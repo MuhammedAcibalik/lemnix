@@ -55,11 +55,11 @@ const baseShadows: string[] = [
   DS.shadows.cardHover,
 ];
 
-// MUI requires exactly 25 shadow values - create the array with proper type
+// MUI requires exactly 25 shadow values
 const muiShadows = [
   ...baseShadows,
   ...Array(25 - baseShadows.length).fill(DS.shadows.soft['2xl'])
-] as const satisfies readonly string[];
+] as unknown as ["none", string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string];
 
 export const globalStyles = `
   @keyframes lemnixRotate {
