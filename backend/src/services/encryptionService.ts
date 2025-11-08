@@ -12,6 +12,7 @@
 
 import crypto from 'crypto';
 import { logger } from './logger';
+import { isProduction } from '../config/env';
 
 // ============================================================================
 // ENCRYPTION CONFIGURATION
@@ -39,13 +40,20 @@ const ENCRYPTION_CONFIG: EncryptionConfig = {
 
 export class EncryptionService {
   private readonly masterKey: Buffer;
-  private readonly keyDerivationIterations = 10000; // ✅ PERFORMANCE: Reduced from 100,000 to 10,000
+  private readonly keyDerivationIterations = 100000;
 
   constructor() {
     const masterKeyString = process.env.ENCRYPTION_MASTER_KEY;
-    
+
     if (!masterKeyString) {
-      throw new Error('ENCRYPTION_MASTER_KEY environment variable is required');
+      if (isProduction) {
+        throw new Error('ENCRYPTION_MASTER_KEY environment variable is required in production');
+      }
+
+      const ephemeralKey = crypto.randomBytes(ENCRYPTION_CONFIG.keyLength);
+      this.masterKey = ephemeralKey;
+      logger.warn('ENCRYPTION_MASTER_KEY missing - using ephemeral development key');
+      return;
     }
 
     if (masterKeyString.length < 32) {
@@ -53,42 +61,22 @@ export class EncryptionService {
     }
 
     this.masterKey = Buffer.from(masterKeyString, 'utf8');
-    
+
     logger.info('Encryption service initialized', {
       algorithm: ENCRYPTION_CONFIG.algorithm,
       keyLength: ENCRYPTION_CONFIG.keyLength,
-      hasMasterKey: !!this.masterKey
+      mode: isProduction ? 'production' : 'development'
     });
   }
 
-  /**
-   * Derive encryption key from master key and salt
-   * ✅ PERFORMANCE: Optimized key derivation with caching
-   */
-  private keyCache = new Map<string, Buffer>();
-  
   private deriveKey(salt: Buffer): Buffer {
-    const saltHex = salt.toString('hex');
-    
-    // Check cache first
-    if (this.keyCache.has(saltHex)) {
-      return this.keyCache.get(saltHex)!;
-    }
-    
-    const key = crypto.pbkdf2Sync(
+    return crypto.pbkdf2Sync(
       this.masterKey,
       salt,
       this.keyDerivationIterations,
       ENCRYPTION_CONFIG.keyLength,
       'sha512'
     );
-    
-    // Cache the key (limit cache size)
-    if (this.keyCache.size < 1000) {
-      this.keyCache.set(saltHex, key);
-    }
-    
-    return key;
   }
 
   /**
@@ -102,9 +90,7 @@ export class EncryptionService {
         return plaintext; // Don't encrypt empty strings
       }
 
-      // ✅ PERFORMANCE: Use deterministic salt for similar data to leverage key cache
-      const dataHash = crypto.createHash('sha256').update(plaintext).digest('hex').substring(0, 64); // 32 bytes = 64 hex chars
-      const salt = Buffer.from(dataHash, 'hex');
+      const salt = crypto.randomBytes(ENCRYPTION_CONFIG.saltLength);
       
       // Generate random IV
       const iv = crypto.randomBytes(ENCRYPTION_CONFIG.ivLength);
@@ -131,14 +117,6 @@ export class EncryptionService {
       ]);
       
       const result = combined.toString('base64');
-      
-      logger.debug('String encrypted successfully', {
-        originalLength: plaintext.length,
-        encryptedLength: result.length,
-        hasSalt: true,
-        hasIV: true,
-        hasTag: true
-      });
       
       return result;
     } catch (error) {

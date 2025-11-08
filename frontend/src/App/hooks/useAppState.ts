@@ -4,7 +4,7 @@
  * @version 2.0.0 - Enterprise Grade Modular Design
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AppState, PageChangeHandler, SnackbarCloseHandler } from '../types';
 import { defaultState, routes, pageIds } from '../constants';
@@ -27,27 +27,14 @@ export const useAppState = (): {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Initial state - no location dependency
-  const [state, setState] = useState<AppState>(() => ({
-    ...defaultState,
-    activePage: defaultState.activePage,
-    excelItems: [...defaultState.excelItems] // Convert readonly array to mutable
+  const [state, setState] = useState<Omit<AppState, 'activePage'>>(() => ({
+    isLoading: defaultState.isLoading,
+    snackbar: { ...defaultState.snackbar },
+    excelItems: [...defaultState.excelItems],
+    optimizationResult: defaultState.optimizationResult
   }));
 
-  const setActivePage = useCallback((page: string): void => {
-    setState(prev => ({ ...prev, activePage: page }));
-  }, []);
-
-  // Sync activePage with URL changes
-  useEffect(() => {
-    const pageFromUrl = getPageFromLocation(location.pathname);
-    setState(prev => {
-      if (prev.activePage !== pageFromUrl) {
-        return { ...prev, activePage: pageFromUrl };
-      }
-      return prev;
-    });
-  }, [location.pathname]);
+  const activePage = useMemo(() => getPageFromLocation(location.pathname), [location.pathname]);
 
   const setIsLoading = useCallback((loading: boolean): void => {
     setState(prev => ({ ...prev, isLoading: loading }));
@@ -69,8 +56,6 @@ export const useAppState = (): {
   }, []);
 
   const handlePageChange = useCallback((page: string): void => {
-    setActivePage(page);
-    
     // Update URL based on page
     const routeMap: Record<string, string> = {
       [pageIds.home]: routes.home,
@@ -85,7 +70,7 @@ export const useAppState = (): {
     
     const route = routeMap[page] || routes.home;
     navigate(route);
-  }, [navigate, setActivePage]);
+  }, [navigate]);
 
   const handleCloseSnackbar = useCallback((): void => {
     setState(prev => ({ 
@@ -94,10 +79,11 @@ export const useAppState = (): {
     }));
   }, []);
 
+  const viewState: AppState = { ...state, activePage };
+
   return {
-    state,
+    state: viewState,
     actions: {
-      setActivePage,
       setIsLoading,
       setSnackbar,
       setExcelItems,
