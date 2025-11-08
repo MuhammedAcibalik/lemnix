@@ -36,7 +36,7 @@ export const useDesignSystem = () => {
    */
   const getColor = (path: string): string => {
     const keys = path.split('.');
-    let value: Record<string, unknown> = DS.colors;
+    let value: any = DS.colors;
     
     for (const key of keys) {
       value = value?.[key];
@@ -73,7 +73,7 @@ export const useDesignSystem = () => {
    */
   const getShadow = (path: string): string => {
     const keys = path.split('.');
-    let value: Record<string, unknown> = DS.shadows;
+    let value: any = DS.shadows;
     
     for (const key of keys) {
       value = value?.[key];
@@ -98,7 +98,7 @@ export const useDesignSystem = () => {
    */
   const getGradient = (key: string): string => {
     const keys = key.split('.');
-    let value: Record<string, unknown> = DS.gradients;
+    let value: any = DS.gradients;
     
     for (const k of keys) {
       value = value?.[k];
@@ -122,7 +122,7 @@ export const useDesignSystem = () => {
    */
   const getTypography = (path: string) => {
     const keys = path.split('.');
-    let value: Record<string, unknown> = DS.typography;
+    let value: any = DS.typography;
     
     for (const key of keys) {
       value = value?.[key];
@@ -137,7 +137,7 @@ export const useDesignSystem = () => {
   /**
    * Get transition
    */
-  const getTransition = (type: keyof typeof DS.transitions): string => {
+  const getTransition = (type: keyof typeof DS.transitions): any => {
     return DS.transitions[type];
   };
 

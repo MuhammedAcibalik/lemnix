@@ -147,7 +147,7 @@ export const StatisticsPage: React.FC = () => {
       }
 
       setStatisticsData({
-        overview: batchData.data.overview,
+        overview: batchData.data.overview as StatisticsOverviewData,
         performance: batchData.data.performance,
         usage: batchData.data.usage,
         optimization: batchData.data.optimization,
