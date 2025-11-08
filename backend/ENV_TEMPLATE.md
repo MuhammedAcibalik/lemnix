@@ -3,7 +3,8 @@
 Copy this to `.env` file and update values:
 
 ```env
-# PostgreSQL Connection (via PgBouncer for connection pooling)
+# PostgreSQL Connection String (required)
+# Supports postgres:// or postgresql:// DSNs
 DATABASE_URL="postgresql://lemnix_user:password@localhost:6432/lemnix_db?schema=public&connection_limit=20&pool_timeout=30"
 
 # Direct PostgreSQL (for migrations and admin tasks)
@@ -21,8 +22,8 @@ PGBOUNCER_DEFAULT_POOL_SIZE=25
 NODE_ENV=development
 PORT=3001
 
-# CORS Settings
-CORS_ORIGIN=http://localhost:5173
+# Frontend Application URL (used for CORS)
+FRONTEND_URL=http://localhost:5173
 
 # JWT Configuration
 JWT_SECRET=your_jwt_secret_key_here
