@@ -27,7 +27,12 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().url().default('http://localhost:3000'),
   
   // Database
-  DATABASE_URL: z.string().url().default('file:./prisma/dev.db'),
+  DATABASE_URL: z
+    .string()
+    .regex(
+      /^postgres(?:ql)?:\/\/.+/,
+      'DATABASE_URL must be a valid PostgreSQL connection string (e.g. postgres://user:pass@host:5432/db)'
+    ),
   
   // JWT Authentication (REQUIRED in production, optional in development)
   JWT_SECRET: z.string().min(32).optional().transform((val) => {
