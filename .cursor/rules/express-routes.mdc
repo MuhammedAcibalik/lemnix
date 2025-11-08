@@ -1,0 +1,216 @@
+---
+globs: backend/src/routes/*.ts
+description: Express.js route yapısı ve güvenlik best practices
+---
+
+# Express Route Best Practices
+
+## Route Yapısı
+
+### Factory Pattern Kullan
+```typescript
+// ✅ İyi
+const createRouter = (): Router => {
+  const router = Router();
+  const controller = new Controller();
+  const factory = new RouterFactory(controller);
+  return factory.create();
+};
+
+export default createRouter();
+```
+
+### Declarative Configuration
+```typescript
+interface RouteConfig {
+  readonly path: string;
+  readonly method: HTTPVerb;
+  readonly handler: FnKeys<Controller> | ControllerHandler;
+  readonly middleware?: ReadonlyArray<RequestHandler>;
+  readonly requiresAuth?: boolean;
+  readonly permission?: Permission;
+  readonly rateLimit?: RateLimiterKey;
+}
+
+const routes: ReadonlyArray<RouteConfig> = [
+  { 
+    path: '/users', 
+    method: 'post', 
+    handler: 'createUser',
+    requiresAuth: true,
+    permission: Permission.CREATE_USER,
+    rateLimit: 'default'
+  }
+];
+```
+
+## Middleware Sırası
+
+**Doğru sıralama (performans + güvenlik):**
+```typescript
+1. Rate Limiting       // En erken rejection
+2. CORS               // Early rejection
+3. Body Parser        // Parse request
+4. Authentication     // Verify token
+5. Authorization      // Check permissions
+6. Validation         // Sanitize input
+7. Business Logic     // Handler
+8. Error Handler      // Son katman
+```
+
+## Async Error Handling
+
+### Sağlam Wrapper
+```typescript
+type ControllerHandler = (
+  req: Request, 
+  res: Response, 
+  next: NextFunction
+) => unknown;
+
+const asyncify = (fn: ControllerHandler): RequestHandler => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const startedAt = Date.now();
+    
+    // Real response time tracking
+    res.once('finish', () => {
+      const duration = Date.now() - startedAt;
+      if (duration > 3000) {
+        logger.warn('Slow request', { 
+          path: req.path, 
+          duration,
+          userId: req.user?.userId 
+        });
+      }
+    });
+
+    try {
+      // Thenable support
+      Promise.resolve(fn(req, res, next)).catch((error: unknown) => {
+        logger.error('Async error', { error });
+        next(error);
+      });
+    } catch (error: unknown) {
+      // Sync throw support
+      logger.error('Sync error', { error });
+      next(error);
+    }
+  };
+};
+```
+
+## Type Safety
+
+### FnKeys Pattern
+```typescript
+type FnKeys<T> = { 
+  [K in keyof T]: T[K] extends Function ? K : never 
+}[keyof T];
+
+interface IMethodCache<T> {
+  getBound(key: FnKeys<T>): ControllerHandler;
+  has(key: FnKeys<T>): boolean;
+}
+```
+
+### Rate Limiter Types
+```typescript
+const RATE_LIMITERS = {
+  default: createRateLimit('default'),
+  export: createRateLimit('export'),
+  optimization: createRateLimit('optimization')
+} as const;
+
+type RateLimiterKey = keyof typeof RATE_LIMITERS;
+```
+
+## Security
+
+### Authentication
+```typescript
+// Her route authenticated olmalı
+const routes: RouteConfig[] = [
+  { 
+    path: '/public', 
+    method: 'get', 
+    handler: 'getPublic',
+    requiresAuth: false  // Sadece public endpoint'ler
+  },
+  { 
+    path: '/private', 
+    method: 'get', 
+    handler: 'getPrivate',
+    requiresAuth: true   // Default davranış
+  }
+];
+```
+
+### Input Validation
+```typescript
+// Zod veya express-validator kullan
+router.post(
+  '/users',
+  validateBody(userSchema),
+  handleValidationErrors,
+  createUser
+);
+```
+
+### Rate Limiting
+```typescript
+// Ağır işlemler mutlaka rate-limited olmalı
+const heavyOperations = [
+  '/export/pdf',
+  '/export/excel',
+  '/quantity/calculate',
+  '/optimization/run'
+];
+
+heavyOperations.forEach(path => {
+  // rateLimit: 'export' veya 'optimization'
+});
+```
+
+## Performance
+
+### Method Caching
+```typescript
+class BoundMethodCache<T extends object> {
+  private readonly cache = new Map<PropertyKey, ControllerHandler>();
+  
+  public getBound(key: FnKeys<T>): ControllerHandler {
+    const cached = this.cache.get(key);
+    if (cached) return cached;
+    
+    const value = (this.instance as any)[key];
+    const bound = value.bind(this.instance);
+    this.cache.set(key, bound);
+    return bound;
+  }
+}
+```
+
+### Singleton Limiters
+```typescript
+// Modül düzeyinde singleton
+const RATE_LIMITERS = { /* ... */ } as const;
+
+// Her RouteRegistry instance'ı aynı limiterleri kullanır
+class RouteRegistry {
+  private readonly rateLimiters = RATE_LIMITERS;
+}
+```
+
+## Logging & Monitoring
+
+```typescript
+// Context-rich logging
+logger.error('Route handler error', {
+  error: err.message,
+  stack: err.stack,
+  path: req.path,
+  method: req.method,
+  userId: req.user?.userId,
+  correlationId: req.id
+});
+```

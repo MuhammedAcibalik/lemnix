@@ -1,0 +1,131 @@
+---
+description: P0 Features integration guide - Algorithm Comparison, Export, History, Statistics, Validation, WebGPU
+---
+
+# P0 Features Integration Guide
+
+## Overview
+7 critical P0 features have been implemented and integrated into the Lemnix frontend following FSD (Feature-Sliced Design) architecture.
+
+## Implemented Features
+
+### P0-1: Algorithm Comparison
+- **Location**: `frontend/src/features/algorithm-comparison/`
+- **Entity**: `frontend/src/entities/algorithm-comparison/`
+- **Components**: `AlgorithmComparisonDialog`, `ComparisonTriggerButton`
+- **Integration**: EnterpriseOptimizationResults action bar
+- **Usage**: Compare optimization algorithms side-by-side
+
+### P0-2: Optimization History
+- **Location**: `frontend/src/widgets/optimization-history/`
+- **API**: Uses existing `useOptimizationHistory` from optimization entity
+- **Components**: `OptimizationHistoryWidget`, `OptimizationHistoryList`
+- **Integration**: StatisticsPage Optimization tab
+- **Features**: Filtering, pagination, detail view
+
+### P0-3: Export Results
+- **Location**: `frontend/src/features/export-results/`
+- **Components**: `ExportDialog`, `ExportButton`
+- **API**: `exportResultToExcel`, `exportResultToPDF`
+- **Integration**: EnterpriseOptimizationResults action bar
+- **Formats**: Excel (.xlsx), PDF
+
+### P0-4: Statistics Dashboard
+- **Entity**: `frontend/src/entities/statistics/`
+- **Widget**: `frontend/src/widgets/statistics-dashboard/`
+- **Components**: `StatisticsDashboard`, `StatisticsOverviewCard`, `AlgorithmPerformanceCard`
+- **Integration**: StatisticsPage Overview tab
+- **Metrics**: Total optimizations, avg efficiency, waste saved, cost savings
+
+### P0-5: Profile-based Optimization
+- **Status**: Backend API exists, UI parameter-based
+- **Implementation**: Simple request parameter modification
+
+### P0-6: Validation System
+- **Location**: `frontend/src/shared/lib/validation/`
+- **Components**: `ValidationAlert`, `useValidation` hook
+- **Types**: `ValidationError`, `ValidationResult`, `ValidationSeverity`
+- **Usage**: Form validation, input validation, quarantine management
+
+### P0-7: WebGPU Integration
+- **Location**: `frontend/src/shared/lib/webgpu/`
+- **Components**: `GPUStatusBadge`, `useWebGPU` hook
+- **API**: `getWebGPUStatus`, `initializeWebGPU`, `getWebGPUInfo`
+- **Integration**: ModernNavigation AppBar (top-right)
+- **States**: Not supported, Ready, Active, Loading
+
+## Integration Points
+
+### StatisticsPage
+```typescript
+// Overview Tab
+<StatisticsDashboard /> // NEW P0-4
+<StatisticsOverview data={...} /> // Legacy
+
+// Optimization Tab
+<OptimizationHistoryWidget limit={10} /> // NEW P0-2
+<OptimizationAnalytics data={...} /> // Legacy
+```
+
+### EnterpriseOptimizationResults
+```typescript
+// Action Bar (after KPI cards)
+<ExportButton onExport={handleExport} isLoading={isExporting} /> // P0-3
+<ComparisonTriggerButton onClick={...} itemCount={...} /> // P0-1
+```
+
+### ModernNavigation AppBar
+```typescript
+// Right action buttons
+<GPUStatusBadge 
+  isSupported={isSupported}
+  isInitialized={isInitialized}
+  isLoading={isLoading}
+/> // P0-7
+```
+
+## API Endpoints
+
+### Statistics
+- `GET /statistics/overview` → Overview metrics
+- `GET /statistics/optimization/algorithms` → Algorithm performance
+
+### Export
+- `POST /enterprise/export` → Export results
+
+### Algorithm Comparison
+- `POST /enterprise/compare` → Compare algorithms
+
+### WebGPU
+- `GET /webgpu/status` → GPU status
+- `POST /webgpu/initialize` → Initialize GPU
+- `GET /webgpu/info` → GPU device info
+
+## Authentication Handling
+
+All P0 features gracefully handle 401 Unauthorized:
+- Return empty/default data
+- Log warning with "requires authentication" message
+- No UI errors shown to user
+- Widgets display "No data yet" state
+
+## Best Practices
+
+1. **Never break existing functionality** - All features are additive
+2. **Follow FSD architecture** - Entities → Features → Widgets → Pages
+3. **Type safety** - No `any`, use `unknown` with type guards
+4. **Error handling** - Graceful degradation, user-friendly messages
+5. **Loading states** - Always show loading/skeleton states
+6. **Readonly types** - Use `readonly` for immutability
+7. **React Query** - Use for all server state management
+
+## File References
+
+- [Optimization Entity](mdc:frontend/src/entities/optimization/index.ts)
+- [Statistics Entity](mdc:frontend/src/entities/statistics/index.ts)
+- [Algorithm Comparison Feature](mdc:frontend/src/features/algorithm-comparison/index.ts)
+- [Export Results Feature](mdc:frontend/src/features/export-results/index.ts)
+- [Optimization History Widget](mdc:frontend/src/widgets/optimization-history/index.ts)
+- [Statistics Dashboard Widget](mdc:frontend/src/widgets/statistics-dashboard/index.ts)
+- [WebGPU Shared Lib](mdc:frontend/src/shared/lib/webgpu/index.ts)
+- [Validation Shared Lib](mdc:frontend/src/shared/lib/validation/index.ts)

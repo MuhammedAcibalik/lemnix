@@ -1,0 +1,128 @@
+---
+alwaysApply: true
+description: SOLID prensipleri ve Clean Architecture kuralları
+---
+
+# SOLID Prensipleri
+
+## Single Responsibility Principle (SRP)
+Her class/fonksiyon tek bir sorumluluğa sahip olmalı.
+
+```typescript
+// ❌ Kötü - Çok sorumluluk
+class UserService {
+  saveUser(user: User) { /* DB */ }
+  sendEmail(user: User) { /* Email */ }
+  logActivity(user: User) { /* Logging */ }
+}
+
+// ✅ İyi - Tek sorumluluk
+class UserRepository {
+  save(user: User) { /* DB */ }
+}
+
+class EmailService {
+  send(to: string, subject: string) { /* Email */ }
+}
+
+class ActivityLogger {
+  log(activity: Activity) { /* Logging */ }
+}
+```
+
+## Open/Closed Principle (OCP)
+Genişletmeye açık, değişikliğe kapalı.
+
+```typescript
+// ✅ İyi - Interface ile genişletilebilir
+interface PaymentProcessor {
+  process(amount: number): Promise<Result>;
+}
+
+class CreditCardProcessor implements PaymentProcessor {
+  process(amount: number): Promise<Result> { /* */ }
+}
+
+class PayPalProcessor implements PaymentProcessor {
+  process(amount: number): Promise<Result> { /* */ }
+}
+```
+
+## Liskov Substitution Principle (LSP)
+Alt sınıflar üst sınıfların yerine geçebilmeli.
+
+```typescript
+// ✅ Interface'ler aynı sözleşmeye uymalı
+interface Cache {
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string): Promise<void>;
+}
+
+class MemoryCache implements Cache { /* */ }
+class RedisCache implements Cache { /* */ }
+```
+
+## Interface Segregation Principle (ISP)
+Küçük, spesifik interface'ler kullan.
+
+```typescript
+// ❌ Kötü - Fat interface
+interface Worker {
+  work(): void;
+  eat(): void;
+  sleep(): void;
+}
+
+// ✅ İyi - Segregated interfaces
+interface Workable {
+  work(): void;
+}
+
+interface Eatable {
+  eat(): void;
+}
+
+interface Sleepable {
+  sleep(): void;
+}
+```
+
+## Dependency Inversion Principle (DIP)
+Abstraction'lara bağımlı ol, concrete class'lara değil.
+
+```typescript
+// ✅ İyi - Constructor injection
+class UserService {
+  constructor(
+    private readonly userRepo: IUserRepository,
+    private readonly logger: ILogger
+  ) {}
+}
+
+// Factory pattern ile DI
+class ServiceFactory {
+  createUserService(): UserService {
+    return new UserService(
+      new UserRepository(),
+      new Logger()
+    );
+  }
+}
+```
+
+## Clean Architecture
+
+### Katmanlar
+- **Domain**: İş mantığı (framework'den bağımsız)
+- **Application**: Use case'ler
+- **Infrastructure**: DB, API, Framework
+- **Presentation**: UI, Routes, Controllers
+
+### Bağımlılık Yönü
+```
+Presentation → Application → Domain
+     ↓              ↓
+Infrastructure ←────┘
+```
+
+Dış katmanlar iç katmanlara bağımlı. Tersi yasak!

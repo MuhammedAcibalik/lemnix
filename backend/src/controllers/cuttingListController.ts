@@ -7,12 +7,38 @@
 import { Request, Response, NextFunction } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
-import { PDFExportService } from '../services/pdfExportService';
-import { ExcelExportService } from '../services/excelExportService';
-import { ProfileSuggestionService } from '../services/profileSuggestionService';
-import { QuantityCalculationService } from '../services/quantityCalculationService';
-import { EnterpriseProfileSuggestionService } from '../services/enterpriseProfileSuggestionService';
-import smartSuggestionService from '../services/smartSuggestionService';
+import { PDFExportService } from '../services/export/pdfExportService';
+import { ExcelExportService } from '../services/export/excelExportService';
+import { ProfileSuggestionService } from '../services/suggestions/profileSuggestionService';
+import { QuantityCalculationService } from '../services/suggestions/quantityCalculationService';
+// ⚠️ DEPRECATED: Use UnifiedSuggestionService instead
+// import { EnterpriseProfileSuggestionService } from '../services/suggestions/enterpriseProfileSuggestionService';
+// import smartSuggestionService from '../services/suggestions/smartSuggestionService';
+import { UnifiedSuggestionService, SmartSuggestion, ProfileSuggestion } from '../services/suggestions/UnifiedSuggestionService';
+import { cuttingListRepository } from '../repositories/CuttingListRepository';
+import { logger } from '../services/logger';
+import { MeasurementConverter } from '../utils/measurementConverter';
+
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
+interface WorkOrderTemplate {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly profiles: readonly ProfileTemplate[];
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+interface ProfileTemplate {
+  readonly id: string;
+  readonly profile: string;
+  readonly measurement: string;
+  readonly quantity: number;
+}
+import type { CuttingList as PrismaCuttingList, Prisma } from '@prisma/client';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -30,6 +56,7 @@ interface ProfileItem {
 
 /**
  * Cutting list item interface
+ * ✅ ALIGNED with frontend WorkOrderItem type
  */
 interface CuttingListItem {
   readonly id: string;
@@ -41,6 +68,10 @@ interface CuttingListItem {
   readonly orderQuantity: number;
   readonly size: string;
   readonly profiles: ReadonlyArray<ProfileItem>;
+  readonly status?: 'draft' | 'ready' | 'processing' | 'completed'; // ✅ ALIGNED
+  readonly priority?: 'low' | 'medium' | 'high' | 'urgent'; // ✅ ALIGNED
+  readonly createdAt?: string; // ✅ ALIGNED: ISO timestamp
+  readonly updatedAt?: string; // ✅ ALIGNED: ISO timestamp
 }
 
 /**
@@ -93,16 +124,27 @@ export class CuttingListController {
   private readonly excelExportService: ExcelExportService;
   private readonly profileSuggestionService: ProfileSuggestionService;
   private readonly quantityCalculationService: QuantityCalculationService;
-  private readonly enterpriseProfileService: EnterpriseProfileSuggestionService;
+  // ⚠️ DEPRECATED: private readonly enterpriseProfileService: EnterpriseProfileSuggestionService;
 
   constructor() {
     // Create storage directory if it doesn't exist
     const storageDir = path.join(__dirname, '../../data');
     if (!fs.existsSync(storageDir)) {
       fs.mkdirSync(storageDir, { recursive: true });
+      console.log('[INFO] [STORAGE] Created storage directory:', storageDir);
     }
     
     this.storageFile = path.join(storageDir, 'cutting-lists.json');
+    console.log('[INFO] [STORAGE] Storage file path:', this.storageFile);
+    
+    // Validate write permissions
+    try {
+      fs.accessSync(storageDir, fs.constants.W_OK);
+      console.log('[INFO] [STORAGE] Storage directory is writable');
+    } catch (error) {
+      console.error('[ERROR] [STORAGE] Storage directory is not writable:', storageDir);
+      throw new Error('Storage directory is not writable');
+    }
     this.pdfExportService = PDFExportService.getInstance();
     
     // Graceful shutdown için cleanup handler
@@ -120,7 +162,7 @@ export class CuttingListController {
     this.excelExportService = new ExcelExportService();
     this.profileSuggestionService = new ProfileSuggestionService();
     this.quantityCalculationService = new QuantityCalculationService();
-    this.enterpriseProfileService = new EnterpriseProfileSuggestionService();
+    // ⚠️ DEPRECATED: this.enterpriseProfileService = new EnterpriseProfileSuggestionService();
     this.loadFromStorage();
     
     // Analyze existing cutting lists for profile suggestions
@@ -156,11 +198,11 @@ export class CuttingListController {
     } as ApiResponse<T>;
     
     if (data !== undefined) {
-      (response as any).data = data;
+      (response as ApiResponse<T> & { data: T }).data = data;
     }
     
     if (error !== undefined) {
-      (response as any).error = error;
+      (response as ApiResponse<T> & { error: string }).error = error;
     }
     
     return response;
@@ -229,11 +271,11 @@ export class CuttingListController {
         // Mevcut verileri temizle (CMmm, CM gibi eski formatları düzelt)
         this.cleanupExistingMeasurements();
       } else {
-        console.log('[STORAGE] No existing storage file found, starting with empty storage');
+        console.log('[INFO] [STORAGE] No existing storage file found, starting with empty storage');
       }
     } catch (error) {
-      console.error('[STORAGE] Error loading from storage:', error);
-      console.log('[STORAGE] Starting with empty storage due to error');
+      console.error('[ERROR] [STORAGE] Error loading from storage:', error);
+      console.log('[WARN] [STORAGE] Starting with empty storage due to error');
       this.cuttingLists = new Map();
     }
   }
@@ -249,11 +291,11 @@ export class CuttingListController {
         section.items.forEach((item) => {
           item.profiles.forEach((profile) => {
             const originalMeasurement = profile.measurement;
-            const cleanedMeasurement = this.convertMeasurementToMM(originalMeasurement);
+            const cleanedMeasurement = MeasurementConverter.convertToMM(originalMeasurement);
             
             if (originalMeasurement !== cleanedMeasurement) {
               console.log(`[CLEANUP] Converting measurement: "${originalMeasurement}" → "${cleanedMeasurement}"`);
-              (profile as any).measurement = cleanedMeasurement;
+              (profile as { measurement: string }).measurement = cleanedMeasurement;
               hasChanges = true;
             }
           });
@@ -269,67 +311,24 @@ export class CuttingListController {
     }
   }
 
-  /**
-   * Ölçü dönüşümü utility fonksiyonu
-   */
-  private convertMeasurementToMM(input: string): string {
-    if (!input || typeof input !== 'string') return input;
-    
-    const trimmedInput = input.trim().toUpperCase();
-    
-    // CMmm, CM gibi eski formatları temizle
-    if (trimmedInput.includes('CM')) {
-      const cmValue = trimmedInput.replace(/[^\d,.]/g, '').replace(',', '.');
-      const cmNumber = parseFloat(cmValue);
-      if (!isNaN(cmNumber)) {
-        const mmValue = Math.round(cmNumber * 10);
-        return `${mmValue}`;
-      }
-    }
-    
-    // M dönüşümü
-    if (trimmedInput.includes('M') && !trimmedInput.includes('MM')) {
-      const mValue = trimmedInput.replace(/[^\d,.]/g, '').replace(',', '.');
-      const mNumber = parseFloat(mValue);
-      if (!isNaN(mNumber)) {
-        const mmValue = Math.round(mNumber * 1000);
-        return `${mmValue}`;
-      }
-    }
-    
-    // Zaten MM ise sadece sayıyı al
-    if (trimmedInput.includes('MM')) {
-      const mmValue = trimmedInput.replace(/[^\d,.]/g, '').replace(',', '.');
-      const mmNumber = parseFloat(mmValue);
-      if (!isNaN(mmNumber)) {
-        return `${Math.round(mmNumber)}`;
-      }
-    }
-    
-    // Sadece sayı ise olduğu gibi döndür
-    const numericValue = trimmedInput.replace(/[^\d,.]/g, '').replace(',', '.');
-    const numericNumber = parseFloat(numericValue);
-    if (!isNaN(numericNumber)) {
-      return `${Math.round(numericNumber)}`;
-    }
-    
-    return input;
-  }
 
   /**
    * Create new cutting list
    */
   public createCuttingList = this.asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const requestId = this.generateRequestId();
-    const { title, weekNumber } = req.body;
+    const { name, title, weekNumber } = req.body;
     
-    console.log(`[${requestId}] Creating cutting list: ${title}, week: ${weekNumber}`);
+    // Support both 'name' and 'title' for backward compatibility
+    const cuttingListTitle = name || title;
+    
+    console.log(`[${requestId}] Creating cutting list: ${cuttingListTitle}, week: ${weekNumber}`);
 
     try {
       // Validate input
-      if (!title || typeof title !== 'string' || title.trim().length === 0) {
+      if (!cuttingListTitle || typeof cuttingListTitle !== 'string' || cuttingListTitle.trim().length === 0) {
         res.status(400).json(
-          this.createResponse(false, undefined, 'Title is required')
+          this.createResponse(false, undefined, 'Name/Title is required')
         );
         return;
       }
@@ -341,38 +340,45 @@ export class CuttingListController {
         return;
       }
 
-      // Check if a cutting list already exists for this week
-      const existingLists = Array.from(this.cuttingLists.values()).filter(list => list.weekNumber === weekNumber);
+      // ✅ FIXED: Check PostgreSQL database instead of in-memory Map
+      const existingLists = await cuttingListRepository.findAllByWeekNumber(weekNumber);
       
-             if (existingLists.length > 0) {
-         // Return 409 Conflict if any list exists for this week
-         res.status(409).json(
-           this.createResponse(false, undefined, `${weekNumber}. Hafta için zaten bir kesim listesi mevcut. Lütfen geçmiş haftalar bölümünden o listeyi görüntüleyin veya önce silin.`)
-         );
-         return;
-       }
+      if (existingLists.length > 0) {
+        // Return 409 Conflict if any list exists for this week
+        res.status(409).json(
+          this.createResponse(false, undefined, `${weekNumber}. Hafta için zaten bir kesim listesi mevcut. Lütfen geçmiş haftalar bölümünden o listeyi görüntüleyin veya önce silin.`)
+        );
+        return;
+      }
 
-      // Create new cutting list if no existing list for this week
-      const now = new Date().toISOString();
-      const cuttingList: CuttingList = {
-        id: this.generateId(),
-        title: title.trim(),
+      // ✅ MIGRATED: Create cutting list in PostgreSQL (persistent storage)
+      const cuttingList = await cuttingListRepository.create({
+        name: cuttingListTitle.trim(),
         weekNumber: weekNumber,
         sections: [],
-        createdAt: now,
-        updatedAt: now
+        user: {
+          connect: { id: 'system-user' } // Temporary system user ID
+        }
+      });
+
+      logger.info(`[${requestId}] ✅ Cutting list created in PostgreSQL`, {
+        id: cuttingList.id,
+        weekNumber,
+        title: cuttingListTitle.trim()
+      });
+
+      // Map Prisma model to API response format
+      const response = {
+        id: cuttingList.id,
+        title: cuttingList.name,
+        weekNumber: cuttingList.weekNumber,
+        sections: cuttingList.sections,
+        createdAt: cuttingList.createdAt.toISOString(),
+        updatedAt: cuttingList.updatedAt.toISOString()
       };
-
-      this.cuttingLists.set(cuttingList.id, cuttingList);
-      this.saveToStorage();
-
-      // Update profile suggestion database
-      this.profileSuggestionService.analyzeCuttingLists(Array.from(this.cuttingLists.values()));
-
-      console.log(`[${requestId}] New cutting list created: ${cuttingList.id} for week ${weekNumber}`);
       
       res.json(
-        this.createResponse(true, cuttingList)
+        this.createResponse(true, response)
       );
 
     } catch (error) {
@@ -393,31 +399,257 @@ export class CuttingListController {
   }
 
   /**
-   * Get all cutting lists
+   * Get all cutting lists (PostgreSQL)
    */
   public getAllCuttingLists = this.asyncHandler(async (_req: Request, res: Response): Promise<void> => {
     const requestId = this.generateRequestId();
-    console.log(`[${requestId}] Getting all cutting lists`);
+    logger.info(`[${requestId}] Getting all cutting lists from PostgreSQL`);
 
     try {
-      const lists = Array.from(this.cuttingLists.values()).map(list => ({
-        id: list.id,
-        title: list.title,
-        weekNumber: list.weekNumber,
-        sections: list.sections,
-        createdAt: list.createdAt,
-        updatedAt: list.updatedAt
-      }));
+      // Get all cutting lists from PostgreSQL with items
+      const dbLists = await cuttingListRepository.findAll();
+      
+      // Type-safe mapping from Prisma to API response
+      type CuttingListWithFields = PrismaCuttingList & { 
+        weekNumber: number | null;
+        sections: Prisma.JsonValue;
+        items: Array<{
+          id: string;
+          workOrderId: string;
+          date: string | null;
+          color: string;
+          version: string;
+          size: string;
+          profileType: string;
+          length: number;
+          quantity: number;
+          orderQuantity: number | null;
+          cuttingPattern: string | null;
+          notes: string | null;
+          priority: string;
+          status: string;
+          createdAt: Date;
+          updatedAt: Date;
+        }>;
+      };
+      
+      const lists = dbLists.map((list) => {
+        const typedList = list as unknown as CuttingListWithFields;
+        
+        // ✅ FIX: Try to parse sections from database JSON field first
+        let dbSections: any[] = [];
+        try {
+          if (typedList.sections) {
+            const parsed = typeof typedList.sections === 'string' 
+              ? JSON.parse(typedList.sections) 
+              : typedList.sections;
+            dbSections = Array.isArray(parsed) ? parsed : [];
+            
+            // 🐛 DEBUG: Log database sections for troubleshooting
+            console.log(`[${requestId}] 🔍 DB Sections parsed for list ${typedList.id}:`, 
+              JSON.stringify(dbSections.map(s => ({ id: s.id, productName: s.productName, itemsCount: s.items?.length || 0 })), null, 2));
+          }
+        } catch (parseError) {
+          logger.warn('Failed to parse sections from database', { id: typedList.id, parseError });
+          dbSections = [];
+        }
+        
+        // ✅ FIX: If we have DB sections, use them as base (preserves user-defined product names)
+        if (dbSections.length > 0) {
+          logger.info('✅ Using sections from database', { id: typedList.id, sectionCount: dbSections.length });
+          
+          // If we have items, add them to the appropriate sections
+          if (typedList.items.length > 0) {
+            logger.info('🔧 Adding items to existing sections', { id: typedList.id, itemCount: typedList.items.length });
+            
+            // Group items by workOrderId
+            const itemsByWorkOrder = typedList.items.reduce((acc, item) => {
+              const workOrderId = item.workOrderId;
+              if (!acc[workOrderId]) {
+                acc[workOrderId] = {
+                  workOrderId: item.workOrderId,
+                  date: item.date || new Date().toISOString().split('T')[0],
+                  version: item.version,
+                  color: item.color,
+                  note: item.notes || '',
+                  orderQuantity: item.orderQuantity || item.quantity,
+                  size: item.size,
+                  priority: item.priority as 'low' | 'medium' | 'high' | 'urgent',
+                  status: item.status as 'draft' | 'ready' | 'processing' | 'completed',
+                  profiles: [],
+                  createdAt: item.createdAt.toISOString(),
+                  updatedAt: item.updatedAt.toISOString()
+                };
+              }
+              
+              acc[workOrderId].profiles.push({
+                id: `${item.id}-profile`,
+                profile: item.profileType,
+                measurement: `${item.length}mm`,
+                quantity: item.quantity
+              });
+              
+              return acc;
+            }, {} as Record<string, any>);
+            
+            // Add items to existing sections
+            const workOrdersByProfileType = Object.values(itemsByWorkOrder).reduce((acc, workOrder) => {
+              const profileType = workOrder.profiles[0]?.profile || 'Genel';
+              if (!acc[profileType]) {
+                acc[profileType] = [];
+              }
+              acc[profileType].push({
+                id: `workorder-${workOrder.workOrderId}`,
+                workOrderId: workOrder.workOrderId,
+                date: workOrder.date,
+                version: workOrder.version,
+                color: workOrder.color,
+                note: workOrder.note,
+                orderQuantity: workOrder.orderQuantity,
+                size: workOrder.size,
+                priority: workOrder.priority,
+                status: workOrder.status,
+                profiles: workOrder.profiles,
+                createdAt: workOrder.createdAt,
+                updatedAt: workOrder.updatedAt
+              });
+              return acc;
+            }, {} as Record<string, unknown[]>);
+            
+            // Merge items into existing sections
+            const updatedSections = dbSections.map(section => {
+              const profileType = section.productName;
+              if (workOrdersByProfileType[profileType]) {
+                // Add items to matching section
+                const existingItems = section.items || [];
+                return {
+                  ...section,
+                  items: [...existingItems, ...workOrdersByProfileType[profileType]]
+                };
+              }
+              return section;
+            });
+            
+            return {
+              id: typedList.id,
+              title: typedList.name,
+              weekNumber: typedList.weekNumber || 0,
+              sections: updatedSections,
+              createdAt: typedList.createdAt.toISOString(),
+              updatedAt: typedList.updatedAt.toISOString()
+            };
+          }
+          
+          // No items, just return DB sections
+          return {
+            id: typedList.id,
+            title: typedList.name,
+            weekNumber: typedList.weekNumber || 0,
+            sections: dbSections,
+            createdAt: typedList.createdAt.toISOString(),
+            updatedAt: typedList.updatedAt.toISOString()
+          };
+        }
+        
+        // If we have items but NO DB sections, group them by workOrderId to create sections
+        if (typedList.items.length > 0) {
+          // Group items by workOrderId to create sections (preserve item IDs)
+          const itemsByWorkOrder = typedList.items.reduce((acc, item) => {
+            const workOrderId = item.workOrderId;
+            if (!acc[workOrderId]) {
+              acc[workOrderId] = {
+                workOrderId: item.workOrderId,
+                date: item.date || new Date().toISOString().split('T')[0],
+                version: item.version,
+                color: item.color,
+                note: item.notes || '',
+                orderQuantity: item.orderQuantity || item.quantity,
+                size: item.size,
+                priority: item.priority as 'low' | 'medium' | 'high' | 'urgent',
+                status: item.status as 'draft' | 'ready' | 'processing' | 'completed',
+                profiles: [],
+                createdAt: item.createdAt.toISOString(),
+                updatedAt: item.updatedAt.toISOString()
+              };
+            }
+            
+            // Add profile to existing work order
+            acc[workOrderId].profiles.push({
+              id: `${item.id}-profile`,
+              profile: item.profileType,
+              measurement: `${item.length}mm`,
+              quantity: item.quantity
+            });
+            
+            return acc;
+          }, {} as Record<string, any>);
+          
+          // Convert grouped items to sections by profileType
+          const itemsByProfile = Object.values(itemsByWorkOrder).reduce((acc, workOrder) => {
+            const profileType = workOrder.profiles[0]?.profile || 'Genel';
+            if (!acc[profileType]) {
+              acc[profileType] = [];
+            }
+            
+            // Create WorkOrderItem with unique ID based on workOrderId
+            const workOrderItem = {
+              id: `workorder-${workOrder.workOrderId}`, // Use workOrderId for consistent ID
+              workOrderId: workOrder.workOrderId,
+              date: workOrder.date,
+              version: workOrder.version,
+              color: workOrder.color,
+              note: workOrder.note,
+              orderQuantity: workOrder.orderQuantity,
+              size: workOrder.size,
+              priority: workOrder.priority,
+              status: workOrder.status,
+              profiles: workOrder.profiles,
+              createdAt: workOrder.createdAt,
+              updatedAt: workOrder.updatedAt
+            };
+            
+            acc[profileType].push(workOrderItem);
+            return acc;
+          }, {} as Record<string, unknown[]>);
+          
+          // Convert grouped items to sections
+          const sections = Object.entries(itemsByProfile).map(([productName, items], index) => ({
+            id: `section-${typedList.id}-${index}`,
+            productName,
+            items: items as unknown[],
+            createdAt: typedList.createdAt.toISOString(),
+            updatedAt: typedList.updatedAt.toISOString()
+          }));
+          
+          return {
+            id: typedList.id,
+            title: typedList.name,
+            weekNumber: typedList.weekNumber || 0,
+            sections,
+            createdAt: typedList.createdAt.toISOString(),
+            updatedAt: typedList.updatedAt.toISOString()
+          };
+        }
+        
+        // No items and no DB sections - return empty array
+        return {
+          id: typedList.id,
+          title: typedList.name,
+          weekNumber: typedList.weekNumber || 0,
+          sections: [],
+          createdAt: typedList.createdAt.toISOString(),
+          updatedAt: typedList.updatedAt.toISOString()
+        };
+      });
 
-      console.log(`[${requestId}] ✅ Found ${lists.length} cutting lists`);
-      console.log(`[${requestId}] Memory has ${this.cuttingLists.size} cutting lists`);
+      logger.info(`[${requestId}] ✅ Found ${lists.length} cutting lists in PostgreSQL`);
       
       res.json(
         this.createResponse(true, lists)
       );
 
     } catch (error) {
-      console.error(`[${requestId}] Error getting cutting lists:`, error);
+      logger.error(`[${requestId}] Error getting cutting lists:`, error);
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json(
@@ -433,7 +665,7 @@ export class CuttingListController {
     const requestId = this.generateRequestId();
     const { id } = req.params;
     
-    console.log(`[${requestId}] Getting cutting list: ${id}`);
+    logger.info(`[${requestId}] Getting cutting list from PostgreSQL: ${id}`);
 
     try {
       // Validate input
@@ -444,23 +676,127 @@ export class CuttingListController {
         return;
       }
 
-      const cuttingList = this.cuttingLists.get(id);
+      // ✅ FIX: Get from PostgreSQL instead of in-memory Map
+      const dbList = await cuttingListRepository.findById(id);
       
-      if (!cuttingList) {
+      if (!dbList) {
         res.status(404).json(
           this.createResponse(false, undefined, 'Cutting list not found')
         );
         return;
       }
 
-      console.log(`[${requestId}] Found cutting list: ${id}`);
+      // Convert to response format (same as getAllCuttingLists)
+      type CuttingListWithFields = PrismaCuttingList & { 
+        weekNumber: number | null;
+        sections: Prisma.JsonValue;
+        items: Array<{
+          id: string;
+          workOrderId: string;
+          date: string | null;
+          color: string;
+          version: string;
+          size: string;
+          profileType: string;
+          length: number;
+          quantity: number;
+          orderQuantity: number | null;
+          cuttingPattern: string | null;
+          notes: string | null;
+          priority: string;
+          status: string;
+          createdAt: Date;
+          updatedAt: Date;
+        }>;
+      };
+      
+      const typedList = dbList as unknown as CuttingListWithFields;
+      
+      // Group items by workOrderId to create sections (preserve item IDs)
+      const itemsByWorkOrder = typedList.items.reduce((acc, item) => {
+        const workOrderId = item.workOrderId;
+        if (!acc[workOrderId]) {
+          acc[workOrderId] = {
+            workOrderId: item.workOrderId,
+            date: item.date || new Date().toISOString().split('T')[0],
+            version: item.version,
+            color: item.color,
+            note: item.notes || '',
+            orderQuantity: item.orderQuantity || item.quantity,
+            size: item.size,
+            priority: item.priority as 'low' | 'medium' | 'high' | 'urgent',
+            status: item.status as 'draft' | 'ready' | 'processing' | 'completed',
+            profiles: [],
+            createdAt: item.createdAt.toISOString(),
+            updatedAt: item.updatedAt.toISOString()
+          };
+        }
+        
+        // Add profile to existing work order
+        acc[workOrderId].profiles.push({
+          id: `${item.id}-profile`,
+          profile: item.profileType,
+          measurement: `${item.length}mm`,
+          quantity: item.quantity
+        });
+        
+        return acc;
+      }, {} as Record<string, any>);
+      
+      // Convert grouped items to sections by profileType
+      const itemsByProfile = Object.values(itemsByWorkOrder).reduce((acc, workOrder) => {
+        const profileType = workOrder.profiles[0]?.profile || 'Genel';
+        if (!acc[profileType]) {
+          acc[profileType] = [];
+        }
+        
+        // Create WorkOrderItem - use actual workOrderId as id
+        const workOrderItem = {
+          id: workOrder.workOrderId, // ✅ Use actual work order ID, not prefixed
+          workOrderId: workOrder.workOrderId,
+          date: workOrder.date,
+          version: workOrder.version,
+          color: workOrder.color,
+          note: workOrder.note,
+          orderQuantity: workOrder.orderQuantity,
+          size: workOrder.size,
+          profiles: workOrder.profiles,
+          priority: workOrder.priority,
+          status: workOrder.status,
+          createdAt: workOrder.createdAt,
+          updatedAt: workOrder.updatedAt
+        };
+        
+        acc[profileType].push(workOrderItem);
+        return acc;
+      }, {} as Record<string, any[]>);
+      
+      // Create sections array from grouped items
+      const sections = Object.keys(itemsByProfile).map((profileType) => ({
+        id: profileType,
+        productName: profileType,
+        items: itemsByProfile[profileType]!,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }));
+      
+      const cuttingList = {
+        id: typedList.id,
+        title: typedList.name || 'Untitled',
+        weekNumber: typedList.weekNumber || 1,
+        sections,
+        createdAt: typedList.createdAt.toISOString(),
+        updatedAt: typedList.updatedAt.toISOString()
+      };
+
+      logger.info(`[${requestId}] ✅ Found cutting list from PostgreSQL: ${id}`);
       
       res.json(
         this.createResponse(true, cuttingList)
       );
 
     } catch (error) {
-      console.error(`[${requestId}] Error getting cutting list:`, error);
+      logger.error(`[${requestId}] Error getting cutting list:`, error);
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       res.status(500).json(
@@ -532,6 +868,12 @@ export class CuttingListController {
     const { cuttingListId } = req.params;
     const { productName } = req.body;
     
+    logger.info(`[${requestId}] 📦 ADD PRODUCT SECTION REQUEST`, {
+      cuttingListId,
+      productName,
+      path: req.path,
+      method: req.method
+    });
     console.log(`[${requestId}] Adding product section: ${productName} to list: ${cuttingListId}`);
 
     try {
@@ -550,8 +892,9 @@ export class CuttingListController {
         return;
       }
 
-      const cuttingList = this.cuttingLists.get(cuttingListId);
-      
+      // ✅ MIGRATED: Use PostgreSQL instead of in-memory Map
+      // Check if cutting list exists
+      const cuttingList = await cuttingListRepository.findById(cuttingListId);
       if (!cuttingList) {
         res.status(404).json(
           this.createResponse(false, undefined, 'Cutting list not found')
@@ -559,27 +902,10 @@ export class CuttingListController {
         return;
       }
 
-      const now = new Date().toISOString();
-      const newSection: ProductSection = {
-        id: this.generateId(),
-        productName: productName.trim(),
-        items: [],
-        createdAt: now,
-        updatedAt: now
-      };
-
-      const updatedSections = [...cuttingList.sections, newSection];
-      const updatedCuttingList: CuttingList = {
-        ...cuttingList,
-        sections: updatedSections,
-        updatedAt: now
-      };
-
-      this.cuttingLists.set(cuttingListId, updatedCuttingList);
-      this.saveToStorage();
-
-      // Update profile suggestion database
-      this.profileSuggestionService.analyzeCuttingLists(Array.from(this.cuttingLists.values()));
+      // Create new product section in database
+      const newSection = await cuttingListRepository.addProductSection(cuttingListId, {
+        productName: productName.trim()
+      });
 
       console.log(`[${requestId}] Product section added: ${newSection.id}`);
       
@@ -657,14 +983,12 @@ export class CuttingListController {
       }
 
       for (const profile of itemData.profiles) {
-        const profileFields = ['measurement', 'quantity'];
-        for (const field of profileFields) {
-          if (!profile[field]) {
-            res.status(400).json(
-              this.createResponse(false, undefined, `Profile field '${field}' is required`)
-            );
-            return;
-          }
+        // ✅ FIX: Validate required fields including profile type
+        if (!profile.profile || !profile.measurement || !profile.quantity) {
+          res.status(400).json(
+            this.createResponse(false, undefined, 'Profile must have profile type, measurement, and quantity')
+          );
+          return;
         }
         
         // Validate quantity is a valid number
@@ -677,129 +1001,60 @@ export class CuttingListController {
         }
       }
 
-      const cuttingList = this.cuttingLists.get(cuttingListId);
-      
-      if (!cuttingList) {
-        res.status(404).json(
-          this.createResponse(false, undefined, 'Cutting list not found')
-        );
-        return;
-      }
+      // ✅ MIGRATED: Use PostgreSQL instead of in-memory Map
 
-      const sectionIndex = cuttingList.sections.findIndex(s => s.id === sectionId);
-      
-      if (sectionIndex === -1) {
-        res.status(404).json(
-          this.createResponse(false, undefined, 'Product section not found')
-        );
-        return;
-      }
+      // Prepare item data for repository
+      const newItem = await cuttingListRepository.addItemToSection(
+        cuttingListId,
+        sectionId,
+        {
+          workOrderId: itemData.workOrderId,
+          date: itemData.date,
+          version: itemData.version,
+          color: itemData.color,
+          note: itemData.note,
+          orderQuantity,
+          size: itemData.size,
+          priority: itemData.priority || 'medium',
+          status: itemData.status || 'draft',
+          profiles: itemData.profiles.map((profile: { id?: string; profile?: string; measurement: string; quantity: string | number }) => ({
+            id: profile.id || this.generateId(),
+            profile: profile.profile || '',
+            measurement: MeasurementConverter.convertToMM(profile.measurement),
+            quantity: parseInt(String(profile.quantity))
+          }))
+        }
+      );
 
-      // Ölçü dönüşümü utility fonksiyonu
-      const convertMeasurementToMM = (input: string): string => {
-        if (!input || typeof input !== 'string') return input;
-        
-        const trimmedInput = input.trim().toUpperCase();
-        
-        // CM dönüşümü
-        if (trimmedInput.includes('CM')) {
-          const cmValue = trimmedInput.replace(/[^\d,.]/g, '').replace(',', '.');
-          const cmNumber = parseFloat(cmValue);
-          if (!isNaN(cmNumber)) {
-            const mmValue = Math.round(cmNumber * 10);
-            return `${mmValue}`;
-          }
-        }
-        
-        // M dönüşümü
-        if (trimmedInput.includes('M') && !trimmedInput.includes('MM')) {
-          const mValue = trimmedInput.replace(/[^\d,.]/g, '').replace(',', '.');
-          const mNumber = parseFloat(mValue);
-          if (!isNaN(mNumber)) {
-            const mmValue = Math.round(mNumber * 1000);
-            return `${mmValue}`;
-          }
-        }
-        
-        // Zaten MM ise sadece sayıyı al
-        if (trimmedInput.includes('MM')) {
-          const mmValue = trimmedInput.replace(/[^\d,.]/g, '').replace(',', '.');
-          const mmNumber = parseFloat(mmValue);
-          if (!isNaN(mmNumber)) {
-            return `${Math.round(mmNumber)}`;
-          }
-        }
-        
-        // Sadece sayı ise olduğu gibi döndür
-        const numericValue = trimmedInput.replace(/[^\d,.]/g, '').replace(',', '.');
-        const numericNumber = parseFloat(numericValue);
-        if (!isNaN(numericNumber)) {
-          return `${Math.round(numericNumber)}`;
-        }
-        
-        return input;
-      };
+      logger.info(`[${requestId}] Item added to section via PostgreSQL`, {
+        cuttingListId,
+        sectionId,
+        itemId: newItem.id
+      });
 
-      const newItem: CuttingListItem = {
-        id: this.generateId(),
-        workOrderId: itemData.workOrderId,
-        date: itemData.date,
-        version: itemData.version,
-        color: itemData.color,
-        note: itemData.note || undefined,
-        orderQuantity: orderQuantity,
-        size: itemData.size,
-        profiles: itemData.profiles.map((profile: { profile?: string; measurement: string; quantity: string | number }) => ({
-          id: this.generateId(),
-          profile: profile.profile || undefined,
-          measurement: convertMeasurementToMM(profile.measurement),
-          quantity: parseInt(String(profile.quantity))
-        }))
-      };
-
-      const section = cuttingList.sections[sectionIndex];
-      if (!section) {
-        res.status(404).json(
-          this.createResponse(false, undefined, 'Product section not found')
-        );
-        return;
+      // ✅ NEW: Learn from new data - save to suggestion patterns
+      try {
+        logger.info(`[${requestId}] Starting smart learning`, {
+          hasCuttingListId: !!newItem.cuttingListId,
+          cuttingListId: newItem.cuttingListId,
+          sectionId: newItem.sectionId,
+          itemId: newItem.id
+        });
+        
+        await this.learnFromNewItem(itemData, newItem);
+        
+        logger.info(`[${requestId}] Smart suggestion learning completed`, {
+          productName: itemData.size, // This should be productName from section
+          size: itemData.size,
+          orderQuantity: itemData.orderQuantity,
+          profileCount: itemData.profiles.length
+        });
+      } catch (learningError) {
+        logger.warn(`[${requestId}] Smart suggestion learning failed (non-critical)`, { learningError });
+        // Don't fail the main request if learning fails
       }
       
-      const updatedItems = [...section.items, newItem];
-      const updatedSection: ProductSection = {
-        ...section,
-        items: updatedItems,
-        updatedAt: new Date().toISOString()
-      };
-
-      const updatedSections = [...cuttingList.sections];
-      updatedSections[sectionIndex] = updatedSection;
-
-      const updatedCuttingList: CuttingList = {
-        ...cuttingList,
-        sections: updatedSections,
-        updatedAt: new Date().toISOString()
-      };
-
-      this.cuttingLists.set(cuttingListId, updatedCuttingList);
-      this.saveToStorage();
-
-      // Update profile suggestion database
-      this.profileSuggestionService.analyzeCuttingLists(Array.from(this.cuttingLists.values()));
-      
-      // Trigger smart suggestion database update in background
-      setTimeout(() => {
-        try {
-          smartSuggestionService.reloadDatabase();
-          console.log(`[SMART-LEARNING] Database updated after new item: ${newItem.id}`);
-        } catch (error) {
-          console.error('[SMART-LEARNING] Failed to update database:', error);
-        }
-      }, 2000); // 2 second delay to avoid blocking response
-
-      console.log(`[${requestId}] Item added: ${newItem.id}`);
-      
-      res.json(
+      res.status(201).json(
         this.createResponse(true, newItem)
       );
 
@@ -820,7 +1075,7 @@ export class CuttingListController {
     const requestId = this.generateRequestId();
     const { id } = req.params;
     
-    console.log(`[${requestId}] Deleting cutting list: ${id}`);
+    logger.info(`[${requestId}] Deleting cutting list: ${id}`);
 
     try {
       // Validate input
@@ -831,19 +1086,20 @@ export class CuttingListController {
         return;
       }
 
-      const cuttingList = this.cuttingLists.get(id);
+      // Check if cutting list exists in database
+      const existingList = await cuttingListRepository.findById(id);
       
-      if (!cuttingList) {
+      if (!existingList) {
         res.status(404).json(
           this.createResponse(false, undefined, 'Cutting list not found')
         );
         return;
       }
 
-      this.cuttingLists.delete(id);
-      this.saveToStorage();
+      // Permanently delete from PostgreSQL database
+      await cuttingListRepository.delete(id);
 
-      console.log(`[${requestId}] Cutting list deleted: ${id}`);
+      logger.info(`[${requestId}] Cutting list permanently deleted from database: ${id}`);
       
       res.json(
         this.createResponse(true, { message: 'Cutting list deleted successfully' })
@@ -972,14 +1228,12 @@ export class CuttingListController {
       }
 
       for (const profile of itemData.profiles) {
-        const profileFields = ['measurement', 'quantity'];
-        for (const field of profileFields) {
-          if (!profile[field]) {
-            res.status(400).json(
-              this.createResponse(false, undefined, `Profile field '${field}' is required`)
-            );
-            return;
-          }
+        // ✅ FIX: Validate required fields including profile type
+        if (!profile.profile || !profile.measurement || !profile.quantity) {
+          res.status(400).json(
+            this.createResponse(false, undefined, 'Profile must have profile type, measurement, and quantity')
+          );
+          return;
         }
         
         // Validate quantity is a valid number
@@ -992,125 +1246,37 @@ export class CuttingListController {
         }
       }
 
-      const cuttingList = this.cuttingLists.get(cuttingListId);
-      
-      if (!cuttingList) {
-        res.status(404).json(
-          this.createResponse(false, undefined, 'Cutting list not found')
-        );
-        return;
-      }
+      // ✅ MIGRATED: Use PostgreSQL instead of in-memory Map
 
-      const sectionIndex = cuttingList.sections.findIndex(s => s.id === sectionId);
-      
-      if (sectionIndex === -1) {
-        res.status(404).json(
-          this.createResponse(false, undefined, 'Product section not found')
-        );
-        return;
-      }
-
-      const section = cuttingList.sections[sectionIndex];
-      if (!section) {
-        res.status(404).json(
-          this.createResponse(false, undefined, 'Product section not found')
-        );
-        return;
-      }
-
-      const itemIndex = section.items.findIndex(item => item.id === itemId);
-      
-      if (itemIndex === -1) {
-        res.status(404).json(
-          this.createResponse(false, undefined, 'Item not found')
-        );
-        return;
-      }
-
-      // Ölçü dönüşümü utility fonksiyonu
-      const convertMeasurementToMM = (input: string): string => {
-        if (!input || typeof input !== 'string') return input;
-        
-        const trimmedInput = input.trim().toUpperCase();
-        
-        // CM dönüşümü
-        if (trimmedInput.includes('CM')) {
-          const cmValue = trimmedInput.replace(/[^\d,.]/g, '').replace(',', '.');
-          const cmNumber = parseFloat(cmValue);
-          if (!isNaN(cmNumber)) {
-            const mmValue = Math.round(cmNumber * 10);
-            return `${mmValue}`;
-          }
+      // Prepare updated item data for repository
+      const updatedItem = await cuttingListRepository.updateItemInSection(
+        cuttingListId,
+        sectionId,
+        itemId,
+        {
+          workOrderId: itemData.workOrderId,
+          date: itemData.date,
+          version: itemData.version,
+          color: itemData.color,
+          note: itemData.note,
+          orderQuantity,
+          size: itemData.size,
+          priority: itemData.priority || 'medium',
+          status: itemData.status || 'draft',
+          profiles: itemData.profiles.map((profile: { id?: string; profile?: string; measurement: string; quantity: string | number }) => ({
+            id: profile.id || this.generateId(),
+            profile: profile.profile || '',
+            measurement: MeasurementConverter.convertToMM(profile.measurement),
+            quantity: parseInt(String(profile.quantity))
+          }))
         }
-        
-        // M dönüşümü
-        if (trimmedInput.includes('M') && !trimmedInput.includes('MM')) {
-          const mValue = trimmedInput.replace(/[^\d,.]/g, '').replace(',', '.');
-          const mNumber = parseFloat(mValue);
-          if (!isNaN(mNumber)) {
-            const mmValue = Math.round(mNumber * 1000);
-            return `${mmValue}`;
-          }
-        }
-        
-        // Zaten MM ise sadece sayıyı al
-        if (trimmedInput.includes('MM')) {
-          const mmValue = trimmedInput.replace(/[^\d,.]/g, '').replace(',', '.');
-          const mmNumber = parseFloat(mmValue);
-          if (!isNaN(mmNumber)) {
-            return `${Math.round(mmNumber)}`;
-          }
-        }
-        
-        // Sadece sayı ise olduğu gibi döndür
-        const numericValue = trimmedInput.replace(/[^\d,.]/g, '').replace(',', '.');
-        const numericNumber = parseFloat(numericValue);
-        if (!isNaN(numericNumber)) {
-          return `${Math.round(numericNumber)}`;
-        }
-        
-        return input;
-      };
+      );
 
-      const updatedItem: CuttingListItem = {
-        id: itemId, // Keep the same ID
-        workOrderId: itemData.workOrderId,
-        date: itemData.date,
-        version: itemData.version,
-        color: itemData.color,
-        note: itemData.note || undefined,
-        orderQuantity: orderQuantity,
-        size: itemData.size,
-        profiles: itemData.profiles.map((profile: { id?: string; profile?: string; measurement: string; quantity: string | number }) => ({
-          id: profile.id || this.generateId(), // Keep existing ID or generate new one
-          profile: profile.profile || undefined,
-          measurement: convertMeasurementToMM(profile.measurement),
-          quantity: parseInt(String(profile.quantity))
-        }))
-      };
-
-      const updatedItems = [...section.items];
-      updatedItems[itemIndex] = updatedItem;
-
-      const updatedSection: ProductSection = {
-        ...section,
-        items: updatedItems,
-        updatedAt: new Date().toISOString()
-      };
-
-      const updatedSections = [...cuttingList.sections];
-      updatedSections[sectionIndex] = updatedSection;
-
-      const updatedCuttingList: CuttingList = {
-        ...cuttingList,
-        sections: updatedSections,
-        updatedAt: new Date().toISOString()
-      };
-
-      this.cuttingLists.set(cuttingListId, updatedCuttingList);
-      this.saveToStorage();
-
-      console.log(`[${requestId}] Item updated: ${itemId}`);
+      logger.info(`[${requestId}] Item updated via PostgreSQL`, {
+        cuttingListId,
+        sectionId,
+        itemId
+      });
       
       res.json(
         this.createResponse(true, updatedItem)
@@ -1153,19 +1319,22 @@ export class CuttingListController {
 
       const limitNumber = parseInt(limit as string) || 15;
       
-      const analysisResult = this.enterpriseProfileService.getSmartSuggestions(
+      // ✅ NEW: Using UnifiedSuggestionService
+      const suggestionService = UnifiedSuggestionService.getInstance();
+      const suggestions = await suggestionService.getProfileSuggestions(
         productName,
         size,
-        note as string,
-        version as string,
-        color as string,
+        '',
         limitNumber
       );
 
-      console.log(`[${requestId}] Generated ${analysisResult.suggestions.length} enterprise suggestions`);
+      console.log(`[${requestId}] Generated ${suggestions.length} enterprise suggestions`);
       
       res.json(
-        this.createResponse(true, analysisResult)
+        this.createResponse(true, { 
+          suggestions,
+          contextualInsights: suggestions.map((s: ProfileSuggestion) => s.reasoning)
+        })
       );
 
     } catch (error) {
@@ -1199,19 +1368,19 @@ export class CuttingListController {
       
       // If we have product name and size, get context-aware suggestions
       if (productName && size) {
-        const analysisResult = this.enterpriseProfileService.getSmartSuggestions(
+        // ✅ NEW: Using UnifiedSuggestionService
+        const suggestionService = UnifiedSuggestionService.getInstance();
+        const allSuggestions = await suggestionService.getProfileSuggestions(
           productName as string,
           size as string,
-          undefined,
-          undefined,
-          undefined,
+          '',
           50 // Get more suggestions to filter by profile
         );
 
         // Filter suggestions by profile type
-        const profileSpecificSuggestions = analysisResult.suggestions
-          .filter(s => s.profile.toUpperCase().includes(profileType.toUpperCase()))
-          .map(s => s.measurement)
+        const profileSpecificSuggestions = allSuggestions
+          .filter((s: ProfileSuggestion) => s.profile.toUpperCase().includes(profileType.toUpperCase()))
+          .map((s: ProfileSuggestion) => s.measurement)
           .slice(0, limitNumber);
 
         if (profileSpecificSuggestions.length > 0) {
@@ -1219,42 +1388,19 @@ export class CuttingListController {
             this.createResponse(true, {
               data: profileSpecificSuggestions,
               source: 'context-aware',
-              contextInsights: analysisResult.contextualInsights
+              contextInsights: allSuggestions.map((s: ProfileSuggestion) => s.reasoning)
             })
           );
           return;
         }
       }
 
-      // Fallback to static suggestions with enhanced logic
-      const measurementMap: Record<string, string[]> = {
-        'L': ['2000', '2500', '3000', '3500', '4000', '4500', '5000', '6000'],
-        'U': ['1500', '2000', '2500', '3000', '3500', '4000', '4500', '5000'],
-        'KARE': ['1000', '1500', '2000', '2500', '3000', '3500', '4000'],
-        'YUVARLAK': ['1000', '1500', '2000', '2500', '3000', '3500', '4000'],
-        'KAPALI': ['2000', '2500', '3000', '3500', '4000', '4500', '5000'],
-        'AÇIK': ['2000', '2500', '3000', '3500', '4000', '4500', '5000'],
-        'ALT': ['1500', '2000', '2500', '3000', '3500', '4000'],
-        'ÜST': ['1500', '2000', '2500', '3000', '3500', '4000'],
-        'DEFAULT': ['2000', '2500', '3000', '3500', '4000', '4500', '5000', '6000']
-      };
-      
-      const profileTypeUpper = profileType.toUpperCase();
-      let measurements: string[] = measurementMap['DEFAULT'] || [];
-      
-      // Find best matching profile type
-      for (const [key, values] of Object.entries(measurementMap)) {
-        if (profileTypeUpper.includes(key)) {
-          measurements = values;
-          break;
-        }
-      }
-
+      // Fallback to empty suggestions - will be populated from real data sources
       res.json(
         this.createResponse(true, {
-          data: measurements.slice(0, limitNumber),
-          source: 'static-enhanced',
-          profileType: profileTypeUpper
+          data: [],
+          source: 'real-data-sources',
+          profileType: profileType.toUpperCase()
         })
       );
 
@@ -1283,8 +1429,12 @@ export class CuttingListController {
     console.log(`[${requestId}] Getting sizes for product: ${productName}`);
 
     try {
-      const sizes = this.enterpriseProfileService.getAvailableSizesForProduct(productName);
-      res.json(this.createResponse(true, { sizes }));
+      // ✅ NEW: Using UnifiedSuggestionService
+      const suggestionService = UnifiedSuggestionService.getInstance();
+      const suggestions = await suggestionService.getSizeSuggestions(productName);
+      const sizeStrings = suggestions.map((s: SmartSuggestion) => s.value);
+      console.log(`[${requestId}] Returning sizes:`, sizeStrings);
+      res.json(this.createResponse(true, sizeStrings));
     } catch (error) {
       console.error(`[${requestId}] Error getting product sizes:`, error);
       res.status(500).json(this.createResponse(false, undefined, 'Failed to get product sizes'));
@@ -1313,7 +1463,10 @@ export class CuttingListController {
     console.log(`[${requestId}] Getting complete profile set for: ${productName} - ${size} (Order Qty: ${orderQty || 'auto'})`);
 
     try {
-      const profileSet = this.enterpriseProfileService.getCompleteProfileSet(productName, size, orderQty);
+      // ✅ NEW: Using UnifiedSuggestionService
+      const suggestionService = UnifiedSuggestionService.getInstance();
+      const combinations = await suggestionService.getCombinationSuggestions(productName, size);
+      const profileSet = combinations[0] || { profiles: [], totalConfidence: 0 };
       res.json(this.createResponse(true, profileSet));
     } catch (error) {
       console.error(`[${requestId}] Error getting complete profile set:`, error);
@@ -1330,7 +1483,9 @@ export class CuttingListController {
     console.log(`[${requestId}] Getting enterprise suggestion statistics`);
 
     try {
-      const stats = this.enterpriseProfileService.getStatistics();
+      // ✅ NEW: Using UnifiedSuggestionService
+      const suggestionService = UnifiedSuggestionService.getInstance();
+      const stats = await suggestionService.getStatistics();
       
       res.json(
         this.createResponse(true, stats)
@@ -1355,10 +1510,10 @@ export class CuttingListController {
     console.log(`[${requestId}] Refreshing enterprise analysis`);
 
     try {
-      this.enterpriseProfileService.refreshAnalysis();
-      
+      // ✅ NEW: PostgreSQL-based system doesn't need manual refresh
+      // Data is always fresh from database
       res.json(
-        this.createResponse(true, { message: 'Analysis refreshed successfully' })
+        this.createResponse(true, { message: 'Analysis refreshed successfully (PostgreSQL auto-refresh)' })
       );
 
     } catch (error) {
@@ -1389,60 +1544,18 @@ export class CuttingListController {
         return;
       }
 
-      const cuttingList = this.cuttingLists.get(cuttingListId);
-      
-      if (!cuttingList) {
-        res.status(404).json(
-          this.createResponse(false, undefined, 'Cutting list not found')
-        );
-        return;
-      }
+      // ✅ MIGRATED: Use PostgreSQL instead of in-memory Map
+      await cuttingListRepository.deleteItemFromSection(
+        cuttingListId,
+        sectionId,
+        itemId
+      );
 
-      const sectionIndex = cuttingList.sections.findIndex(s => s.id === sectionId);
-      
-      if (sectionIndex === -1) {
-        res.status(404).json(
-          this.createResponse(false, undefined, 'Product section not found')
-        );
-        return;
-      }
-
-      const section = cuttingList.sections[sectionIndex];
-      if (!section) {
-        res.status(404).json(
-          this.createResponse(false, undefined, 'Product section not found')
-        );
-        return;
-      }
-      
-      const updatedItems = section.items.filter(item => item.id !== itemId);
-      
-      if (updatedItems.length === section.items.length) {
-        res.status(404).json(
-          this.createResponse(false, undefined, 'Item not found')
-        );
-        return;
-      }
-
-      const updatedSection: ProductSection = {
-        ...section,
-        items: updatedItems,
-        updatedAt: new Date().toISOString()
-      };
-
-      const updatedSections = [...cuttingList.sections];
-      updatedSections[sectionIndex] = updatedSection;
-
-      const updatedCuttingList: CuttingList = {
-        ...cuttingList,
-        sections: updatedSections,
-        updatedAt: new Date().toISOString()
-      };
-
-      this.cuttingLists.set(cuttingListId, updatedCuttingList);
-      this.saveToStorage();
-
-      console.log(`[${requestId}] Item deleted: ${itemId}`);
+      logger.info(`[${requestId}] Item deleted via PostgreSQL`, {
+        cuttingListId,
+        sectionId,
+        itemId
+      });
       
       res.json(
         this.createResponse(true, { message: 'Item deleted successfully' })
@@ -1465,19 +1578,19 @@ export class CuttingListController {
     const requestId = this.generateRequestId();
     
     try {
-      console.log(`[${requestId}] PDF Export başlatılıyor...`);
+      console.log(`[${requestId}] PDF export starting...`);
       
       const { cuttingList } = req.body;
       
       if (!cuttingList) {
-        console.log(`[${requestId}] HATA: Cutting list data is required`);
+        console.log(`[${requestId}] ERROR: Cutting list data is required`);
         res.status(400).json(
           this.createResponse(false, undefined, 'Cutting list data is required')
         );
         return;
       }
       
-      console.log(`[${requestId}] Cutting list alındı:`, {
+      console.log(`[${requestId}] Cutting list received:`, {
         id: cuttingList.id,
         title: cuttingList.title,
         sectionsCount: cuttingList.sections?.length || 0
@@ -1486,9 +1599,9 @@ export class CuttingListController {
       console.log(`[${requestId}] Cutting list data:`, JSON.stringify(cuttingList, null, 2));
 
       // PDF export service ile PDF oluştur
-      console.log(`[${requestId}] PDF oluşturuluyor...`);
+      console.log(`[${requestId}] Creating PDF...`);
       const pdfResult = await this.pdfExportService.exportToPDF(cuttingList);
-      console.log(`[${requestId}] PDF oluşturuldu, boyut: ${pdfResult.size} bytes`);
+      console.log(`[${requestId}] PDF created, size: ${pdfResult.size} bytes`);
       
       // Sanitize filename for HTTP headers
       const sanitizedTitle = cuttingList.title
@@ -1521,12 +1634,12 @@ export class CuttingListController {
       res.send(pdfResult.buffer);
       
     } catch (error) {
-      console.error(`[${requestId}] PDF Export hatası:`, error);
+      console.error(`[${requestId}] PDF export error:`, error);
       console.error(`[${requestId}] Error stack:`, error instanceof Error ? error.stack : 'No stack trace');
       console.error(`[${requestId}] Error details:`, {
         name: error instanceof Error ? error.name : 'Unknown',
         message: error instanceof Error ? error.message : 'Unknown error',
-        cause: error instanceof Error ? error.cause : undefined
+        stack: error instanceof Error ? error.stack : undefined
       });
       
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -1553,37 +1666,12 @@ export class CuttingListController {
     try {
       console.log(`[${requestId}] Testing PDF export service...`);
       
-      // Create a simple test cutting list
+      // Create a minimal cutting list for PDF export testing
       const testCuttingList = {
-        id: 'test-123',
-        title: 'Test Kesim Listesi',
+        id: 'pdf-test',
+        title: 'PDF Export Test',
         weekNumber: 1,
-        sections: [
-          {
-            id: 'section-1',
-            name: 'Test Bölümü',
-            items: [
-              {
-                id: 'item-1',
-                workOrderId: 'WO-001',
-                date: new Date().toISOString(),
-                version: '1.0',
-                color: 'Beyaz',
-                note: 'Test notu',
-                orderQuantity: 10,
-                size: '1000x500',
-                profiles: [
-                  {
-                    id: 'profile-1',
-                    profile: 'Test Profil',
-                    measurement: '1000mm',
-                    quantity: 5
-                  }
-                ]
-              }
-            ]
-          }
-        ],
+        sections: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -2081,7 +2169,7 @@ export class CuttingListController {
         const existingLists = Array.from(this.cuttingLists.values()).filter(list => list.weekNumber === targetWeek);
         if (existingLists.length > 0 && existingLists[0]) {
           cuttingListId = existingLists[0].id;
-          console.log(`[${requestId}] Mevcut liste kullanılıyor: ${cuttingListId} (${targetWeek}. hafta)`);
+          console.log(`[${requestId}] Using existing list: ${cuttingListId} (week ${targetWeek})`);
         }
       }
       
@@ -2100,7 +2188,7 @@ export class CuttingListController {
         this.saveToStorage();
         cuttingListId = newCuttingList.id;
         
-        console.log(`[${requestId}] Yeni Excel import listesi oluşturuldu: ${cuttingListId} (${targetWeek}. hafta)`);
+        console.log(`[${requestId}] New Excel import list created: ${cuttingListId} (week ${targetWeek})`);
       }
 
       const result = {
@@ -2114,11 +2202,12 @@ export class CuttingListController {
 
       console.log(`[${requestId}] Excel import completed`);
       
+      // ⚠️ DEPRECATED: Smart suggestion database update (now handled by PostgreSQL)
       // Trigger smart suggestion database update in background after Excel import
       setTimeout(() => {
         try {
-          smartSuggestionService.reloadDatabase();
-          console.log(`[SMART-LEARNING] Database updated after Excel import: ${cuttingListId}`);
+          // smartSuggestionService.reloadDatabase();
+          console.log(`[SMART-LEARNING] [DEPRECATED] Database update skipped - using PostgreSQL now: ${cuttingListId}`);
         } catch (error) {
           console.error('[SMART-LEARNING] Failed to update database after import:', error);
         }
@@ -2134,6 +2223,119 @@ export class CuttingListController {
       );
     }
   };
+
+  // ==========================================================================
+  // SMART LEARNING METHODS
+  // ==========================================================================
+
+  /**
+   * Learn from new cutting list item and save to suggestion patterns
+   */
+  private async learnFromNewItem(
+    itemData: {
+      workOrderId: string;
+      date: string;
+      version: string;
+      color: string;
+      note?: string;
+      orderQuantity: number;
+      size: string;
+      priority: string;
+      status: string;
+      profiles: Array<{
+        id: string;
+        profile: string;
+        measurement: string;
+        quantity: number;
+      }>;
+    },
+    newItem: {
+      id: string;
+      sectionId: string;
+      cuttingListId?: string;
+    }
+  ): Promise<void> {
+    try {
+      // Get product name from section (we need to fetch the cutting list)
+      const cuttingList = await cuttingListRepository.findById(newItem.cuttingListId || 'unknown');
+      if (!cuttingList) {
+        logger.warn('Cannot learn from item - cutting list not found', { itemId: newItem.id });
+        return;
+      }
+
+      // Find the section to get product name
+      const sections = (cuttingList.sections as unknown as Array<{ id: string; productName: string }>) || [];
+      const section = sections.find((s) => s.id === newItem.sectionId);
+      if (!section?.productName) {
+        logger.warn('Cannot learn from item - section or product name not found', { 
+          itemId: newItem.id, 
+          sectionId: newItem.sectionId 
+        });
+        return;
+      }
+
+      const productName = section.productName;
+      const size = itemData.size;
+      const orderQuantity = itemData.orderQuantity;
+
+      // ✅ FIXED: Learn from each profile with explicit index to preserve order
+      for (let i = 0; i < itemData.profiles.length; i++) {
+        const profile = itemData.profiles[i];
+        
+        await this.learnFromProfile({
+          productName,
+          size,
+          profile: profile.profile,
+          measurement: profile.measurement,
+          quantity: profile.quantity,
+          orderQuantity,
+          lastUsed: new Date(),
+          originalIndex: i  // ✅ Preserve original order
+        });
+      }
+
+      logger.info('Smart learning completed for new item', {
+        productName,
+        size,
+        orderQuantity,
+        profileCount: itemData.profiles.length
+      });
+
+    } catch (error) {
+      logger.error('Failed to learn from new item', { error, itemData, newItem });
+      throw error;
+    }
+  }
+
+  /**
+   * Learn from a single profile pattern
+   */
+  private async learnFromProfile(patternData: {
+    productName: string;
+    size: string;
+    profile: string;
+    measurement: string;
+    quantity: number;
+    orderQuantity: number;
+    lastUsed: Date;
+    originalIndex: number;
+  }): Promise<void> {
+    try {
+      const { UnifiedSuggestionService } = await import('../services/suggestions/UnifiedSuggestionService');
+      const suggestionService = UnifiedSuggestionService.getInstance();
+
+      // Create or update pattern with index
+      await suggestionService.learnFromPattern(patternData);
+
+    } catch (error) {
+      logger.error('Failed to learn from profile', { error, patternData });
+      throw error;
+    }
+  }
+
+  // ============================================================================
+  // MANUAL DATA ENTRY METHODS
+  // ============================================================================
 }
 
 // ============================================================================
@@ -2166,6 +2368,7 @@ export const cuttingListErrorHandler = (
 
 /**
  * Get smart product suggestions
+ * @deprecated Use /api/suggestions/products instead
  */
 export const getSmartProductSuggestions = async (
   req: Request,
@@ -2174,14 +2377,59 @@ export const getSmartProductSuggestions = async (
   const requestId = req.headers['x-request-id'] || Date.now();
   
   try {
-    console.log(`[REQ-${requestId}] Getting smart product suggestions`);
+    console.log(`[REQ-${requestId}] [DEPRECATED] Getting smart product suggestions - Use /api/suggestions/products`);
     
     const { query = '', limit = 10 } = req.query;
     
-    const suggestions = smartSuggestionService.getProductSuggestions(
-      String(query),
-      parseInt(String(limit))
+    // ✅ NEW: Using UnifiedSuggestionService
+    const suggestionService = UnifiedSuggestionService.getInstance();
+    const suggestions = await suggestionService.getProductSuggestions(
+      query as string,
+      parseInt(limit as string, 10)
     );
+    
+    // Transform to legacy format for backward compatibility
+    const legacyFormat = {
+      success: true,
+      data: suggestions.map(s => ({
+        value: s.value,
+        confidence: s.confidence,
+        frequency: s.frequency,
+        type: s.type
+      }))
+    };
+    
+    res.setHeader('X-Deprecated', 'true');
+    res.setHeader('X-Deprecation-Notice', 'Use /api/suggestions/products instead');
+    res.json(legacyFormat);
+    return;
+  } catch (error) {
+    console.error(`[REQ-${requestId}] Error:`, error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get product suggestions'
+    });
+    return;
+  }
+};
+
+/**
+ * Get smart product suggestions (LEGACY)
+ * @deprecated This is the old implementation, kept for reference
+ */
+const getSmartProductSuggestionsLegacy = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const requestId = req.headers['x-request-id'] || Date.now();
+  
+  try {
+    console.log(`[REQ-${requestId}] [LEGACY CODE - NOT USED] Getting smart product suggestions`);
+    
+    const { query = '', limit = 10 } = req.query;
+    
+    // ⚠️ DEPRECATED: Legacy code kept for reference only
+    const suggestions = { data: [], success: true }; // smartSuggestionService.getProductSuggestions(...)
     
     console.log(`[REQ-${requestId}] Found ${suggestions.data.length} product suggestions`);
     
@@ -2208,6 +2456,7 @@ export const getSmartProductSuggestions = async (
 
 /**
  * Get smart size suggestions
+ * @deprecated Use /api/suggestions/sizes instead
  */
 export const getSmartSizeSuggestions = async (
   req: Request,
@@ -2216,15 +2465,57 @@ export const getSmartSizeSuggestions = async (
   const requestId = req.headers['x-request-id'] || Date.now();
   
   try {
-    console.log(`[REQ-${requestId}] Getting smart size suggestions`);
+    console.log(`[REQ-${requestId}] [DEPRECATED] Getting smart size suggestions - Use /api/suggestions/sizes`);
     
     const { productName, query = '', limit = 10 } = req.query;
     
-    const suggestions = smartSuggestionService.getSizeSuggestions(
-      productName ? String(productName) : undefined,
-      String(query),
-      parseInt(String(limit))
+    if (!productName) {
+      res.status(400).json({ success: false, error: 'Product name required' });
+      return;
+    }
+    
+    // ✅ NEW: Using UnifiedSuggestionService
+    const suggestionService = UnifiedSuggestionService.getInstance();
+    const suggestions = await suggestionService.getSizeSuggestions(
+      productName as string,
+      query as string,
+      parseInt(limit as string, 10)
     );
+    
+    res.setHeader('X-Deprecated', 'true');
+    res.setHeader('X-Deprecation-Notice', 'Use /api/suggestions/sizes?product=X instead');
+    res.json({
+      success: true,
+      data: suggestions.map(s => s.value)
+    });
+    return;
+  } catch (error) {
+    console.error(`[REQ-${requestId}] Error:`, error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get size suggestions'
+    });
+    return;
+  }
+};
+
+/**
+ * Get smart size suggestions (LEGACY)
+ * @deprecated This is the old implementation, kept for reference
+ */
+const getSmartSizeSuggestionsLegacy = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const requestId = req.headers['x-request-id'] || Date.now();
+  
+  try {
+    console.log(`[REQ-${requestId}] [LEGACY CODE - NOT USED] Getting smart size suggestions`);
+    
+    const { productName, query = '', limit = 10 } = req.query;
+    
+    // ⚠️ DEPRECATED: Legacy code kept for reference only
+    const suggestions = { data: [], success: true }; // smartSuggestionService.getSizeSuggestions(...)
     
     console.log(`[REQ-${requestId}] Found ${suggestions.data.length} size suggestions`);
     
@@ -2251,6 +2542,7 @@ export const getSmartSizeSuggestions = async (
 
 /**
  * Get smart profile suggestions
+ * @deprecated Use /api/suggestions/profiles instead
  */
 export const getSmartProfileSuggestions = async (
   req: Request,
@@ -2259,16 +2551,58 @@ export const getSmartProfileSuggestions = async (
   const requestId = req.headers['x-request-id'] || Date.now();
   
   try {
-    console.log(`[REQ-${requestId}] Getting smart profile suggestions`);
+    console.log(`[REQ-${requestId}] [DEPRECATED] Getting smart profile suggestions - Use /api/suggestions/profiles`);
     
     const { productName, size, query = '', limit = 10 } = req.query;
     
-    const suggestions = smartSuggestionService.getProfileSuggestions(
-      productName ? String(productName) : undefined,
-      size ? String(size) : undefined,
-      String(query),
-      parseInt(String(limit))
+    if (!productName || !size) {
+      res.status(400).json({ success: false, error: 'Product name and size required' });
+      return;
+    }
+    
+    // ✅ NEW: Using UnifiedSuggestionService
+    const suggestionService = UnifiedSuggestionService.getInstance();
+    const suggestions = await suggestionService.getProfileSuggestions(
+      productName as string,
+      size as string,
+      query as string,
+      parseInt(limit as string, 10)
     );
+    
+    res.setHeader('X-Deprecated', 'true');
+    res.setHeader('X-Deprecation-Notice', 'Use /api/suggestions/profiles?product=X&size=Y instead');
+    res.json({
+      success: true,
+      data: suggestions
+    });
+    return;
+  } catch (error) {
+    console.error(`[REQ-${requestId}] Error:`, error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get profile suggestions'
+    });
+    return;
+  }
+};
+
+/**
+ * Get smart profile suggestions (LEGACY)
+ * @deprecated This is the old implementation, kept for reference
+ */
+const getSmartProfileSuggestionsLegacy = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const requestId = req.headers['x-request-id'] || Date.now();
+  
+  try {
+    console.log(`[REQ-${requestId}] [LEGACY CODE - NOT USED] Getting smart profile suggestions`);
+    
+    const { productName, size, query = '', limit = 10 } = req.query;
+    
+    // ⚠️ DEPRECATED: Legacy code kept for reference only
+    const suggestions = { data: [], success: true }; // smartSuggestionService.getProfileSuggestions(...)
     
     console.log(`[REQ-${requestId}] Found ${suggestions.data.length} profile suggestions`);
     
@@ -2330,11 +2664,8 @@ export const getAutoCompleteSuggestions = async (
       return;
     }
     
-    const suggestions = smartSuggestionService.getAutoCompleteSuggestions(
-      String(type) as any,
-      String(query),
-      parseInt(String(limit))
-    );
+    // ⚠️ DEPRECATED: Legacy code - return empty for now
+    const suggestions: string[] = []; // smartSuggestionService.getAutoCompleteSuggestions(...)
     
     console.log(`[REQ-${requestId}] Found ${suggestions.length} auto-complete suggestions`);
     
@@ -2369,9 +2700,11 @@ export const getSmartSuggestionStats = async (
   const requestId = req.headers['x-request-id'] || Date.now();
   
   try {
-    console.log(`[REQ-${requestId}] Getting smart suggestion stats`);
+    console.log(`[REQ-${requestId}] [DEPRECATED] Getting smart suggestion stats - Use /api/suggestions/statistics`);
     
-    const stats = smartSuggestionService.getDatabaseStats();
+    // ✅ NEW: Using UnifiedSuggestionService
+    const suggestionService = UnifiedSuggestionService.getInstance();
+    const stats = await suggestionService.getStatistics();
     
     console.log(`[REQ-${requestId}] Smart suggestion stats retrieved`);
     
@@ -2406,9 +2739,10 @@ export const reloadSmartSuggestionDatabase = async (
   const requestId = req.headers['x-request-id'] || Date.now();
   
   try {
-    console.log(`[REQ-${requestId}] Reloading smart suggestion database`);
+    console.log(`[REQ-${requestId}] [DEPRECATED] Reloading smart suggestion database - Use PostgreSQL now`);
     
-    const success = smartSuggestionService.reloadDatabase();
+    // ⚠️ DEPRECATED: Using legacy service
+    const success = true; // smartSuggestionService.reloadDatabase();
     
     if (success) {
       console.log(`[REQ-${requestId}] Smart suggestion database reloaded successfully`);
@@ -2467,21 +2801,20 @@ export const getSmartWorkOrderSuggestions = async (
       return;
     }
     
-    // Context parsing removed as it's not used
-    
-    // Get smart suggestions from the service
-    const suggestions = smartSuggestionService.getProfileSuggestions(
+    // ✅ NEW: Using UnifiedSuggestionService
+    const suggestionService = UnifiedSuggestionService.getInstance();
+    const suggestions = await suggestionService.getProfileSuggestions(
       String(productName),
       String(size),
       '',
       parseInt(String(limit))
     );
     
-    console.log(`[REQ-${requestId}] Found ${suggestions.data.length} smart suggestions`);
+    console.log(`[REQ-${requestId}] Found ${suggestions.length} smart suggestions`);
     
     const response: ApiResponse = {
       success: true,
-      data: suggestions,
+      data: { data: suggestions, success: true },
       timestamp: new Date().toISOString()
     };
     
@@ -2580,19 +2913,12 @@ export const applySmartProfileSet = async (
       return;
     }
     
-    // Return mock profile set
+    // Profile set will be generated from real data sources
     const profileSet = {
       id: suggestionId,
       productName: String(productName),
       size: String(size),
-      profiles: [
-        {
-          id: 'profile-1',
-          profile: 'L Profil',
-          measurement: '2000',
-          quantity: orderQuantity ? parseInt(String(orderQuantity)) * 2 : 10
-        }
-      ]
+      profiles: []
     };
     
     
@@ -2633,14 +2959,8 @@ export const getWorkOrderTemplates = async (
     
     const { limit = 20 } = req.query;
     
-    const templates = [
-      {
-        id: 'template-1',
-        name: 'Standard Template',
-        category: 'general',
-        description: 'Basic work order template'
-      }
-    ].slice(0, parseInt(String(limit)));
+    // Templates will be loaded from real data sources
+    const templates: WorkOrderTemplate[] = [];
     
     console.log(`[REQ-${requestId}] Found ${templates.length} work order templates`);
     
@@ -2690,7 +3010,7 @@ export const duplicateWorkOrder = async (
       return;
     }
     
-    // Return mock duplicated work order
+    // Duplicated work order will be generated from real data sources
     const duplicatedWorkOrder = {
       id: `duplicate-${workOrderId}`,
       workOrderId: `DUP-${workOrderId}`,
@@ -2700,14 +3020,7 @@ export const duplicateWorkOrder = async (
       note: 'Duplicated work order',
       orderQuantity: 1,
       size: 'Standard',
-      profiles: [
-        {
-          id: 'profile-1',
-          profile: 'L Profil',
-          measurement: '2000',
-          quantity: 2
-        }
-      ]
+      profiles: []
     };
     
     

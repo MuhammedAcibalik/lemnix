@@ -1,0 +1,428 @@
+/**
+ * Stock Length Configuration Dialog
+ * Allows users to configure stock lengths for optimization
+ * 
+ * @module enterprise-optimization-wizard/components
+ * @version 1.0.0
+ */
+
+import React, { useState, useMemo } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogActions,
+  Box,
+  Typography,
+  Button,
+  TextField,
+  Chip,
+  Stack,
+  IconButton,
+  InputAdornment,
+  Alert,
+  Grid,
+} from '@mui/material';
+import {
+  Close as CloseIcon,
+  Add as AddIcon,
+  Straighten as StraightenIcon,
+  CheckCircle as CheckCircleIcon,
+} from '@mui/icons-material';
+import { useDesignSystem } from '@/shared/hooks';
+
+// Preset stock lengths (most commonly used)
+const PRESET_STOCK_LENGTHS = [6100, 4100, 3500] as const;
+
+interface StockLengthConfigDialogProps {
+  readonly open: boolean;
+  readonly onClose: () => void;
+  readonly initialStockLengths: readonly number[];
+  readonly onConfirm: (stockLengths: readonly number[]) => void;
+}
+
+export const StockLengthConfigDialog: React.FC<StockLengthConfigDialogProps> = ({
+  open,
+  onClose,
+  initialStockLengths,
+  onConfirm,
+}) => {
+  const ds = useDesignSystem();
+  
+  // State
+  const [stockLengths, setStockLengths] = useState<number[]>([...initialStockLengths]);
+  const [manualInput, setManualInput] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  // Reset state when dialog opens
+  React.useEffect(() => {
+    if (open) {
+      setStockLengths([...initialStockLengths]);
+      setManualInput('');
+      setError(null);
+    }
+  }, [open, initialStockLengths]);
+
+  // Validation
+  const validateLength = (length: number): string | null => {
+    if (length <= 0) return 'Stok boyu pozitif bir sayı olmalıdır';
+    if (length > 10000) return 'Stok boyu 10000mm\'den küçük olmalıdır';
+    if (stockLengths.includes(length)) return 'Bu stok boyu zaten ekli';
+    return null;
+  };
+
+  // Handlers
+  const handleAddPreset = (length: number) => {
+    setError(null);
+    
+    const validationError = validateLength(length);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    
+    setStockLengths(prev => [...prev, length].sort((a, b) => a - b));
+  };
+
+  const handleAddManual = () => {
+    setError(null);
+    
+    const length = parseInt(manualInput);
+    
+    if (isNaN(length)) {
+      setError('Geçerli bir sayı girin');
+      return;
+    }
+    
+    const validationError = validateLength(length);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    
+    setStockLengths(prev => [...prev, length].sort((a, b) => a - b));
+    setManualInput('');
+  };
+
+  const handleRemove = (length: number) => {
+    if (stockLengths.length <= 1) {
+      setError('En az 1 stok boyu tanımlı olmalıdır');
+      return;
+    }
+    
+    setError(null);
+    setStockLengths(prev => prev.filter(l => l !== length));
+  };
+
+  const handleConfirm = () => {
+    if (stockLengths.length === 0) {
+      setError('En az 1 stok boyu tanımlı olmalıdır');
+      return;
+    }
+    
+    onConfirm(stockLengths);
+    onClose();
+  };
+
+  // Check if preset is already added
+  const isPresetAdded = useMemo(() => {
+    return PRESET_STOCK_LENGTHS.map(length => stockLengths.includes(length));
+  }, [stockLengths]);
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: `${ds.borderRadius.xl}px`,
+          overflow: 'hidden',
+        }
+      }}
+    >
+      {/* Glassmorphism Header */}
+      <Box sx={{
+        background: ds.glass.background,
+        backdropFilter: ds.glass.backdropFilter,
+        borderBottom: ds.glass.border,
+        p: ds.spacing['4'],
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: ds.spacing['2'] }}>
+          <StraightenIcon sx={{ 
+            color: ds.colors.primary.main, 
+            fontSize: 24 
+          }} />
+          <Typography sx={{
+            fontSize: '1.5rem',
+            fontWeight: 700,
+            background: ds.gradients.primary,
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            letterSpacing: ds.typography.letterSpacing.tight,
+            lineHeight: 1,
+          }}>
+            Stok Boy Uzunlukları
+          </Typography>
+        </Box>
+        
+        <IconButton 
+          onClick={onClose} 
+          size="small"
+          sx={{
+            color: ds.colors.text.secondary,
+            transition: ds.transitions.fast,
+            '&:hover': {
+              color: ds.colors.text.primary,
+              backgroundColor: `rgba(0, 0, 0, 0.04)`,
+            }
+          }}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </Box>
+
+      {/* Content */}
+      <DialogContent sx={{ p: ds.spacing['4'] }}>
+        <Stack spacing={ds.spacing['4']}>
+          {/* Description */}
+          <Typography sx={{ 
+            fontSize: '0.875rem', 
+            color: ds.colors.text.secondary,
+          }}>
+            Optimizasyonda kullanılacak alüminyum profil stok boy uzunluklarını seçin veya manuel olarak ekleyin.
+          </Typography>
+
+          {/* Error Alert */}
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ borderRadius: `${ds.borderRadius.md}px` }}
+              onClose={() => setError(null)}
+            >
+              {error}
+            </Alert>
+          )}
+
+          {/* Preset Buttons */}
+          <Box>
+            <Typography sx={{ 
+              fontSize: '0.875rem', 
+              fontWeight: 600,
+              color: ds.colors.text.primary,
+              mb: ds.spacing['2'],
+            }}>
+              Sık Kullanılan Boylar
+            </Typography>
+            <Grid container spacing={ds.spacing['2']}>
+              {PRESET_STOCK_LENGTHS.map((length, index) => (
+                <Grid item xs={4} key={length}>
+                  <Button
+                    variant={isPresetAdded[index] ? 'outlined' : 'contained'}
+                    onClick={() => handleAddPreset(length)}
+                    disabled={isPresetAdded[index]}
+                    fullWidth
+                    sx={{
+                      py: ds.spacing['2'],
+                      borderRadius: `${ds.borderRadius.md}px`,
+                      fontWeight: 600,
+                      fontSize: '0.9375rem',
+                      ...(isPresetAdded[index] ? {
+                        borderColor: ds.colors.success.main,
+                        color: ds.colors.success.main,
+                        '&:hover': {
+                          borderColor: ds.colors.success.main,
+                          backgroundColor: `rgba(76, 175, 80, 0.04)`,
+                        }
+                      } : {
+                        background: ds.gradients.primary,
+                        '&:hover': {
+                          background: ds.gradients.primary,
+                          opacity: 0.9,
+                        }
+                      })
+                    }}
+                  >
+                    {isPresetAdded[index] && <CheckCircleIcon sx={{ fontSize: 16, mr: 0.5 }} />}
+                    {length} mm
+                  </Button>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+
+          {/* Manual Input */}
+          <Box>
+            <Typography sx={{ 
+              fontSize: '0.875rem', 
+              fontWeight: 600,
+              color: ds.colors.text.primary,
+              mb: ds.spacing['2'],
+            }}>
+              Manuel Girdi
+            </Typography>
+            <Stack direction="row" spacing={ds.spacing['2']}>
+              <TextField
+                label="Stok Boyu"
+                placeholder="Örn: 5000"
+                value={manualInput}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Only allow numbers
+                  if (value === '' || /^\d+$/.test(value)) {
+                    setManualInput(value);
+                    setError(null);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddManual();
+                  }
+                }}
+                type="number"
+                fullWidth
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <StraightenIcon sx={{ fontSize: 18, color: ds.colors.primary.main }} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Typography sx={{ 
+                        fontSize: '0.75rem', 
+                        color: ds.colors.text.secondary,
+                        fontWeight: 600,
+                      }}>
+                        mm
+                      </Typography>
+                    </InputAdornment>
+                  )
+                }}
+              />
+              <Button
+                variant="contained"
+                onClick={handleAddManual}
+                disabled={!manualInput}
+                sx={{
+                  minWidth: 100,
+                  borderRadius: `${ds.borderRadius.md}px`,
+                }}
+                startIcon={<AddIcon />}
+              >
+                Ekle
+              </Button>
+            </Stack>
+          </Box>
+
+          {/* Stock Lengths List */}
+          <Box>
+            <Typography sx={{ 
+              fontSize: '0.875rem', 
+              fontWeight: 600,
+              color: ds.colors.text.primary,
+              mb: ds.spacing['2'],
+            }}>
+              Seçili Stok Boyları ({stockLengths.length})
+            </Typography>
+            
+            {stockLengths.length === 0 ? (
+              <Alert severity="warning" sx={{ borderRadius: `${ds.borderRadius.md}px` }}>
+                Hiç stok boyu seçilmedi. Lütfen en az 1 stok boyu ekleyin.
+              </Alert>
+            ) : (
+              <Stack 
+                direction="row" 
+                spacing={ds.spacing['1']} 
+                flexWrap="wrap"
+                useFlexGap
+                sx={{
+                  p: ds.spacing['3'],
+                  backgroundColor: ds.colors.neutral[50],
+                  borderRadius: `${ds.borderRadius.md}px`,
+                  border: `1px solid ${ds.colors.neutral[200]}`,
+                  minHeight: 60,
+                }}
+              >
+                {stockLengths.map((length) => (
+                  <Chip
+                    key={length}
+                    label={`${length} mm`}
+                    onDelete={() => handleRemove(length)}
+                    deleteIcon={<CloseIcon sx={{ fontSize: 16 }} />}
+                    sx={{
+                      height: 32,
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      backgroundColor: ds.colors.primary.main,
+                      color: 'white',
+                      '& .MuiChip-deleteIcon': {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        '&:hover': {
+                          color: 'white',
+                        }
+                      },
+                      '&:hover': {
+                        backgroundColor: ds.colors.primary[600],
+                      }
+                    }}
+                  />
+                ))}
+              </Stack>
+            )}
+          </Box>
+
+          {/* Info Box */}
+          <Alert 
+            severity="info" 
+            sx={{ 
+              borderRadius: `${ds.borderRadius.md}px`,
+              fontSize: '0.8125rem',
+            }}
+          >
+            💡 <strong>İpucu:</strong> Optimizasyon algoritması, eklediğiniz stok boyları arasından en verimli olanı otomatik seçecektir.
+          </Alert>
+        </Stack>
+      </DialogContent>
+
+      {/* Footer */}
+      <DialogActions sx={{
+        p: ds.spacing['4'],
+        borderTop: `1px solid ${ds.colors.neutral[200]}`,
+        gap: ds.spacing['2'],
+      }}>
+        <Button
+          variant="outlined"
+          onClick={onClose}
+          sx={{ textTransform: 'none' }}
+        >
+          İptal
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleConfirm}
+          disabled={stockLengths.length === 0}
+          startIcon={<CheckCircleIcon />}
+          sx={{
+            background: ds.gradients.primary,
+            textTransform: 'none',
+            '&:hover': {
+              background: ds.gradients.primary,
+              opacity: 0.9,
+            }
+          }}
+        >
+          Devam Et
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+export default StockLengthConfigDialog;
+

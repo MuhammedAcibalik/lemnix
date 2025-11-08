@@ -1,0 +1,72 @@
+---
+globs: *.ts,*.tsx
+description: TypeScript strict mode kuralları ve tip güvenliği standartları
+---
+
+# TypeScript Strict Mode Kuralları
+
+## Tip Güvenliği
+
+### Yasaklar
+- ❌ `any` kullanımı YASAK
+- ❌ `as` type assertion minimize edilmeli
+- ❌ Implicit `any` kullanma
+- ❌ Type guard olmadan `unknown` daraltma
+
+### Kullanılması Gerekenler
+- ✅ `unknown` (any yerine) → type guard ile daralt
+- ✅ `never` ile impossible durumları modelle
+- ✅ Discriminated unions
+- ✅ Generic constraints
+- ✅ `readonly` ve `as const` ile immutability
+- ✅ `satisfies` operator (TS 4.9+)
+
+## Type Guards
+
+```typescript
+// Type guard örneği
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+// Discriminated union
+type Result<T> = 
+  | { success: true; data: T }
+  | { success: false; error: string };
+
+// Exhaustive check
+function assertNever(x: never): never {
+  throw new Error(`Unexpected value: ${x}`);
+}
+```
+
+## Fonksiyon İmzaları
+
+```typescript
+// ✅ İyi
+type FnKeys<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
+
+// ✅ İyi - Explicit return type
+function processData(input: string): Result<Data> {
+  // ...
+}
+
+// ❌ Kötü - Implicit any
+function processData(input) {
+  // ...
+}
+```
+
+## Interface & Type
+
+```typescript
+// ✅ Readonly properties
+interface Config {
+  readonly apiUrl: string;
+  readonly timeout: number;
+}
+
+// ✅ Const assertion
+const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE'] as const;
+type HTTPMethod = typeof HTTP_METHODS[number];
+```

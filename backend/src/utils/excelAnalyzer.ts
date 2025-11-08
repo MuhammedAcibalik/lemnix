@@ -759,7 +759,7 @@ export class PatternDetector {
   /**
    * Infer product name from data row context
    */
-  private static inferProductFromDataRow(row: any[], rowIndex: number, data: ExcelData): string | null {
+  private static inferProductFromDataRow(row: unknown[], rowIndex: number, data: ExcelData): string | null {
     // Look backwards for potential product names
     for (let i = rowIndex - 1; i >= Math.max(0, rowIndex - 20); i--) {
       const prevRow = data[i];
@@ -777,7 +777,7 @@ export class PatternDetector {
     }
     
     // Look for profile type patterns in current row to infer product category
-    const profileTypes = row.map(cell => DataTransformers.toString(cell))
+    const profileTypes = row.map(cell => DataTransformers.toString(cell as string | number | boolean | null))
       .filter(cell => /(kapalı|açık|alt|üst|frame|gönye)/i.test(cell));
     
     if (profileTypes.length > 0) {

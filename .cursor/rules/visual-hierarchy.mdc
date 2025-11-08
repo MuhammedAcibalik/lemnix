@@ -1,0 +1,820 @@
+---
+description: Visual hierarchy & micro-interactions - gradients, hover effects, transitions
+globs: frontend/src/**/*.tsx
+---
+
+# Visual Hierarchy & Micro-interactions
+
+## Temel Prensipler
+
+### Visual Hierarchy
+1. **Primary Action** → En belirgin (gradient, contained button)
+2. **Secondary Action** → Orta belirginlik (outlined button)
+3. **Tertiary Action** → Düşük belirginlik (text button, icon button)
+
+### Micro-interactions
+Kullanıcı etkileşimini zenginleştiren küçük animasyonlar ve feedback'ler.
+
+### Consistency
+Aynı element türü her yerde aynı davranışı göstermeli.
+
+---
+
+## Gradient Title Pattern
+
+### Dialog Header
+```typescript
+import { useDesignSystem } from '@/shared/hooks';
+
+const ds = useDesignSystem();
+
+<Typography sx={{
+  fontSize: '1.5rem',
+  fontWeight: 700,
+  background: ds.gradients.primary,
+  backgroundClip: 'text',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  letterSpacing: ds.typography.letterSpacing.tight,
+  lineHeight: 1,
+}}>
+  Dialog Başlığı
+</Typography>
+```
+
+### Page Header
+```typescript
+<Typography sx={{
+  fontSize: '2.25rem',
+  fontWeight: 800,
+  background: ds.gradients.primary,
+  backgroundClip: 'text',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  letterSpacing: '-0.02em',
+  lineHeight: 1.2,
+  mb: ds.spacing['2'],
+}}>
+  Kesim Listesi Yönetimi
+</Typography>
+```
+
+### Semantic Gradients
+```typescript
+// Primary (Default) - Blue → Purple
+background: ds.gradients.primary
+
+// Success - Green
+background: ds.gradients.success
+
+// Warning - Orange
+background: ds.gradients.warning
+
+// Accent - Purple
+background: ds.gradients.accent
+```
+
+---
+
+## Icon + Text Composition
+
+### Dialog Header with Icon
+```typescript
+<Box sx={{ 
+  display: 'flex', 
+  alignItems: 'center', 
+  gap: ds.spacing['2'] 
+}}>
+  <AssignmentIcon sx={{ 
+    color: ds.colors.primary.main,
+    fontSize: ds.componentSizes.icon.lg,  // 24px
+  }} />
+  <Typography sx={{
+    fontSize: '1.5rem',
+    fontWeight: 700,
+    background: ds.gradients.primary,
+    backgroundClip: 'text',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+  }}>
+    Yeni İş Emri
+  </Typography>
+</Box>
+```
+
+### Button with Icon
+```typescript
+<Button
+  variant="contained"
+  startIcon={<AddIcon />}
+  onClick={handleAdd}
+>
+  Yeni Ekle
+</Button>
+
+// Loading state
+<Button
+  variant="contained"
+  startIcon={isLoading ? <CircularProgress size={16} /> : <CheckIcon />}
+  disabled={isLoading}
+>
+  {isLoading ? 'Kaydediliyor...' : 'Kaydet'}
+</Button>
+```
+
+### Chip with Icon
+```typescript
+<Chip
+  icon={<AssignmentIcon sx={{ fontSize: 12 }} />}
+  label="5 İş Emri"
+  size="small"
+  sx={{
+    height: 22,
+    fontWeight: 600,
+    fontSize: '0.6875rem',
+    background: alpha(ds.colors.primary.main, 0.1),
+    color: ds.colors.primary.main,
+    '& .MuiChip-icon': { 
+      ml: 0.5,   // Icon left margin
+      mr: -0.5,  // Icon right margin (negative for tighter spacing)
+    },
+  }}
+/>
+```
+
+---
+
+## Chip Design System
+
+### Size Variants
+```typescript
+// Small - 22px height (Compact stats)
+<Chip
+  label="5 Items"
+  size="small"
+  sx={{
+    height: 22,
+    fontSize: '0.6875rem',  // 11px
+    fontWeight: 600,
+  }}
+/>
+
+// Medium - 28px height (Default)
+<Chip
+  label="Active"
+  size="medium"
+  sx={{
+    height: 28,
+    fontSize: '0.8125rem',  // 13px
+    fontWeight: 600,
+  }}
+/>
+```
+
+### Color Variants
+```typescript
+// Primary
+<Chip
+  label="Primary"
+  sx={{
+    background: alpha(ds.colors.primary.main, 0.1),
+    color: ds.colors.primary.main,
+    borderRadius: `${ds.borderRadius.sm}px`,
+  }}
+/>
+
+// Success
+<Chip
+  label="Success"
+  sx={{
+    background: alpha(ds.colors.success.main, 0.1),
+    color: ds.colors.success[700],
+  }}
+/>
+
+// Neutral
+<Chip
+  label="Neutral"
+  sx={{
+    background: alpha(ds.colors.neutral[300], 0.1),
+    color: ds.colors.neutral[700],
+  }}
+/>
+```
+
+### Status Chips
+```typescript
+const STATUS_STYLES = {
+  active: {
+    bg: alpha(ds.colors.success.main, 0.1),
+    color: ds.colors.success.main,
+    icon: <CheckCircleIcon />,
+  },
+  pending: {
+    bg: alpha(ds.colors.warning.main, 0.1),
+    color: ds.colors.warning.main,
+    icon: <AccessTimeIcon />,
+  },
+  error: {
+    bg: alpha(ds.colors.error.main, 0.1),
+    color: ds.colors.error.main,
+    icon: <ErrorIcon />,
+  },
+};
+
+<Chip
+  icon={STATUS_STYLES[status].icon}
+  label={statusLabel}
+  sx={{
+    background: STATUS_STYLES[status].bg,
+    color: STATUS_STYLES[status].color,
+  }}
+/>
+```
+
+---
+
+## Card Hover Effects
+
+### Subtle Hover (Informational Cards)
+```typescript
+<CardV2
+  variant="glass"
+  hoverable
+  sx={{
+    transition: ds.transitions.base,
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: ds.shadows.soft.lg,
+    }
+  }}
+>
+```
+
+### Interactive Hover (Clickable Cards)
+```typescript
+<CardV2
+  variant="interactive"
+  onClick={handleClick}
+  sx={{
+    cursor: 'pointer',
+    transition: ds.transitions.base,
+    border: `1px solid ${ds.colors.neutral[200]}`,
+    '&:hover': {
+      borderColor: ds.colors.primary.main,
+      boxShadow: ds.shadows.soft.xl,
+      transform: 'translateY(-4px)',
+    },
+    '&:active': {
+      transform: 'translateY(-2px)',
+      boxShadow: ds.shadows.soft.md,
+    }
+  }}
+>
+```
+
+### Gradient Border Hover
+```typescript
+<Card
+  sx={{
+    position: 'relative',
+    border: '1px solid transparent',
+    transition: ds.transitions.base,
+    '&::before': {
+      content: '""',
+      position: 'absolute',
+      inset: 0,
+      borderRadius: `${ds.borderRadius.lg}px`,
+      padding: '1px',
+      background: ds.gradients.primary,
+      WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+      WebkitMaskComposite: 'xor',
+      maskComposite: 'exclude',
+      opacity: 0,
+      transition: ds.transitions.base,
+    },
+    '&:hover::before': {
+      opacity: 1,
+    },
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: ds.shadows.soft.lg,
+    }
+  }}
+>
+```
+
+---
+
+## Button States
+
+### Primary Button
+```typescript
+<Button
+  variant="contained"
+  sx={{
+    background: ds.gradients.primary,
+    color: 'white',
+    fontWeight: 600,
+    borderRadius: `${ds.borderRadius.button}px`,
+    transition: ds.transitions.base,
+    '&:hover': {
+      background: ds.gradients.primary,
+      opacity: 0.9,
+      transform: 'translateY(-1px)',
+      boxShadow: ds.shadows.soft.md,
+    },
+    '&:active': {
+      transform: 'translateY(0)',
+      boxShadow: ds.shadows.soft.sm,
+    },
+    '&:disabled': {
+      background: ds.colors.neutral[200],
+      color: ds.colors.neutral[500],
+    }
+  }}
+>
+  Kaydet
+</Button>
+```
+
+### Outlined Button (Secondary)
+```typescript
+<Button
+  variant="outlined"
+  sx={{
+    borderColor: ds.colors.neutral[300],
+    color: ds.colors.text.primary,
+    fontWeight: 600,
+    transition: ds.transitions.base,
+    '&:hover': {
+      borderColor: ds.colors.primary.main,
+      backgroundColor: alpha(ds.colors.primary.main, 0.04),
+    }
+  }}
+>
+  İptal
+</Button>
+```
+
+### Icon Button
+```typescript
+<IconButton
+  size="small"
+  sx={{
+    color: ds.colors.text.secondary,
+    transition: ds.transitions.fast,
+    '&:hover': {
+      color: ds.colors.primary.main,
+      backgroundColor: alpha(ds.colors.primary.main, 0.08),
+      transform: 'scale(1.1)',
+    }
+  }}
+>
+  <EditIcon fontSize="small" />
+</IconButton>
+```
+
+### Loading Button
+```typescript
+<Button
+  variant="contained"
+  disabled={isLoading}
+  startIcon={isLoading ? (
+    <CircularProgress 
+      size={16} 
+      sx={{ color: 'inherit' }}
+    />
+  ) : (
+    <CheckCircleIcon />
+  )}
+>
+  {isLoading ? 'İşleniyor...' : 'Onayla'}
+</Button>
+```
+
+---
+
+## Transition System
+
+### Fast Transitions (Hover)
+```typescript
+// 150ms - Quick feedback
+sx={{
+  transition: ds.transitions.fast,
+  '&:hover': {
+    color: ds.colors.primary.main,
+  }
+}}
+```
+
+### Base Transitions (Default)
+```typescript
+// 200ms - Standard interactions
+sx={{
+  transition: ds.transitions.base,
+  '&:hover': {
+    transform: 'translateY(-2px)',
+  }
+}}
+```
+
+### Slow Transitions (Complex)
+```typescript
+// 300ms - Complex animations
+sx={{
+  transition: ds.transitions.slow,
+  '&:hover': {
+    transform: 'scale(1.05)',
+    boxShadow: ds.shadows.soft.xl,
+  }
+}}
+```
+
+### Custom Transitions
+```typescript
+// Multiple properties with different timings
+sx={{
+  transition: `
+    transform ${ds.transitions.fast},
+    box-shadow ${ds.transitions.base},
+    opacity ${ds.transitions.slow}
+  `,
+}}
+```
+
+---
+
+## Spacing Hierarchy
+
+### Compact (Dense UI)
+```typescript
+// 4px - 8px spacing
+<Stack spacing={ds.spacing['1']}>  // 4px
+<Box sx={{ gap: ds.spacing['2'] }}>  // 8px
+```
+
+### Cozy (Comfortable)
+```typescript
+// 12px - 16px spacing
+<Stack spacing={ds.spacing['3']}>  // 12px
+<Box sx={{ p: ds.spacing['4'] }}>  // 16px padding
+```
+
+### Spacious (Generous)
+```typescript
+// 24px - 32px spacing
+<Stack spacing={ds.spacing['6']}>  // 24px
+<Box sx={{ p: ds.spacing['8'] }}>  // 32px padding
+```
+
+### Visual Rhythm Example
+```typescript
+<Box sx={{ p: ds.spacing['4'] }}>  {/* Container: 16px */}
+  <Typography sx={{ mb: ds.spacing['2'] }}>  {/* Title margin: 8px */}
+    Başlık
+  </Typography>
+  
+  <Stack spacing={ds.spacing['3']}>  {/* Item gap: 12px */}
+    <Item1 />
+    <Item2 />
+  </Stack>
+  
+  <Divider sx={{ my: ds.spacing['4'] }} />  {/* Section divider: 16px */}
+  
+  <Stack spacing={ds.spacing['2']}>  {/* Compact list: 8px */}
+    <SubItem1 />
+    <SubItem2 />
+  </Stack>
+</Box>
+```
+
+---
+
+## Shadow Depth
+
+### Elevation Hierarchy
+```typescript
+// Level 1: Subtle (Flat cards)
+boxShadow: ds.shadows.soft.sm  // 0 1px 2px
+
+// Level 2: Default (Standard cards)
+boxShadow: ds.shadows.soft.md  // 0 4px 6px
+
+// Level 3: Elevated (Hover state)
+boxShadow: ds.shadows.soft.lg  // 0 10px 15px
+
+// Level 4: Floating (Modals, Dialogs)
+boxShadow: ds.shadows.soft.xl  // 0 20px 25px
+```
+
+### Progressive Shadow (Hover)
+```typescript
+<Card
+  sx={{
+    boxShadow: ds.shadows.soft.sm,
+    transition: ds.transitions.base,
+    '&:hover': {
+      boxShadow: ds.shadows.soft.lg,  // Increase 2 levels
+    }
+  }}
+>
+```
+
+---
+
+## Border Radius Consistency
+
+### Component-Specific Radius
+```typescript
+// Buttons - 6px (Small, tight)
+<Button sx={{ borderRadius: `${ds.borderRadius.button}px` }}>
+
+// Inputs - 8px (Medium)
+<TextField sx={{ 
+  '& .MuiOutlinedInput-root': {
+    borderRadius: `${ds.borderRadius.input}px`
+  }
+}}>
+
+// Cards - 12px (Large, friendly)
+<CardV2 sx={{ borderRadius: `${ds.borderRadius.card}px` }}>
+
+// Dialogs - 16px (Extra large, premium)
+<Dialog PaperProps={{
+  sx: { borderRadius: `${ds.borderRadius.xl}px` }
+}}>
+```
+
+---
+
+## Focus States (Accessibility)
+
+### Visible Focus Ring
+```typescript
+<Button
+  sx={{
+    '&:focus-visible': {
+      outline: `2px solid ${ds.colors.primary.main}`,
+      outlineOffset: '2px',
+    }
+  }}
+>
+```
+
+### Custom Focus Style
+```typescript
+<TextField
+  sx={{
+    '& .MuiOutlinedInput-root': {
+      '&.Mui-focused': {
+        boxShadow: `0 0 0 3px ${alpha(ds.colors.primary.main, 0.1)}`,
+      }
+    }
+  }}
+/>
+```
+
+---
+
+## Progress Indicators
+
+### Linear Progress (Determinate)
+```typescript
+<Box sx={{ width: '100%' }}>
+  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+    <Typography variant="body2">İlerleme</Typography>
+    <Typography variant="body2" color="text.secondary">
+      {progress}%
+    </Typography>
+  </Box>
+  <LinearProgress 
+    variant="determinate" 
+    value={progress}
+    sx={{
+      height: 6,
+      borderRadius: `${ds.borderRadius.sm}px`,
+      backgroundColor: alpha(ds.colors.primary.main, 0.1),
+      '& .MuiLinearProgress-bar': {
+        borderRadius: `${ds.borderRadius.sm}px`,
+        background: ds.gradients.primary,
+      }
+    }}
+  />
+</Box>
+```
+
+### Circular Progress (Indeterminate)
+```typescript
+<Box sx={{ 
+  display: 'flex', 
+  justifyContent: 'center',
+  alignItems: 'center',
+  minHeight: 200,
+}}>
+  <CircularProgress 
+    sx={{
+      color: ds.colors.primary.main,
+    }}
+  />
+</Box>
+```
+
+---
+
+## Skeleton Loading
+
+### Text Skeleton
+```typescript
+<Skeleton 
+  variant="text" 
+  width="60%" 
+  height={24}
+  sx={{ borderRadius: `${ds.borderRadius.sm}px` }}
+/>
+```
+
+### Card Skeleton
+```typescript
+<Card>
+  <CardContent>
+    <Skeleton variant="rectangular" height={140} sx={{ mb: 2 }} />
+    <Skeleton variant="text" width="80%" />
+    <Skeleton variant="text" width="60%" />
+  </CardContent>
+</Card>
+```
+
+---
+
+## Divider Patterns
+
+### Subtle Divider
+```typescript
+<Divider 
+  sx={{ 
+    borderColor: ds.colors.neutral[200],
+    my: ds.spacing['4'],
+  }} 
+/>
+```
+
+### Gradient Divider
+```typescript
+<Box
+  sx={{
+    height: 1,
+    background: ds.gradients.primary,
+    opacity: 0.3,
+    my: ds.spacing['4'],
+  }}
+/>
+```
+
+### Text Divider
+```typescript
+<Divider sx={{ my: ds.spacing['4'] }}>
+  <Typography 
+    variant="body2" 
+    sx={{ 
+      color: ds.colors.text.secondary,
+      px: ds.spacing['2'],
+    }}
+  >
+    VEYA
+  </Typography>
+</Divider>
+```
+
+---
+
+## Tooltip Styling
+
+```typescript
+<Tooltip
+  title="İş emrini düzenle"
+  arrow
+  placement="top"
+  componentsProps={{
+    tooltip: {
+      sx: {
+        backgroundColor: ds.colors.neutral[800],
+        color: 'white',
+        fontSize: '0.75rem',
+        fontWeight: 500,
+        borderRadius: `${ds.borderRadius.sm}px`,
+        boxShadow: ds.shadows.soft.md,
+      }
+    },
+    arrow: {
+      sx: {
+        color: ds.colors.neutral[800],
+      }
+    }
+  }}
+>
+  <IconButton>
+    <EditIcon />
+  </IconButton>
+</Tooltip>
+```
+
+---
+
+## Badge Styling
+
+```typescript
+<Badge
+  badgeContent={4}
+  sx={{
+    '& .MuiBadge-badge': {
+      backgroundColor: ds.colors.primary.main,
+      color: 'white',
+      fontWeight: 600,
+      fontSize: '0.625rem',
+      minWidth: 18,
+      height: 18,
+      borderRadius: `${ds.borderRadius.sm}px`,
+      boxShadow: `0 0 0 2px ${ds.colors.background.paper}`,
+    }
+  }}
+>
+  <NotificationsIcon />
+</Badge>
+```
+
+---
+
+## Anti-Pattern'ler (Yapma!)
+
+### ❌ Inconsistent Hover Effects
+```typescript
+// YANLIŞ - Her card farklı hover
+<Card sx={{ '&:hover': { transform: 'scale(1.05)' } }}>
+<Card sx={{ '&:hover': { transform: 'translateY(-2px)' } }}>
+<Card sx={{ '&:hover': { transform: 'rotate(2deg)' } }}>
+
+// DOĞRU - Tutarlı hover effect
+<CardV2 hoverable>  // Same hover everywhere
+```
+
+### ❌ Too Many Gradients
+```typescript
+// YANLIŞ - Her yerde gradient
+<Typography sx={{ background: ds.gradients.primary }}>Title 1</Typography>
+<Typography sx={{ background: ds.gradients.success }}>Title 2</Typography>
+<Typography sx={{ background: ds.gradients.warning }}>Title 3</Typography>
+
+// DOĞRU - Sadece primary başlıklarda gradient
+<Typography sx={{ background: ds.gradients.primary }}>Main Title</Typography>
+<Typography sx={{ color: ds.colors.text.primary }}>Subtitle</Typography>
+```
+
+### ❌ Slow Transitions for Hover
+```typescript
+// YANLIŞ - Hover çok yavaş (800ms)
+sx={{ transition: 'all 0.8s' }}
+
+// DOĞRU - Hover hızlı (150ms)
+sx={{ transition: ds.transitions.fast }}
+```
+
+### ❌ No Visual Feedback
+```typescript
+// YANLIŞ - Hiç hover effect yok
+<Button onClick={handleClick}>Tıkla</Button>
+
+// DOĞRU - Clear hover feedback
+<Button 
+  onClick={handleClick}
+  sx={{
+    '&:hover': {
+      backgroundColor: alpha(ds.colors.primary.main, 0.08),
+    }
+  }}
+>
+  Tıkla
+</Button>
+```
+
+---
+
+## Checklist
+
+- [ ] Gradient sadece primary başlıklarda mı?
+- [ ] Icon + Text composition consistent mi?
+- [ ] Hover effect tüm interactive element'lerde var mı?
+- [ ] Transition timing uygun mu? (fast/base/slow)
+- [ ] Shadow depth hierarchy doğru mu?
+- [ ] Border radius consistent mi?
+- [ ] Focus state görünür mü?
+- [ ] Spacing rhythm tutarlı mı?
+- [ ] Loading state'ler styled mı?
+
+---
+
+## Referanslar
+
+- [Design System v2.0](mdc:frontend/src/theme/designSystem.v2.ts)
+- [CardV2 Component](mdc:frontend/src/shared/ui/Card/Card.v2.tsx)
+- [CuttingListBuilder - Visual Examples](mdc:frontend/src/components/CuttingListBuilder/)

@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:18.0-alpine
+    container_name: lemnix-postgres
+    environment:
+      POSTGRES_DB: lemnix_db
+      POSTGRES_USER: lemnix_user
+      POSTGRES_PASSWORD: LemnixSecure2024
+      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=128MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=4MB
+      -c min_wal_size=1GB
+      -c max_wal_size=4GB
+      -c max_connections=200
+    
+  pgbouncer:
+    image: pgbouncer/pgbouncer:latest
+    container_name: lemnix-pgbouncer
+    environment:
+      DATABASES_HOST: postgres
+      DATABASES_PORT: 5432
+      DATABASES_USER: lemnix_user
+      DATABASES_PASSWORD: LemnixSecure2024
+      DATABASES_DBNAME: lemnix_db
+      PGBOUNCER_POOL_MODE: transaction
+      PGBOUNCER_MAX_CLIENT_CONN: 1000
+      PGBOUNCER_DEFAULT_POOL_SIZE: 50  # Increased from 25
+      PGBOUNCER_RESERVE_POOL_SIZE: 10  # Reserve pool for bursts
+      PGBOUNCER_MAX_DB_CONNECTIONS: 100
+      PGBOUNCER_SERVER_IDLE_TIMEOUT: 600  # 10 minutes
+      PGBOUNCER_QUERY_TIMEOUT: 30  # 30 seconds max per query
+      PGBOUNCER_STATS_PERIOD: 60  # Stats update interval
+    ports:
+      - "6432:6432"
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD", "psql", "-U", "lemnix_user", "-d", "pgbouncer", "-c", "SHOW POOLS"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+

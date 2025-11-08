@@ -1,0 +1,571 @@
+---
+description: Dashboard UX patterns - Real-time monitoring vs analytical statistics, visual hierarchy
+---
+
+# Dashboard UX Patterns - Monitoring vs Analytics
+
+## Dashboard vs Statistics Page (Kritik Fark)
+
+### Dashboard (Real-Time Monitoring)
+**Amaç:** "ŞİMDİ ne yapmalıyım?" - Anlık durum, hızlı karar
+
+**Özellikler:**
+- ✅ **Tek sayfa, scroll** - Tab YOK!
+- ✅ **5 saniye kuralı** - Tüm kritik bilgi bir bakışta
+- ✅ **Real-time updates** - 30s-1dk polling
+- ✅ **Live status indicators** - 🟢 Canlı badge, pulse animasyon
+- ✅ **Alert/Warning panel** - Acil dikkat gerektiren durumlar
+- ✅ **5-9 visualization** - Cognitive load düşük
+- ✅ **Quick actions** - "Optimize Now", "Review Pending"
+- ✅ **Visual hierarchy** - Inverted pyramid (kritik → detay)
+
+**Layout:**
+```
+┌──────────────────────────────────────┐
+│ 🟢 Live | Son güncelleme: 30s önce  │ ← Real-time status
+├──────────────────────────────────────┤
+│ KRİTİK METRİKLER (TIER 1)           │
+│ [KPI 1] [KPI 2] [KPI 3] [KPI 4]    │ ← Büyük, prominent
+├──────────────────────────────────────┤
+│ CANLI AKTİVİTE (TIER 2)             │
+│ [Activity Feed 70%] [Alerts 30%]    │ ← Main focus
+├──────────────────────────────────────┤
+│ GÜNCEL PERFORMANS (TIER 3)          │
+│ [Bugünün grafiği]                   │ ← TODAY only
+├──────────────────────────────────────┤
+│ HIZLI ÖNGÖRÜLER (TIER 4)            │
+│ 💡 Actionable insight               │ ← Compact
+└──────────────────────────────────────┘
+```
+
+### Statistics Page (Historical Analysis)
+**Amaç:** "Nasıl performans gösterdik?" - Geçmiş analiz, trendler
+
+**Özellikler:**
+- ✅ **Tabs/sections** - Detaylı drill-down
+- ✅ **30-day+ trends** - Zaman serileri, karşılaştırmalar
+- ✅ **Comprehensive data** - Tüm metrikler, detaylı tablolar
+- ✅ **Filters & date ranges** - Özelleştirilebilir görünüm
+- ✅ **Export functionality** - PDF, Excel, CSV
+- ✅ **20+ visualizations** - Kapsamlı analiz
+- ✅ **Manual refresh** - On-demand data
+
+---
+
+## Dashboard Implementation Rules
+
+### ❌ ASLA YAPMA (Dashboard'da)
+```typescript
+// YANLIŞ - Tabs kullanma
+<Tabs value={activeTab}>
+  <Tab label="Overview" />
+  <Tab label="Details" />
+</Tabs>
+
+// YANLIŞ - Historical trends (30+ days)
+<LineChart data={last30DaysTrend} />
+
+// YANLIŞ - Complex filters
+<DateRangePicker />
+<MultiSelectFilter />
+
+// YANLIŞ - Too many widgets (>9)
+{widgets.map(w => <Widget key={w.id} />)} // 15+ widgets
+```
+
+### ✅ HER ZAMAN YAP (Dashboard'da)
+```typescript
+// DOĞRU - Single page, sections
+<Stack spacing={3}>
+  <Section title="KRİTİK METRİKLER">
+    <Grid>{kpis}</Grid>
+  </Section>
+  <Section title="CANLI AKTİVİTE">
+    <ActivityFeed />
+  </Section>
+</Stack>
+
+// DOĞRU - Real-time status badge
+<Chip
+  icon={<LiveIcon sx={{ animation: 'pulse 2s infinite' }} />}
+  label="Canlı"
+  sx={{
+    bgcolor: ds.colors.success[50],
+    color: ds.colors.success[700],
+  }}
+/>
+
+// DOĞRU - Auto-refresh timestamp
+<Typography variant="caption">
+  Son güncelleme: {getTimeSinceUpdate()}
+</Typography>
+
+// DOĞRU - Alert panel
+{failedCount > 0 && (
+  <Alert severity="error">
+    🔴 {failedCount} işlem başarısız oldu
+  </Alert>
+)}
+
+// DOĞRU - 5-9 visualizations
+const dashboardWidgets = [
+  <KPI1 />, <KPI2 />, <KPI3 />, <KPI4 />,    // 4 KPIs
+  <ActivityFeed />,                           // 1 feed
+  <AlertPanel />,                             // 1 alert
+  <TodayChart />,                             // 1 chart
+  <QuickInsight />                            // 1 insight
+]; // Total: 8 widgets
+```
+
+---
+
+## Visual Hierarchy (Inverted Pyramid)
+
+### TIER 1: Critical KPIs (En Üstte)
+```typescript
+// Büyük, prominent metric cards
+<Grid container spacing={2}>
+  <Grid item xs={12} sm={6} md={3}>
+    <MetricCard
+      value="24"                    // h3 variant
+      title="Bekleyen İş Emirleri"  // body2
+      icon={<PendingIcon />}        // 56x56 avatar
+      status="warning"              // Color coding
+      sx={{ p: 3 }}                 // Generous padding
+    />
+  </Grid>
+</Grid>
+
+// Section label
+<Typography 
+  variant="caption" 
+  sx={{ 
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    fontWeight: 600,
+  }}
+>
+  KRİTİK METRİKLER
+</Typography>
+```
+
+### TIER 2: Activity + Alerts (Main Focus)
+```typescript
+// 70% Activity + 30% Alerts layout
+<Grid container spacing={2}>
+  <Grid item xs={12} lg={8}>
+    <ActivityFeed
+      activities={activities}      // Real-time data
+      maxHeight={500}              // Scrollable
+      autoRefresh={60 * 1000}      // 1 minute
+    />
+  </Grid>
+  
+  <Grid item xs={12} lg={4}>
+    <AlertPanel
+      criticalAlerts={criticalAlerts}
+      warnings={warnings}
+    />
+  </Grid>
+</Grid>
+```
+
+### TIER 3: Current Performance
+```typescript
+// TODAY's data only
+<AlgorithmComparisonChart
+  data={todayPerformance}          // Not 30-day trend
+  title="Bugünün Performansı"
+  height={200}                     // Medium size
+/>
+```
+
+### TIER 4: Quick Insights
+```typescript
+// Compact, actionable
+<CardV2 
+  variant="glass"
+  sx={{
+    p: 2,
+    bgcolor: ds.colors.info[50],
+  }}
+>
+  <Typography variant="body2">
+    💡 En çok kullanılan profil bugün: 60x40 Box
+  </Typography>
+</CardV2>
+```
+
+---
+
+## Real-Time Patterns
+
+### Live Status Badge
+```typescript
+const [connectionStatus, setConnectionStatus] = useState<'live' | 'disconnected'>('live');
+
+<Chip
+  icon={<FiberManualRecord sx={{ 
+    fontSize: 12,
+    animation: status === 'live' ? 'pulse 2s infinite' : 'none',
+  }} />}
+  label={status === 'live' ? 'Canlı' : 'Bağlantı Kesildi'}
+  sx={{
+    bgcolor: status === 'live' ? ds.colors.success[50] : ds.colors.error[50],
+    color: status === 'live' ? ds.colors.success[700] : ds.colors.error[700],
+    border: `1px solid ${status === 'live' ? ds.colors.success.main : ds.colors.error.main}`,
+    '@keyframes pulse': {
+      '0%, 100%': { opacity: 1 },
+      '50%': { opacity: 0.6 },
+    },
+  }}
+/>
+```
+
+### Auto-Refresh Timestamp
+```typescript
+const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    setLastUpdate(new Date());
+  }, 30000); // Update every 30s
+  
+  return () => clearInterval(interval);
+}, []);
+
+const getTimeSinceUpdate = () => {
+  const seconds = Math.floor((new Date().getTime() - lastUpdate.getTime()) / 1000);
+  if (seconds < 60) return `${seconds}s önce`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}dk önce`;
+  return `${Math.floor(minutes / 60)}sa önce`;
+};
+
+<Typography variant="caption">
+  Son güncelleme: {getTimeSinceUpdate()}
+</Typography>
+```
+
+### React Query Polling
+```typescript
+// Critical metrics - 30 seconds
+export function useDashboardMetrics() {
+  return useQuery({
+    queryKey: ['dashboard', 'metrics'],
+    queryFn: getDashboardMetrics,
+    staleTime: 20 * 1000,              // 20s
+    refetchInterval: 30 * 1000,        // Auto-refresh 30s
+    refetchIntervalInBackground: true, // Continue in background
+    retry: (failureCount, error) => {
+      if (error?.response?.status === 401) return false;
+      return failureCount < 2;
+    },
+  });
+}
+
+// Activity feed - 1 minute
+export function useRecentActivity(limit: number = 50) {
+  return useQuery({
+    queryKey: ['dashboard', 'activity', limit],
+    queryFn: () => getRecentActivity(limit),
+    staleTime: 30 * 1000,              // 30s
+    refetchInterval: 60 * 1000,        // Auto-refresh 1min
+    refetchIntervalInBackground: true,
+  });
+}
+```
+
+---
+
+## Alert Panel Pattern
+
+```typescript
+const pendingCount = activities.filter(a => a.status === 'pending').length;
+const failedCount = activities.filter(a => a.status === 'failed').length;
+
+{/* Critical (Red) */}
+{failedCount > 0 && (
+  <CardV2 
+    variant="glass" 
+    sx={{ 
+      p: 2,
+      bgcolor: ds.colors.error[50],
+      border: `1px solid ${ds.colors.error.main}`,
+    }}
+  >
+    <Typography variant="subtitle2" sx={{ fontWeight: 600, color: ds.colors.error[700] }}>
+      🔴 Kritik
+    </Typography>
+    <Typography variant="body2">
+      {failedCount} işlem başarısız oldu
+    </Typography>
+  </CardV2>
+)}
+
+{/* Warning (Yellow) */}
+{pendingCount > 0 && (
+  <CardV2 
+    variant="glass" 
+    sx={{ 
+      p: 2,
+      bgcolor: ds.colors.warning[50],
+      border: `1px solid ${ds.colors.warning.main}`,
+    }}
+  >
+    <Typography variant="subtitle2" sx={{ fontWeight: 600, color: ds.colors.warning[700] }}>
+      ⚠️ Bekleyen İşlemler
+    </Typography>
+    <Typography variant="body2">
+      {pendingCount} işlem inceleme bekliyor
+    </Typography>
+  </CardV2>
+)}
+
+{/* All Clear (Green) */}
+{pendingCount === 0 && failedCount === 0 && (
+  <CardV2 
+    variant="glass" 
+    sx={{ 
+      p: 2,
+      bgcolor: ds.colors.success[50],
+      border: `1px solid ${ds.colors.success.main}`,
+    }}
+  >
+    <Typography variant="subtitle2" sx={{ fontWeight: 600, color: ds.colors.success[700] }}>
+      ✅ Tüm Sistemler Normal
+    </Typography>
+    <Typography variant="body2" sx={{ color: ds.colors.text.secondary }}>
+      Dikkat gerektiren durum yok
+    </Typography>
+  </CardV2>
+)}
+```
+
+---
+
+## Activity Feed Real-Time Styling
+
+### Enhanced Scrollbar
+```typescript
+<Stack 
+  sx={{ 
+    maxHeight: 500,
+    overflow: 'auto',
+    '&::-webkit-scrollbar': {
+      width: '8px',
+    },
+    '&::-webkit-scrollbar-track': {
+      bgcolor: 'transparent',
+      borderRadius: '4px',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      bgcolor: ds.colors.neutral[300],
+      borderRadius: '4px',
+      border: '2px solid transparent',
+      backgroundClip: 'content-box',
+      '&:hover': {
+        bgcolor: ds.colors.neutral[400],
+      },
+    },
+  }}
+>
+```
+
+### Fade-In Animation for New Items
+```typescript
+{activities.map((activity, index) => (
+  <Fade key={activity.id} in timeout={300 + index * 100}>
+    <Box>
+      <ActivityItem activity={activity} />
+    </Box>
+  </Fade>
+))}
+```
+
+### Today Count Badge
+```typescript
+const todayCount = activities.filter(a => {
+  const activityDate = new Date(a.date);
+  const today = new Date();
+  return activityDate.toDateString() === today.toDateString();
+}).length;
+
+{todayCount > 0 && (
+  <Chip 
+    label={`Bugün ${todayCount}`}
+    size="small"
+    sx={{
+      bgcolor: ds.colors.primary[50],
+      color: ds.colors.primary[600],
+      fontWeight: 500,
+    }}
+  />
+)}
+```
+
+---
+
+## Section Labels (Visual Hierarchy)
+
+```typescript
+// Section başlıkları - uppercase, tracked spacing
+<Typography 
+  variant="caption" 
+  sx={{ 
+    color: ds.colors.text.secondary, 
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    mb: 1.5,
+    display: 'block',
+  }}
+>
+  KRİTİK METRİKLER
+</Typography>
+
+// Örnekler:
+- "KRİTİK METRİKLER" (TIER 1)
+- "CANLI AKTİVİTE AKIŞI" (TIER 2)
+- "UYARILAR & BİLDİRİMLER" (TIER 2)
+- "GÜNCEL PERFORMANS" (TIER 3)
+- "HIZLI ÖNGÖRÜLER" (TIER 4)
+```
+
+---
+
+## Metric Card Sizing (Dashboard)
+
+### Dashboard (Prominent)
+```typescript
+// TIER 1 - Critical KPIs
+<CardContent sx={{ p: 3 }}>           // p: 3 (24px)
+  <Avatar sx={{ width: 56, height: 56 }} />  // Larger
+  <Typography variant="h3">          // Bigger value
+    {value}
+  </Typography>
+  <Typography variant="body2">       // Clear label
+    {title}
+  </Typography>
+</CardContent>
+```
+
+### Statistics (Compact)
+```typescript
+// Statistics page - daha compact
+<CardContent sx={{ p: 2 }}>           // p: 2 (16px)
+  <Avatar sx={{ width: 48, height: 48 }} />  // Smaller
+  <Typography variant="h4">          // Smaller value
+    {value}
+  </Typography>
+</CardContent>
+```
+
+---
+
+## Empty State Pattern (Dashboard)
+
+### Modern Empty State
+```typescript
+if (activities.length === 0) {
+  return (
+    <CardV2 variant="glass" sx={{ p: 3 }}>
+      <Box sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        textAlign: 'center',
+        py: 4,
+      }}>
+        {/* Icon Circle */}
+        <Box sx={{
+          width: 80,
+          height: 80,
+          borderRadius: '50%',
+          bgcolor: ds.colors.neutral[100],
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          mb: 2,
+        }}>
+          <Typography sx={{ fontSize: '2rem' }}>
+            📋
+          </Typography>
+        </Box>
+        
+        <Typography variant="body1" sx={{ fontWeight: 500, mb: 0.5 }}>
+          Henüz aktivite bulunmuyor
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 280 }}>
+          Yeni kesim listesi oluşturarak aktiviteleri görmeye başlayın
+        </Typography>
+      </Box>
+    </CardV2>
+  );
+}
+```
+
+---
+
+## Loading State Pattern (Dashboard)
+
+### Skeleton with Pulse Animation
+```typescript
+if (isLoading) {
+  return (
+    <CardV2 variant="glass" sx={{ p: 3 }}>
+      <Stack spacing={2}>
+        {[1, 2, 3].map((i) => (
+          <Box
+            key={i}
+            sx={{
+              height: 72,
+              borderRadius: 2,
+              bgcolor: ds.colors.neutral[100],
+              animation: 'pulse 1.5s ease-in-out infinite',
+              '@keyframes pulse': {
+                '0%, 100%': { opacity: 1 },
+                '50%': { opacity: 0.5 },
+              },
+            }}
+          />
+        ))}
+      </Stack>
+    </CardV2>
+  );
+}
+```
+
+---
+
+## Checklist (Dashboard vs Statistics)
+
+### Dashboard Checklist
+- [ ] Tabs YOK - tek sayfa, scroll
+- [ ] Real-time badge (🟢 Canlı)
+- [ ] Auto-update timestamp
+- [ ] 5-9 visualization (max)
+- [ ] Alert panel var mı?
+- [ ] Quick actions visible
+- [ ] Visual hierarchy (TIER 1-4)
+- [ ] Polling enabled (30s-1min)
+- [ ] TODAY's data focus
+
+### Statistics Checklist
+- [ ] Tabs/sections için drill-down
+- [ ] Historical trends (30+ days)
+- [ ] Export functionality
+- [ ] Filters & date ranges
+- [ ] Comprehensive data
+- [ ] Manual refresh
+- [ ] Detailed tables
+- [ ] All-time comparisons
+
+---
+
+## Referanslar
+
+- [Dashboard Page](mdc:frontend/src/pages/dashboard-page/index.tsx)
+- [Dashboard Content](mdc:frontend/src/widgets/dashboard-tabs/ui/DashboardTabs.tsx)
+- [Statistics Page](mdc:frontend/src/pages/statistics-page/index.tsx)
+- [Dashboard Queries](mdc:frontend/src/entities/dashboard/api/dashboardQueries.ts)

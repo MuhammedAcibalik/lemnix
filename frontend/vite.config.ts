@@ -124,14 +124,22 @@ export default defineConfig(({ command, mode }) => {
     // ========================================================================
     resolve: {
       alias: {
-        // Path aliases
+        // Path aliases - FSD compliant
         '@': path.resolve(__dirname, './src'),
+        '@shared': path.resolve(__dirname, './src/shared'),
+        '@entities': path.resolve(__dirname, './src/entities'),
+        '@features': path.resolve(__dirname, './src/features'),
+        '@widgets': path.resolve(__dirname, './src/widgets'),
+        '@pages': path.resolve(__dirname, './src/pages'),
+        '@app': path.resolve(__dirname, './src/app'),
         '@components': path.resolve(__dirname, './src/components'),
-        '@pages': path.resolve(__dirname, './src/components/pages'),
         '@services': path.resolve(__dirname, './src/services'),
         '@hooks': path.resolve(__dirname, './src/hooks'),
         '@types': path.resolve(__dirname, './src/types'),
         '@utils': path.resolve(__dirname, './src/utils'),
+        '@theme': path.resolve(__dirname, './src/theme'),
+        '@config': path.resolve(__dirname, './src/config'),
+        '@stores': path.resolve(__dirname, './src/stores'),
         '@assets': path.resolve(__dirname, './src/assets'),
         
         // React optimization
@@ -180,7 +188,7 @@ export default defineConfig(({ command, mode }) => {
       sourcemap: isDevelopment,
       
       // Chunk size warnings
-      chunkSizeWarningLimit: 1000,
+      chunkSizeWarningLimit: 500,
       
       // Rollup options
       rollupOptions: {
@@ -216,13 +224,59 @@ export default defineConfig(({ command, mode }) => {
           },
           
           // Manual chunk splitting
-          manualChunks: {
+          manualChunks: (id) => {
             // Vendor chunks
-            'react-vendor': ['react', 'react-dom'],
-            'mui-vendor': ['@mui/material', '@mui/icons-material'],
-            'emotion-vendor': ['@emotion/react', '@emotion/styled'],
-            'router-vendor': ['react-router-dom'],
-            'utils-vendor': ['axios', 'zustand', 'date-fns']
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom')) {
+                return 'react-vendor';
+              }
+              if (id.includes('@mui/material') || id.includes('@mui/icons-material')) {
+                return 'mui-vendor';
+              }
+              if (id.includes('@emotion')) {
+                return 'emotion-vendor';
+              }
+              if (id.includes('react-router')) {
+                return 'router-vendor';
+              }
+              if (id.includes('axios') || id.includes('zustand') || id.includes('date-fns')) {
+                return 'utils-vendor';
+              }
+              if (id.includes('@tanstack/react-query')) {
+                return 'query-vendor';
+              }
+              // Other vendor libraries
+              return 'vendor';
+            }
+            
+            // Component chunks
+            if (id.includes('/components/')) {
+              if (id.includes('EnterpriseOptimization')) {
+                return 'enterprise-components';
+              }
+              if (id.includes('CuttingList')) {
+                return 'cutting-components';
+              }
+              if (id.includes('Modern')) {
+                return 'modern-components';
+              }
+              return 'components';
+            }
+            
+            // Page chunks
+            if (id.includes('/pages/')) {
+              return 'pages';
+            }
+            
+            // Store chunks
+            if (id.includes('/stores/')) {
+              return 'stores';
+            }
+            
+            // Service chunks
+            if (id.includes('/services/')) {
+              return 'services';
+            }
           }
         },
         
@@ -257,8 +311,8 @@ export default defineConfig(({ command, mode }) => {
     // ========================================================================
     server: {
       // Port configuration
-      port: parseInt(env.VITE_PORT) || 3000,
-      host: env.VITE_HOST || 'localhost',
+      port: 5173, // Fixed port instead of env variable
+      host: 'localhost',
       
       // HTTPS configuration
       https: env.VITE_HTTPS === 'true' ? {
@@ -278,16 +332,20 @@ export default defineConfig(({ command, mode }) => {
           target: env.VITE_API_URL || 'http://localhost:3001',
           changeOrigin: true,
           secure: false,
-          // rewrite: (path) => path.replace(/^\/api/, ''), // REMOVED - Keep /api prefix
+          // ✅ KEEP /api prefix - backend expects it at /api/cutting-list
+          // rewrite: (path) => path.replace(/^\/api/, ''), // DON'T rewrite
           configure: (proxy, options) => {
             proxy.on('error', (err, req, res) => {
               console.log('proxy error', err);
             });
             proxy.on('proxyReq', (proxyReq, req, res) => {
-              console.log('Sending Request to the Target:', req.method, req.url);
+              console.log('🔄 [Vite Proxy] Sending Request to the Target:', req.method, req.url, '->', proxyReq.path);
             });
             proxy.on('proxyRes', (proxyRes, req, res) => {
-              console.log('Received Response from the Target:', proxyRes.statusCode, req.url);
+              console.log('✅ [Vite Proxy] Received Response from the Target:', proxyRes.statusCode, req.url);
+            });
+            proxy.on('error', (err, req, res) => {
+              console.error('❌ [Vite Proxy] Error:', err.message, 'for', req.url);
             });
           }
         }
@@ -346,8 +404,7 @@ export default defineConfig(({ command, mode }) => {
           // Autoprefixer
           require('autoprefixer'),
           
-          // CSS optimization
-          ...(isProduction ? [require('cssnano')] : [])
+          // CSS optimization - cssnano removed for now
         ]
       }
     },

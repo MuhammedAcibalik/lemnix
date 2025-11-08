@@ -1,0 +1,727 @@
+---
+description: Empty states & user guidance - placeholders, CTAs, friendly copy
+globs: frontend/src/**/*.tsx
+---
+
+# Empty States & User Guidance
+
+## Temel Prensipler
+
+### Boş Ekran ≠ Boş Deneyim
+Empty state'ler kullanıcıyı yönlendiren, eğiten ve motive eden fırsatlardır.
+
+### 3 Temel Bileşen
+1. **Visual** - Icon veya illustration
+2. **Message** - Açıklayıcı başlık ve açıklama
+3. **Action** - Kullanıcıyı yönlendiren CTA
+
+### Ton
+Dostane, yardımcı, motive edici (hata değil, fırsat).
+
+---
+
+## Empty State Anatomy
+
+```typescript
+import { useDesignSystem } from '@/shared/hooks';
+import { Box, Typography, Button, Stack } from '@mui/material';
+import { Icon } from '@mui/icons-material';
+
+export const EmptyState: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+}> = ({ icon, title, description, action }) => {
+  const ds = useDesignSystem();
+  
+  return (
+    <Box sx={{
+      textAlign: 'center',
+      py: ds.spacing['8'],
+      px: ds.spacing['4'],
+    }}>
+      {/* Icon */}
+      <Box sx={{ mb: ds.spacing['3'] }}>
+        {icon}
+      </Box>
+      
+      {/* Title */}
+      <Typography sx={{
+        fontSize: '1.125rem',
+        fontWeight: 600,
+        color: ds.colors.text.primary,
+        mb: ds.spacing['1'],
+      }}>
+        {title}
+      </Typography>
+      
+      {/* Description */}
+      <Typography sx={{
+        fontSize: '0.875rem',
+        color: ds.colors.text.secondary,
+        mb: ds.spacing['4'],
+        maxWidth: 400,
+        mx: 'auto',
+      }}>
+        {description}
+      </Typography>
+      
+      {/* Action */}
+      {action && (
+        <Button
+          variant="contained"
+          onClick={action.onClick}
+          startIcon={<AddIcon />}
+        >
+          {action.label}
+        </Button>
+      )}
+    </Box>
+  );
+};
+```
+
+---
+
+## Pattern 1: No Data Yet (First Use)
+
+### Kesim Listesi Yok
+```typescript
+import { Assignment as AssignmentIcon, Add as AddIcon } from '@mui/icons-material';
+
+<EmptyState
+  icon={
+    <AssignmentIcon sx={{ 
+      fontSize: 64, 
+      color: ds.colors.neutral[400],
+    }} />
+  }
+  title="Henüz kesim listesi yok"
+  description="İlk kesim listenizi oluşturarak iş emirlerini yönetmeye başlayın"
+  action={{
+    label: 'İlk Listenizi Oluşturun',
+    onClick: handleCreateList,
+  }}
+/>
+```
+
+### İş Emri Yok
+```typescript
+<EmptyState
+  icon={
+    <InventoryIcon sx={{ 
+      fontSize: 64, 
+      color: ds.colors.neutral[400],
+    }} />
+  }
+  title="Bu listede henüz iş emri yok"
+  description="Ürün grubu ekleyerek iş emirlerinizi organize etmeye başlayın"
+  action={{
+    label: 'Ürün Grubu Ekle',
+    onClick: handleAddProduct,
+  }}
+/>
+```
+
+---
+
+## Pattern 2: Filtered Results Empty
+
+### Arama Sonucu Yok
+```typescript
+<Box sx={{ 
+  textAlign: 'center', 
+  py: ds.spacing['8'] 
+}}>
+  <SearchOffIcon sx={{ 
+    fontSize: 64, 
+    color: ds.colors.neutral[400],
+    mb: ds.spacing['2'],
+  }} />
+  <Typography sx={{
+    fontSize: '1.125rem',
+    fontWeight: 600,
+    color: ds.colors.text.primary,
+    mb: ds.spacing['1'],
+  }}>
+    "{searchQuery}" için sonuç bulunamadı
+  </Typography>
+  <Typography sx={{
+    fontSize: '0.875rem',
+    color: ds.colors.text.secondary,
+    mb: ds.spacing['4'],
+  }}>
+    Farklı bir arama terimi deneyin veya filtreleri temizleyin
+  </Typography>
+  <Stack direction="row" spacing={ds.spacing['2']} justifyContent="center">
+    <Button variant="outlined" onClick={handleClearSearch}>
+      Aramayı Temizle
+    </Button>
+    <Button variant="outlined" onClick={handleClearFilters}>
+      Filtreleri Sıfırla
+    </Button>
+  </Stack>
+</Box>
+```
+
+---
+
+## Pattern 3: Data Available but Hidden (Filters)
+
+### Filtre Sonucu Boş
+```typescript
+<Box sx={{ 
+  textAlign: 'center', 
+  py: ds.spacing['6'],
+  px: ds.spacing['4'],
+  backgroundColor: alpha(ds.colors.warning.main, 0.05),
+  borderRadius: `${ds.borderRadius.lg}px`,
+  border: `1px solid ${alpha(ds.colors.warning.main, 0.2)}`,
+}}>
+  <FilterListOffIcon sx={{ 
+    fontSize: 48, 
+    color: ds.colors.warning.main,
+    mb: ds.spacing['2'],
+  }} />
+  <Typography sx={{
+    fontSize: '1rem',
+    fontWeight: 600,
+    color: ds.colors.text.primary,
+    mb: ds.spacing['1'],
+  }}>
+    Seçili filtrelerle eşleşen sonuç yok
+  </Typography>
+  <Typography sx={{
+    fontSize: '0.8125rem',
+    color: ds.colors.text.secondary,
+    mb: ds.spacing['3'],
+  }}>
+    Toplam {totalCount} kayıt var, ancak hiçbiri filtre kriterlerinize uymuyor
+  </Typography>
+  <Button 
+    variant="contained" 
+    size="small"
+    onClick={handleResetFilters}
+  >
+    Tüm Filtreleri Sıfırla
+  </Button>
+</Box>
+```
+
+---
+
+## Pattern 4: Empty State with Preview/Demo
+
+### İstatistik Demo Preview
+```typescript
+<Box sx={{ 
+  textAlign: 'center', 
+  py: ds.spacing['6'] 
+}}>
+  <AssessmentIcon sx={{ 
+    fontSize: 48, 
+    color: ds.colors.neutral[400],
+    mb: ds.spacing['2'],
+  }} />
+  <Typography sx={{
+    fontSize: '1.125rem',
+    fontWeight: 600,
+    color: ds.colors.text.primary,
+    mb: ds.spacing['1'],
+  }}>
+    Kesim Listesi İstatistikleri
+  </Typography>
+  <Typography sx={{
+    fontSize: '0.875rem',
+    color: ds.colors.text.secondary,
+    mb: ds.spacing['4'],
+  }}>
+    İstatistikleri görüntülemek için önce bir kesim listesi oluşturun
+  </Typography>
+  
+  {/* Demo Stats Preview */}
+  <Stack 
+    direction="row" 
+    spacing={ds.spacing['3']} 
+    justifyContent="center"
+    sx={{ mb: ds.spacing['4'] }}
+  >
+    <Box sx={{ textAlign: 'center' }}>
+      <Typography sx={{ 
+        fontSize: '1.5rem', 
+        fontWeight: 700, 
+        color: ds.colors.neutral[300],
+      }}>
+        0
+      </Typography>
+      <Typography sx={{ 
+        fontSize: '0.75rem', 
+        color: ds.colors.neutral[500],
+      }}>
+        Ürün Grubu
+      </Typography>
+    </Box>
+    <Box sx={{ textAlign: 'center' }}>
+      <Typography sx={{ 
+        fontSize: '1.5rem', 
+        fontWeight: 700, 
+        color: ds.colors.neutral[300],
+      }}>
+        0
+      </Typography>
+      <Typography sx={{ 
+        fontSize: '0.75rem', 
+        color: ds.colors.neutral[500],
+      }}>
+        İş Emri
+      </Typography>
+    </Box>
+    <Box sx={{ textAlign: 'center' }}>
+      <Typography sx={{ 
+        fontSize: '1.5rem', 
+        fontWeight: 700, 
+        color: ds.colors.neutral[300],
+      }}>
+        0%
+      </Typography>
+      <Typography sx={{ 
+        fontSize: '0.75rem', 
+        color: ds.colors.neutral[500],
+      }}>
+        Verimlilik
+      </Typography>
+    </Box>
+  </Stack>
+  
+  <Button 
+    variant="outlined" 
+    startIcon={<AddIcon />}
+    onClick={handleCreateList}
+  >
+    Yeni Liste Oluştur
+  </Button>
+</Box>
+```
+
+---
+
+## Pattern 5: Loading → Empty Transition
+
+### Skeleton to Empty
+```typescript
+const [isLoading, setIsLoading] = useState(true);
+const [data, setData] = useState<Item[]>([]);
+
+// Show skeleton while loading
+{isLoading ? (
+  <Stack spacing={ds.spacing['2']}>
+    {[1, 2, 3].map((i) => (
+      <Skeleton 
+        key={i} 
+        variant="rectangular" 
+        height={80} 
+        sx={{ borderRadius: `${ds.borderRadius.md}px` }}
+      />
+    ))}
+  </Stack>
+) : data.length === 0 ? (
+  <EmptyState
+    icon={<InboxIcon sx={{ fontSize: 64, color: ds.colors.neutral[400] }} />}
+    title="Veri bulunamadı"
+    description="Henüz kayıt bulunmuyor"
+  />
+) : (
+  <DataList items={data} />
+)}
+```
+
+---
+
+## Pattern 6: Error State (Different from Empty)
+
+### Data Fetch Error
+```typescript
+<Box sx={{ 
+  textAlign: 'center', 
+  py: ds.spacing['8'],
+  px: ds.spacing['4'],
+}}>
+  <ErrorOutlineIcon sx={{ 
+    fontSize: 64, 
+    color: ds.colors.error.main,
+    mb: ds.spacing['2'],
+  }} />
+  <Typography sx={{
+    fontSize: '1.125rem',
+    fontWeight: 600,
+    color: ds.colors.text.primary,
+    mb: ds.spacing['1'],
+  }}>
+    Veri yüklenemedi
+  </Typography>
+  <Typography sx={{
+    fontSize: '0.875rem',
+    color: ds.colors.text.secondary,
+    mb: ds.spacing['4'],
+  }}>
+    Bir hata oluştu. Lütfen tekrar deneyin.
+  </Typography>
+  <Stack direction="row" spacing={ds.spacing['2']} justifyContent="center">
+    <Button 
+      variant="contained" 
+      startIcon={<RefreshIcon />}
+      onClick={handleRetry}
+    >
+      Tekrar Dene
+    </Button>
+    <Button 
+      variant="outlined"
+      onClick={handleContactSupport}
+    >
+      Destek Al
+    </Button>
+  </Stack>
+</Box>
+```
+
+---
+
+## Icon Selection Guidelines
+
+### Context-Appropriate Icons
+
+```typescript
+// Data/List Empty
+<InboxIcon />           // Generic empty
+<FolderOpenIcon />      // Empty folder
+<AssignmentIcon />      // No tasks/work orders
+
+// Search/Filter Empty
+<SearchOffIcon />       // No search results
+<FilterListOffIcon />   // Filter resulted in empty
+
+// Feature Not Available
+<LockIcon />            // Premium feature
+<ComingSoonIcon />      // Coming soon
+
+// Error State
+<ErrorOutlineIcon />    // General error
+<CloudOffIcon />        // Network error
+<WarningIcon />         // Warning state
+
+// Loading State
+<HourglassEmptyIcon />  // Processing
+<PendingIcon />         // Waiting
+```
+
+### Icon Sizing
+```typescript
+// Large empty state (primary)
+sx={{ fontSize: 64 }}
+
+// Medium empty state (section)
+sx={{ fontSize: 48 }}
+
+// Small empty state (inline)
+sx={{ fontSize: 32 }}
+```
+
+---
+
+## Copy Writing Guidelines
+
+### Title
+- **Kısa ve açıklayıcı** (4-7 kelime)
+- **Pozitif ton** ("Henüz yok" > "Hiç yok")
+- **User-centric** ("Listeniz boş" > "Liste boş")
+
+### Description
+- **Neden boş** olduğunu açıkla
+- **Ne yapması gerektiğini** belirt
+- **Motivasyon ver** (benefit vurgula)
+
+### ✅ Good Examples
+```typescript
+// ✅ DOĞRU - Pozitif, yönlendirici
+title: "İlk iş emrinizi ekleyin"
+description: "İş emirlerini organize ederek kesim verimliliğinizi artırın"
+
+// ✅ DOĞRU - Açıklayıcı, solution-oriented
+title: "Bu filtrelerle eşleşen sonuç yok"
+description: "Farklı filtre kombinasyonu deneyin veya filtreleri sıfırlayın"
+
+// ✅ DOĞRU - User-centric, action-oriented
+title: "Henüz kombinasyon kaydetmediniz"
+description: "Sık kullandığınız profil kombinasyonlarını kaydedin ve hızlıca yeniden kullanın"
+```
+
+### ❌ Bad Examples
+```typescript
+// ❌ YANLIŞ - Negative, unhelpful
+title: "Hiçbir şey yok"
+description: "Boş"
+
+// ❌ YANLIŞ - Technical, confusing
+title: "Data array is empty"
+description: "No records found in database"
+
+// ❌ YANLIŞ - Too vague
+title: "Burada bir şey yok"
+description: "Bir şeyler ekleyin"
+```
+
+---
+
+## CTA Button Guidelines
+
+### Primary Action (Most Common)
+```typescript
+<Button 
+  variant="contained" 
+  startIcon={<AddIcon />}
+  onClick={handleAdd}
+>
+  İlk Kaydınızı Ekleyin
+</Button>
+```
+
+### Multiple Actions (Choice)
+```typescript
+<Stack direction="row" spacing={ds.spacing['2']} justifyContent="center">
+  <Button 
+    variant="contained" 
+    startIcon={<AddIcon />}
+    onClick={handleCreate}
+  >
+    Yeni Oluştur
+  </Button>
+  <Button 
+    variant="outlined"
+    startIcon={<UploadIcon />}
+    onClick={handleImport}
+  >
+    İçe Aktar
+  </Button>
+</Stack>
+```
+
+### Learn More (Educational)
+```typescript
+<Button 
+  variant="text" 
+  endIcon={<ArrowForwardIcon />}
+  onClick={handleLearnMore}
+>
+  Nasıl Kullanılır?
+</Button>
+```
+
+---
+
+## Responsive Empty States
+
+### Mobile: Compact
+```typescript
+<Box sx={{
+  textAlign: 'center',
+  py: { xs: ds.spacing['4'], md: ds.spacing['8'] },
+  px: ds.spacing['3'],
+}}>
+  <Icon sx={{ 
+    fontSize: { xs: 48, md: 64 },
+    color: ds.colors.neutral[400],
+  }} />
+  <Typography sx={{
+    fontSize: { xs: '1rem', md: '1.125rem' },
+    fontWeight: 600,
+    mt: ds.spacing['2'],
+  }}>
+    {title}
+  </Typography>
+</Box>
+```
+
+---
+
+## Empty State Variants
+
+### Inline Empty (Small Section)
+```typescript
+<Box sx={{
+  textAlign: 'center',
+  py: ds.spacing['4'],
+  px: ds.spacing['3'],
+  backgroundColor: alpha(ds.colors.neutral[100], 0.5),
+  borderRadius: `${ds.borderRadius.md}px`,
+  border: `1px dashed ${ds.colors.neutral[300]}`,
+}}>
+  <Typography sx={{
+    fontSize: '0.875rem',
+    color: ds.colors.text.secondary,
+  }}>
+    Bu bölümde henüz veri yok
+  </Typography>
+</Box>
+```
+
+### Card Empty (Inside Card)
+```typescript
+<CardV2 variant="outlined">
+  <Box sx={{ 
+    textAlign: 'center', 
+    py: ds.spacing['6'] 
+  }}>
+    <Icon sx={{ fontSize: 40, color: ds.colors.neutral[400] }} />
+    <Typography sx={{
+      fontSize: '0.9375rem',
+      fontWeight: 600,
+      color: ds.colors.text.primary,
+      mt: ds.spacing['2'],
+    }}>
+      {title}
+    </Typography>
+  </Box>
+</CardV2>
+```
+
+### Full Page Empty
+```typescript
+<Box sx={{
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minHeight: '60vh',
+  textAlign: 'center',
+  px: ds.spacing['4'],
+}}>
+  <Icon sx={{ fontSize: 80, color: ds.colors.neutral[400], mb: ds.spacing['3'] }} />
+  <Typography sx={{
+    fontSize: '1.5rem',
+    fontWeight: 700,
+    color: ds.colors.text.primary,
+    mb: ds.spacing['2'],
+  }}>
+    {title}
+  </Typography>
+  <Typography sx={{
+    fontSize: '1rem',
+    color: ds.colors.text.secondary,
+    maxWidth: 500,
+    mb: ds.spacing['4'],
+  }}>
+    {description}
+  </Typography>
+  <Button variant="contained" size="large">
+    {actionLabel}
+  </Button>
+</Box>
+```
+
+---
+
+## Animation (Optional Enhancement)
+
+### Fade In Empty State
+```typescript
+import { FadeIn } from '@/shared';
+
+<FadeIn>
+  <EmptyState {...props} />
+</FadeIn>
+```
+
+### Gentle Bounce Icon
+```typescript
+import { keyframes } from '@mui/material';
+
+const bounce = keyframes`
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+`;
+
+<Icon sx={{
+  fontSize: 64,
+  color: ds.colors.neutral[400],
+  animation: `${bounce} 2s ease-in-out infinite`,
+}} />
+```
+
+---
+
+## Anti-Pattern'ler (Yapma!)
+
+### ❌ Hiçbir Şey Gösterme
+```typescript
+// YANLIŞ - Boş beyaz ekran
+{items.length === 0 && null}
+
+// DOĞRU - Empty state göster
+{items.length === 0 && <EmptyState {...} />}
+```
+
+### ❌ Teknik Mesajlar
+```typescript
+// YANLIŞ
+title: "Array is empty"
+description: "No data found in response.data.items"
+
+// DOĞRU
+title: "Henüz iş emri yok"
+description: "İlk iş emrinizi ekleyerek başlayın"
+```
+
+### ❌ CTA Yok
+```typescript
+// YANLIŞ - Sadece mesaj, aksiyon yok
+<EmptyState
+  icon={<Icon />}
+  title="Boş"
+  description="Veri yok"
+  // No action!
+/>
+
+// DOĞRU - Clear CTA
+<EmptyState
+  icon={<Icon />}
+  title="Boş"
+  description="Veri yok"
+  action={{ label: 'Ekle', onClick: handleAdd }}
+/>
+```
+
+### ❌ Aynı Empty State Her Yerde
+```typescript
+// YANLIŞ - Generic empty her yerde
+<EmptyState title="Veri yok" />
+
+// DOĞRU - Context-specific empty states
+<WorkOrderEmptyState />
+<StatisticsEmptyState />
+<SearchEmptyState />
+```
+
+---
+
+## Checklist
+
+- [ ] Icon context'e uygun mu?
+- [ ] Title açıklayıcı ve pozitif mi?
+- [ ] Description yönlendirici mi?
+- [ ] CTA var mı ve net mi?
+- [ ] Ton dostane mi?
+- [ ] Mobile responsive mi?
+- [ ] Loading → Empty transition smooth mu?
+- [ ] Error state empty state'ten ayrı mı?
+
+---
+
+## Referanslar
+
+- [StatisticsTab Empty State](mdc:frontend/src/components/CuttingListBuilder/components/StatisticsTab.tsx)
+- [CombinationDialog Empty State](mdc:frontend/src/components/CuttingListBuilder/dialogs/CombinationDialog.tsx)
+- [Design System v2.0](mdc:frontend/src/theme/designSystem.v2.ts)

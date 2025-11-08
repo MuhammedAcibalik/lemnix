@@ -1,0 +1,257 @@
+---
+description: Frontend-Backend alignment rules and synchronization guidelines
+---
+
+# Frontend-Backend Alignment Guide
+
+## Algorithm Catalog Synchronization
+
+### Available Algorithms (TRUTH SOURCE: Backend)
+```typescript
+// Backend: backend/src/services/optimization/types.ts
+type AlgorithmLabel = 'ffd' | 'bfd' | 'genetic' | 'pooling';
+
+// Frontend: Must match exactly
+export const ALGORITHM_CATALOG: Record<AlgorithmType, AlgorithmInfo> = {
+  ffd: { name: 'First Fit Decreasing', icon: '🔵', ... },
+  bfd: { name: 'Best Fit Decreasing', icon: '🟢', ... },
+  genetic: { name: 'Genetic Algorithm v1.7.1', icon: '🧬', ... },
+  pooling: { name: 'Profile Pooling', icon: '🎯', ... }
+};
+```
+
+### ❌ NEVER DO:
+- Add algorithms to frontend that don't exist in backend
+- Hardcode algorithm counts (use `Object.keys(ALGORITHM_CATALOG).length`)
+- Create separate algorithm lists in different files
+
+### ✅ ALWAYS DO:
+- Use `ALGORITHM_CATALOG` as single source of truth
+- Derive counts dynamically from catalog
+- Update both frontend types and backend types together
+
+## Type Alignment Checklist
+
+### Optimization Request/Response
+```typescript
+// Backend types must match Frontend types
+// Check these files:
+// - backend/src/types/index.ts (OptimizationAlgorithm)
+// - backend/src/services/optimization/types.ts (AlgorithmLabel)
+// - frontend/src/entities/optimization/model/types.ts (AlgorithmType)
+```
+
+### Common Misalignments to Avoid
+1. **Algorithm names**: Frontend shows "Simulated Annealing" but backend doesn't support it
+2. **Property names**: Backend uses `executionTime` but frontend expects `executionTimeMs`
+3. **Nested objects**: Backend returns flat structure, frontend expects nested
+4. **Optional fields**: Backend makes required, frontend treats as optional (or vice versa)
+
+## API Endpoint Coverage
+
+### Missing Backend Features in Frontend
+When implementing new backend endpoints, update these files:
+1. `frontend/src/entities/{entity}/api/{entity}Api.ts` - API functions
+2. `frontend/src/entities/{entity}/api/{entity}Queries.ts` - React Query hooks
+3. `frontend/src/entities/{entity}/model/types.ts` - TypeScript types
+4. `frontend/src/entities/{entity}/index.ts` - Public API exports
+
+### Current Endpoint Status (as of implementation)
+✅ **Fully Integrated**:
+- `/enterprise/optimize` - Main optimization
+- `/enterprise/compare` - Algorithm comparison
+- `/enterprise/export` - Export results
+- `/webgpu/status` - GPU status
+
+⚠️ **Partially Integrated**:
+- `/statistics/*` - Dashboard widgets (401 handled gracefully)
+- `/enterprise/analytics` - Analytics (optional, 401 handled)
+- `/enterprise/system-health` - Health check (optional, 401 handled)
+
+❌ **Not Yet Integrated** (58 endpoints):
+- Profile-specific operations
+- Quarantine management
+- Batch operations
+- Advanced analytics
+- See [BACKEND_FRONTEND_ALIGNMENT_ANALYSIS.md](mdc:docs/BACKEND_FRONTEND_ALIGNMENT_ANALYSIS.md)
+
+## Authentication Handling
+
+### 401 Unauthorized - Standard Pattern
+```typescript
+export async function fetchData(): Promise<Data> {
+  try {
+    const response = await api.get<Data>('/endpoint');
+    return response.data;
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number } };
+    if (err.response?.status === 401) {
+      console.warn('Endpoint requires authentication - returning empty data');
+    } else {
+      console.warn('Endpoint failed:', error);
+    }
+    return getEmptyData(); // Graceful fallback
+  }
+}
+```
+
+### React Query Integration
+```typescript
+export function useDataQuery() {
+  return useQuery({
+    queryKey: ['data'],
+    queryFn: fetchData,
+    retry: (failureCount, error) => {
+      // Don't retry 401s
+      if ((error as any)?.response?.status === 401) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+```
+
+## Data Transformation Patterns
+
+### Backend → Frontend
+```typescript
+// Backend returns snake_case, Frontend uses camelCase
+interface BackendResponse {
+  execution_time_ms: number;
+  total_efficiency: number;
+  waste_percentage: number;
+}
+
+// Transform in API layer
+export async function getOptimizationResult(id: string): Promise<OptimizationResult> {
+  const response = await api.get<BackendResponse>(`/results/${id}`);
+  return {
+    executionTimeMs: response.data.execution_time_ms,
+    totalEfficiency: response.data.total_efficiency,
+    wastePercentage: response.data.waste_percentage,
+  };
+}
+```
+
+### Validation with Zod
+```typescript
+// Always validate backend responses
+import { z } from 'zod';
+
+const OptimizationResultSchema = z.object({
+  algorithm: z.enum(['ffd', 'bfd', 'genetic', 'pooling']),
+  executionTimeMs: z.number().positive(),
+  totalEfficiency: z.number().min(0).max(100),
+  wastePercentage: z.number().min(0).max(100),
+});
+
+export async function getOptimizationResult(id: string): Promise<OptimizationResult> {
+  const response = await api.get(`/results/${id}`);
+  return OptimizationResultSchema.parse(response.data);
+}
+```
+
+## Version Compatibility Matrix
+
+| Backend Version | Frontend Version | Compatible | Notes |
+|----------------|------------------|------------|-------|
+| v1.0.0 | v1.0.0 | ✅ | Initial release |
+| v1.7.1 | v1.7.1 | ✅ | Current (GA v1.7.1 + P0 features) |
+
+### Breaking Change Protocol
+1. Backend increments major version (e.g., v2.0.0)
+2. Frontend updates types in `entities/{entity}/model/types.ts`
+3. Add migration guide to `docs/MIGRATION.md`
+4. Update compatibility matrix
+
+## PostgreSQL + Frontend Integration
+
+### Database Type Mapping
+```typescript
+// Backend (Prisma)
+model CuttingList {
+  sections Json @db.JsonB  // PostgreSQL JSONB
+}
+
+// Controller (Type conversion)
+const lists = await cuttingListRepository.findAll();
+const mapped: CuttingList[] = lists.map(list => ({
+  sections: (list.sections as unknown) as CuttingListSection[]
+}));
+
+// Frontend (Domain type)
+interface CuttingList {
+  sections: CuttingListSection[];  // Strongly typed
+}
+```
+
+**Important:** Always cast JSONB fields through `unknown` first for type safety.
+
+### State Management Pattern
+
+#### ❌ WRONG - Dual State Sync
+```typescript
+const { data: queryData } = useQuery('lists');
+const [localLists, setLocalLists] = useState([]);
+
+useEffect(() => {
+  if (queryData) {
+    setLocalLists(queryData);  // ❌ Double state = bugs
+  }
+}, [queryData]);
+```
+
+#### ✅ CORRECT - Single Source of Truth
+```typescript
+// Option 1: React Query only
+const { data: lists } = useQuery('lists');
+return <Grid lists={lists ?? []} />;
+
+// Option 2: Local fetch only
+const [lists, setLists] = useState([]);
+
+const fetchLists = useCallback(async () => {
+  const result = await fetch('/api/cutting-list');
+  setLists(result.data);  // ✅ Direct update
+}, []);
+
+useEffect(() => {
+  fetchLists();
+}, [fetchLists]);
+```
+
+### Edit Dialog Pattern
+```typescript
+// ❌ WRONG - Update wrong state
+<EditDialog
+  item={editingItem}
+  onChange={(field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));  // ❌ Wrong!
+  }}
+/>
+
+// ✅ CORRECT - Update displayed state
+<EditDialog
+  item={editingItem}
+  onChange={(field, value) => {
+    setEditingItem(prev => ({ ...prev, [field]: value }));  // ✅ Correct
+  }}
+  onSave={(updatedItem) => {
+    updateItemInSection(updatedItem);  // ✅ Save to backend
+  }}
+/>
+```
+
+## File References
+
+- [Backend Types](mdc:backend/src/types/index.ts)
+- [Backend Optimization Types](mdc:backend/src/services/optimization/types.ts)
+- [Frontend Optimization Entity](mdc:frontend/src/entities/optimization/index.ts)
+- [Frontend Algorithm Catalog](mdc:frontend/src/entities/optimization/model/types.ts)
+- [Alignment Analysis](mdc:docs/BACKEND_FRONTEND_ALIGNMENT_ANALYSIS.md)
+- [P0 Implementation Plan](mdc:docs/P0_IMPLEMENTATION_PLAN.md)
+- [PostgreSQL Patterns](mdc:.cursor/rules/postgresql-prisma-patterns.mdc)
+- [React State Patterns](mdc:.cursor/rules/react-state-patterns.mdc)
+- [Debugging Patterns](mdc:.cursor/rules/debugging-patterns.mdc)

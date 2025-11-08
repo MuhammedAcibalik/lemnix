@@ -23,12 +23,10 @@ export type ProfileType = string;
 export enum OptimizationAlgorithm {
   FIRST_FIT_DECREASING = 'ffd',
   BEST_FIT_DECREASING = 'bfd',
-  NEXT_FIT_DECREASING = 'nfd',
-  WORST_FIT_DECREASING = 'wfd',
   GENETIC_ALGORITHM = 'genetic',
-  SIMULATED_ANNEALING = 'simulated-annealing',
-  BRANCH_AND_BOUND = 'branch-and-bound',
-  PROFILE_POOLING = 'pooling'
+  NSGA_II = 'nsga-ii',
+  PROFILE_POOLING = 'pooling',
+  PATTERN_EXACT = 'pattern-exact'
 }
 
 // Alias for backward compatibility
@@ -675,4 +673,128 @@ export interface BnBNode {
   depth: number;
   lowerBound: number;
   upperBound: number;
+}
+
+// ========== PROFILE MANAGEMENT TYPES ==========
+
+/**
+ * Profile definition with associated stock lengths
+ */
+export interface ProfileDefinition {
+  readonly id: string;
+  readonly profileCode: string;
+  readonly profileName: string;
+  readonly isActive: boolean;
+  readonly createdAt: Date;
+  readonly updatedAt: Date;
+  readonly stockLengths: ProfileStockLength[];
+}
+
+/**
+ * Stock length configuration for a profile
+ */
+export interface ProfileStockLength {
+  readonly id: string;
+  readonly profileId: string;
+  readonly stockLength: number; // mm
+  readonly isDefault: boolean;
+  readonly priority: number; // Lower number = higher priority
+  readonly createdAt: Date;
+}
+
+/**
+ * Mapping between work order, profile type, and profile definition
+ */
+export interface WorkOrderProfileMapping {
+  readonly id: string;
+  readonly workOrderId: string;
+  readonly profileType: string; // e.g., "Kapalı alt", "Açık üst"
+  readonly profileId: string;
+  readonly weekNumber: number;
+  readonly year: number;
+  readonly uploadedBy?: string;
+  readonly createdAt: Date;
+  readonly profile?: ProfileDefinition; // Populated with relation
+}
+
+/**
+ * Profile mapping for optimization context
+ */
+export interface ProfileMapping {
+  readonly profileCode: string;
+  readonly profileName: string;
+  readonly stockLengths: readonly number[];
+  readonly defaultStockLength: number;
+}
+
+/**
+ * Excel row data for profile management upload
+ */
+export interface ProfileManagementExcelRow {
+  readonly profileCode: string;
+  readonly profileName: string;
+  readonly workOrderId: string;
+  readonly profileType: string;
+  readonly stockLength1: number;
+  readonly stockLength2?: number;
+  readonly stockLength3?: number;
+  readonly defaultStock?: number; // 1, 2, or 3
+}
+
+/**
+ * Parse result for profile management Excel
+ */
+export interface ProfileManagementParseResult {
+  readonly success: boolean;
+  readonly data?: ProfileManagementData;
+  readonly errors?: string[];
+  readonly summary?: {
+    readonly totalRows: number;
+    readonly validRows: number;
+    readonly invalidRows: number;
+    readonly weekNumber: number;
+    readonly year: number;
+    readonly uniqueProfiles: number;
+    readonly uniqueMappings: number;
+  };
+}
+
+/**
+ * Structured data from profile management Excel
+ */
+export interface ProfileManagementData {
+  readonly profiles: Map<string, ProfileDefinitionInput>; // profileCode → definition
+  readonly mappings: WorkOrderProfileMappingInput[];
+  readonly weekNumber: number;
+  readonly year: number;
+}
+
+/**
+ * Input for creating profile definition
+ */
+export interface ProfileDefinitionInput {
+  readonly profileCode: string;
+  readonly profileName: string;
+  readonly stockLengths: ProfileStockLengthInput[];
+}
+
+/**
+ * Input for creating profile stock length
+ */
+export interface ProfileStockLengthInput {
+  readonly stockLength: number;
+  readonly isDefault: boolean;
+  readonly priority: number;
+}
+
+/**
+ * Input for creating work order profile mapping
+ */
+export interface WorkOrderProfileMappingInput {
+  readonly workOrderId: string;
+  readonly profileType: string;
+  readonly profileCode: string; // Will be resolved to profileId
+  readonly weekNumber: number;
+  readonly year: number;
+  readonly uploadedBy?: string;
 }

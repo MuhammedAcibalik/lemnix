@@ -1,0 +1,319 @@
+---
+alwaysApply: true
+description: Genel kod kalitesi, clean code ve best practices
+---
+
+# Kod Kalitesi Standartları
+
+## Genel Prensipler
+
+### DRY (Don't Repeat Yourself)
+```typescript
+// ❌ Kötü
+const user1Email = user1.email.toLowerCase().trim();
+const user2Email = user2.email.toLowerCase().trim();
+
+// ✅ İyi
+const normalizeEmail = (email: string) => email.toLowerCase().trim();
+const user1Email = normalizeEmail(user1.email);
+const user2Email = normalizeEmail(user2.email);
+```
+
+### KISS (Keep It Simple, Stupid)
+```typescript
+// ❌ Kötü - Gereksiz karmaşık
+const result = condition ? 
+  (value > 10 ? 
+    (value < 20 ? 'medium' : 'large') : 
+    'small') : 
+  'none';
+
+// ✅ İyi - Basit ve okunabilir
+function getSize(value: number, condition: boolean): string {
+  if (!condition) return 'none';
+  if (value <= 10) return 'small';
+  if (value < 20) return 'medium';
+  return 'large';
+}
+```
+
+### YAGNI (You Aren't Gonna Need It)
+Gelecekte belki lazım olur düşüncesiyle kod yazma. 
+Şu an ihtiyaç varsa yaz.
+
+## İsimlendirme
+
+### Boolean
+```typescript
+// ✅ İyi - is/has/can/should prefix
+const isLoading = true;
+const hasPermission = user.checkPermission();
+const canDelete = user.role === 'admin';
+const shouldRender = isVisible && !isLoading;
+```
+
+### Fonksiyonlar
+```typescript
+// ✅ İyi - Verb ile başla
+function calculateTotal(items: Item[]): number { }
+function fetchUserData(userId: string): Promise<User> { }
+function validateEmail(email: string): boolean { }
+```
+
+### Classes
+```typescript
+// ✅ İyi - Noun/noun phrase
+class UserRepository { }
+class PaymentProcessor { }
+class EmailService { }
+```
+
+### Constants
+```typescript
+// ✅ İyi - UPPER_SNAKE_CASE
+const MAX_RETRY_COUNT = 3;
+const API_BASE_URL = 'https://api.example.com';
+const DEFAULT_TIMEOUT_MS = 5000;
+```
+
+## Fonksiyon Yapısı
+
+### Tek Sorumluluk
+```typescript
+// ❌ Kötü - Çok sorumluluk
+function processUserAndSendEmail(user: User) {
+  validateUser(user);
+  saveToDatabase(user);
+  sendWelcomeEmail(user);
+  logActivity(user);
+}
+
+// ✅ İyi - Her fonksiyon bir şey yapar
+function processUser(user: User): void {
+  validateUser(user);
+  saveToDatabase(user);
+}
+
+function sendUserWelcome(user: User): void {
+  sendWelcomeEmail(user);
+  logActivity(user);
+}
+```
+
+### Erken Dönüş
+```typescript
+// ✅ İyi - Guard clauses
+function processPayment(amount: number, user: User): Result {
+  if (amount <= 0) {
+    return { success: false, error: 'Invalid amount' };
+  }
+  
+  if (!user.hasPaymentMethod) {
+    return { success: false, error: 'No payment method' };
+  }
+  
+  if (amount > user.balance) {
+    return { success: false, error: 'Insufficient funds' };
+  }
+  
+  return processTransaction(amount, user);
+}
+```
+
+### Parametre Sayısı
+```typescript
+// ❌ Kötü - Çok parametre
+function createUser(
+  name: string,
+  email: string,
+  age: number,
+  address: string,
+  phone: string,
+  role: string
+) { }
+
+// ✅ İyi - Object parameter
+interface CreateUserParams {
+  readonly name: string;
+  readonly email: string;
+  readonly age: number;
+  readonly address: string;
+  readonly phone: string;
+  readonly role: string;
+}
+
+function createUser(params: CreateUserParams) { }
+```
+
+## Error Handling
+
+### Try-Catch
+```typescript
+// ✅ İyi - Specific catch
+async function fetchData(url: string): Promise<Data> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new HttpError(response.status, response.statusText);
+    }
+    return await response.json();
+  } catch (error) {
+    if (error instanceof HttpError) {
+      logger.error('HTTP error', { status: error.status });
+    } else if (error instanceof TypeError) {
+      logger.error('Network error', { error });
+    } else {
+      logger.error('Unknown error', { error });
+    }
+    throw error;
+  }
+}
+```
+
+### Result Pattern
+```typescript
+type Result<T, E = Error> =
+  | { success: true; data: T }
+  | { success: false; error: E };
+
+function parseJson<T>(json: string): Result<T> {
+  try {
+    const data = JSON.parse(json);
+    return { success: true, data };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error : new Error('Parse failed')
+    };
+  }
+}
+```
+
+## Yorum Yazma
+
+### Ne zaman yorum yazılır
+```typescript
+// ✅ İyi - NEDEN açıklama
+// Cache'i 5 dakika tutuyoruz çünkü API rate limit var
+const CACHE_TTL_MS = 5 * 60 * 1000;
+
+// ✅ İyi - Karmaşık algoritma açıklama
+// Binary search kullanıyoruz: O(log n) complexity
+function findItem(items: Item[], target: string): number { }
+
+// ❌ Kötü - NE yaptığını açıklama (gereksiz)
+// i'yi 1 artır
+i++;
+```
+
+### TSDoc/JSDoc
+```typescript
+/**
+ * Calculates the total price including tax and discount
+ * @param items - List of items in cart
+ * @param taxRate - Tax rate as decimal (0.18 for 18%)
+ * @param discountCode - Optional discount code
+ * @returns Total price with tax and discount applied
+ * @throws {InvalidDiscountError} If discount code is invalid
+ */
+function calculateTotal(
+  items: Item[],
+  taxRate: number,
+  discountCode?: string
+): number {
+  // ...
+}
+```
+
+## Performance
+
+### Array Operations
+```typescript
+// ❌ Kötü - Multiple iterations
+const result = items
+  .filter(x => x.active)
+  .map(x => x.value)
+  .filter(x => x > 0);
+
+// ✅ İyi - Single iteration
+const result = items.reduce<number[]>((acc, item) => {
+  if (item.active && item.value > 0) {
+    acc.push(item.value);
+  }
+  return acc;
+}, []);
+```
+
+### Object Lookup
+```typescript
+// ❌ Kötü - Array.find O(n)
+function getUserById(users: User[], id: string): User | undefined {
+  return users.find(u => u.id === id);
+}
+
+// ✅ İyi - Map O(1)
+const userMap = new Map(users.map(u => [u.id, u]));
+function getUserById(id: string): User | undefined {
+  return userMap.get(id);
+}
+```
+
+## Testing Considerations
+
+### Testable Code
+```typescript
+// ❌ Kötü - Hard to test
+function processOrder() {
+  const db = new Database();
+  const order = db.getOrder();
+  const total = calculateTotal(order);
+  sendEmail(order.user.email, total);
+}
+
+// ✅ İyi - Dependency injection
+function processOrder(
+  db: IDatabase,
+  emailService: IEmailService
+): void {
+  const order = db.getOrder();
+  const total = calculateTotal(order);
+  emailService.send(order.user.email, total);
+}
+```
+
+## Güvenlik
+
+### Input Validation
+```typescript
+// ✅ İyi - Her input validate edilmeli
+function getUserById(id: unknown): User {
+  if (typeof id !== 'string' || !id.trim()) {
+    throw new ValidationError('Invalid user ID');
+  }
+  
+  // Sanitize
+  const sanitized = id.trim().toLowerCase();
+  return fetchUser(sanitized);
+}
+```
+
+### Sensitive Data
+```typescript
+// ✅ İyi - Sensitive data loglama
+logger.info('User logged in', {
+  userId: user.id,
+  // password: user.password, // ❌ ASLA!
+  email: maskEmail(user.email) // 'j***@example.com'
+});
+```
+
+## Checklist (Her PR için)
+
+- [ ] `any` kullanımı yok
+- [ ] Fonksiyonlar tek sorumluluk
+- [ ] Error handling kapsamlı
+- [ ] İsimlendirme açıklayıcı
+- [ ] Yorumlar neden açıklıyor
+- [ ] Performance düşünülmüş
+- [ ] Security kontrol edilmiş
+- [ ] Testable kod yazılmış

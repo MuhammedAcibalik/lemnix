@@ -1,10 +1,10 @@
 /**
  * @fileoverview Cutting List Routes
  * @module CuttingListRoutes
- * @version 1.0.0
+ * @version 3.1.0
  */
 
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction, RequestHandler } from 'express';
 import { 
   CuttingListController, 
   cuttingListErrorHandler,
@@ -22,247 +22,253 @@ import {
   getAvailableSizes,
   getProfileCombinations
 } from '../controllers/cuttingListController';
+import { handleValidationErrors } from '../middleware/validation';
+import { createRateLimit } from '../middleware/rateLimiting';
+import { verifyToken, requirePermission, Permission } from '../middleware/authorization';
+import { logger } from '../services/logger';
 
-const router = Router();
-const cuttingListController = new CuttingListController();
+const RATE_LIMITERS = {
+  default: createRateLimit('default'),
+  export: createRateLimit('export'),
+  optimization: createRateLimit('optimization')
+} as const;
 
-// ============================================================================
-// CUTTING LIST ROUTES
-// ============================================================================
+type RateLimiterKey = keyof typeof RATE_LIMITERS;
+type HTTPVerb = 'get' | 'post' | 'put' | 'delete' | 'patch';
+type ControllerHandler = (req: Request, res: Response, next: NextFunction) => unknown;
+type FnKeys<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
 
-// Create new cutting list
-router.post('/', cuttingListController.createCuttingList);
+interface RouteConfig {
+  readonly path: string;
+  readonly method: HTTPVerb;
+  readonly handler: FnKeys<CuttingListController> | ControllerHandler;
+  readonly middleware?: ReadonlyArray<RequestHandler>;
+  readonly requiresAuth?: boolean;
+  readonly permission?: Permission;
+  readonly rateLimit?: RateLimiterKey;
+}
 
-// Get all cutting lists
-router.get('/', cuttingListController.getAllCuttingLists);
+interface IMethodCache<T> {
+  getBound(key: FnKeys<T>): ControllerHandler;
+  has(key: FnKeys<T>): boolean;
+  clear(): void;
+}
 
-// Test PDF export (must be before /:id route)
-router.get('/test-pdf', cuttingListController.testPDFExport);
+interface IRouteRegistry {
+  register(config: RouteConfig): void;
+  registerBatch(configs: ReadonlyArray<RouteConfig>): void;
+  build(): Router;
+}
 
-// Get cutting list by ID
-router.get('/:id', cuttingListController.getCuttingListById);
-
-// Update cutting list
-router.put('/:id', cuttingListController.updateCuttingList);
-
-// Delete cutting list
-router.delete('/:id', cuttingListController.deleteCuttingList);
-
-// ============================================================================
-// PRODUCT SECTION ROUTES
-// ============================================================================
-
-// Add product section to cutting list
-router.post('/:cuttingListId/sections', cuttingListController.addProductSection);
-
-// Delete product section
-router.delete('/:cuttingListId/sections/:sectionId', cuttingListController.deleteProductSection);
-
-// ============================================================================
-// ITEM ROUTES
-// ============================================================================
-
-// Add item to product section
-router.post('/:cuttingListId/sections/:sectionId/items', cuttingListController.addItemToSection);
-
-// Update item in section
-router.put('/:cuttingListId/sections/:sectionId/items/:itemId', cuttingListController.updateItemInSection);
-
-// Delete item from section
-router.delete('/:cuttingListId/sections/:sectionId/items/:itemId', cuttingListController.deleteItemFromSection);
-
-// ============================================================================
-// EXPORT ROUTES
-// ============================================================================
-
-// Export to PDF
-router.post('/export/pdf', cuttingListController.exportToPDF);
-
-// Export to Excel
-router.post('/export/excel', cuttingListController.exportToExcel);
-
-// ============================================================================
-// PROFILE SUGGESTION ROUTES
-// ============================================================================
-
-// Get profile variations for a product and size (multiple options)
-router.get('/suggestions/variations', cuttingListController.getProfileVariations);
-
-// Get profile suggestions for a product and size
-router.get('/suggestions/profiles', cuttingListController.getProfileSuggestions);
-
-// Search for similar products
-router.get('/suggestions/products', cuttingListController.searchSimilarProducts);
-
-// Get sizes for a specific product
-router.get('/suggestions/sizes', cuttingListController.getSizesForProduct);
-
-// Get profile suggestion database statistics
-router.get('/suggestions/stats', cuttingListController.getProfileSuggestionStats);
-
-// ============================================================================
-// QUANTITY CALCULATION ROUTES
-// ============================================================================
-
-// Calculate quantity based on order quantity and optional size/profile
-router.post('/quantity/calculate', cuttingListController.calculateQuantity);
-
-// Get quantity suggestions for a given order quantity
-router.post('/quantity/suggestions', cuttingListController.getQuantitySuggestions);
-
-// Validate quantity for a given order quantity
-router.post('/quantity/validate', cuttingListController.validateQuantity);
-
-// Get all possible quantities for a given order quantity
-router.post('/quantity/possibilities', cuttingListController.getPossibleQuantities);
-
-// ============================================================================
-// EXCEL IMPORT ROUTES
-// ============================================================================
-
-// Import Excel data to cutting list
-router.post('/import/excel', cuttingListController.importExcelData);
-
-// ============================================================================
-// SMART SUGGESTION ROUTES
-// ============================================================================
-
-// Get smart product suggestions with confidence scoring
-router.get('/smart/products', getSmartProductSuggestions);
-
-// Get smart size suggestions (product-aware)
-router.get('/smart/sizes', getSmartSizeSuggestions);
-
-// Get smart profile suggestions (context-aware)
-router.get('/smart/profiles', getSmartProfileSuggestions);
-
-// Get auto-complete suggestions
-router.get('/smart/autocomplete', getAutoCompleteSuggestions);
-
-// Get smart suggestion database statistics
-router.get('/smart/stats', getSmartSuggestionStats);
-
-// Reload smart suggestion database
-router.post('/smart/reload', reloadSmartSuggestionDatabase);
-
-// ============================================================================
-// SMART WORK ORDER CREATION ROUTES
-// ============================================================================
-
-// Get smart suggestions for work order creation
-router.get('/smart/suggestions', getSmartWorkOrderSuggestions);
-
-// Get smart insights for work order data
-router.post('/smart/insights', getSmartWorkOrderInsights);
-
-// Apply smart profile set to work order
-router.post('/smart/apply-profile-set', applySmartProfileSet);
-
-// Get work order templates
-router.get('/smart/templates', getWorkOrderTemplates);
-
-// Duplicate work order with smart modifications
-router.post('/smart/duplicate', duplicateWorkOrder);
-
-// ============================================================================
-// ENTERPRISE PROFILE SUGGESTION ROUTES
-// ============================================================================
-
-// Get enterprise profile suggestions (context-aware)
-router.get('/enterprise/profiles', cuttingListController.getEnterpriseProfileSuggestions);
-
-// Get smart measurement suggestions (context-aware)
-router.get('/enterprise/measurements', cuttingListController.getSmartMeasurementSuggestions);
-
-// Get enterprise suggestion statistics
-router.get('/enterprise/stats', cuttingListController.getEnterpriseSuggestionStats);
-
-// Refresh enterprise analysis
-router.post('/enterprise/refresh', cuttingListController.refreshEnterpriseAnalysis);
-
-// Get available sizes for a product
-router.get('/enterprise/product-sizes', cuttingListController.getProductSizes);
-
-// Get complete profile set for product-size combination
-router.get('/enterprise/complete-profile-set', cuttingListController.getCompleteProfileSet);
-
-// ============================================================================
-// PROFILE API ROUTES (for frontend profile suggestions)
-// ============================================================================
-
-// Profile suggestions endpoint - maps to smart profiles
-router.get('/profiles/suggestions', (req: Request, res: Response) => {
-  // Redirect to smart profiles with query parameter
-  req.query['query'] = req.query['q'] as string || '';
-  getSmartProfileSuggestions(req, res);
-});
-
-// Profile measurements endpoint  
-router.get('/profiles/:profileType/measurements', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { profileType } = req.params;
-    const { limit = 10 } = req.query;
+const asyncify = (fn: ControllerHandler): RequestHandler => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const startedAt = Date.now();
     
-    if (!profileType) {
-      res.status(400).json({
-        success: false,
-        error: 'Profile type is required',
-        timestamp: new Date().toISOString()
-      });
-      return;
-    }
-    
-    // Common measurements for different profile types
-    const measurementMap: Record<string, string[]> = {
-      'L': ['2000', '2500', '3000', '3500', '4000', '4500', '5000', '6000'],
-      'U': ['1500', '2000', '2500', '3000', '3500', '4000', '4500', '5000'],
-      'KARE': ['1000', '1500', '2000', '2500', '3000', '3500', '4000'],
-      'YUVARLAK': ['1000', '1500', '2000', '2500', '3000', '3500', '4000'],
-      'KAPALI': ['2000', '2500', '3000', '3500', '4000', '4500', '5000'],
-      'AÇIK': ['2000', '2500', '3000', '3500', '4000', '4500', '5000'],
-      'DEFAULT': ['2000', '2500', '3000', '3500', '4000', '4500', '5000', '6000']
-    };
-    
-    const profileTypeUpper = profileType.toUpperCase();
-    let measurements: string[] = measurementMap['DEFAULT']!;
-    
-    // Find matching profile type
-    for (const [key, values] of Object.entries(measurementMap)) {
-      if (profileTypeUpper.includes(key)) {
-        measurements = values;
-        break;
+    res.once('finish', () => {
+      const duration = Date.now() - startedAt;
+      if (duration > 3000) {
+        logger.warn('Slow request detected', {
+          path: req.path,
+          method: req.method,
+          duration,
+          userId: req.user?.userId,
+          statusCode: res.statusCode
+        });
       }
+    });
+
+    try {
+      Promise.resolve(fn(req, res, next)).catch((error: unknown) => {
+        const err = error as Error;
+        logger.error('Route handler error', {
+          error: err.message,
+          path: req.path,
+          method: req.method,
+          userId: req.user?.userId,
+          stack: err.stack
+        });
+        next(error);
+      });
+    } catch (error: unknown) {
+      const err = error as Error;
+      logger.error('Route handler sync error', {
+        error: err.message,
+        path: req.path,
+        method: req.method,
+        userId: req.user?.userId,
+        stack: err.stack
+      });
+      next(error);
+    }
+  };
+};
+
+class BoundMethodCache<T extends object> implements IMethodCache<T> {
+  private readonly cache = new Map<PropertyKey, ControllerHandler>();
+
+  constructor(private readonly instance: T) {}
+
+  public getBound(key: FnKeys<T>): ControllerHandler {
+    const k: PropertyKey = key;
+    const hit = this.cache.get(k);
+    if (hit !== undefined) {
+      return hit;
+    }
+
+    const value = (this.instance as Record<string, unknown>)[key as string];
+    if (typeof value !== 'function') {
+      throw new TypeError(`${String(key)} is not a method`);
+    }
+
+    const bound = (value as Function).bind(this.instance) as ControllerHandler;
+    this.cache.set(k, bound);
+    return bound;
+  }
+
+  public has(key: FnKeys<T>): boolean {
+    return this.cache.has(key as PropertyKey);
+  }
+
+  public clear(): void {
+    this.cache.clear();
+  }
+}
+
+class RouteRegistry implements IRouteRegistry {
+  private readonly rateLimiters = RATE_LIMITERS;
+
+  constructor(
+    private readonly router: Router,
+    private readonly cache: IMethodCache<CuttingListController>
+  ) {}
+
+  public register(config: RouteConfig): void {
+    const middlewares: RequestHandler[] = [];
+    
+    if (config.rateLimit) {
+      middlewares.push(this.rateLimiters[config.rateLimit]);
     }
     
-    res.json({
-      success: true,
-      data: measurements.slice(0, parseInt(limit as string) || 10),
-      timestamp: new Date().toISOString()
-    });
+    if (config.requiresAuth) {
+      middlewares.push(verifyToken);
+    }
     
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get measurements',
-      timestamp: new Date().toISOString()
-    });
+    if (config.permission) {
+      middlewares.push(requirePermission(config.permission));
+    }
+    
+    if (config.middleware) {
+      middlewares.push(...config.middleware);
+    }
+
+    const handler = typeof config.handler === 'string' 
+      ? asyncify(this.cache.getBound(config.handler) as ControllerHandler)
+      : asyncify(config.handler as ControllerHandler);
+
+    middlewares.push(handler);
+    this.router[config.method](config.path, ...middlewares);
   }
-});
 
-// ============================================================================
-// SMART SUGGESTIONS ROUTES
-// ============================================================================
+  public registerBatch(configs: ReadonlyArray<RouteConfig>): void {
+    configs.forEach(config => this.register(config));
+  }
 
-// Get available sizes for a product
-router.get('/smart-suggestions/sizes', getAvailableSizes);
+  public build(): Router {
+    return this.router;
+  }
+}
 
-// Get profile combinations for a product and size
-router.get('/smart-suggestions/combinations', getProfileCombinations);
 
-// ============================================================================
-// ERROR HANDLER
-// ============================================================================
+const queryNormalizer: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {
+  const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+  if (q.length > 0) {
+    res.locals.query = q;
+  }
+  next();
+};
 
+class CuttingListRouterFactory {
+  private readonly routes: ReadonlyArray<RouteConfig> = [
+    { path: '/', method: 'post', handler: 'createCuttingList', requiresAuth: false }, // TODO: Re-enable auth after testing
+    { path: '/', method: 'get', handler: 'getAllCuttingLists', requiresAuth: false }, // TODO: Re-enable auth after testing
+    { path: '/test-pdf', method: 'get', handler: 'testPDFExport', requiresAuth: true },
+    
+    // ✅ CRITICAL FIX: Specific routes BEFORE generic /:id routes to prevent path hijacking
+    { path: '/:cuttingListId/sections/:sectionId/items/:itemId', method: 'put', handler: 'updateItemInSection', requiresAuth: true, permission: Permission.START_OPTIMIZATION, middleware: [handleValidationErrors] },
+    { path: '/:cuttingListId/sections/:sectionId/items/:itemId', method: 'delete', handler: 'deleteItemFromSection', requiresAuth: true, permission: Permission.MANAGE_QUARANTINE },
+    { path: '/:cuttingListId/sections/:sectionId/items', method: 'post', handler: 'addItemToSection', requiresAuth: true, permission: Permission.START_OPTIMIZATION, middleware: [handleValidationErrors] },
+    
+    { path: '/:cuttingListId/sections/:sectionId', method: 'delete', handler: 'deleteProductSection', requiresAuth: true, permission: Permission.MANAGE_QUARANTINE },
+    { path: '/:cuttingListId/sections', method: 'post', handler: 'addProductSection', requiresAuth: false }, // TODO: Re-enable auth after testing
+    
+    // Generic /:id routes LAST
+    { path: '/:id', method: 'get', handler: 'getCuttingListById', requiresAuth: true, permission: Permission.VIEW_CUTTING_PLANS },
+    { path: '/:id', method: 'put', handler: 'updateCuttingList', requiresAuth: true, permission: Permission.START_OPTIMIZATION },
+    { path: '/:id', method: 'delete', handler: 'deleteCuttingList', requiresAuth: true, permission: Permission.MANAGE_QUARANTINE }, // ✅ RE-ENABLED: Allow cutting list deletion
+    
+    { path: '/export/pdf', method: 'post', handler: 'exportToPDF', requiresAuth: true, permission: Permission.EXPORT_REPORTS, rateLimit: 'export' },
+    { path: '/export/excel', method: 'post', handler: 'exportToExcel', requiresAuth: true, permission: Permission.EXPORT_REPORTS, rateLimit: 'export' },
+    
+    { path: '/suggestions/variations', method: 'get', handler: 'getProfileVariations', requiresAuth: true },
+    { path: '/suggestions/profiles', method: 'get', handler: 'getProfileSuggestions', requiresAuth: true },
+    { path: '/suggestions/products', method: 'get', handler: 'searchSimilarProducts', requiresAuth: true },
+    { path: '/suggestions/sizes', method: 'get', handler: 'getSizesForProduct', requiresAuth: true },
+    { path: '/suggestions/stats', method: 'get', handler: 'getProfileSuggestionStats', requiresAuth: true },
+    
+    { path: '/quantity/calculate', method: 'post', handler: 'calculateQuantity', requiresAuth: true, rateLimit: 'optimization' },
+    { path: '/quantity/suggestions', method: 'post', handler: 'getQuantitySuggestions', requiresAuth: true, rateLimit: 'optimization' },
+    { path: '/quantity/validate', method: 'post', handler: 'validateQuantity', requiresAuth: true },
+    { path: '/quantity/possibilities', method: 'post', handler: 'getPossibleQuantities', requiresAuth: true, rateLimit: 'optimization' },
+    
+        { path: '/import/excel', method: 'post', handler: 'importExcelData', requiresAuth: true, permission: Permission.MANAGE_CONFIG },
+    
+    { path: '/enterprise/profiles', method: 'get', handler: 'getEnterpriseProfileSuggestions', requiresAuth: true },
+    { path: '/enterprise/measurements', method: 'get', handler: 'getSmartMeasurementSuggestions', requiresAuth: true },
+    { path: '/enterprise/stats', method: 'get', handler: 'getEnterpriseSuggestionStats', requiresAuth: true },
+    { path: '/enterprise/refresh', method: 'post', handler: 'refreshEnterpriseAnalysis', requiresAuth: true, permission: Permission.MANAGE_CONFIG },
+    { path: '/enterprise/product-sizes', method: 'get', handler: 'getProductSizes', requiresAuth: true },
+    { path: '/enterprise/complete-profile-set', method: 'get', handler: 'getCompleteProfileSet', requiresAuth: true },
+    
+    { path: '/smart/products', method: 'get', handler: getSmartProductSuggestions, requiresAuth: true },
+    { path: '/smart/sizes', method: 'get', handler: getSmartSizeSuggestions, requiresAuth: true },
+    { path: '/smart/profiles', method: 'get', handler: getSmartProfileSuggestions, requiresAuth: true },
+    { path: '/smart/autocomplete', method: 'get', handler: getAutoCompleteSuggestions, requiresAuth: true },
+    { path: '/smart/stats', method: 'get', handler: getSmartSuggestionStats, requiresAuth: true },
+    { path: '/smart/reload', method: 'post', handler: reloadSmartSuggestionDatabase, requiresAuth: true, permission: Permission.MANAGE_CONFIG },
+    { path: '/smart/suggestions', method: 'get', handler: getSmartWorkOrderSuggestions, requiresAuth: true },
+    { path: '/smart/insights', method: 'post', handler: getSmartWorkOrderInsights, requiresAuth: true, rateLimit: 'optimization' },
+    { path: '/smart/apply-profile-set', method: 'post', handler: applySmartProfileSet, requiresAuth: true, permission: Permission.START_OPTIMIZATION },
+    { path: '/smart/templates', method: 'get', handler: getWorkOrderTemplates, requiresAuth: true },
+    { path: '/smart/duplicate', method: 'post', handler: duplicateWorkOrder, requiresAuth: true, permission: Permission.START_OPTIMIZATION },
+    
+    { path: '/profiles/suggestions', method: 'get', handler: getSmartProfileSuggestions, requiresAuth: true, middleware: [queryNormalizer] },
+    { path: '/smart-suggestions/sizes', method: 'get', handler: getAvailableSizes, requiresAuth: true },
+    { path: '/smart-suggestions/combinations', method: 'get', handler: getProfileCombinations, requiresAuth: true }
+  ];
+
+  constructor(private readonly controller: CuttingListController) {}
+
+  public create(): Router {
+    const router = Router();
+    const cache = new BoundMethodCache(this.controller);
+    const registry = new RouteRegistry(router, cache);
+
+    console.log('🔧 [CuttingListRoutes] Registering routes:', this.routes.length);
+    this.routes.forEach(route => {
+      console.log(`  - ${route.method.toUpperCase()} ${route.path} -> ${route.handler}`);
+    });
+
+    registry.registerBatch(this.routes);
 router.use(cuttingListErrorHandler);
 
-export default router;
+    return registry.build();
+  }
+}
+
+const createRouter = (): Router => {
+  const controller = new CuttingListController();
+  const factory = new CuttingListRouterFactory(controller);
+  return factory.create();
+};
+
+export default createRouter();

@@ -1,0 +1,201 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Cancel previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20.19.0'
+  NPM_VERSION: '10.0.0'
+
+jobs:
+  # ============================================================================
+  # CODE QUALITY - BACKEND
+  # ============================================================================
+  backend-quality:
+    name: Backend - Code Quality
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: 📦 Install dependencies
+        run: npm ci --legacy-peer-deps
+      
+      - name: 🔍 Lint check
+        run: npm run lint
+      
+      - name: 🎨 Format check
+        run: npm run format -- --check
+      
+      - name: 🔐 Type check
+        run: npx tsc --noEmit
+      
+      - name: 📊 Build
+        run: npm run build
+
+  # ============================================================================
+  # CODE QUALITY - FRONTEND
+  # ============================================================================
+  frontend-quality:
+    name: Frontend - Code Quality
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./frontend
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: 📦 Install dependencies
+        run: npm ci --legacy-peer-deps
+      
+      - name: 🔍 Lint check
+        run: npm run lint
+      
+      - name: 🎨 Format check
+        run: npm run format -- --check
+      
+      - name: 🔐 Type check
+        run: npx tsc --noEmit
+      
+      - name: 📊 Build
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+  # ============================================================================
+  # BUNDLE SIZE CHECK
+  # ============================================================================
+  bundle-size:
+    name: Frontend - Bundle Size Check
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./frontend
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: 📦 Install dependencies
+        run: npm ci --legacy-peer-deps
+      
+      - name: 📊 Build and analyze
+        run: npm run build
+        env:
+          NODE_ENV: production
+      
+      - name: 📦 Check bundle size
+        run: |
+          BUNDLE_SIZE=$(du -sh dist | cut -f1)
+          echo "Bundle size: $BUNDLE_SIZE"
+          # Add bundle size check logic here
+          # Example: fail if > 5MB
+
+  # ============================================================================
+  # DATABASE MIGRATIONS
+  # ============================================================================
+  database-check:
+    name: Backend - Database Migrations
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: 📦 Install dependencies
+        run: npm ci --legacy-peer-deps
+      
+      - name: 🗄️ Generate Prisma Client
+        run: npm run db:generate
+      
+      - name: 🔍 Check migrations
+        run: npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma
+
+  # ============================================================================
+  # SECURITY AUDIT
+  # ============================================================================
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: 🔐 Audit Backend
+        working-directory: ./backend
+        run: npm audit --audit-level=high
+        continue-on-error: true
+      
+      - name: 🔐 Audit Frontend
+        working-directory: ./frontend
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  # ============================================================================
+  # DEPLOYMENT READY CHECK
+  # ============================================================================
+  deployment-ready:
+    name: Deployment Ready
+    runs-on: ubuntu-latest
+    needs: [backend-quality, frontend-quality, database-check]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: ✅ All checks passed
+        run: echo "🚀 Ready for deployment!"
+

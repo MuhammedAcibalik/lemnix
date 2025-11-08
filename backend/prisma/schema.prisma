@@ -1,0 +1,418 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  name          String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  isActive      Boolean        @default(true)
+  lastLogin     DateTime?
+  password      String?
+  role          String         @default("planner")
+  cuttingLists  CuttingList[]
+  optimizations Optimization[]
+  activities    UserActivity[]
+
+  @@index([email])
+  @@index([role, isActive])
+  @@map("users")
+}
+
+model CuttingList {
+  id                  String                  @id @default(cuid())
+  name                String
+  description         String?
+  status              String                  @default("draft")
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  userId              String
+  metadata            Json?
+  weekNumber          Int?
+  sections            Json?
+  items               CuttingListItem[]
+  statistics          CuttingListStatistics[]
+  user                User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productionPlanItems ProductionPlanItem[]
+
+  @@unique([userId, weekNumber])
+  @@index([userId, status])
+  @@index([weekNumber, status])
+  @@index([createdAt(sort: Desc)])
+  @@index([status, updatedAt])
+  @@index([userId, status, createdAt(sort: Desc)])
+  @@index([status, weekNumber, updatedAt])
+  @@index([sections(ops: JsonbPathOps)], type: Gin)
+  @@index([metadata(ops: JsonbPathOps)], type: Gin)
+  @@map("cutting_lists")
+}
+
+model CuttingListItem {
+  id                   String      @id @default(cuid())
+  workOrderId          String
+  date                 String?
+  color                String
+  version              String
+  size                 String
+  profileType          String
+  length               Float
+  quantity             Int
+  orderQuantity        Int?
+  cuttingPattern       String?
+  notes                String?
+  priority             String      @default("medium")
+  status               String      @default("draft")
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  cuttingListId        String
+  materialDescription  String?
+  materialNumber       String?
+  productionPlanItemId String?
+  cuttingList          CuttingList @relation(fields: [cuttingListId], references: [id], onDelete: Cascade)
+
+  @@index([cuttingListId])
+  @@index([workOrderId])
+  @@index([profileType, color])
+  @@index([status, priority])
+  @@index([materialNumber])
+  @@index([productionPlanItemId])
+  @@map("cutting_list_items")
+}
+
+model Optimization {
+  id            String   @id @default(cuid())
+  algorithm     String
+  status        String   @default("pending")
+  executionTime Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  userId        String
+  metadata      Json?
+  parameters    Json
+  result        Json?
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([algorithm, status])
+  @@index([createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+  @@index([userId, algorithm, createdAt(sort: Desc)])
+  @@index([status, algorithm, createdAt(sort: Desc)])
+  @@index([parameters(ops: JsonbPathOps)], type: Gin)
+  @@index([result(ops: JsonbPathOps)], type: Gin)
+  @@index([metadata(ops: JsonbPathOps)], type: Gin)
+  @@map("optimizations")
+}
+
+model StockLength {
+  id        String   @id @default(cuid())
+  length    Float
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("stock_lengths")
+}
+
+model ProfileType {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("profile_types")
+}
+
+model CuttingListStatistics {
+  id                  String      @id @default(cuid())
+  cuttingListId       String
+  totalItems          Int         @default(0)
+  totalProfiles       Int         @default(0)
+  totalQuantity       Int         @default(0)
+  averageWastePercent Float       @default(0)
+  optimizationCount   Int         @default(0)
+  completionRate      Float       @default(0)
+  efficiencyScore     Float       @default(0)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  cuttingList         CuttingList @relation(fields: [cuttingListId], references: [id], onDelete: Cascade)
+
+  @@map("cutting_list_statistics")
+}
+
+model ProfileUsageStatistics {
+  id              String    @id @default(cuid())
+  profileType     String
+  profileName     String
+  measurement     Float
+  totalUsageCount Int       @default(0)
+  totalQuantity   Int       @default(0)
+  averageQuantity Float     @default(0)
+  lastUsed        DateTime?
+  frequencyRank   Int       @default(0)
+  popularityScore Float     @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@unique([profileType, profileName, measurement])
+  @@map("profile_usage_statistics")
+}
+
+model OptimizationStatistics {
+  id                    String   @id @default(cuid())
+  algorithm             String
+  inputItemCount        Int      @default(0)
+  outputItemCount       Int      @default(0)
+  wasteReductionPercent Float    @default(0)
+  executionTimeMs       Int      @default(0)
+  successRate           Float    @default(0)
+  averageEfficiency     Float    @default(0)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  parameters            Json?
+
+  @@index([algorithm, createdAt])
+  @@map("optimization_statistics")
+}
+
+model SystemMetrics {
+  id          String   @id @default(cuid())
+  metricType  String
+  metricName  String
+  metricValue Float
+  metricUnit  String?
+  timestamp   DateTime @default(now())
+  metadata    Json?
+
+  @@index([metricType, timestamp(sort: Desc)])
+  @@index([timestamp(sort: Desc)])
+  @@map("system_metrics")
+}
+
+model UserActivity {
+  id           String   @id @default(cuid())
+  userId       String
+  activityType String
+  ipAddress    String?
+  userAgent    String?
+  sessionId    String?
+  createdAt    DateTime @default(now())
+  activityData Json?
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([activityType, createdAt])
+  @@index([createdAt(sort: Desc)])
+  @@map("user_activities")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  tableName String
+  operation String
+  recordId  String
+  oldData   Json?
+  newData   Json?
+  ipAddress String?
+  userAgent String?
+  timestamp DateTime @default(now())
+
+  @@index([userId, timestamp(sort: Desc)])
+  @@index([tableName, operation])
+  @@index([recordId])
+  @@index([timestamp(sort: Desc)])
+  @@map("audit_logs")
+}
+
+model SuggestionPattern {
+  id              String   @id @default(cuid())
+  contextKey      String
+  patternKey      String   @unique
+  productName     String
+  size            String
+  profile         String
+  measurement     String
+  quantity        Int
+  frequency       Int      @default(1)
+  confidence      Float    @default(0)
+  lastUsed        DateTime @default(now())
+  averageQuantity Float
+  contexts        Json
+  variations      Json
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  averageRatio    Float    @default(1)
+  orderQuantity   Int      @default(1)
+  ratio           Float    @default(1)
+  ratioHistory    Json?
+
+  @@index([contextKey, confidence(sort: Desc)])
+  @@index([productName, size])
+  @@index([profile, measurement])
+  @@index([frequency(sort: Desc)])
+  @@index([lastUsed(sort: Desc)])
+  @@index([orderQuantity, ratio])
+  @@index([contexts(ops: JsonbPathOps)], type: Gin)
+  @@map("suggestion_patterns")
+}
+
+model SuggestionCache {
+  id        String   @id @default(cuid())
+  cacheKey  String   @unique
+  cacheType String
+  data      Json
+  hitCount  Int      @default(0)
+  lastHit   DateTime @default(now())
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([cacheType, expiresAt])
+  @@index([expiresAt])
+  @@map("suggestion_caches")
+}
+
+model SuggestionMetrics {
+  id                String   @id @default(cuid())
+  metricType        String
+  productName       String?
+  size              String?
+  suggestionCount   Int      @default(0)
+  acceptanceRate    Float    @default(0)
+  averageConfidence Float    @default(0)
+  responseTimeMs    Int?
+  metadata          Json?
+  timestamp         DateTime @default(now())
+
+  @@index([metricType, timestamp(sort: Desc)])
+  @@index([productName, size])
+  @@map("suggestion_metrics")
+}
+
+model ProductionPlan {
+  id         String               @id @default(cuid())
+  weekNumber Int
+  year       Int
+  status     String               @default("active")
+  uploadedAt DateTime             @default(now())
+  uploadedBy String?
+  metadata   Json?
+  items      ProductionPlanItem[]
+
+  @@unique([weekNumber, year])
+  @@index([weekNumber, year, status])
+  @@index([uploadedAt(sort: Desc)])
+  @@map("production_plans")
+}
+
+model ProductionPlanItem {
+  id                        String         @id @default(cuid())
+  planId                    String
+  ad                        String
+  siparisVeren              String
+  musteriNo                 String
+  musteriKalemi             String
+  siparis                   String
+  malzemeNo                 String
+  malzemeKisaMetni          String
+  miktar                    Float
+  planlananBitisTarihi      DateTime
+  bolum                     String
+  oncelik                   String
+  linkedCuttingListId       String?
+  encryptedAd               String?
+  encryptedMalzemeKisaMetni String?
+  encryptedMalzemeNo        String?
+  encryptedMusteriKalemi    String?
+  encryptedMusteriNo        String?
+  encryptedSiparis          String?
+  encryptedSiparisVeren     String?
+  linkedCuttingList         CuttingList?   @relation(fields: [linkedCuttingListId], references: [id])
+  plan                      ProductionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([planId])
+  @@index([siparis])
+  @@index([oncelik, planlananBitisTarihi])
+  @@index([bolum, oncelik])
+  @@index([linkedCuttingListId])
+  @@map("production_plan_items")
+}
+
+model MaterialProfileMapping {
+  id               String   @id @default(cuid())
+  malzemeNo        String
+  malzemeKisaMetni String
+  profileType      String
+  length           Float
+  usageCount       Int      @default(1)
+  lastUsed         DateTime @default(now())
+  createdBy        String?
+  createdAt        DateTime @default(now())
+
+  @@unique([malzemeNo, profileType, length])
+  @@index([malzemeNo])
+  @@index([usageCount, lastUsed])
+  @@map("material_profile_mappings")
+}
+
+model ProfileDefinition {
+  id           String                    @id @default(cuid())
+  profileCode  String
+  profileName  String
+  isActive     Boolean                   @default(true)
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+  stockLengths ProfileStockLength[]
+  mappings     WorkOrderProfileMapping[]
+
+  @@unique([profileCode])
+  @@index([isActive])
+  @@index([profileCode, isActive])
+  @@map("profile_definitions")
+}
+
+model ProfileStockLength {
+  id          String            @id @default(cuid())
+  profileId   String
+  stockLength Float
+  isDefault   Boolean           @default(false)
+  priority    Int               @default(0)
+  createdAt   DateTime          @default(now())
+  profile     ProfileDefinition @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId, isDefault])
+  @@index([profileId, priority])
+  @@index([stockLength])
+  @@map("profile_stock_lengths")
+}
+
+model WorkOrderProfileMapping {
+  id          String            @id @default(cuid())
+  workOrderId String
+  profileType String
+  profileId   String
+  weekNumber  Int
+  year        Int
+  uploadedBy  String?
+  createdAt   DateTime          @default(now())
+  profile     ProfileDefinition @relation(fields: [profileId], references: [id])
+
+  @@unique([workOrderId, profileType, weekNumber, year])
+  @@index([weekNumber, year])
+  @@index([profileType])
+  @@index([workOrderId])
+  @@index([profileId, weekNumber, year])
+  @@index([workOrderId, weekNumber, year])
+  @@map("work_order_profile_mappings")
+}

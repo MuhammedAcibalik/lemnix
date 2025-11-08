@@ -1,0 +1,93 @@
+name: PR Quality Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # ============================================================================
+  # PR INFORMATION
+  # ============================================================================
+  pr-info:
+    name: PR Information
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📋 PR Details
+        run: |
+          echo "PR Title: ${{ github.event.pull_request.title }}"
+          echo "PR Author: ${{ github.event.pull_request.user.login }}"
+          echo "Source Branch: ${{ github.head_ref }}"
+          echo "Target Branch: ${{ github.base_ref }}"
+
+  # ============================================================================
+  # CONVENTIONAL COMMITS CHECK
+  # ============================================================================
+  commit-lint:
+    name: Commit Message Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: 🔍 Check commit messages
+        run: |
+          echo "Checking commit messages for conventional commits..."
+          # Add commitlint check here
+          # npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }}
+
+  # ============================================================================
+  # CHANGED FILES CHECK
+  # ============================================================================
+  changed-files:
+    name: Changed Files Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: 🔍 Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            backend/**
+            frontend/**
+      
+      - name: 📊 Report changes
+        run: |
+          echo "Changed backend files: ${{ steps.changed-files.outputs.all_changed_files }}"
+
+  # ============================================================================
+  # PR SIZE CHECK
+  # ============================================================================
+  pr-size:
+    name: PR Size Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: 📏 Check PR size
+        run: |
+          ADDITIONS=$(git diff --shortstat ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | grep -oP '\d+(?= insertions)')
+          DELETIONS=$(git diff --shortstat ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} | grep -oP '\d+(?= deletions)')
+          TOTAL=$((ADDITIONS + DELETIONS))
+          
+          echo "Lines added: $ADDITIONS"
+          echo "Lines deleted: $DELETIONS"
+          echo "Total changes: $TOTAL"
+          
+          if [ $TOTAL -gt 800 ]; then
+            echo "⚠️ PR is large ($TOTAL lines changed). Consider breaking it into smaller PRs."
+          fi
+

@@ -1,0 +1,259 @@
+---
+description: Genetic Algorithm v1.7.1 implementation details and best practices
+globs: **/GeneticAlgorithm.ts,**/optimization/**/*.ts
+---
+
+# Genetic Algorithm v1.7.1 - Implementation Guide
+
+## Critical Features
+
+### 1. Deterministic Behavior
+- **RNG**: Linear Congruential Generator (LCG) with seed `12345`
+- **Item Keys**: Counter-based unique IDs cached in WeakMap
+- **Reproducibility**: Same input + same seed = same output
+
+### 2. Dynamic Fitness Normalization
+- **Method**: Min-max scaling based on population statistics
+- **Rolling Updates**: Every 3-5 generations to adapt to evolving fitness landscape
+- **Components**: Waste ratio, cost, efficiency, time all dynamically normalized
+- **Fallback**: Returns 0.5 (neutral) when range < 1e-6
+
+### 3. Dual Mutation Strategy
+- **Swap Mutation**: Local search, always applied
+- **Inversion Mutation**: Diversity preservation, triggered on stagnation
+- **Adaptive**: Automatically switches based on convergence metrics
+
+### 4. Combined Early Stopping
+- **CV Threshold**: Coefficient of Variation < 0.01 (population converged)
+- **Fitness Improvement**: Change < 1e-4 between generations
+- **Both Required**: Only stops when both conditions met
+
+### 5. Adaptive Parameters
+```typescript
+// Population size scales with problem complexity
+const basePopulation = 50;
+const itemCountFactor = Math.ceil(items.length / 50);
+const populationSize = Math.min(
+  basePopulation * itemCountFactor,
+  MAX_POPULATION_SIZE
+);
+
+// Generations adjust based on stagnation
+let generations = BASE_GENERATIONS;
+if (stagnationCounter > threshold) {
+  generations *= 1.5; // Increase exploration
+}
+```
+
+### 6. Telemetry & Metrics
+```typescript
+performanceMetrics: {
+  algorithmComplexity: string,      // O(n²) or actual
+  convergenceRate: number,          // 0-1 scale
+  generations: number,              // Planned
+  actualGenerations: number,        // Actually used
+  convergenceReason: string,        // "cv-threshold" | "improvement-threshold" | "max-gen"
+  populationSize: number,
+  effectiveComplexity: string,
+  cpuUsage?: number,
+  memoryUsage?: number,
+  scalability?: string
+}
+```
+
+## Critical Implementation Details
+
+### Item Key Generation (Deterministic)
+```typescript
+private itemKeyCache = new WeakMap<OptimizationItem, string>();
+private itemKeyCounter = 0;
+
+// Called once after quantity expansion
+for (const item of expanded) {
+  if (!this.itemKeyCache.has(item)) {
+    const base = item.workOrderId?.trim() 
+      ? item.workOrderId 
+      : `${item.profileType}_${item.length}`;
+    this.itemKeyCache.set(item, `${base}#${this.itemKeyCounter++}`);
+  }
+}
+
+private getStableItemKey(item: OptimizationItem): string {
+  const key = this.itemKeyCache.get(item);
+  if (!key) {
+    // Fallback: should not happen if initialized properly
+    const base = item.workOrderId?.trim() 
+      ? item.workOrderId 
+      : `${item.profileType}_${item.length}`;
+    const newKey = `${base}#${this.itemKeyCounter++}`;
+    this.itemKeyCache.set(item, newKey);
+    return newKey;
+  }
+  return key;
+}
+```
+
+### Order Crossover (OX) with Recovery
+```typescript
+private orderCrossover(parent1: T[], parent2: T[]): T[] {
+  const size = parent1.length;
+  const result: T[] = [];
+  const usedKeys = new Set<string>();
+  
+  // Copy segment from parent1
+  for (let i = start; i <= end; i++) {
+    result[i] = parent1[i];
+    usedKeys.add(this.getStableItemKey(parent1[i]));
+  }
+  
+  // Fill remaining from parent2
+  let currentPos = (end + 1) % size;
+  for (let i = (end + 1) % size; result.length < size; i = (i + 1) % size) {
+    const item = parent2[i];
+    const key = this.getStableItemKey(item);
+    if (!usedKeys.has(key)) {
+      result[currentPos] = item;
+      usedKeys.add(key);
+      currentPos = (currentPos + 1) % size;
+    }
+  }
+  
+  // CRITICAL: Recovery if items lost
+  if (result.length !== size) {
+    let recoveredCount = 0;
+    for (const item of parent1) {
+      if (result.length >= size) break;
+      const key = this.getStableItemKey(item);
+      if (!usedKeys.has(key)) {
+        result.push(item);
+        usedKeys.add(key);
+        recoveredCount++;
+      }
+    }
+    
+    // Log critical error if recovery triggered
+    if (recoveredCount > 0) {
+      this.logger.error('OX recovery triggered', { 
+        expected: size, 
+        actual: result.length,
+        recovered: recoveredCount 
+      });
+    }
+  }
+  
+  return result;
+}
+```
+
+### Fitness Calculation with Rolling Normalization
+```typescript
+// Update stats every 3-5 generations
+if ((gen % 3) === 0) {
+  this.fitnessStats = this.collectFitnessStats(
+    population.map(p => p.result)
+  );
+  
+  // Re-normalize all fitness scores
+  population = population.map(p => ({
+    ...p,
+    fitness: this.calculateFitness(p.result, context.objectives)
+  }));
+  
+  // Re-sync bestEverFitness with new scale
+  bestEverFitness = Math.max(
+    bestEverFitness, 
+    population[0]?.fitness ?? 0
+  );
+}
+```
+
+### Time Unit Consistency
+```typescript
+// ALL time metrics in MINUTES
+const TIME_BASELINE_MIN = 60; // minutes
+const TIME_ESTIMATES = {
+  FFD: 30,    // minutes
+  BFD: 45,    // minutes
+  GENETIC: 90 // minutes
+};
+
+// In fitness calculation
+const timeScore = 1 - normalize01(
+  estimatedTimeMin,
+  0,
+  TIME_BASELINE_MIN // Consistent units
+);
+```
+
+## Constants Reference
+
+### Genetic Algorithm Configuration
+```typescript
+const GA_CONFIG = {
+  BASE_POPULATION_SIZE: 50,
+  MAX_POPULATION_SIZE: 200,
+  BASE_GENERATIONS: 100,
+  MAX_GENERATIONS: 500,
+  MUTATION_RATE: 0.15,
+  CROSSOVER_RATE: 0.80,
+  TOURNAMENT_SIZE: 3,
+  ELITE_SIZE: 2,
+  FITNESS_IMPROVEMENT_THRESHOLD: 1e-4,
+  CV_CONVERGENCE_THRESHOLD: 0.01,
+  STAGNATION_LIMIT: 10,
+  ROLLING_STATS_INTERVAL: 3
+};
+```
+
+### Fitness Normalization
+```typescript
+const FITNESS_NORMALIZATION = {
+  COST_BASELINE: 1000,        // baseline cost in currency
+  TIME_BASELINE_MIN: 60,      // baseline time in minutes
+  EFFICIENCY_BASELINE: 0.85,  // baseline efficiency (85%)
+  MIN_RANGE_THRESHOLD: 1e-6   // minimum range for normalization
+};
+```
+
+## Best Practices
+
+1. **Never use Date.now() or Math.random()** - Breaks determinism
+2. **Always initialize item keys before evolution** - Prevents key conflicts
+3. **Log convergence metrics** - Essential for debugging and tuning
+4. **Monitor recovery triggers** - Should never happen in production
+5. **Keep time units consistent** - All in minutes or all in seconds
+6. **Re-sync bestEverFitness after rolling updates** - Prevents scale mismatch
+7. **Use normalized objectives** - Before sending to GPU or fitness calculation
+
+## GPU Integration (Disabled but Ready)
+
+```typescript
+// When re-enabling GPU:
+// 1. Normalize weights before sending
+const normObjs = this.normalizeWeights(context.objectives);
+const [wWaste, wCost, wEff, wTime] = this.getFitnessWeights(normObjs);
+
+// 2. Send fitness weights to GPU
+const webgpuParams = {
+  fitnessWeights: [wWaste, wCost, wEff, wTime],
+  // ... other params
+};
+
+// 3. Request evolved order indices (not full items)
+// 4. Map indices back to items on CPU
+```
+
+## Testing Checklist
+
+- [ ] Determinism: Same seed → same result
+- [ ] OX Invariant: Output same size and multiset as parents
+- [ ] Recovery: Should never trigger (log error if it does)
+- [ ] Convergence: Stops early with valid reason
+- [ ] Fitness Range: No NaN or Infinity in fitness scores
+- [ ] Time Units: All time metrics consistent
+- [ ] Telemetry: All metrics logged correctly
+
+## File References
+
+- [GeneticAlgorithm.ts](mdc:backend/src/services/optimization/algorithms/GeneticAlgorithm.ts)
+- [Optimization Types](mdc:backend/src/services/optimization/types.ts)
