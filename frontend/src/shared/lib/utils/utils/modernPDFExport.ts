@@ -9,7 +9,7 @@ import html2canvas from 'html2canvas';
 
 // Type definitions (inline for now)
 export interface ModernStatisticsData {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ModernExportOptions {
@@ -21,25 +21,77 @@ export interface ModernExportOptions {
 }
 
 export interface PDFModernSection {
-  [key: string]: any;
+  title?: string;
+  content?: string;
+  data?: unknown;
+  [key: string]: unknown;
 }
 
 export interface PDFChart {
-  [key: string]: any;
+  type?: string;
+  data?: unknown[];
+  labels?: string[];
+  [key: string]: unknown;
 }
 
 export interface PDFAnimation {
-  [key: string]: any;
+  type?: string;
+  duration?: number;
+  [key: string]: unknown;
+}
+
+// PDF Template Type
+interface PDFTemplate {
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    text: string;
+    light: string;
+    gradient: string[];
+  };
+  fonts: {
+    primary: string;
+    secondary: string;
+    sizes: {
+      title: number;
+      subtitle: number;
+      header: number;
+      body: number;
+      small: number;
+    };
+  };
+  effects: {
+    glassmorphism: boolean;
+    gradients: boolean;
+    shadows: boolean;
+    animations: boolean;
+  };
 }
 
 export interface ModernExportResult {
   success: boolean;
-  data?: any;
-  files?: any;
+  data?: {
+    pdf?: Blob;
+    filename?: string;
+  };
+  files?: Array<{
+    name: string;
+    data: Blob;
+    type: string;
+  }>;
+  message?: string;
+  metadata?: {
+    processingTime?: number;
+    dataPoints?: number;
+    chartsGenerated?: number;
+    pagesGenerated?: number;
+  };
 }
 
 // Modern PDF Templates
-const PDF_TEMPLATES = {
+const PDF_TEMPLATES: Record<string, PDFTemplate> = {
   corporate: {
     colors: {
       primary: '#1F2937',
@@ -119,7 +171,7 @@ export const createModernPDFExport = async (
   
   try {
     const doc = new jsPDF('p', 'mm', 'a4');
-    const template: any = PDF_TEMPLATES[options.theme as keyof typeof PDF_TEMPLATES] || PDF_TEMPLATES.corporate;
+    const template: PDFTemplate = PDF_TEMPLATES[options.theme as keyof typeof PDF_TEMPLATES] || PDF_TEMPLATES.corporate;
     
     // Sayfa ayarları
     const pageWidth = doc.internal.pageSize.getWidth();
