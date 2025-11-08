@@ -215,7 +215,7 @@ export const useCuttingListStore = create<CuttingListState & CuttingListActions>
             metadata: {
               ...state.currentList.metadata,
               totalItems: state.currentList.items.length + 1,
-              totalLength: state.currentList.metadata.totalLength + (item.length * item.quantity)
+              totalLength: (state.currentList.metadata?.totalLength || 0) + (item.length * item.quantity)
             }
           };
           
@@ -258,8 +258,8 @@ export const useCuttingListStore = create<CuttingListState & CuttingListActions>
               ...state.currentList.metadata,
               totalItems: state.currentList.items.length - 1,
               totalLength: itemToRemove 
-                ? state.currentList.metadata.totalLength - (itemToRemove.length * itemToRemove.quantity)
-                : state.currentList.metadata.totalLength
+                ? (state.currentList.metadata?.totalLength || 0) - (itemToRemove.length * itemToRemove.quantity)
+                : (state.currentList.metadata?.totalLength || 0)
             }
           };
           
@@ -339,8 +339,7 @@ export const useCuttingListStore = create<CuttingListState & CuttingListActions>
           if (item) {
             const duplicatedItem = {
               ...item,
-              id: `${item.id}_copy_${Date.now()}`,
-              name: `${item.name} (Kopya)`
+              id: `${item.id}_copy_${Date.now()}`
             };
             set({
               currentList: {
