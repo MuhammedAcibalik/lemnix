@@ -9,6 +9,11 @@
 import { useTheme } from '@mui/material';
 import * as DS from '@/App/theme/designSystem.v2';
 
+// Helper type for nested object access
+type NestedObject = {
+  [key: string]: string | number | NestedObject;
+};
+
 /**
  * Design System Hook v2.0
  * 
@@ -36,17 +41,18 @@ export const useDesignSystem = () => {
    */
   const getColor = (path: string): string => {
     const keys = path.split('.');
-    let value: Record<string, unknown> = DS.colors;
+    let value: NestedObject | string | number = DS.colors;
     
     for (const key of keys) {
-      value = value?.[key];
-      if (value === undefined) {
+      if (typeof value === 'object' && value !== null && key in value) {
+        value = value[key];
+      } else {
         console.warn(`Color path "${path}" not found in design system`);
         return '#000000';
       }
     }
     
-    return value as string;
+    return typeof value === 'string' ? value : String(value);
   };
 
   /**
@@ -73,17 +79,18 @@ export const useDesignSystem = () => {
    */
   const getShadow = (path: string): string => {
     const keys = path.split('.');
-    let value: Record<string, unknown> = DS.shadows;
+    let value: NestedObject | string | number = DS.shadows;
     
     for (const key of keys) {
-      value = value?.[key];
-      if (value === undefined) {
+      if (typeof value === 'object' && value !== null && key in value) {
+        value = value[key];
+      } else {
         console.warn(`Shadow path "${path}" not found`);
         return 'none';
       }
     }
     
-    return value as string;
+    return typeof value === 'string' ? value : String(value);
   };
 
   /**
@@ -98,16 +105,17 @@ export const useDesignSystem = () => {
    */
   const getGradient = (key: string): string => {
     const keys = key.split('.');
-    let value: Record<string, unknown> = DS.gradients;
+    let value: NestedObject | string | number = DS.gradients;
     
     for (const k of keys) {
-      value = value?.[k];
-      if (value === undefined) {
+      if (typeof value === 'object' && value !== null && k in value) {
+        value = value[k];
+      } else {
         return DS.gradients.primary;
       }
     }
     
-    return value as string;
+    return typeof value === 'string' ? value : String(value);
   };
 
   /**
@@ -120,13 +128,14 @@ export const useDesignSystem = () => {
   /**
    * Get typography style
    */
-  const getTypography = (path: string) => {
+  const getTypography = (path: string): Record<string, unknown> | string | number => {
     const keys = path.split('.');
-    let value: Record<string, unknown> = DS.typography;
+    let value: NestedObject | string | number = DS.typography;
     
     for (const key of keys) {
-      value = value?.[key];
-      if (value === undefined) {
+      if (typeof value === 'object' && value !== null && key in value) {
+        value = value[key];
+      } else {
         return DS.typography.body.base;
       }
     }
@@ -137,7 +146,7 @@ export const useDesignSystem = () => {
   /**
    * Get transition
    */
-  const getTransition = (type: keyof typeof DS.transitions): string => {
+  const getTransition = (type: keyof typeof DS.transitions): string | Record<string, string> => {
     return DS.transitions[type];
   };
 

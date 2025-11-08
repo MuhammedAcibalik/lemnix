@@ -81,9 +81,14 @@ export const useAppState = (): {
 
   const viewState: AppState = { ...state, activePage };
 
+  const setActivePage = useCallback((page: string): void => {
+    handlePageChange(page);
+  }, [handlePageChange]);
+
   return {
     state: viewState,
     actions: {
+      setActivePage,
       setIsLoading,
       setSnackbar,
       setExcelItems,

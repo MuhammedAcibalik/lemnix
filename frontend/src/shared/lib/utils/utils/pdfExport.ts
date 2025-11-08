@@ -112,7 +112,7 @@ export const exportToPDF = async (
         profile.name,
         profile.count,
         profile.percentage
-      ]);
+      ]) as (string | number)[][];
       
       profileData.unshift(['Profil Tipi', 'Adet', 'Yüzde']);
       yPosition = addTable(doc, profileData, yPosition, pageWidth, margin);
@@ -131,7 +131,7 @@ export const exportToPDF = async (
         category.name,
         category.itemCount,
         category.totalQuantity
-      ]);
+      ]) as (string | number)[][];
       
       categoryData.unshift(['Kategori', 'Ürün Sayısı', 'Toplam Miktar']);
       yPosition = addTable(doc, categoryData, yPosition, pageWidth, margin);
@@ -150,7 +150,7 @@ export const exportToPDF = async (
         color.color,
         color.count,
         color.percentage
-      ]);
+      ]) as (string | number)[][];
       
       colorData.unshift(['Renk', 'Adet', 'Yüzde']);
       yPosition = addTable(doc, colorData, yPosition, pageWidth, margin);
@@ -169,14 +169,14 @@ export const exportToPDF = async (
         size.size,
         size.count,
         size.percentage
-      ]);
+      ]) as (string | number)[][];
       
       sizeData.unshift(['Ebat', 'Adet', 'Yüzde']);
       yPosition = addTable(doc, sizeData, yPosition, pageWidth, margin);
     }
 
     // Footer
-    const pageCount = (doc as { internal: { getNumberOfPages: () => number } }).internal.getNumberOfPages();
+    const pageCount = (doc as unknown as { internal: { getNumberOfPages: () => number } }).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
       doc.setFontSize(8);

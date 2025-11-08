@@ -82,7 +82,7 @@ export const ProductionPlanListPage: React.FC = () => {
     <Box sx={{ width: '100%', p: { xs: 2, md: 3, lg: 4 }, maxWidth: '1600px', mx: 'auto' }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, gap: 2, flexWrap: 'wrap' }}>
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: ds.palette.primary.main, mb: 1 }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: ds.colors.primary.main, mb: 1 }}>
             Üretim Planları
           </Typography>
           <Typography variant="body1" color="text.secondary">
@@ -114,20 +114,22 @@ export const ProductionPlanListPage: React.FC = () => {
           <ProductionPlanFilters
             filters={filters}
             onFiltersChange={handleFiltersChange}
-            isLoading={plansLoading}
           />
         </Card>
 
-        <PlanMetrics
-          metrics={metrics}
-          isLoading={metricsLoading}
-        />
+        {metrics && (
+          <PlanMetrics
+            metrics={metrics}
+            loading={metricsLoading}
+          />
+        )}
 
         <ProductionPlanTable
           plans={plans}
-          isLoading={plansLoading}
+          loading={plansLoading}
           error={plansError}
-          availableItems={availableItems}
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
         />
       </Box>
 

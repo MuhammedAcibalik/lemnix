@@ -51,12 +51,12 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   const getIcon = () => {
     switch (variant) {
       case 'warning':
-        return <WarningAmberIcon sx={{ fontSize: ds.componentSizes.icon.lg, color: ds.colors.warning.main }} />;
+        return <WarningAmberIcon sx={{ fontSize: ds.componentSizes.icon.large, color: ds.colors.warning.main }} />;
       case 'error':
-        return <ErrorOutlineIcon sx={{ fontSize: ds.componentSizes.icon.lg, color: ds.colors.error.main }} />;
+        return <ErrorOutlineIcon sx={{ fontSize: ds.componentSizes.icon.large, color: ds.colors.error.main }} />;
       case 'info':
       default:
-        return <InfoIcon sx={{ fontSize: ds.componentSizes.icon.lg, color: ds.colors.info.main }} />;
+        return <InfoIcon sx={{ fontSize: ds.componentSizes.icon.large, color: ds.colors.info.main }} />;
     }
   };
 
@@ -73,7 +73,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           backgroundColor: ds.colors.error.main,
           color: '#ffffff',
           '&:hover': {
-            backgroundColor: ds.colors.error.dark,
+            backgroundColor: ds.colors.error[700],
           },
         };
       case 'warning':
@@ -82,7 +82,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           backgroundColor: ds.colors.warning.main,
           color: '#ffffff',
           '&:hover': {
-            backgroundColor: ds.colors.warning.dark,
+            backgroundColor: ds.colors.warning[700],
           },
         };
       case 'primary':

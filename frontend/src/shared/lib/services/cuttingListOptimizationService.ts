@@ -4,7 +4,7 @@
  * @version 2.0.0 - Enterprise Grade
  */
 
-import { OptimizationItem } from '../types';
+import { OptimizationItem } from '../../types/legacy';
 import { MeasurementConverter } from '../utils/measurementConverter';
 
 // ============================================================================
@@ -251,7 +251,7 @@ export class CuttingListOptimizationService {
       }
 
       // Handle missing profile type
-      let profileType = profile.profile || 'Genel';
+      const profileType = profile.profile || 'Genel';
       if (!profile.profile) {
         warnings.push({
           type: 'ASSUMED_VALUE',

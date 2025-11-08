@@ -43,7 +43,33 @@ export const exportStatistics = async (
 /**
  * Veri formatını StatisticsData'ya dönüştürür
  */
-export const formatStatisticsData = (rawData: Record<string, unknown>): StatisticsData => {
+interface RawStatisticsData {
+  overview?: {
+    totalItems?: number;
+    totalCategories?: number;
+    averageQuantity?: number;
+    totalWeight?: number;
+  };
+  workOrderAnalysis?: {
+    completed?: number;
+    pending?: number;
+    total?: number;
+    averageProcessingTime?: number;
+  };
+  profileAnalysis?: {
+    profileTypes?: unknown[];
+  };
+  productCategories?: {
+    categories?: unknown[];
+  };
+  colorSize?: {
+    colorAnalysis?: unknown[];
+    sizeAnalysis?: unknown[];
+    colorSizeCombinations?: unknown[];
+  };
+}
+
+export const formatStatisticsData = (rawData: RawStatisticsData): StatisticsData => {
   return {
     kesimListesi: {
       toplamUrun: rawData?.overview?.totalItems || 0,

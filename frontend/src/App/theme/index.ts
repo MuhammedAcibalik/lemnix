@@ -8,7 +8,7 @@ import { createTheme } from '@mui/material';
 import * as DS from './designSystem.v2';
 import { responsive, gridSpacing, gridSizes, containerSizes, container, mediaQuery, layouts, componentVariants, animations } from './responsiveUtils';
 
-const getColorScale = (scale: typeof DS.colors.primary) => ({
+const getColorScale = (scale: { main: string; light: string; dark: string; contrast: string }) => ({
   main: scale.main,
   light: scale.light,
   dark: scale.dark,
@@ -33,7 +33,7 @@ const getPropertyWithFallback = (
 
 const spacing = (factor: number) => factor * DS.spacing['1'];
 
-const muiShadows: string[] = [
+const baseShadows: string[] = [
   DS.shadows.none,
   DS.shadows.soft.sm,
   DS.shadows.soft.md,
@@ -55,9 +55,11 @@ const muiShadows: string[] = [
   DS.shadows.cardHover,
 ];
 
-while (muiShadows.length < 25) {
-  muiShadows.push(DS.shadows.soft['2xl']);
-}
+// MUI requires exactly 25 shadow values
+const muiShadows = [
+  ...baseShadows,
+  ...Array(25 - baseShadows.length).fill(DS.shadows.soft['2xl'])
+] as unknown as ["none", string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string];
 
 export const globalStyles = `
   @keyframes lemnixRotate {
@@ -88,10 +90,10 @@ export const theme = createTheme({
       dark: DS.colors.warning[700],
     },
     error: {
-      ...getColorScale(DS.colors.status.critical),
       main: DS.colors.error.main,
       light: DS.colors.error[300],
       dark: DS.colors.error[700],
+      contrastText: '#ffffff',
     },
     info: {
       ...getColorScale(DS.colors.primary),

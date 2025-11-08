@@ -6,17 +6,92 @@
 
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { 
-  ModernStatisticsData, 
-  ModernExportOptions, 
-  PDFModernSection, 
-  PDFChart,
-  PDFAnimation,
-  ModernExportResult 
-} from './modernExportTypes';
+
+// Type definitions (inline for now)
+export interface ModernStatisticsData {
+  [key: string]: unknown;
+}
+
+export interface ModernExportOptions {
+  format?: 'a4' | 'letter';
+  orientation?: 'portrait' | 'landscape';
+  template?: string;
+  theme?: string;
+  filename?: string;
+}
+
+export interface PDFModernSection {
+  title?: string;
+  content?: string;
+  data?: unknown;
+  [key: string]: unknown;
+}
+
+export interface PDFChart {
+  type?: string;
+  data?: unknown[];
+  labels?: string[];
+  [key: string]: unknown;
+}
+
+export interface PDFAnimation {
+  type?: string;
+  duration?: number;
+  [key: string]: unknown;
+}
+
+// PDF Template Type
+interface PDFTemplate {
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    background: string;
+    text: string;
+    light: string;
+    gradient: string[];
+  };
+  fonts: {
+    primary: string;
+    secondary: string;
+    sizes: {
+      title: number;
+      subtitle: number;
+      header: number;
+      body: number;
+      small: number;
+    };
+  };
+  effects: {
+    glassmorphism: boolean;
+    gradients: boolean;
+    shadows: boolean;
+    animations: boolean;
+  };
+}
+
+export interface ModernExportResult {
+  success: boolean;
+  data?: {
+    pdf?: Blob;
+    filename?: string;
+  };
+  files?: Array<{
+    name: string;
+    data: Blob;
+    type: string;
+  }>;
+  message?: string;
+  metadata?: {
+    processingTime?: number;
+    dataPoints?: number;
+    chartsGenerated?: number;
+    pagesGenerated?: number;
+  };
+}
 
 // Modern PDF Templates
-const PDF_TEMPLATES = {
+const PDF_TEMPLATES: Record<string, PDFTemplate> = {
   corporate: {
     colors: {
       primary: '#1F2937',
@@ -96,7 +171,7 @@ export const createModernPDFExport = async (
   
   try {
     const doc = new jsPDF('p', 'mm', 'a4');
-    const template = PDF_TEMPLATES[options.theme] || PDF_TEMPLATES.corporate;
+    const template: PDFTemplate = PDF_TEMPLATES[options.theme as keyof typeof PDF_TEMPLATES] || PDF_TEMPLATES.corporate;
     
     // Sayfa ayarları
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -157,7 +232,7 @@ export const createModernPDFExport = async (
         processingTime,
         dataPoints: calculateDataPoints(data),
         chartsGenerated: 6,
-        pagesGenerated: doc.internal.getNumberOfPages()
+        pagesGenerated: (doc as any).internal.getNumberOfPages ? (doc as any).internal.getNumberOfPages() : 1
       }
     };
     

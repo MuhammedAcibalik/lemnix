@@ -93,7 +93,7 @@ export function useProgressiveUpload(): UseProgressiveUploadReturn {
 
       socket.on('connect', () => {
         console.log('🔌 WebSocket connected for progressive upload');
-        sessionIdRef.current = socket.id;
+        sessionIdRef.current = socket.id || null;
       });
 
       socket.on('disconnect', () => {

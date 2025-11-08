@@ -169,7 +169,7 @@ export const validationConstants = {
   search: {
     minLength: 2,
     maxLength: 100,
-    allowedCharacters: /^[a-zA-Z0-9\s\-_\.]+$/
+    allowedCharacters: /^[a-zA-Z0-9\s\-_.]+$/
   },
   filters: {
     maxProfileTypes: 20,

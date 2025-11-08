@@ -176,7 +176,7 @@ export class ExcelParserService {
     const validItems: ProductionPlanItem[] = [];
     const errors: string[] = [];
     let weekNumber = 0;
-    let year = new Date().getFullYear();
+    const year = new Date().getFullYear();
 
     // Headers and data rows loaded successfully
 
@@ -323,9 +323,9 @@ export class ExcelParserService {
     // Try different date formats - prioritize DD.MM.YYYY (Turkish format)
     const formats = [
       /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/, // DD.MM.YYYY (Turkish format - PRIORITY)
-      /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/, // DD/MM/YYYY, DD-MM-YYYY
-      /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/, // DD/MM/YY, DD-MM-YY (MM/DD/YY Excel format)
-      /^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/, // YYYY/MM/DD, YYYY-MM-DD, YYYY.MM.DD
+      /^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/, // DD/MM/YYYY, DD-MM-YYYY
+      /^(\d{1,2})[/-](\d{1,2})[/-](\d{2})$/, // DD/MM/YY, DD-MM-YY (MM/DD/YY Excel format)
+      /^(\d{4})[/.-](\d{1,2})[/.-](\d{1,2})$/, // YYYY/MM/DD, YYYY-MM-DD, YYYY.MM.DD
     ];
 
     for (const format of formats) {

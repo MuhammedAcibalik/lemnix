@@ -52,7 +52,17 @@ export class ProductionPlanService {
         };
       }
 
-      const { weekNumber, year } = parseResult.summary!;
+      // Type guard: ensure data and summary are defined
+      const parsedData = parseResult.data;
+      const parsedSummary = parseResult.summary;
+      if (!parsedData || !parsedSummary) {
+        return {
+          success: false,
+          errors: ['Excel dosyası işlenemedi - veri bulunamadı']
+        };
+      }
+
+      const { weekNumber, year } = parsedSummary;
 
       // TODO: Re-enable duplicate check after testing
       // Check if plan already exists for this week/year
@@ -79,16 +89,16 @@ export class ProductionPlanService {
             year,
             uploadedBy,
             metadata: {
-              totalItems: parseResult.data.length,
-              validRows: parseResult.summary!.validRows,
-              invalidRows: parseResult.summary!.invalidRows,
+              totalItems: parsedData.length,
+              validRows: parsedSummary.validRows,
+              invalidRows: parsedSummary.invalidRows,
               uploadedAt: new Date().toISOString()
             }
           }
         });
 
         await tx.productionPlanItem.createMany({
-          data: parseResult.data.map(item => mapProductionPlanItem(item, plan.id))
+          data: parsedData.map(item => mapProductionPlanItem(item, plan.id))
         });
 
         return tx.productionPlan.findUnique({
@@ -492,12 +502,12 @@ function decryptProductionPlanItem(item: ProductionPlanItem & {
   encryptedMalzemeNo?: string | null;
   encryptedMalzemeKisaMetni?: string | null;
 }): ProductionPlanItem {
-  const resolveField = (encrypted: string | null | undefined, fallback: string | null): string | null => {
+  const resolveField = (encrypted: string | null | undefined, fallback: string): string => {
     if (encrypted && encrypted.trim()) {
       return encryptionService.decryptString(encrypted);
     }
 
-    return decryptField(fallback ?? null);
+    return decryptField(fallback) ?? fallback;
   };
 
   return {
