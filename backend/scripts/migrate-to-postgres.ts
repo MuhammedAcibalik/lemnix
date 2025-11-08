@@ -91,12 +91,12 @@ async function migrateData(): Promise<void> {
       (data) => postgres.stockLength.createMany({ data, skipDuplicates: true })
     ));
     
-    // 4. Work Orders
-    stats.push(await migrateModel(
-      'WorkOrders',
-      () => sqlite.workOrder.findMany(),
-      (data) => postgres.workOrder.createMany({ data, skipDuplicates: true })
-    ));
+    // 4. Work Orders - Commented out as this model doesn't exist in current schema
+    // stats.push(await migrateModel(
+    //   'WorkOrders',
+    //   () => sqlite.workOrder.findMany(),
+    //   (data) => postgres.workOrder.createMany({ data, skipDuplicates: true })
+    // ));
     
     // 5. Cutting Lists
     stats.push(await migrateModel(
@@ -141,11 +141,12 @@ async function migrateData(): Promise<void> {
       (data) => postgres.cuttingListStatistics.createMany({ data, skipDuplicates: true })
     ));
     
-    stats.push(await migrateModel(
-      'WorkOrderStatistics',
-      () => sqlite.workOrderStatistics.findMany(),
-      (data) => postgres.workOrderStatistics.createMany({ data, skipDuplicates: true })
-    ));
+    // WorkOrderStatistics - Commented out as this model doesn't exist in current schema
+    // stats.push(await migrateModel(
+    //   'WorkOrderStatistics',
+    //   () => sqlite.workOrderStatistics.findMany(),
+    //   (data) => postgres.workOrderStatistics.createMany({ data, skipDuplicates: true })
+    // ));
     
     stats.push(await migrateModel(
       'ProfileUsageStatistics',

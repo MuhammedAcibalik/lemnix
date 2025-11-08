@@ -232,7 +232,7 @@ export class DataTransformers {
     const str = this.toString(value);
     if (!str) return undefined;
     
-    const normalized = str.replace(/[^\d.,\-]/g, '').replace(',', '.');
+    const normalized = str.replace(/[^\d.,-]/g, '').replace(',', '.');
     const num = Number(normalized);
     
     return TypeGuards.isNumber(num) ? num : undefined;
@@ -488,7 +488,7 @@ export class PatternDetector {
   ): ProductSection | null {
     let productName = '';
     let sectionStartRow = startIndex;
-    let headerRow = headerPattern?.rowIndex ?? -1;
+    const headerRow = headerPattern?.rowIndex ?? -1;
     const dataRows: number[] = [];
 
     console.log(`🔍 Searching for product section starting from row ${startIndex}`);
@@ -879,8 +879,8 @@ export class PatternDetector {
       /^[A-Z]{1,2}\d{4,8}[A-Z]*$/i,   // Mixed alphanumeric (A1234B, AB1234)
       /^\d{3,8}[A-Z]{1,3}$/i,         // Numbers + letters (123456A, 1234AB)
       /^[A-Z]{1,4}\/\d{4,8}$/i,       // Letter/number format (WO/123456)
-      /^\d{2,4}[-\/]\d{3,6}$/,        // Number-number format (23-456, 2023/1234)
-      /^[A-Z]\d{2,3}[-\/]\d{3,6}$/i,   // Letter+num/num format (A23-456)
+      /^\d{2,4}[-/]\d{3,6}$/,        // Number-number format (23-456, 2023/1234)
+      /^[A-Z]\d{2,3}[-/]\d{3,6}$/i,   // Letter+num/num format (A23-456)
       
       // GEVŞEK PATTERN'LER
       /^[A-Z0-9]{3,12}$/i,            // Any alphanumeric between 3-12 chars

@@ -167,7 +167,7 @@ export const EnterpriseOptimizationForm: React.FC<EnterpriseOptimizationFormProp
   // Calculate form completion
   const formCompletion = useMemo(() => {
     let completed = 0;
-    let total = 4;
+    const total = 4;
     
     if (cuttingList.length > 0) completed++;
     if (params.algorithm) completed++;

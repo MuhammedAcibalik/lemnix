@@ -136,7 +136,7 @@ function responseErrorInterceptor(error: AxiosError<ApiErrorResponse>): Promise<
   }
   
   let userMessage = 'Beklenmeyen bir hata oluştu';
-  let shouldShowToast = true;
+  const shouldShowToast = true;
   
   if (error.response) {
     // Server responded with error

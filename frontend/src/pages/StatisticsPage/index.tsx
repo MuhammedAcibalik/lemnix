@@ -59,12 +59,23 @@ interface TabPanelProps {
   value: number;
 }
 
+interface StatisticsOverviewData {
+  totalCuttingLists: number;
+  totalWorkOrders: number;
+  totalProfiles: number;
+  averageEfficiency: number;
+  totalWasteReduction: number;
+  optimizationSuccessRate: number;
+  activeUsers: number;
+  systemUptime: number;
+}
+
 interface StatisticsData {
-  overview: Record<string, unknown>;
-  performance: Record<string, unknown>;
-  usage: Record<string, unknown>;
-  optimization: Record<string, unknown>;
-  systemHealth: Record<string, unknown>;
+  overview: StatisticsOverviewData | null;
+  performance: Record<string, unknown> | null;
+  usage: Record<string, unknown> | null;
+  optimization: Record<string, unknown> | null;
+  systemHealth: Record<string, unknown> | null;
 }
 
 // ============================================================================
@@ -388,11 +399,11 @@ export const StatisticsPage: React.FC = () => {
             </TabPanel>
 
             <TabPanel value={activeTab} index={1}>
-              <PerformanceMetrics data={statisticsData.performance} />
+              <PerformanceMetrics data={statisticsData.performance || {}} />
             </TabPanel>
 
             <TabPanel value={activeTab} index={2}>
-              <UsageAnalytics data={statisticsData.usage} />
+              <UsageAnalytics data={statisticsData.usage || {}} />
             </TabPanel>
 
             <TabPanel value={activeTab} index={3}>
@@ -401,12 +412,12 @@ export const StatisticsPage: React.FC = () => {
                 <OptimizationHistoryWidget limit={10} />
                 
                 {/* Legacy Analytics */}
-                <OptimizationAnalytics data={statisticsData.optimization} />
+                <OptimizationAnalytics data={statisticsData.optimization || {}} />
               </Stack>
             </TabPanel>
 
             <TabPanel value={activeTab} index={4}>
-              <SystemHealth data={statisticsData.systemHealth} />
+              <SystemHealth data={statisticsData.systemHealth || {}} />
             </TabPanel>
           </Box>
         </FadeIn>

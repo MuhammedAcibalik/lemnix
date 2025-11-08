@@ -329,13 +329,6 @@ export interface OptimizationRecommendation {
 // SELECTION SYSTEM TYPES
 // ============================================================================
 
-export interface ProfileItem {
-  id: string;
-  profile: string;
-  measurement: string;
-  quantity: number;
-}
-
 export interface WorkOrderItem {
   id: string;
   workOrderId: string;

@@ -14,6 +14,15 @@ export interface QuickCreateParams {
   readonly description?: string;
 }
 
+// Helper to get current week number
+function getCurrentWeekNumber(): number {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 1);
+  const diff = now.getTime() - start.getTime();
+  const oneWeek = 1000 * 60 * 60 * 24 * 7;
+  return Math.ceil(diff / oneWeek);
+}
+
 export function useQuickCreate() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,9 +44,8 @@ export function useQuickCreate() {
 
     try {
       const request: CreateCuttingListRequest = {
-        title: params.title,
-        description: params.description,
-        sections: [], // Empty sections to start with
+        name: params.title,
+        weekNumber: getCurrentWeekNumber(),
       };
 
       const result = await createMutation.mutateAsync(request);

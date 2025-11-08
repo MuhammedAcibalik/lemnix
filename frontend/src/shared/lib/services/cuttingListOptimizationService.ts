@@ -251,7 +251,7 @@ export class CuttingListOptimizationService {
       }
 
       // Handle missing profile type
-      let profileType = profile.profile || 'Genel';
+      const profileType = profile.profile || 'Genel';
       if (!profile.profile) {
         warnings.push({
           type: 'ASSUMED_VALUE',
