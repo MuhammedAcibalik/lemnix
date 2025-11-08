@@ -59,8 +59,19 @@ interface TabPanelProps {
   value: number;
 }
 
+interface StatisticsOverviewData {
+  totalCuttingLists: number;
+  totalWorkOrders: number;
+  totalProfiles: number;
+  averageEfficiency: number;
+  totalWasteReduction: number;
+  optimizationSuccessRate: number;
+  activeUsers: number;
+  systemUptime: number;
+}
+
 interface StatisticsData {
-  overview: Record<string, unknown> | null;
+  overview: StatisticsOverviewData | null;
   performance: Record<string, unknown> | null;
   usage: Record<string, unknown> | null;
   optimization: Record<string, unknown> | null;

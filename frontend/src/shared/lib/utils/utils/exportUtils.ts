@@ -43,7 +43,7 @@ export const exportStatistics = async (
 /**
  * Veri formatını StatisticsData'ya dönüştürür
  */
-export const formatStatisticsData = (rawData: Record<string, unknown>): StatisticsData => {
+export const formatStatisticsData = (rawData: any): StatisticsData => {
   return {
     kesimListesi: {
       toplamUrun: rawData?.overview?.totalItems || 0,

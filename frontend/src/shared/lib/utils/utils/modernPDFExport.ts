@@ -6,14 +6,34 @@
 
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { 
-  ModernStatisticsData, 
-  ModernExportOptions, 
-  PDFModernSection, 
-  PDFChart,
-  PDFAnimation,
-  ModernExportResult 
-} from './modernExportTypes';
+
+// Type definitions (inline for now)
+export interface ModernStatisticsData {
+  [key: string]: any;
+}
+
+export interface ModernExportOptions {
+  format?: 'a4' | 'letter';
+  orientation?: 'portrait' | 'landscape';
+  template?: string;
+}
+
+export interface PDFModernSection {
+  [key: string]: any;
+}
+
+export interface PDFChart {
+  [key: string]: any;
+}
+
+export interface PDFAnimation {
+  [key: string]: any;
+}
+
+export interface ModernExportResult {
+  success: boolean;
+  data?: any;
+}
 
 // Modern PDF Templates
 const PDF_TEMPLATES = {

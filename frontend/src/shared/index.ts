@@ -69,7 +69,7 @@ export type { ValidationError, ValidationResult, ValidationSeverity } from './li
 
 // Design System Hook (CRITICAL - Single Source of Truth)
 export { useDesignSystem } from './hooks';
-export type { DesignSystem, ColorPath } from './hooks';
+export type { DesignSystem } from './hooks';
 export { 
   colors, 
   spacing, 
@@ -141,7 +141,7 @@ export type { FadeInProps, ScaleInProps, StaggerProps } from './ui/Motion';
 
 // Modern Components v2.0 (FAZ 3)
 export { ButtonV2, PrimaryButton as PrimaryButtonV2, SecondaryButton as SecondaryButtonV2, GhostButton, GradientButton, SoftButton, LinkButton, DangerButton as DangerButtonV2, SuccessButton as SuccessButtonV2 } from './ui/Button/Button.v2';
-export type { ButtonV2Props, ButtonVariant } from './ui/Button/Button.v2';
+export type { ButtonV2Props } from './ui/Button/Button.v2';
 
 export { CardV2 } from './ui/Card/Card.v2';
 export type { CardV2Props, CardVariant } from './ui/Card/Card.v2';

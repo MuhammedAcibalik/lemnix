@@ -4,7 +4,7 @@
  * @version 2.0.0 - Enterprise Grade
  */
 
-import { OptimizationItem } from '../types';
+import { OptimizationItem } from '../../types/legacy';
 import { MeasurementConverter } from '../utils/measurementConverter';
 
 // ============================================================================
