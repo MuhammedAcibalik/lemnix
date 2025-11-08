@@ -16,6 +16,8 @@ export interface ModernExportOptions {
   format?: 'a4' | 'letter';
   orientation?: 'portrait' | 'landscape';
   template?: string;
+  theme?: string;
+  filename?: string;
 }
 
 export interface PDFModernSection {
@@ -33,6 +35,7 @@ export interface PDFAnimation {
 export interface ModernExportResult {
   success: boolean;
   data?: any;
+  files?: any;
 }
 
 // Modern PDF Templates
@@ -116,7 +119,7 @@ export const createModernPDFExport = async (
   
   try {
     const doc = new jsPDF('p', 'mm', 'a4');
-    const template = PDF_TEMPLATES[options.theme] || PDF_TEMPLATES.corporate;
+    const template: any = PDF_TEMPLATES[options.theme as keyof typeof PDF_TEMPLATES] || PDF_TEMPLATES.corporate;
     
     // Sayfa ayarları
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -177,7 +180,7 @@ export const createModernPDFExport = async (
         processingTime,
         dataPoints: calculateDataPoints(data),
         chartsGenerated: 6,
-        pagesGenerated: doc.internal.getNumberOfPages()
+        pagesGenerated: (doc as any).internal.getNumberOfPages ? (doc as any).internal.getNumberOfPages() : 1
       }
     };
     
