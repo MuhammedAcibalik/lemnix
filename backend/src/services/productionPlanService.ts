@@ -6,7 +6,8 @@
 
 import { PrismaClient, ProductionPlan, ProductionPlanItem } from '@prisma/client';
 import { excelParserService, ExcelParseResult } from './excelParserService';
-import { encryptionService, batchDecryptStrings } from './encryptionService';
+import { encryptionService, batchDecryptStrings, decryptField } from './encryptionService';
+import { logger } from './logger';
 
 export interface ProductionPlanWithItems extends ProductionPlan {
   items: ProductionPlanItem[];
@@ -71,60 +72,36 @@ export class ProductionPlanService {
       //   };
       // }
 
-      // Create production plan
-      const productionPlan = await this.prisma.productionPlan.create({
-        data: {
-          weekNumber,
-          year,
-          uploadedBy,
-          metadata: {
-            totalItems: parseResult.data.length,
-            validRows: parseResult.summary!.validRows,
-            invalidRows: parseResult.summary!.invalidRows,
-            uploadedAt: new Date().toISOString()
+      const createdPlan = await this.prisma.$transaction(async (tx) => {
+        const plan = await tx.productionPlan.create({
+          data: {
+            weekNumber,
+            year,
+            uploadedBy,
+            metadata: {
+              totalItems: parseResult.data.length,
+              validRows: parseResult.summary!.validRows,
+              invalidRows: parseResult.summary!.invalidRows,
+              uploadedAt: new Date().toISOString()
+            }
           }
-        }
+        });
+
+        await tx.productionPlanItem.createMany({
+          data: parseResult.data.map(item => mapProductionPlanItem(item, plan.id))
+        });
+
+        return tx.productionPlan.findUnique({
+          where: { id: plan.id },
+          include: { items: true }
+        });
       });
 
-      // Create production plan items with OPTIMIZED encryption
-      const items = await this.prisma.productionPlanItem.createMany({
-        data: parseResult.data.map(item => {
-          // ✅ PERFORMANCE: Encrypt once, use for both fields
-          const encryptedAd = encryptionService.encryptString(item.ad);
-          const encryptedSiparisVeren = encryptionService.encryptString(item.siparisVeren);
-          const encryptedMusteriNo = encryptionService.encryptString(item.musteriNo);
-          const encryptedMusteriKalemi = encryptionService.encryptString(item.musteriKalemi);
-          const encryptedSiparis = encryptionService.encryptString(item.siparis);
-          const encryptedMalzemeNo = encryptionService.encryptString(item.malzemeNo);
-          const encryptedMalzemeKisaMetni = encryptionService.encryptString(item.malzemeKisaMetni);
-          
-          return {
-            ...item,
-            planId: productionPlan.id,
-            // Use encrypted values for both original and encrypted fields
-            ad: encryptedAd,
-            siparisVeren: encryptedSiparisVeren,
-            musteriNo: encryptedMusteriNo,
-            musteriKalemi: encryptedMusteriKalemi,
-            siparis: encryptedSiparis,
-            malzemeNo: encryptedMalzemeNo,
-            malzemeKisaMetni: encryptedMalzemeKisaMetni,
-            // Store same encrypted values in dedicated fields
-            encryptedAd,
-            encryptedSiparisVeren,
-            encryptedMusteriNo,
-            encryptedMusteriKalemi,
-            encryptedSiparis,
-            encryptedMalzemeNo,
-            encryptedMalzemeKisaMetni
-          };
-        })
-      });
-
-      // Fetch created plan with items
-      const createdPlan = await this.prisma.productionPlan.findUnique({
-        where: { id: productionPlan.id },
-        include: { items: true }
+      logger.info('Production plan created', {
+        weekNumber,
+        year,
+        uploadedBy,
+        itemCount: parseResult.data.length
       });
 
       return {
@@ -153,11 +130,6 @@ export class ProductionPlanService {
       page = 1,
       limit = 50
     } = filters;
-
-    console.log('🔍 [Backend] Filter Debug:', {
-      inputFilters: filters,
-      parsedFilters: { weekNumber, year, status, bolum, oncelik, page, limit }
-    });
 
     const where: Record<string, unknown> = {};
 
@@ -189,12 +161,6 @@ export class ProductionPlanService {
       itemWhere.oncelik = mappedOncelik;
     }
 
-    console.log('🔍 [Backend] Where Clauses:', {
-      planWhere: where,
-      itemWhere,
-      hasItemFilters: Object.keys(itemWhere).length > 0
-    });
-
     const plans = await this.prisma.productionPlan.findMany({
       where: {
         ...where,
@@ -221,113 +187,16 @@ export class ProductionPlanService {
       take: limit
     });
 
-    console.log('🔍 [Backend] Query Result:', {
+    logger.debug('Loaded production plans', {
       plansFound: plans.length,
       plansWithItems: plans.filter(p => p.items.length > 0).length,
-      totalItems: plans.reduce((sum, p) => sum + p.items.length, 0),
-      firstPlan: plans[0] ? {
-        id: plans[0].id,
-        weekNumber: plans[0].weekNumber,
-        year: plans[0].year,
-        itemCount: plans[0].items.length
-      } : null
+      totalItems: plans.reduce((sum, p) => sum + p.items.length, 0)
     });
 
-    console.log('🔍 [Backend] Starting decryption process...');
-
-      // ✅ SIMPLIFIED: Direct decryption for each item
-      const decryptedPlans = plans.map(plan => ({
-        ...plan,
-        items: plan.items.map(item => {
-          const itemWithEncrypted = item as typeof item & {
-            encryptedAd?: string | null;
-            encryptedSiparisVeren?: string | null;
-            encryptedMusteriNo?: string | null;
-            encryptedMusteriKalemi?: string | null;
-            encryptedSiparis?: string | null;
-            encryptedMalzemeNo?: string | null;
-            encryptedMalzemeKisaMetni?: string | null;
-          };
-          
-          // Check if item has encrypted fields OR if original fields are encrypted
-          const hasEncryptedFields = itemWithEncrypted.encryptedAd || 
-            itemWithEncrypted.encryptedSiparisVeren || 
-            itemWithEncrypted.encryptedMusteriNo ||
-            itemWithEncrypted.encryptedMusteriKalemi ||
-            itemWithEncrypted.encryptedSiparis ||
-            itemWithEncrypted.encryptedMalzemeNo ||
-            itemWithEncrypted.encryptedMalzemeKisaMetni;
-          
-          const hasOriginalEncryptedFields = encryptionService.isEncrypted(item.ad || '') ||
-            encryptionService.isEncrypted(item.siparisVeren || '') ||
-            encryptionService.isEncrypted(item.musteriNo || '') ||
-            encryptionService.isEncrypted(item.musteriKalemi || '') ||
-            encryptionService.isEncrypted(item.siparis || '') ||
-            encryptionService.isEncrypted(item.malzemeNo || '') ||
-            encryptionService.isEncrypted(item.malzemeKisaMetni || '');
-          
-          if (!hasEncryptedFields && !hasOriginalEncryptedFields) {
-            console.log('🔍 DEBUG - No encrypted fields found for item:', item.id);
-            return item; // Return as-is if no encrypted fields
-          }
-          
-          console.log('🔍 DEBUG - Encrypted fields detected:', {
-            itemId: item.id,
-            hasEncryptedFields,
-            hasOriginalEncryptedFields
-          });
-          
-          // Decrypt each field individually with error handling
-          try {
-            console.log('🔍 DEBUG - Item decryption:', {
-              itemId: item.id,
-              hasEncryptedAd: !!itemWithEncrypted.encryptedAd,
-              originalAd: item.ad?.substring(0, 20) + '...',
-              isOriginalAdEncrypted: encryptionService.isEncrypted(item.ad || '')
-            });
-            
-            return {
-              ...item,
-              // Always try to decrypt - if encrypted field exists, use it; otherwise try original field
-              ad: itemWithEncrypted.encryptedAd ? 
-                encryptionService.decryptString(itemWithEncrypted.encryptedAd) : 
-                (encryptionService.isEncrypted(item.ad) ? encryptionService.decryptString(item.ad) : item.ad),
-              siparisVeren: itemWithEncrypted.encryptedSiparisVeren ? 
-                encryptionService.decryptString(itemWithEncrypted.encryptedSiparisVeren) : 
-                (encryptionService.isEncrypted(item.siparisVeren) ? encryptionService.decryptString(item.siparisVeren) : item.siparisVeren),
-              musteriNo: itemWithEncrypted.encryptedMusteriNo ? 
-                encryptionService.decryptString(itemWithEncrypted.encryptedMusteriNo) : 
-                (encryptionService.isEncrypted(item.musteriNo) ? encryptionService.decryptString(item.musteriNo) : item.musteriNo),
-              musteriKalemi: itemWithEncrypted.encryptedMusteriKalemi ? 
-                encryptionService.decryptString(itemWithEncrypted.encryptedMusteriKalemi) : 
-                (encryptionService.isEncrypted(item.musteriKalemi) ? encryptionService.decryptString(item.musteriKalemi) : item.musteriKalemi),
-              siparis: itemWithEncrypted.encryptedSiparis ? 
-                encryptionService.decryptString(itemWithEncrypted.encryptedSiparis) : 
-                (encryptionService.isEncrypted(item.siparis) ? encryptionService.decryptString(item.siparis) : item.siparis),
-              malzemeNo: itemWithEncrypted.encryptedMalzemeNo ? 
-                encryptionService.decryptString(itemWithEncrypted.encryptedMalzemeNo) : 
-                (encryptionService.isEncrypted(item.malzemeNo) ? encryptionService.decryptString(item.malzemeNo) : item.malzemeNo),
-              malzemeKisaMetni: itemWithEncrypted.encryptedMalzemeKisaMetni ? 
-                encryptionService.decryptString(itemWithEncrypted.encryptedMalzemeKisaMetni) : 
-                (encryptionService.isEncrypted(item.malzemeKisaMetni) ? encryptionService.decryptString(item.malzemeKisaMetni) : item.malzemeKisaMetni)
-            };
-          } catch (error) {
-            console.error('Decryption error for item:', item.id, error);
-            // Return original item if decryption fails
-            return item;
-          }
-        })
-      }));
-
-    console.log('🔍 [Backend] Decryption completed:', {
-      originalPlans: plans.length,
-      decryptedPlans: decryptedPlans.length,
-      firstItemSample: decryptedPlans[0]?.items[0] ? {
-        id: decryptedPlans[0].items[0].id,
-        ad: decryptedPlans[0].items[0].ad?.substring(0, 30) + '...',
-        isAdEncrypted: encryptionService.isEncrypted(decryptedPlans[0].items[0].ad || '')
-      } : null
-    });
+    const decryptedPlans = plans.map(plan => ({
+      ...plan,
+      items: plan.items.map(decryptProductionPlanItem)
+    }));
 
     return decryptedPlans;
   }
@@ -583,6 +452,64 @@ export class ProductionPlanService {
       ]
     });
   }
+}
+
+function mapProductionPlanItem(item: ProductionPlanItem, planId: string) {
+  const encryptedAd = encryptionService.encryptString(item.ad);
+  const encryptedSiparisVeren = encryptionService.encryptString(item.siparisVeren);
+  const encryptedMusteriNo = encryptionService.encryptString(item.musteriNo);
+  const encryptedMusteriKalemi = encryptionService.encryptString(item.musteriKalemi);
+  const encryptedSiparis = encryptionService.encryptString(item.siparis);
+  const encryptedMalzemeNo = encryptionService.encryptString(item.malzemeNo);
+  const encryptedMalzemeKisaMetni = encryptionService.encryptString(item.malzemeKisaMetni);
+
+  return {
+    ...item,
+    planId,
+    ad: encryptedAd,
+    siparisVeren: encryptedSiparisVeren,
+    musteriNo: encryptedMusteriNo,
+    musteriKalemi: encryptedMusteriKalemi,
+    siparis: encryptedSiparis,
+    malzemeNo: encryptedMalzemeNo,
+    malzemeKisaMetni: encryptedMalzemeKisaMetni,
+    encryptedAd,
+    encryptedSiparisVeren,
+    encryptedMusteriNo,
+    encryptedMusteriKalemi,
+    encryptedSiparis,
+    encryptedMalzemeNo,
+    encryptedMalzemeKisaMetni
+  };
+}
+
+function decryptProductionPlanItem(item: ProductionPlanItem & {
+  encryptedAd?: string | null;
+  encryptedSiparisVeren?: string | null;
+  encryptedMusteriNo?: string | null;
+  encryptedMusteriKalemi?: string | null;
+  encryptedSiparis?: string | null;
+  encryptedMalzemeNo?: string | null;
+  encryptedMalzemeKisaMetni?: string | null;
+}): ProductionPlanItem {
+  const resolveField = (encrypted: string | null | undefined, fallback: string | null): string | null => {
+    if (encrypted && encrypted.trim()) {
+      return encryptionService.decryptString(encrypted);
+    }
+
+    return decryptField(fallback ?? null);
+  };
+
+  return {
+    ...item,
+    ad: resolveField(item.encryptedAd, item.ad),
+    siparisVeren: resolveField(item.encryptedSiparisVeren, item.siparisVeren),
+    musteriNo: resolveField(item.encryptedMusteriNo, item.musteriNo),
+    musteriKalemi: resolveField(item.encryptedMusteriKalemi, item.musteriKalemi),
+    siparis: resolveField(item.encryptedSiparis, item.siparis),
+    malzemeNo: resolveField(item.encryptedMalzemeNo, item.malzemeNo),
+    malzemeKisaMetni: resolveField(item.encryptedMalzemeKisaMetni, item.malzemeKisaMetni)
+  };
 }
 
 export const productionPlanService = new ProductionPlanService(new PrismaClient());

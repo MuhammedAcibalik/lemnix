@@ -47,7 +47,7 @@ import { SystemHealth } from '../../widgets/statistics-page/components/SystemHea
 // Import new P0 widgets
 import { StatisticsDashboard } from '@/widgets/statistics-dashboard';
 import { OptimizationHistoryWidget } from '@/widgets/optimization-history';
-import { FadeIn, CardV2 } from '@/shared';
+import { FadeIn, CardV2, api } from '@/shared';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -122,38 +122,25 @@ export const StatisticsPage: React.FC = () => {
       setError(null);
 
       // ✅ P2-8: BATCH STATISTICS - Single request instead of 5
-      const baseUrl = 'http://localhost:3001/api/statistics';
       const types = 'overview,performance,usage,optimization,health';
-      
-      // Get auth token from localStorage
-      const token = localStorage.getItem('auth_token');
-      
-      const batchResponse = await fetch(`${baseUrl}/batch?types=${types}`, {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : '',
-          'Content-Type': 'application/json',
-        },
-      });
-      const batchData = await batchResponse.json();
-      
-      // Extract data from batch response
-      const overview = batchData.data?.overview;
-      const performance = batchData.data?.performance;
-      const usage = batchData.data?.usage;
-      const optimization = batchData.data?.optimization;
-      const systemHealth = batchData.data?.health;
+      const batchData = await api.get<{
+        overview: Record<string, unknown>;
+        performance: Record<string, unknown>;
+        usage: Record<string, unknown>;
+        optimization: Record<string, unknown>;
+        health: Record<string, unknown>;
+      }>(`/statistics/batch?types=${types}`);
 
-      // Check for API errors - data is already extracted from successful batch response
-      if (!overview || !performance || !usage || !optimization) {
+      if (!batchData.data || !batchData.data.overview || !batchData.data.performance || !batchData.data.usage || !batchData.data.optimization) {
         throw new Error('Failed to fetch statistics data');
       }
 
       setStatisticsData({
-        overview: overview,
-        performance: performance,
-        usage: usage,
-        optimization: optimization,
-        systemHealth: systemHealth
+        overview: batchData.data.overview,
+        performance: batchData.data.performance,
+        usage: batchData.data.usage,
+        optimization: batchData.data.optimization,
+        systemHealth: batchData.data.health
       });
 
       setLastUpdated(new Date());
@@ -193,7 +180,6 @@ export const StatisticsPage: React.FC = () => {
 
   const handleExport = () => {
     // TODO: Implement export functionality
-    console.log('Export statistics data');
   };
 
   // ============================================================================

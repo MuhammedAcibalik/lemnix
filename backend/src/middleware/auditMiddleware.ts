@@ -13,6 +13,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { auditService, AuditOperation, AuditSeverity } from '../services/auditService';
 import { logger } from '../services/logger';
+import { auditQueue } from '../services/auditQueue';
 
 // ============================================================================
 // AUDIT CONFIGURATION
@@ -78,13 +79,13 @@ export const auditMiddleware = (req: Request, res: Response, next: NextFunction)
   const originalJson = res.json;
 
   // Override response methods to capture response data
-  res.send = function(data: any) {
-    logAuditEvent(req, res, startTime, data, originalSend);
+  res.send = function (data: any) {
+    enqueueAuditEvent(req, res, startTime, data);
     return originalSend.call(this, data);
   };
 
-  res.json = function(data: any) {
-    logAuditEvent(req, res, startTime, data, originalJson);
+  res.json = function (data: any) {
+    enqueueAuditEvent(req, res, startTime, data);
     return originalJson.call(this, data);
   };
 
@@ -94,14 +95,13 @@ export const auditMiddleware = (req: Request, res: Response, next: NextFunction)
 /**
  * Log audit event after response is sent
  */
-async function logAuditEvent(
+function enqueueAuditEvent(
   req: Request,
   res: Response,
   startTime: number,
-  responseData: any,
-  originalMethod: Function
-): Promise<void> {
-  try {
+  responseData: any
+): void {
+  auditQueue.enqueue(async () => {
     const duration = Date.now() - startTime;
     const operation = getOperationFromRequest(req);
     const tableName = getTableNameFromPath(req.path);
@@ -167,15 +167,7 @@ async function logAuditEvent(
       duration,
       isSensitive
     });
-
-  } catch (error) {
-    logger.error('Failed to log audit event', {
-      error: (error as Error).message,
-      path: req.path,
-      method: req.method,
-      userId: (req as any).user?.userId || 'anonymous'
-    });
-  }
+  });
 }
 
 // ============================================================================

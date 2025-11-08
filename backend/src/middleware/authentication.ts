@@ -8,39 +8,30 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { logger } from '../services/logger';
 import { UserRole, Permission, generateToken, JWTPayload } from './authorization';
+import { InMemorySessionStore, SessionRecord, SessionStore } from './sessionStore';
 
 // ============================================================================
 // SESSION MANAGEMENT
 // ============================================================================
 
-interface ActiveSession {
-  sessionId: string;
-  userId: string;
-  role: UserRole;
-  createdAt: number;
-  lastActivity: number;
-  tokenIds: Set<string>;
-  isActive: boolean;
-}
-
 class SessionManager {
-  private sessions = new Map<string, ActiveSession>();
-  private userSessions = new Map<string, Set<string>>();
   private readonly SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
   private readonly ABSOLUTE_TIMEOUT = 8 * 60 * 60 * 1000; // 8 hours
-  private cleanupInterval: NodeJS.Timeout;
+  private readonly cleanupInterval: NodeJS.Timeout;
+  private readonly activeSessionIds = new Set<string>();
+  private readonly activeUsers = new Map<string, number>();
 
-  constructor() {
+  constructor(private readonly store: SessionStore = new InMemorySessionStore()) {
     this.cleanupInterval = setInterval(() => {
       this.cleanupInactiveSessions();
     }, 5 * 60 * 1000);
   }
 
   createSession(userId: string, role: UserRole): string {
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const sessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
     const now = Date.now();
 
-    const session: ActiveSession = {
+    const session: SessionRecord = {
       sessionId,
       userId,
       role,
@@ -50,84 +41,86 @@ class SessionManager {
       isActive: true
     };
 
-    this.sessions.set(sessionId, session);
+    this.store.create(session);
+    this.activeSessionIds.add(sessionId);
+    this.activeUsers.set(userId, (this.activeUsers.get(userId) ?? 0) + 1);
 
-    if (!this.userSessions.has(userId)) {
-      this.userSessions.set(userId, new Set());
-    }
-    this.userSessions.get(userId)!.add(sessionId);
-
-    logger.info('Session created', { sessionId, userId, role, totalSessions: this.sessions.size });
+    logger.info('Session created', { sessionId, userId, role });
     return sessionId;
   }
 
   validateSession(sessionId: string, tokenId: string): boolean {
-    const session = this.sessions.get(sessionId);
-    
-    if (!session || !session.isActive) return false;
+    const session = this.store.find(sessionId);
+
+    if (!session || !session.isActive) {
+      return false;
+    }
 
     const now = Date.now();
-    
-    if (now - session.lastActivity > this.SESSION_TIMEOUT || 
-        now - session.createdAt > this.ABSOLUTE_TIMEOUT) {
+
+    if (now - session.lastActivity > this.SESSION_TIMEOUT || now - session.createdAt > this.ABSOLUTE_TIMEOUT) {
       this.invalidateSession(sessionId);
       return false;
     }
 
     session.lastActivity = now;
     session.tokenIds.add(tokenId);
+    this.store.update(sessionId, session);
     return true;
   }
 
   invalidateSession(sessionId: string): void {
-    const session = this.sessions.get(sessionId);
-    if (!session) return;
-
-    session.isActive = false;
-    this.sessions.delete(sessionId);
-
-    const userSessions = this.userSessions.get(session.userId);
-    if (userSessions) {
-      userSessions.delete(sessionId);
-      if (userSessions.size === 0) {
-        this.userSessions.delete(session.userId);
-      }
+    const session = this.store.find(sessionId);
+    if (!session) {
+      return;
     }
 
-    logger.info('Session invalidated', { sessionId, userId: session.userId, totalSessions: this.sessions.size });
+    session.isActive = false;
+    this.store.update(sessionId, session);
+    this.store.delete(sessionId);
+    this.activeSessionIds.delete(sessionId);
+
+    const userCount = this.activeUsers.get(session.userId) ?? 0;
+    if (userCount <= 1) {
+      this.activeUsers.delete(session.userId);
+    } else {
+      this.activeUsers.set(session.userId, userCount - 1);
+    }
+
+    logger.info('Session invalidated', { sessionId, userId: session.userId });
   }
 
   invalidateUserSessions(userId: string): void {
-    const userSessions = this.userSessions.get(userId);
-    if (!userSessions) return;
-
-    const sessionIds = Array.from(userSessions);
-    sessionIds.forEach(sessionId => this.invalidateSession(sessionId));
-
-    logger.info('All user sessions invalidated', { userId, sessionCount: sessionIds.length });
+    const sessions = this.store.findByUser(userId);
+    sessions.forEach(session => this.invalidateSession(session.sessionId));
+    logger.info('All user sessions invalidated', { userId, sessionCount: sessions.length });
   }
 
   private cleanupInactiveSessions(): void {
     const now = Date.now();
-    const toRemove: string[] = [];
+    const expiredSessions: string[] = [];
 
-    for (const [sessionId, session] of this.sessions) {
-      if (!session.isActive || 
-          now - session.lastActivity > this.SESSION_TIMEOUT ||
-          now - session.createdAt > this.ABSOLUTE_TIMEOUT) {
-        toRemove.push(sessionId);
+    for (const sessionId of Array.from(this.activeSessionIds)) {
+      const session = this.store.find(sessionId);
+      if (!session) {
+        this.activeSessionIds.delete(sessionId);
+        continue;
+      }
+
+      if (!session.isActive || now - session.lastActivity > this.SESSION_TIMEOUT || now - session.createdAt > this.ABSOLUTE_TIMEOUT) {
+        expiredSessions.push(sessionId);
       }
     }
 
-    toRemove.forEach(sessionId => this.invalidateSession(sessionId));
+    expiredSessions.forEach(id => this.invalidateSession(id));
 
-    if (toRemove.length > 0) {
-      logger.debug('Cleaned up inactive sessions', { removedCount: toRemove.length, activeSessions: this.sessions.size });
+    if (expiredSessions.length > 0) {
+      logger.debug('Cleaned up inactive sessions', { removedCount: expiredSessions.length });
     }
   }
 
   getSessionStats(): { activeSessions: number; totalUsers: number } {
-    return { activeSessions: this.sessions.size, totalUsers: this.userSessions.size };
+    return { activeSessions: this.activeSessionIds.size, totalUsers: this.activeUsers.size };
   }
 }
 

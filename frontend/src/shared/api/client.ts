@@ -23,6 +23,10 @@ function generateCorrelationId(): string {
  * TODO: Implement actual auth token retrieval
  */
 function getAuthToken(): string | null {
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    return null;
+  }
+
   // Check localStorage first
   const stored = localStorage.getItem('auth_token');
   if (stored) {
@@ -34,8 +38,6 @@ function getAuthToken(): string | null {
   // ✅ SECURITY: Strict development-only check
   if (import.meta.env.MODE === 'development' && import.meta.env.DEV) {
     const mockToken = 'mock-dev-token-lemnix-2025'; // ✅ FIXED: Consistent token
-    console.info('[API] ⚠️ Using mock token in DEVELOPMENT mode (first time)');
-    // ✅ CRITICAL FIX: Only write ONCE, prevent infinite loop
     localStorage.setItem('auth_token', mockToken);
     return mockToken;
   }
@@ -91,7 +93,7 @@ function requestInterceptor(config: InternalAxiosRequestConfig): InternalAxiosRe
   
   // Log in development
   if (import.meta.env.DEV) {
-    console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`);
+    console.debug(`[API] ${config.method?.toUpperCase()} ${config.url}`);
   }
   
   return config;
@@ -110,7 +112,7 @@ function requestErrorInterceptor(error: AxiosError): Promise<never> {
  */
 function responseInterceptor(response: AxiosResponse): AxiosResponse {
   if (import.meta.env.DEV) {
-    console.log(`[API] ${response.status} ${response.config.url}`, response.data);
+    console.debug(`[API] ${response.status} ${response.config.url}`);
   }
   return response;
 }

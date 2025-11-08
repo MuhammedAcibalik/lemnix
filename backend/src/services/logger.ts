@@ -1,8 +1,8 @@
 /**
- * @fileoverview Enterprise Structured Logger
- * @module Logger
- * @version 2.0.0 - Enterprise Compliance
+ * Structured application logger with environment-aware log levels.
  */
+
+import { env } from '../config/env';
 
 export interface LogContext {
   readonly [key: string]: unknown;
@@ -15,12 +15,19 @@ export interface ILogger {
   error(message: string, error?: Error | unknown, context?: LogContext): void;
 }
 
-/**
- * Structured Console Logger
- * Format: [LEVEL] [TIMESTAMP] [CONTEXT] message { data }
- */
+type LogLevel = 'error' | 'warn' | 'info' | 'debug';
+
+const levelOrder: Record<LogLevel, number> = {
+  error: 0,
+  warn: 1,
+  info: 2,
+  debug: 3
+};
+
+const nativeConsole = { ...console };
+
 export class ConsoleLogger implements ILogger {
-  constructor(private readonly verbose: boolean = false) {}
+  constructor(private readonly level: LogLevel) {}
 
   private formatMessage(level: string, message: string, context?: LogContext): string {
     const timestamp = new Date().toISOString();
@@ -29,29 +36,41 @@ export class ConsoleLogger implements ILogger {
   }
 
   debug(message: string, context?: LogContext): void {
-    if (this.verbose) {
-      console.debug(this.formatMessage('DEBUG', message, context));
+    if (this.shouldLog('debug')) {
+      nativeConsole.debug(this.formatMessage('DEBUG', message, context));
     }
   }
 
   info(message: string, context?: LogContext): void {
-    console.info(this.formatMessage('INFO', message, context));
+    if (this.shouldLog('info')) {
+      nativeConsole.info(this.formatMessage('INFO', message, context));
+    }
   }
 
   warn(message: string, context?: LogContext): void {
-    console.warn(this.formatMessage('WARN', message, context));
+    if (this.shouldLog('warn')) {
+      nativeConsole.warn(this.formatMessage('WARN', message, context));
+    }
   }
 
   error(message: string, error?: Error | unknown, context?: LogContext): void {
-    const errorContext = {
-      ...context,
-      error: error instanceof Error ? {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      } : error,
-    };
-    console.error(this.formatMessage('ERROR', message, errorContext));
+    if (this.shouldLog('error')) {
+      const errorContext = {
+        ...context,
+        error: error instanceof Error
+          ? {
+              message: error.message,
+              stack: error.stack,
+              name: error.name
+          }
+          : error
+      };
+      nativeConsole.error(this.formatMessage('ERROR', message, errorContext));
+    }
+  }
+
+  private shouldLog(level: LogLevel): boolean {
+    return levelOrder[level] <= levelOrder[this.level];
   }
 }
 
@@ -62,5 +81,36 @@ export class NoOpLogger implements ILogger {
   error(_message: string, _error?: Error | unknown, _context?: LogContext): void {}
 }
 
-// Default logger instance - Always verbose for debugging
-export const logger = new ConsoleLogger(true);
+const configuredLevel: LogLevel = ((): LogLevel => {
+  switch (env.LOG_LEVEL) {
+    case 'error':
+    case 'warn':
+    case 'info':
+      return env.LOG_LEVEL;
+    case 'verbose':
+      return 'debug';
+    default:
+      return 'debug';
+  }
+})();
+
+export const logger = new ConsoleLogger(configuredLevel);
+
+configureConsoleProxy(logger);
+
+function configureConsoleProxy(activeLogger: ILogger): void {
+  console.debug = (message?: any, ...optionalParams: any[]) => {
+    activeLogger.debug(String(message), optionalParams.length ? { params: optionalParams } : undefined);
+  };
+  console.info = (message?: any, ...optionalParams: any[]) => {
+    activeLogger.info(String(message), optionalParams.length ? { params: optionalParams } : undefined);
+  };
+  console.warn = (message?: any, ...optionalParams: any[]) => {
+    activeLogger.warn(String(message), optionalParams.length ? { params: optionalParams } : undefined);
+  };
+  console.error = (message?: any, ...optionalParams: any[]) => {
+    const error = optionalParams.find(param => param instanceof Error) ?? optionalParams[0];
+    activeLogger.error(String(message), error instanceof Error ? error : undefined, optionalParams.length ? { params: optionalParams } : undefined);
+  };
+
+}
