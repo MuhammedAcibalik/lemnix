@@ -47,6 +47,23 @@ export enum WasteCategory {
   EXCESSIVE = 'excessive' // > 500mm
 }
 
+// ========== CUTTING LIST ENUMS (Phase 1 Implementation) ==========
+
+export enum CuttingListStatus {
+  DRAFT = 'DRAFT',
+  READY = 'READY',
+  PROCESSING = 'PROCESSING',
+  COMPLETED = 'COMPLETED',
+  ARCHIVED = 'ARCHIVED'
+}
+
+export enum ItemPriority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  URGENT = 'URGENT'
+}
+
 // ========== CORE DOMAIN MODELS ==========
 
 export interface WorkOrder {
