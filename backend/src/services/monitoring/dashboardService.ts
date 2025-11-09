@@ -118,11 +118,13 @@ export class DashboardService {
           where: { status: { not: "ARCHIVED" } },
         }),
 
-        // Work orders by status
-        (prisma as any).workOrder?.groupBy({
-          by: ["status"],
-          _count: true,
-        }) ?? [],
+        // Work orders by status - check if model exists
+        typeof prisma.workOrder !== 'undefined' 
+          ? prisma.workOrder.groupBy({
+              by: ["status"],
+              _count: true,
+            })
+          : Promise.resolve([]),
 
         // Distinct profile types
         prisma.cuttingListItem.findMany({

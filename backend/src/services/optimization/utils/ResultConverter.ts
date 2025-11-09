@@ -8,7 +8,7 @@
  */
 
 import type { ILogger } from '../../logger';
-import { OptimizationItem, Cut, CuttingSegment, WasteCategory } from '../../../types';
+import { OptimizationItem, Cut, CuttingSegment, WasteCategory, WasteDistribution, OptimizationConstraints } from '../../../types';
 import type { OptimizationAlgorithm, MaterialStockLength } from '../../../types';
 import type { AdvancedOptimizationResult, StockSummary } from '../types';
 import type { CuttingOptimizerResult } from '../CuttingOptimizer';
@@ -100,7 +100,7 @@ export class ResultConverter {
       algorithm,
       executionTimeMs,
       wasteDistribution,
-      constraints: {} as any, // TODO: pass from original constraints
+      constraints: {}, // Empty constraints object - will be populated from original request if available
       efficiencyCategory: this.categorizeEfficiency(efficiency),
       detailedWasteAnalysis: wasteDistribution,
       optimizationScore: qualityScore,
@@ -395,12 +395,12 @@ export class ResultConverter {
   /**
    * Calculate quality score
    */
-  private calculateQualityScore(efficiency: number, wasteDistribution: any): number {
+  private calculateQualityScore(efficiency: number, wasteDistribution: WasteDistribution): number {
     const wasteScore = this.calculateWasteScore(wasteDistribution);
     return (efficiency * 0.7) + (wasteScore * 0.3);
   }
 
-  private calculateWasteScore(wasteDistribution: any): number {
+  private calculateWasteScore(wasteDistribution: WasteDistribution): number {
     const excessivePenalty = wasteDistribution.excessive * 20;
     const largePenalty = wasteDistribution.large * 10;
     const mediumPenalty = wasteDistribution.medium * 5;

@@ -350,7 +350,7 @@ export class PatternExactAlgorithm extends BaseAlgorithm {
 
     // Performance metrics
     const performanceMetrics = MetricsCalculator.calculatePerformanceMetrics(
-      'pattern-exact' as any,
+      'pattern-exact',
       cuts.length
     );
 

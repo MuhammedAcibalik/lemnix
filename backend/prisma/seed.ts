@@ -28,27 +28,9 @@ async function main() {
 
   console.log(`[INFO] System user created: ${systemUser.id}`);
 
-  // Real cutting lists - no mock data
-  const sampleCuttingLists: any[] = [];
-
-  console.log(`[INFO] Seeding ${sampleCuttingLists.length} cutting lists...`);
-
-  // Real optimization results - no mock data
-  const sampleOptimizations: any[] = [];
-
-  console.log(`[INFO] Seeding ${sampleOptimizations.length} optimization results...`);
-
-  // Real profiles - no mock data
-  const sampleProfiles: any[] = [];
-
-  console.log(`[INFO] Seeding ${sampleProfiles.length} profile definitions...`);
-
   console.log('[INFO] Database seed completed successfully');
   console.log('[INFO] Summary:');
   console.log(`[INFO]   - Users: 1 (system-user)`);
-  console.log(`[INFO]   - Cutting Lists: ${sampleCuttingLists.length}`);
-  console.log(`[INFO]   - Optimization Results: ${sampleOptimizations.length}`);
-  console.log(`[INFO]   - Profile Definitions: ${sampleProfiles.length}`);
 }
 
 main()

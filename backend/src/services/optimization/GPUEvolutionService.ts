@@ -29,6 +29,13 @@ import type { OptimizationItem } from '../../types';
 import type { AdvancedOptimizationResult } from './types';
 import type { ILogger } from '../logger';
 
+/**
+ * WebGPU Navigator interface for type safety
+ */
+interface NavigatorWithGPU extends Navigator {
+  gpu?: GPU;
+}
+
 // WebGPU type definitions
 declare global {
   
@@ -269,9 +276,9 @@ export class GPUEvolutionService {
       this.logger.info('Initializing GPU Evolution Service...');
 
       // Check WebGPU support
-      if (typeof globalThis !== 'undefined' && (globalThis as any).navigator && (globalThis as any).navigator.gpu) {
+      if (typeof globalThis !== 'undefined' && (globalThis.navigator as NavigatorWithGPU)?.gpu) {
         // Browser environment
-        this.adapter = await (globalThis as any).navigator.gpu.requestAdapter({
+        this.adapter = await (globalThis.navigator as NavigatorWithGPU).gpu!.requestAdapter({
           powerPreference: 'high-performance',
           forceFallbackAdapter: false
         });

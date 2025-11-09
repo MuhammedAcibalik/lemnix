@@ -50,7 +50,7 @@ export interface UseProgressiveUploadReturn {
   progress: UploadProgress;
   isUploading: boolean;
   error: string | null;
-  result: any | null;
+  result: unknown | null;
   reset: () => void;
 }
 
@@ -75,7 +75,7 @@ export function useProgressiveUpload(): UseProgressiveUploadReturn {
 
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<any | null>(null);
+  const [result, setResult] = useState<unknown | null>(null);
 
   // Initialize WebSocket connection
   useEffect(() => {
@@ -300,7 +300,7 @@ export function useProgressiveRetrieval() {
     };
   }, []);
 
-  const retrieveData = useCallback(async (filters: any = {}) => {
+  const retrieveData = useCallback(async (filters: Record<string, unknown> = {}) => {
     try {
       setProgress((prev) => ({
         ...prev,

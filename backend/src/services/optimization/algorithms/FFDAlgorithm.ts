@@ -23,6 +23,7 @@ import {
   WasteCategory,
   OptimizationAlgorithm,
   ProfileType,
+  OptimizationConstraints,
 } from "../../../types";
 import { BaseAlgorithm } from "../core/BaseAlgorithm";
 import { OptimizationContext } from "../core/OptimizationContext";
@@ -837,7 +838,7 @@ export class FFDAlgorithm extends BaseAlgorithm {
   private generateCuttingPatterns(
     itemGroups: Array<{ length: number; quantity: number }>,
     stockLengths: number[],
-    constraints: any,
+    constraints: OptimizationConstraints,
   ): Array<{
     stockLength: number;
     pattern: Map<number, number>; // length -> count
@@ -894,7 +895,7 @@ export class FFDAlgorithm extends BaseAlgorithm {
       used: number;
       waste: number;
     }>,
-    constraints?: any,
+    constraints?: OptimizationConstraints,
   ): void {
     const lengths = itemGroups.map((g) => g.length);
     const kerfWidth = constraints?.kerfWidth ?? 0;
@@ -1105,7 +1106,7 @@ export class FFDAlgorithm extends BaseAlgorithm {
       waste: number;
     }>,
     itemGroups: Array<{ length: number; quantity: number }>,
-    constraints: any,
+    constraints: OptimizationConstraints,
   ): Array<{
     pattern: (typeof patterns)[0];
     count: number;
@@ -1154,7 +1155,7 @@ export class FFDAlgorithm extends BaseAlgorithm {
       count: number;
     }>,
     stockLengths: number[],
-    constraints: any,
+    constraints: OptimizationConstraints,
     itemGroups?: Array<{ length: number; quantity: number }>,
   ): Cut[] {
     const cuts: Cut[] = [];
@@ -1359,7 +1360,7 @@ export class FFDAlgorithm extends BaseAlgorithm {
       waste: number;
     }>,
     itemGroups: Array<{ length: number; quantity: number }>,
-    constraints: any,
+    constraints: OptimizationConstraints,
   ): Array<{
     pattern: (typeof patterns)[0];
     count: number;
