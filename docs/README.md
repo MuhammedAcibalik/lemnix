@@ -1,7 +1,7 @@
 # 📚 LEMNİX Dokümantasyon
 
 **Versiyon:** 5.0.0  
-**Son Güncelleme:** 2025-01-05
+**Son Güncelleme:** 2025-11-09
 
 ---
 
@@ -16,26 +16,36 @@
 ## 📖 Ana Dokümantasyon
 
 ### **Mimari & Yapı**
-- [PROJE_YAPISI.md](./PROJE_YAPISI.md) - Backend/Frontend yapısı, FSD, Clean Architecture
+- **[PROJE_YAPISI.md](./PROJE_YAPISI.md)** - Backend/Frontend yapısı, FSD, Clean Architecture
+- **[COMPREHENSIVE_PROJECT_ANALYSIS.md](./COMPREHENSIVE_PROJECT_ANALYSIS.md)** - Kapsamlı proje analizi ve teknoloji stack detayları
 
 ### **Optimizasyon**
-- [ENTERPRISE_OPTIMIZATION_GUIDE_DETAILED.md](./ENTERPRISE_OPTIMIZATION_GUIDE_DETAILED.md) - Detaylı algoritma açıklamaları
-- [ENTERPRISE_OPTIMIZATION_GUIDE.md](./ENTERPRISE_OPTIMIZATION_GUIDE.md) - Hızlı referans
+- **[ENTERPRISE_OPTIMIZATION_GUIDE_DETAILED.md](./ENTERPRISE_OPTIMIZATION_GUIDE_DETAILED.md)** - Detaylı algoritma açıklamaları, matematiksel formüller, kullanım senaryoları
 
-### **Deployment**
-- [PRODUCTION_READY_GUIDE.md](./PRODUCTION_READY_GUIDE.md) - Production checklist, güvenlik, performans
+### **Deployment & Production**
+- **[PRODUCTION_READY_GUIDE.md](./PRODUCTION_READY_GUIDE.md)** - Production checklist, güvenlik, performans optimizasyonu
 
 ---
 
 ## 🗄️ Arşiv
 
-Eski değişiklikler ve araştırmalar `archive/` klasöründe:
+Geçmiş analizler, değişiklik notları ve uygulama logları `archive/` klasöründe organize edilmiştir:
 
-- [CHANGES.md](./archive/CHANGES.md) - Eski değişiklik notları
-- [CRITICAL_FIXES_v4.2.md](./archive/CRITICAL_FIXES_v4.2.md) - v4.2 kritik düzeltmeler
-- [REFACTOR_FIXES.md](./archive/REFACTOR_FIXES.md) - Refactoring notları
-- [OPTIMIZATION_SERVICE_ANALYSIS.md](./archive/OPTIMIZATION_SERVICE_ANALYSIS.md) - Eski servis analizi
-- [gpu-research-report.md](./archive/gpu-research-report.md) - GPU araştırması
+### Analiz Raporları (`archive/analysis/`)
+- Kesim listesi analizleri ve teknik özellikler
+- Backend-Frontend alignment analizleri
+- Paket güvenlik ve bağımlılık analizleri
+- Erişilebilirlik ve API validasyon auditleri
+
+### Uygulama Logları (`archive/implementation-logs/`)
+- Feature implementasyon notları (Genetic Algorithm, Dashboard v2, etc.)
+- Öncelikli düzeltme logları
+- Bug fix raporları
+
+### Migrasyon Rehberleri (`archive/migration-guides/`)
+- Veritabanı migrasyonu (SQLite → PostgreSQL)
+- GPU hızlandırma session özeti
+- Kesim listesi migrasyon rehberi
 
 ---
 

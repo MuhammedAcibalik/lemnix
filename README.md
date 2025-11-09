@@ -234,10 +234,12 @@ GET /api/statistics/work-order-analysis?cuttingListId=:id
 
 Detaylı dokümantasyon için `docs/` klasörüne bakınız:
 
-- **COMPREHENSIVE_PROJECT_ANALYSIS.md** - Kapsamlı proje analizi (mimari, teknoloji, kod kalitesi, güvenlik)
-- **ENTERPRISE_OPTIMIZATION_GUIDE.md** - Optimizasyon rehberi
-- **PRODUCTION_READY_GUIDE.md** - Üretim hazırlık rehberi
-- **PROJE_YAPISI.md** - Proje yapısı detayları
+- **[PROJE_YAPISI.md](./docs/PROJE_YAPISI.md)** - Proje yapısı ve mimari detayları
+- **[COMPREHENSIVE_PROJECT_ANALYSIS.md](./docs/COMPREHENSIVE_PROJECT_ANALYSIS.md)** - Kapsamlı proje analizi (mimari, teknoloji, kod kalitesi)
+- **[ENTERPRISE_OPTIMIZATION_GUIDE_DETAILED.md](./docs/ENTERPRISE_OPTIMIZATION_GUIDE_DETAILED.md)** - Optimizasyon algoritmaları ve kullanım rehberi
+- **[PRODUCTION_READY_GUIDE.md](./docs/PRODUCTION_READY_GUIDE.md)** - Üretim hazırlık rehberi
+
+Ek dokümantasyon ve arşiv dosyaları için [docs/README.md](./docs/README.md) dosyasına bakınız.
 
 ## Teknoloji Stack
 
