@@ -152,12 +152,75 @@ export class BFDAlgorithm extends BaseAlgorithm {
   }
 
   /**
-   * Validate optimization context
+   * Validate optimization context with comprehensive checks
+   * Enhanced error messages for better debugging
    */
   private validateContext(context: OptimizationContext): void {
     const validation = this.canOptimize(context);
     if (!validation.valid) {
       throw new Error(`BFD optimization failed: ${validation.reason}`);
+    }
+
+    // Enhanced validation: Check for valid item lengths
+    for (const item of context.items) {
+      if (!Number.isFinite(item.length) || item.length <= 0) {
+        throw new Error(
+          `Invalid item length: ${item.length}. All items must have positive finite lengths.`,
+        );
+      }
+      if (item.length > Math.max(...context.stockLengths)) {
+        throw new Error(
+          `Item length ${item.length}mm exceeds maximum stock length ${Math.max(...context.stockLengths)}mm. Cannot optimize.`,
+        );
+      }
+      if (!Number.isFinite(item.quantity) || item.quantity < 1) {
+        throw new Error(
+          `Invalid item quantity: ${item.quantity}. All items must have positive integer quantities.`,
+        );
+      }
+    }
+
+    // Validate stock lengths
+    if (context.stockLengths.length === 0) {
+      throw new Error(
+        "No stock lengths provided. At least one stock length is required for optimization.",
+      );
+    }
+
+    for (const stockLength of context.stockLengths) {
+      if (!Number.isFinite(stockLength) || stockLength <= 0) {
+        throw new Error(
+          `Invalid stock length: ${stockLength}. All stock lengths must be positive finite numbers.`,
+        );
+      }
+    }
+
+    // Validate constraints
+    const { kerfWidth, startSafety, endSafety, minScrapLength } =
+      context.constraints;
+    if (kerfWidth < 0) {
+      throw new Error(
+        `Invalid kerf width: ${kerfWidth}. Kerf width must be non-negative.`,
+      );
+    }
+    if (startSafety < 0 || endSafety < 0) {
+      throw new Error(
+        `Invalid safety margins: startSafety=${startSafety}, endSafety=${endSafety}. Safety margins must be non-negative.`,
+      );
+    }
+    if (minScrapLength < 0) {
+      throw new Error(
+        `Invalid minScrapLength: ${minScrapLength}. Must be non-negative.`,
+      );
+    }
+
+    // Check if minimum stock is usable
+    const minStock = Math.min(...context.stockLengths);
+    const usableLength = minStock - startSafety - endSafety;
+    if (usableLength <= 0) {
+      throw new Error(
+        `Stock configuration error: Minimum stock length ${minStock}mm with safety margins (start=${startSafety}mm, end=${endSafety}mm) leaves no usable space.`,
+      );
     }
   }
 
@@ -343,6 +406,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
 
   /**
    * Calculate how many pieces of an item can fit in a cut
+   * Enhanced with numerical stability checks
    */
   private calculatePiecesThatFit(
     item: OptimizationItem,
@@ -361,6 +425,22 @@ export class BFDAlgorithm extends BaseAlgorithm {
 
     // Calculate how many pieces can fit
     const piecesThatFit = Math.floor(cut.remainingLength / spacePerPiece);
+
+    // Safety check: Ensure result is finite and non-negative
+    if (!Number.isFinite(piecesThatFit) || piecesThatFit < 0) {
+      this.logger.error(
+        "[BFD] Numerical instability in calculatePiecesThatFit",
+        {
+          itemLength: item.length,
+          remainingLength: cut.remainingLength,
+          kerfNeeded,
+          spacePerPiece,
+          piecesThatFit,
+        },
+      );
+      return 0; // Safe fallback
+    }
+
     return Math.min(piecesThatFit, item.quantity);
   }
 
@@ -531,6 +611,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
 
   /**
    * Place item in existing cut
+   * Enhanced error handling with detailed context
    */
   private placeItemInExistingCut(
     item: OptimizationItem,
@@ -540,12 +621,26 @@ export class BFDAlgorithm extends BaseAlgorithm {
   ): void {
     const stockCuts = bins.binsByLength.get(bestFit.stockLength);
     if (stockCuts === undefined) {
-      throw new Error(`Stock length ${bestFit.stockLength} not found in bins`);
+      this.logger.error("Stock length not found in bins", {
+        requestedLength: bestFit.stockLength,
+        availableLengths: Array.from(bins.binsByLength.keys()),
+        itemLength: item.length,
+      });
+      throw new Error(
+        `Internal error: Stock length ${bestFit.stockLength}mm not found in bins. Available: ${Array.from(bins.binsByLength.keys()).join(", ")}mm`,
+      );
     }
 
     const cutIndex = stockCuts.indexOf(bestFit.cut);
     if (cutIndex === -1) {
-      throw new Error(`Cut not found in stock length ${bestFit.stockLength}`);
+      this.logger.error("Cut not found in stock cuts array", {
+        stockLength: bestFit.stockLength,
+        cutId: bestFit.cut.id,
+        availableCuts: stockCuts.length,
+      });
+      throw new Error(
+        `Internal error: Cut ${bestFit.cut.id} not found in stock length ${bestFit.stockLength}mm bins (${stockCuts.length} cuts available)`,
+      );
     }
 
     const kerfNeeded = StockCalculator.calculateKerfNeeded(
@@ -581,6 +676,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
 
   /**
    * Place item in new cut with balanced distribution
+   * Enhanced error handling with detailed context
    */
   private placeItemInNewCut(
     item: OptimizationItem,
@@ -595,7 +691,15 @@ export class BFDAlgorithm extends BaseAlgorithm {
     const stockCuts = bins.binsByLength.get(selectedStockLength);
 
     if (stockCuts === undefined) {
-      throw new Error(`Stock length ${selectedStockLength} not found in bins`);
+      this.logger.error("Stock length not found when creating new cut", {
+        selectedLength: selectedStockLength,
+        availableLengths: Array.from(bins.binsByLength.keys()),
+        itemLength: item.length,
+        itemQuantity: item.quantity,
+      });
+      throw new Error(
+        `Internal error: Stock length ${selectedStockLength}mm not found in bins when creating new cut. Available: ${Array.from(bins.binsByLength.keys()).join(", ")}mm`,
+      );
     }
 
     const newCut = this.createNewStock(
@@ -748,6 +852,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
 
   /**
    * Create new empty stock
+   * Enhanced validation for stock configuration
    */
   private createNewStock(
     stockLength: number,
@@ -758,8 +863,26 @@ export class BFDAlgorithm extends BaseAlgorithm {
       stockLength - constraints.startSafety - constraints.endSafety;
 
     if (usableLength <= 0) {
+      this.logger.error("Invalid stock configuration detected", {
+        stockLength,
+        startSafety: constraints.startSafety,
+        endSafety: constraints.endSafety,
+        usableLength,
+      });
       throw new Error(
-        `Invalid stock configuration: stockLength=${stockLength}, safety margins exceed available space`,
+        `Invalid stock configuration: stockLength=${stockLength}mm with safety margins (start=${constraints.startSafety}mm, end=${constraints.endSafety}mm) leaves ${usableLength}mm usable space. This should have been caught in validation.`,
+      );
+    }
+
+    // Additional safety check for numeric stability
+    if (!Number.isFinite(usableLength) || usableLength > stockLength) {
+      this.logger.error("Numerical instability in usableLength calculation", {
+        stockLength,
+        usableLength,
+        constraints,
+      });
+      throw new Error(
+        `Numerical error: Invalid usableLength=${usableLength}mm calculated from stockLength=${stockLength}mm`,
       );
     }
 
@@ -877,11 +1000,19 @@ export class BFDAlgorithm extends BaseAlgorithm {
 
   /**
    * Validate cut invariant
+   * Enhanced error message with context
    */
   private validateCutInvariant(cut: Cut): void {
     if (cut.segmentCount !== cut.segments.length) {
+      this.logger.error("Cut invariant violation detected", {
+        cutId: cut.id,
+        segmentCount: cut.segmentCount,
+        actualSegments: cut.segments.length,
+        stockLength: cut.stockLength,
+        usedLength: cut.usedLength,
+      });
       throw new Error(
-        `Invariant violation: segmentCount=${cut.segmentCount} !== segments.length=${cut.segments.length}`,
+        `Invariant violation in cut ${cut.id}: segmentCount=${cut.segmentCount} !== segments.length=${cut.segments.length}. This indicates a programming error in segment management.`,
       );
     }
   }
@@ -922,6 +1053,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
 
   /**
    * Validate stock accounting with precision handling
+   * Enhanced error messages with detailed diagnostics
    */
   private validateStockAccounting(
     cut: Cut,
@@ -935,9 +1067,21 @@ export class BFDAlgorithm extends BaseAlgorithm {
         cut.stockLength,
       )
     ) {
+      const total = finalUsedLength + finalRemaining;
+      const difference = Math.abs(total - cut.stockLength);
+      this.logger.error("Stock accounting validation failed", {
+        cutId: cut.id,
+        stockLength: cut.stockLength,
+        usedLength: finalUsedLength,
+        remaining: finalRemaining,
+        total,
+        difference,
+        segments: cut.segmentCount,
+      });
       throw new Error(
         `Accounting violation in cut ${cut.id}: ` +
-          `used=${finalUsedLength} + remaining=${finalRemaining} !== stock=${cut.stockLength}`,
+          `used=${finalUsedLength}mm + remaining=${finalRemaining}mm = ${total}mm ≠ stock=${cut.stockLength}mm ` +
+          `(difference: ${difference.toFixed(3)}mm). This may indicate floating-point precision issues or calculation errors.`,
       );
     }
 
@@ -945,9 +1089,18 @@ export class BFDAlgorithm extends BaseAlgorithm {
     const difference = Math.abs(total - cut.stockLength);
 
     if (difference > CONSTANTS.ACCOUNTING_PRECISION_THRESHOLD) {
+      this.logger.error("Accounting precision threshold exceeded", {
+        cutId: cut.id,
+        stockLength: cut.stockLength,
+        total,
+        difference,
+        threshold: CONSTANTS.ACCOUNTING_PRECISION_THRESHOLD,
+      });
       throw new Error(
         `Accounting precision error in cut ${cut.id}: ` +
-          `total=${total} differs from stock=${cut.stockLength} by ${difference}mm`,
+          `total=${total}mm differs from stock=${cut.stockLength}mm by ${difference.toFixed(3)}mm ` +
+          `(threshold: ${CONSTANTS.ACCOUNTING_PRECISION_THRESHOLD}mm). ` +
+          `This suggests cumulative floating-point errors or incorrect kerf calculations.`,
       );
     }
   }
@@ -1488,6 +1641,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
   /**
    * Generate all possible cutting patterns for given item groups and stock lengths
    * Based on the reference implementation
+   * Enhanced with better memory management and error recovery
    */
   private generateCuttingPatterns(
     itemGroups: Array<{ length: number; quantity: number }>,
@@ -1504,7 +1658,45 @@ export class BFDAlgorithm extends BaseAlgorithm {
       itemGroups: itemGroups.length,
       stockLengths: stockLengths.length,
       kerfWidth: constraints.kerfWidth,
+      maxPatterns: maxPatterns || "unlimited",
     });
+
+    // Validate inputs before pattern generation
+    if (itemGroups.length === 0) {
+      this.logger.warn("[BFD] No item groups provided for pattern generation");
+      return [];
+    }
+
+    if (stockLengths.length === 0) {
+      this.logger.error(
+        "[BFD] No stock lengths provided for pattern generation",
+      );
+      throw new Error(
+        "Cannot generate patterns: No stock lengths available",
+      );
+    }
+
+    // Check for invalid item lengths
+    for (const group of itemGroups) {
+      if (!Number.isFinite(group.length) || group.length <= 0) {
+        this.logger.error("[BFD] Invalid item length in pattern generation", {
+          length: group.length,
+          quantity: group.quantity,
+        });
+        throw new Error(
+          `Invalid item length ${group.length}mm in pattern generation`,
+        );
+      }
+      if (!Number.isFinite(group.quantity) || group.quantity < 1) {
+        this.logger.error(
+          "[BFD] Invalid item quantity in pattern generation",
+          { length: group.length, quantity: group.quantity },
+        );
+        throw new Error(
+          `Invalid item quantity ${group.quantity} for length ${group.length}mm`,
+        );
+      }
+    }
 
     const patterns: Array<{
       stockLength: number;
@@ -1521,14 +1713,39 @@ export class BFDAlgorithm extends BaseAlgorithm {
       // endSafety is only applied when actual cutting position reaches near stock end
       const usableLength = stockLength - constraints.startSafety;
 
+      // Safety check for usable length
+      if (usableLength <= 0) {
+        this.logger.warn(
+          "[BFD] Stock length too small for pattern generation",
+          {
+            stockLength,
+            startSafety: constraints.startSafety,
+            usableLength,
+          },
+        );
+        continue; // Skip this stock length
+      }
+
       // Generate all possible combinations of items that fit in this stock
-      this.generatePatternsForStock(
-        itemGroups,
-        stockLength,
-        usableLength,
-        patterns,
-        constraints,
-      );
+      try {
+        this.generatePatternsForStock(
+          itemGroups,
+          stockLength,
+          usableLength,
+          patterns,
+          constraints,
+        );
+      } catch (error) {
+        this.logger.error(
+          "[BFD] Error generating patterns for stock length",
+          {
+            stockLength,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        );
+        // Continue with other stock lengths instead of failing completely
+        continue;
+      }
 
       // MEMORY SAFETY: Stop if we hit the pattern limit
       if (maxPatterns && patterns.length >= maxPatterns) {
@@ -1537,6 +1754,22 @@ export class BFDAlgorithm extends BaseAlgorithm {
         );
         break;
       }
+    }
+
+    // Check if we generated any patterns
+    if (patterns.length === 0) {
+      this.logger.error(
+        "[BFD] No valid patterns generated - items may not fit in any stock",
+        {
+          itemGroups: itemGroups.map((g) => `${g.length}mm x${g.quantity}`),
+          stockLengths: sortedStockLengths,
+        },
+      );
+      throw new Error(
+        `Cannot generate patterns: No valid cutting patterns found. ` +
+          `Items may be too large for available stock lengths (${sortedStockLengths.join(", ")}mm). ` +
+          `Consider using larger stock or reducing item lengths.`,
+      );
     }
 
     // ✅ ENABLED: Pareto filtering to reduce combinatorial explosion
@@ -1941,6 +2174,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
   /**
    * Validate that cuts exactly fulfill the required demand
    * FIXED: Added detailed debug logging to track where pieces are lost
+   * Enhanced error messages for better debugging
    */
   private validateDemandFulfillment(
     cuts: Cut[],
@@ -1983,6 +2217,8 @@ export class BFDAlgorithm extends BaseAlgorithm {
 
     // Compare with required demand (allow minimal overproduction; deficits are errors)
     const errors: string[] = [];
+    const warnings: string[] = [];
+
     for (const group of itemGroups) {
       const actual = actualCuts.get(group.length) || 0;
       const required = group.quantity;
@@ -1994,11 +2230,34 @@ export class BFDAlgorithm extends BaseAlgorithm {
       });
 
       if (actual < required) {
-        const diff = actual - required;
-        errors.push(
-          `${group.length}mm: required ${required}, got ${actual} (diff: ${diff})`,
-        );
+        const diff = required - actual;
+        const errorMsg = `${group.length}mm: shortage of ${diff} pieces (required ${required}, got ${actual})`;
+        errors.push(errorMsg);
+        this.logger.error(`[BFD] ❌ Demand shortage detected`, {
+          length: group.length,
+          required,
+          actual,
+          shortage: diff,
+        });
+      } else if (actual > required) {
+        const excess = actual - required;
+        const warningMsg = `${group.length}mm: overproduced ${excess} pieces (required ${required}, got ${actual})`;
+        warnings.push(warningMsg);
+        this.logger.warn(`[BFD] ⚠️ Overproduction detected`, {
+          length: group.length,
+          required,
+          actual,
+          excess,
+        });
       }
+    }
+
+    // Log warnings but don't fail on overproduction
+    if (warnings.length > 0) {
+      this.logger.warn(`[BFD] ⚠️ Overproduction warnings:`, {
+        warnings,
+        note: "Some items were overproduced. This is acceptable but not optimal.",
+      });
     }
 
     if (errors.length > 0) {
@@ -2009,8 +2268,15 @@ export class BFDAlgorithm extends BaseAlgorithm {
           length: g.length,
           quantity: g.quantity,
         })),
+        cutsGenerated: cuts.length,
+        totalSegments: cuts.reduce((sum, c) => sum + c.segmentCount, 0),
       });
-      throw new Error(`Demand mismatch: ${errors.join(", ")}`);
+      throw new Error(
+        `Demand validation failed - items are missing from cutting plan:\n${errors.join("\n")}\n\n` +
+          `This is a critical error that prevents accurate order fulfillment. ` +
+          `The optimization algorithm failed to generate cuts for all required items. ` +
+          `Please verify input data and try again with different optimization parameters.`,
+      );
     }
 
     this.logger.debug(`[BFD] ✅ Demand validation passed:`, {
@@ -2019,6 +2285,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
         length: g.length,
         quantity: g.quantity,
       })),
+      warnings: warnings.length > 0 ? warnings : "none",
     });
   }
 
@@ -2036,6 +2303,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
   /**
    * Find exact demand solution using priority search (BFS/Dijkstra-like)
    * Replaces greedy backtracking to find optimal mixed-pattern solutions
+   * Enhanced with better error handling and fallback mechanisms
    */
   private findExactDemandSolution(
     patterns: Array<{
@@ -2060,6 +2328,23 @@ export class BFDAlgorithm extends BaseAlgorithm {
       initialDemand: Object.fromEntries(demand),
       patternsAvailable: patterns.length,
     });
+
+    // Validate inputs
+    if (patterns.length === 0) {
+      this.logger.error(
+        "[BFD] Cannot run priority search with no patterns",
+      );
+      throw new Error(
+        "Priority search failed: No patterns available. This indicates pattern generation failed or all patterns were filtered out.",
+      );
+    }
+
+    if (demand.size === 0) {
+      this.logger.error("[BFD] Cannot run priority search with no demand");
+      throw new Error(
+        "Priority search failed: No demand specified. This indicates an empty or invalid cutting list.",
+      );
+    }
 
     // Convert patterns to SearchPattern format
     const searchPatterns: SearchPattern[] = patterns.map((p) => ({
@@ -2086,18 +2371,43 @@ export class BFDAlgorithm extends BaseAlgorithm {
     // maxStates: 50000 (5x increase for exhaustive exploration)
     // overProductionTolerance: 3 (allow small overproduction for solution feasibility)
     // wasteNormalization: 10 (combined with w×10 in priorityOf → makes 1mm waste = 1 priority unit!)
-    const result = solver.solve(searchPatterns, demand, {
-      maxStates: 50000,
-      overProductionTolerance: 3,
-      wasteNormalization: 10,
-    });
+    let result: SearchState | null = null;
+
+    try {
+      result = solver.solve(searchPatterns, demand, {
+        maxStates: 50000,
+        overProductionTolerance: 3,
+        wasteNormalization: 10,
+      });
+    } catch (error) {
+      this.logger.error(
+        "[BFD] Priority search solver threw an exception",
+        {
+          error: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          patternsCount: searchPatterns.length,
+          demandSize: demand.size,
+        },
+      );
+      throw new Error(
+        `Priority search solver failed: ${error instanceof Error ? error.message : String(error)}. ` +
+          `This may indicate the problem is too complex or requires manual intervention.`,
+      );
+    }
 
     if (!result) {
       this.logger.error(`[BFD] ❌ PrioritySearchSolver returned null!`, {
         patternsCount: searchPatterns.length,
         demand: Object.fromEntries(demand),
+        note: "No feasible solution found within search limits",
       });
-      throw new Error("No solution found with priority search");
+      throw new Error(
+        "No solution found with priority search. " +
+          `This may occur if: 1) The demand cannot be satisfied with available patterns, ` +
+          `2) The search space is too large (${searchPatterns.length} patterns), or ` +
+          `3) The search state limit (50000) was exceeded. ` +
+          `Consider: reducing unique item lengths, increasing stock lengths, or adjusting kerf/safety margins.`,
+      );
     }
 
     this.logger.info(`[BFD] 🎯 Priority search completed:`, {
@@ -2123,6 +2433,8 @@ export class BFDAlgorithm extends BaseAlgorithm {
           errors: finalValidation.errors,
           produced: Object.fromEntries(result.produced),
           required: Object.fromEntries(demand),
+          solutionPatterns: solution.length,
+          totalCuts: solution.reduce((sum, s) => sum + s.count, 0),
         },
       );
 
@@ -2131,7 +2443,9 @@ export class BFDAlgorithm extends BaseAlgorithm {
       //                    2) search space too large (hit maxStates limit)
       // We MUST throw error - system should use traditional BFD instead
       throw new Error(
-        `Demand validation failed: ${finalValidation.errors.join(", ")}`,
+        `Demand validation failed after priority search: ${finalValidation.errors.join(", ")}. ` +
+          `The algorithm found a solution but it doesn't exactly match the required quantities. ` +
+          `This is a critical error - falling back to traditional BFD algorithm.`,
       );
     }
 
