@@ -53,6 +53,19 @@ interface CategoryPerformance {
   wastePercentage: number;
 }
 
+interface ProductCategoryExtended extends ProductCategory {
+  listCount: number;
+  percentage: string;
+}
+
+interface ProductCategoriesAnalysis {
+  totalCategories: number;
+  categories: ProductCategoryExtended[];
+  averageItemsPerCategory: number;
+  mostActiveCategory: string;
+  categoryPerformance: CategoryPerformance[];
+}
+
 interface CuttingListSection {
   productName: string;
   items: CuttingListItem[];
@@ -76,14 +89,14 @@ export class ProductCategoriesService {
   /**
    * Get product categories analysis
    */
-  public async getProductCategoriesAnalysis(cuttingListId?: string): Promise<any> {
+  public async getProductCategoriesAnalysis(cuttingListId?: string): Promise<ProductCategoriesAnalysis> {
     try {
-      let categoryStats = {
+      let categoryStats: ProductCategoriesAnalysis = {
         totalCategories: 0,
-        categories: [] as ProductCategory[],
+        categories: [],
         averageItemsPerCategory: 0,
         mostActiveCategory: 'Bilinmiyor',
-        categoryPerformance: [] as CategoryPerformance[]
+        categoryPerformance: []
       };
 
       if (cuttingListId) {

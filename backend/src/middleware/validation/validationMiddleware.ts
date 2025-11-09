@@ -16,6 +16,13 @@ import {
 } from '../../types/apiResponse';
 
 /**
+ * Extended Request type with validated data
+ */
+interface RequestWithValidatedData extends Request {
+  validatedData?: unknown;
+}
+
+/**
  * Validation target options
  */
 export type ValidationTarget = 'body' | 'query' | 'params';
@@ -65,7 +72,7 @@ export function validateRequest<T extends z.ZodType>(
       const validatedData = schema.parse(dataToValidate);
       
       // Attach validated data to request for controller access
-      (req as any).validatedData = validatedData;
+      (req as RequestWithValidatedData).validatedData = validatedData;
       
       // If stripping unknown fields, replace original data
       if (stripUnknown) {

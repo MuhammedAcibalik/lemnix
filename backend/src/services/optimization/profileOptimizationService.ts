@@ -7,7 +7,7 @@
  * Örnek: "Kapalı Alt" profilinde 992mm ve 687mm parçaları aynı stoktan keser.
  */
 
-import { OptimizationItem, OptimizationAlgorithm, WasteCategory, Cut, OptimizationResult } from '../../types';
+import { OptimizationItem, OptimizationAlgorithm, WasteCategory, Cut, OptimizationResult, CuttingSegment } from '../../types';
 import { AdvancedOptimizationService } from './AdvancedOptimizationService';
 
 // ============================================================================
@@ -17,7 +17,7 @@ import { AdvancedOptimizationService } from './AdvancedOptimizationService';
 interface PoolingCut {
   readonly id?: string;
   readonly stockLength?: number;
-  readonly segments?: readonly unknown[];
+  readonly segments?: readonly CuttingSegment[];
   readonly usedLength?: number;
   readonly remainingLength?: number;
   readonly planLabel?: string;
@@ -137,7 +137,7 @@ export class ProfileOptimizationService {
         cuts: (poolingResult.cuts as Cut[]).map((cut: Cut, index: number) => ({
           id: cut.id || `cut_${index}`,
           stockLength: cut.stockLength || 6100,
-          segments: (cut.segments as any[]) || [],
+          segments: cut.segments || [],
           usedLength: cut.usedLength || 0,
           remainingLength: cut.remainingLength || 0,
           planLabel: cut.planLabel || 'No plan',

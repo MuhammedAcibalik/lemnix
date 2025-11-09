@@ -32,7 +32,7 @@
  * @see docs/GENETIC_ALGORITHM_IMPROVEMENTS.md for P0/P1 fixes needed
  */
 
-import type { OptimizationItem, Cut, CuttingSegment, ProfileType } from '../../../types';
+import type { OptimizationItem, Cut, CuttingSegment, ProfileType, OptimizationConstraints } from '../../../types';
 import { WasteCategory, OptimizationAlgorithm } from '../../../types';
 import { BaseAlgorithm } from '../core/BaseAlgorithm';
 import { OptimizationContext } from '../core/OptimizationContext';
@@ -1721,7 +1721,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   private generateCuttingPatterns(
     itemGroups: Array<{ length: number; quantity: number }>,
     stockLengths: number[],
-    constraints: any
+    constraints: OptimizationConstraints
   ): Array<{
     stockLength: number;
     pattern: Map<number, number>; // length -> count
@@ -1770,7 +1770,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       used: number;
       waste: number;
     }>,
-    constraints?: any
+    constraints?: OptimizationConstraints
   ): void {
     const lengths = itemGroups.map(g => g.length);
     const kerfWidth = constraints?.kerfWidth ?? 0;
@@ -1967,7 +1967,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       waste: number;
     }>,
     itemGroups: Array<{ length: number; quantity: number }>,
-    constraints: any
+    constraints: OptimizationConstraints
   ): Array<{
     pattern: typeof patterns[0];
     count: number;
@@ -2005,7 +2005,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   private convertSolutionToCuts(
     solution: Array<{ pattern: { stockLength: number; pattern: Map<number, number>; used: number; waste: number }; count: number }>,
     stockLengths: number[],
-    constraints: any,
+    constraints: OptimizationConstraints,
     itemGroups?: Array<{ length: number; quantity: number }>
   ): Cut[] {
     const cuts: Cut[] = [];
@@ -2192,7 +2192,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       waste: number;
     }>,
     itemGroups: Array<{ length: number; quantity: number }>,
-    constraints: any
+    constraints: OptimizationConstraints
   ): Array<{
     pattern: typeof patterns[0];
     count: number;

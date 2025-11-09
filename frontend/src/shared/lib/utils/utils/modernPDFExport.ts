@@ -7,6 +7,16 @@
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
+/**
+ * Extended jsPDF type with internal API access
+ */
+interface ExtendedJsPDF extends jsPDF {
+  internal: {
+    getNumberOfPages: () => number;
+    [key: string]: unknown;
+  };
+}
+
 // Type definitions (inline for now)
 export interface ModernStatisticsData {
   [key: string]: unknown;
@@ -256,8 +266,8 @@ export const createModernPDFExport = async (
         processingTime,
         dataPoints: calculateDataPoints(data),
         chartsGenerated: 6,
-        pagesGenerated: (doc as any).internal.getNumberOfPages
-          ? (doc as any).internal.getNumberOfPages()
+        pagesGenerated: (doc as ExtendedJsPDF).internal.getNumberOfPages
+          ? (doc as ExtendedJsPDF).internal.getNumberOfPages()
           : 1,
       },
     };

@@ -69,6 +69,11 @@ export class NSGAIIAlgorithm extends GeneticAlgorithm {
   public override readonly scalability = 7; // High scalability for multi-objective problems
 
   /**
+   * GPU Evolution Service for accelerated optimization (optional)
+   */
+  private gpuEvolutionService?: GPUEvolutionService;
+
+  /**
    * Epsilon threshold for normalization to avoid division by zero
    * Used consistently across all normalization operations
    */
@@ -166,8 +171,8 @@ export class NSGAIIAlgorithm extends GeneticAlgorithm {
       }
 
       // Initialize GPU Evolution Service
-      (this as any).gpuEvolutionService = new GPUEvolutionService(this.logger);
-      const initialized = await (this as any).gpuEvolutionService.initialize();
+      this.gpuEvolutionService = new GPUEvolutionService(this.logger);
+      const initialized = await this.gpuEvolutionService.initialize();
 
       if (!initialized) {
         this.logger.info('GPU not available for NSGA-II, will use CPU');
@@ -184,7 +189,7 @@ export class NSGAIIAlgorithm extends GeneticAlgorithm {
       const generations = context.nsgaParams?.generations ?? 200;
       const seed = context.nsgaParams?.seed ?? 12345;
       
-    const gpuResult = await (this as any).gpuEvolutionService.runEvolution({
+    const gpuResult = await this.gpuEvolutionService!.runEvolution({
       items: expanded,
       stockLength: primaryStockLength,
       populationSize,
@@ -245,8 +250,8 @@ export class NSGAIIAlgorithm extends GeneticAlgorithm {
       return null;
     } finally {
       // Cleanup GPU resources
-    (this as any).gpuEvolutionService?.dispose();
-    (this as any).gpuEvolutionService = null;
+    this.gpuEvolutionService?.dispose();
+    this.gpuEvolutionService = undefined;
     }
   }
 
@@ -1727,7 +1732,8 @@ export class NSGAIIAlgorithm extends GeneticAlgorithm {
     }
     
     try {
-      const hv = this.calculateHypervolume(front as any); // Mevcut HV fonksiyonunuz
+      // Use WFG algorithm directly for raw number arrays
+      const hv = this.wfgHypervolume(front, refPoint);
       return Number.isFinite(hv) ? hv : null;
     } catch (error) {
       this.logger.warn('NSGA-II: Error calculating advanced hypervolume, returning null', {
