@@ -3,8 +3,13 @@
  * @module shared/ui/Button
  */
 
+// Export v3 as primary
+export { ButtonV3 as Button, ButtonV3 } from "./Button.v3";
+export type { ButtonV3Props as ButtonProps } from "./Button.v3";
+
+// Legacy exports for backward compatibility
 export {
-  Button,
+  Button as ButtonLegacy,
   PrimaryButton,
   SecondaryButton,
   TextButton,
@@ -12,4 +17,3 @@ export {
   SuccessButton,
 } from "./Button";
 
-export type { ButtonProps } from "./Button";
