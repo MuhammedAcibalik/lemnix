@@ -302,7 +302,7 @@ export const validateOptimizationParams = (
         (algo) =>
           algo
             ? VALIDATION_CONFIG.allowedValues.algorithms.includes(
-                algo as string,
+                algo as "ffd" | "bfd" | "genetic" | "pooling",
               )
             : false,
         "Geçersiz algoritma seçimi",
@@ -317,7 +317,7 @@ export const validateOptimizationParams = (
       .addRule(
         (u) =>
           u
-            ? VALIDATION_CONFIG.allowedValues.units.includes(u as string)
+            ? VALIDATION_CONFIG.allowedValues.units.includes(u as "m" | "mm" | "cm")
             : false,
         "Geçersiz birim seçimi",
       )
@@ -422,7 +422,7 @@ export const validateFileUpload = (
     },
     {
       validator: () =>
-        VALIDATION_CONFIG.allowedValues.fileTypes.includes(file.type as string),
+        VALIDATION_CONFIG.allowedValues.fileTypes.includes(file.type as "application/json" | "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" | "application/vnd.ms-excel" | "text/csv"),
       error:
         "Sadece Excel (.xlsx, .xls), CSV (.csv) ve JSON (.json) dosyaları kabul edilir",
     },

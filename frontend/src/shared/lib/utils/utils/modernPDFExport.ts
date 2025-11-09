@@ -763,7 +763,7 @@ const addTrendCharts = async (
   const chartData = Array.isArray(data.workOrders?.trends) ? data.workOrders.trends.slice(-7) : [];
   if (chartData.length === 0) return;
   
-  const maxValue = Math.max(...chartData.map((d: any) => d.completed || 0));
+  const maxValue = Math.max(...chartData.map((d: any) => (d.completed || 0) as number));
   const stepX = (chartWidth - 40) / (chartData.length - 1);
   const stepY = (chartHeight - 40) / maxValue;
 
@@ -772,9 +772,9 @@ const addTrendCharts = async (
 
   for (let i = 0; i < chartData.length - 1; i++) {
     const x1 = x + 20 + i * stepX;
-    const y1 = y + chartHeight - 20 - chartData[i].completed * stepY;
+    const y1 = y + chartHeight - 20 - ((chartData[i] as any).completed || 0) * stepY;
     const x2 = x + 20 + (i + 1) * stepX;
-    const y2 = y + chartHeight - 20 - chartData[i + 1].completed * stepY;
+    const y2 = y + chartHeight - 20 - ((chartData[i + 1] as any).completed || 0) * stepY;
 
     doc.line(x1, y1, x2, y2);
   }
@@ -792,9 +792,9 @@ const addTrendCharts = async (
 
   for (let i = 0; i < chartData.length - 1; i++) {
     const x1 = x + chartWidth + 30 + i * stepX;
-    const y1 = y + chartHeight - 20 - chartData[i].efficiency * stepY;
+    const y1 = y + chartHeight - 20 - ((chartData[i] as any).efficiency || 0) * stepY;
     const x2 = x + chartWidth + 30 + (i + 1) * stepX;
-    const y2 = y + chartHeight - 20 - chartData[i + 1].efficiency * stepY;
+    const y2 = y + chartHeight - 20 - ((chartData[i + 1] as any).efficiency || 0) * stepY;
 
     doc.line(x1, y1, x2, y2);
   }
