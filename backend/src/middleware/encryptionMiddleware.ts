@@ -101,7 +101,7 @@ export const decryptDataMiddleware = (
   }
 };
 
-function encryptPayload(payload: any, context: DataProtectionContext): any {
+function encryptPayload(payload: unknown, context: DataProtectionContext): unknown {
   if (Array.isArray(payload)) {
     return payload.map((item) => encryptPayload(item, context));
   }
@@ -110,7 +110,7 @@ function encryptPayload(payload: any, context: DataProtectionContext): any {
     return payload;
   }
 
-  const encrypted: Record<string, unknown> = { ...payload };
+  const encrypted: Record<string, unknown> = { ...(payload as Record<string, unknown>) };
 
   for (const field of context.sensitiveFields) {
     if (typeof encrypted[field] === "string") {
@@ -127,7 +127,7 @@ function encryptPayload(payload: any, context: DataProtectionContext): any {
   return encrypted;
 }
 
-function decryptPayload(payload: any, context: DataProtectionContext): any {
+function decryptPayload(payload: unknown, context: DataProtectionContext): unknown {
   if (Array.isArray(payload)) {
     return payload.map((item) => decryptPayload(item, context));
   }
@@ -136,7 +136,7 @@ function decryptPayload(payload: any, context: DataProtectionContext): any {
     return payload;
   }
 
-  const decrypted: Record<string, unknown> = { ...payload };
+  const decrypted: Record<string, unknown> = { ...(payload as Record<string, unknown>) };
 
   for (const field of context.sensitiveFields) {
     if (typeof decrypted[field] === "string") {
@@ -154,10 +154,10 @@ function decryptPayload(payload: any, context: DataProtectionContext): any {
 }
 
 export function encryptDataForTable(
-  data: any,
+  data: unknown,
   tableName: string,
   context?: DataProtectionContext,
-): any {
+): unknown {
   const protection = context ?? {
     table: tableName,
     sensitiveFields: [],
@@ -167,10 +167,10 @@ export function encryptDataForTable(
 }
 
 export function decryptDataForTable(
-  data: any,
+  data: unknown,
   tableName: string,
   context?: DataProtectionContext,
-): any {
+): unknown {
   const protection = context ?? {
     table: tableName,
     sensitiveFields: [],

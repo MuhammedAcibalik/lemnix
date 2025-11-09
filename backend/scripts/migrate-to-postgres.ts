@@ -1,11 +1,16 @@
 /**
  * Data Migration Script: SQLite → PostgreSQL
  * 
+ * ⚠️ DEPRECATED: This migration was completed. PostgreSQL is now the primary database.
+ * This script is kept for historical reference only.
+ * 
  * This script migrates existing data from SQLite to PostgreSQL.
  * Run after PostgreSQL setup and Prisma migration.
  * 
  * Usage:
  *   npm run migrate:sqlite-to-postgres
+ * 
+ * NOTE: This script requires a SQLite database file to exist, which is no longer used.
  */
 
 import { PrismaClient, Prisma } from '@prisma/client';

@@ -504,7 +504,7 @@ export class CuttingListController {
           const typedList = list as unknown as CuttingListWithFields;
 
           // ✅ FIX: Try to parse sections from database JSON field first
-          let dbSections: any[] = [];
+          let dbSections: ProductSection[] = [];
           try {
             if (typedList.sections) {
               const parsed =

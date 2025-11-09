@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod';
+import { Request, Response, NextFunction } from 'express';
 import { CuttingListStatus, ItemPriority } from '../../types';
 
 // ============================================================================
@@ -205,10 +206,10 @@ export function validateInput<T>(
  * Create validation middleware for Express routes
  */
 export function createValidationMiddleware<T>(schema: z.ZodSchema<T>) {
-  return (req: any, res: any, next: any) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     const result = validateInput(schema, req.body);
     if (!result.success) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: {
           message: 'Validation failed',
@@ -216,8 +217,9 @@ export function createValidationMiddleware<T>(schema: z.ZodSchema<T>) {
           details: result.errors
         }
       });
+      return;
     }
-    req.validatedData = result.data;
+    (req as Request & { validatedData: T }).validatedData = result.data as T;
     next();
   };
 }
