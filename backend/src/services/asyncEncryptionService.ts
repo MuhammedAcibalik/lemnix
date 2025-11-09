@@ -11,6 +11,7 @@
  */
 
 import { EventEmitter } from "events";
+import { ProductionPlanItem } from "@prisma/client";
 import { encryptionService } from "./encryptionService";
 import { logger } from "./logger";
 
@@ -35,11 +36,15 @@ export interface EncryptionResult<T> {
   duration: number;
 }
 
+export interface ProductionPlanItemWithEncryption extends ProductionPlanItem {
+  // Encrypted fields are already part of ProductionPlanItem schema
+}
+
 export interface BatchEncryptionOptions {
   batchSize?: number;
   concurrency?: number;
   onProgress?: (progress: EncryptionProgress) => void;
-  onError?: (error: Error, item: any) => void;
+  onError?: (error: Error, item: ProductionPlanItemWithEncryption) => void;
 }
 
 // ============================================================================
@@ -54,9 +59,9 @@ export class AsyncEncryptionService extends EventEmitter {
    * Encrypt sensitive fields in production plan items asynchronously
    */
   async encryptProductionPlanItems(
-    items: any[],
+    items: ProductionPlanItemWithEncryption[],
     options: BatchEncryptionOptions = {},
-  ): Promise<EncryptionResult<any[]>> {
+  ): Promise<EncryptionResult<ProductionPlanItemWithEncryption[]>> {
     const startTime = Date.now();
     const batchSize = options.batchSize || this.defaultBatchSize;
     const concurrency = options.concurrency || this.defaultConcurrency;
@@ -75,7 +80,7 @@ export class AsyncEncryptionService extends EventEmitter {
         concurrency,
       });
 
-      const encryptedItems: any[] = [];
+      const encryptedItems: ProductionPlanItemWithEncryption[] = [];
       const errors: string[] = [];
 
       // Process items in batches
@@ -160,9 +165,9 @@ export class AsyncEncryptionService extends EventEmitter {
    * Decrypt production plan items asynchronously
    */
   async decryptProductionPlanItems(
-    items: any[],
+    items: ProductionPlanItemWithEncryption[],
     options: BatchEncryptionOptions = {},
-  ): Promise<EncryptionResult<any[]>> {
+  ): Promise<EncryptionResult<ProductionPlanItemWithEncryption[]>> {
     const startTime = Date.now();
     const batchSize = options.batchSize || this.defaultBatchSize;
     const concurrency = options.concurrency || this.defaultConcurrency;
@@ -181,7 +186,7 @@ export class AsyncEncryptionService extends EventEmitter {
         concurrency,
       });
 
-      const decryptedItems: any[] = [];
+      const decryptedItems: ProductionPlanItemWithEncryption[] = [];
       const errors: string[] = [];
 
       // Process items in batches
@@ -266,11 +271,11 @@ export class AsyncEncryptionService extends EventEmitter {
    * Encrypt a single item
    */
   private async encryptSingleItem(
-    item: any,
+    item: ProductionPlanItemWithEncryption,
     index: number,
     progress: EncryptionProgress,
     options: BatchEncryptionOptions,
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<{ success: boolean; data?: ProductionPlanItemWithEncryption; error?: string }> {
     try {
       // ✅ PERFORMANCE: Encrypt once, use for both fields
       const encryptedAd = encryptionService.encryptString(item.ad);
@@ -329,11 +334,11 @@ export class AsyncEncryptionService extends EventEmitter {
    * Decrypt a single item
    */
   private async decryptSingleItem(
-    item: any,
+    item: ProductionPlanItemWithEncryption,
     index: number,
     progress: EncryptionProgress,
     options: BatchEncryptionOptions,
-  ): Promise<{ success: boolean; data?: any; error?: string }> {
+  ): Promise<{ success: boolean; data?: ProductionPlanItemWithEncryption; error?: string }> {
     try {
       // ✅ PERFORMANCE: Check if item has encrypted fields before processing
       const hasEncryptedFields =

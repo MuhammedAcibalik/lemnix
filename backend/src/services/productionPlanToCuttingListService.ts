@@ -132,7 +132,13 @@ export class ProductionPlanToCuttingListService {
   private async createCuttingListItems(
     cuttingListId: string,
     planItems: CreateCuttingListFromPlanRequest["productionPlanItems"],
-    validatedItems: any[],
+    validatedItems: Array<{
+      id: string;
+      siparis: string;
+      miktar: number;
+      malzemeNo: string;
+      malzemeKisaMetni: string;
+    }>,
   ) {
     const itemsToCreate = planItems.map((planItem) => {
       const validatedItem = validatedItems.find(

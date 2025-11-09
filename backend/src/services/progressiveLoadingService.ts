@@ -11,10 +11,11 @@
  */
 
 import { EventEmitter } from "events";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, ProductionPlanItem, Prisma } from "@prisma/client";
 import {
   asyncEncryptionService,
   EncryptionProgress,
+  ProductionPlanItemWithEncryption,
 } from "./asyncEncryptionService";
 import { logger } from "./logger";
 
@@ -40,11 +41,17 @@ export interface ProgressiveLoadResult<T> {
   duration: number;
 }
 
+export interface StageResult {
+  success: boolean;
+  data?: unknown;
+  errors?: string[];
+}
+
 export interface ProgressiveLoadOptions {
   batchSize?: number;
   concurrency?: number;
   onProgress?: (progress: LoadingProgress) => void;
-  onStageComplete?: (stage: string, result: any) => void;
+  onStageComplete?: (stage: string, result: StageResult) => void;
 }
 
 // ============================================================================
@@ -234,9 +241,9 @@ export class ProgressiveLoadingService extends EventEmitter {
    * Progressive data retrieval with streaming
    */
   async getProductionPlansProgressive(
-    filters: any = {},
+    filters: Prisma.ProductionPlanWhereInput = {},
     options: ProgressiveLoadOptions = {},
-  ): Promise<ProgressiveLoadResult<any[]>> {
+  ): Promise<ProgressiveLoadResult<ProductionPlanItem[]>> {
     const startTime = Date.now();
     const progress: LoadingProgress = {
       stage: "parsing",
@@ -363,7 +370,7 @@ export class ProgressiveLoadingService extends EventEmitter {
    * Save items progressively to database
    */
   private async saveItemsProgressive(
-    items: any[],
+    items: Prisma.ProductionPlanItemCreateManyInput[],
     planId: string,
     options: {
       onProgress?: (progress: {
@@ -372,9 +379,9 @@ export class ProgressiveLoadingService extends EventEmitter {
         percentage: number;
       }) => void;
     } = {},
-  ): Promise<any[]> {
+  ): Promise<Prisma.ProductionPlanItemCreateManyInput[]> {
     const batchSize = 100;
-    const savedItems: any[] = [];
+    const savedItems: Prisma.ProductionPlanItemCreateManyInput[] = [];
 
     for (let i = 0; i < items.length; i += batchSize) {
       const batch = items.slice(i, i + batchSize);

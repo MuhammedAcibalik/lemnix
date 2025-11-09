@@ -5,7 +5,7 @@
  * @description CRUD and query operations for profile management
  */
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import { profileExcelParserService } from "./profileExcelParserService";
 import {
   ProfileDefinition,
@@ -21,15 +21,15 @@ export class ProfileManagementService {
 
   // Type-safe Prisma client access helpers
   private get profileDefinition() {
-    return (this.prisma as any).profileDefinition;
+    return this.prisma.profileDefinition;
   }
 
   private get profileStockLength() {
-    return (this.prisma as any).profileStockLength;
+    return this.prisma.profileStockLength;
   }
 
   private get workOrderProfileMapping() {
-    return (this.prisma as any).workOrderProfileMapping;
+    return this.prisma.workOrderProfileMapping;
   }
 
   /**
@@ -71,32 +71,28 @@ export class ProfileManagementService {
         // Create or update profile definitions
         const profileIdMap = new Map<string, string>(); // profileCode → profileId
 
-        const txProfileDef = (tx as any).profileDefinition;
-        const txStockLength = (tx as any).profileStockLength;
-        const txMapping = (tx as any).workOrderProfileMapping;
-
         for (const [profileCode, profileInput] of profiles.entries()) {
           // Check if profile exists
-          const existingProfile = await txProfileDef.findUnique({
+          const existingProfile = await tx.profileDefinition.findUnique({
             where: { profileCode },
           });
 
           if (existingProfile) {
             // Update profile name if changed
             if (existingProfile.profileName !== profileInput.profileName) {
-              await txProfileDef.update({
+              await tx.profileDefinition.update({
                 where: { id: existingProfile.id },
                 data: { profileName: profileInput.profileName },
               });
             }
 
             // Delete existing stock lengths
-            await txStockLength.deleteMany({
+            await tx.profileStockLength.deleteMany({
               where: { profileId: existingProfile.id },
             });
 
             // Create new stock lengths
-            await txStockLength.createMany({
+            await tx.profileStockLength.createMany({
               data: profileInput.stockLengths.map((sl) => ({
                 profileId: existingProfile.id,
                 stockLength: sl.stockLength,
@@ -109,7 +105,7 @@ export class ProfileManagementService {
             profilesUpdated++;
           } else {
             // Create new profile
-            const newProfile = await txProfileDef.create({
+            const newProfile = await tx.profileDefinition.create({
               data: {
                 profileCode,
                 profileName: profileInput.profileName,
@@ -129,7 +125,7 @@ export class ProfileManagementService {
         }
 
         // Delete existing mappings for this week/year (allow re-upload)
-        const deletedCount = await txMapping.deleteMany({
+        const deletedCount = await tx.workOrderProfileMapping.deleteMany({
           where: {
             weekNumber,
             year,
@@ -158,7 +154,7 @@ export class ProfileManagementService {
         });
 
         // Use skipDuplicates to handle identical rows
-        await txMapping.createMany({
+        await tx.workOrderProfileMapping.createMany({
           data: mappingsToCreate,
           skipDuplicates: true,
         });
@@ -485,15 +481,12 @@ export class ProfileManagementService {
   }> {
     try {
       return await this.prisma.$transaction(async (tx) => {
-        const txMapping = (tx as any).workOrderProfileMapping;
-        const txProfileDef = (tx as any).profileDefinition;
-
         let created = 0;
         let updated = 0;
 
         // Get profile IDs for profile codes
         const profileCodes = [...new Set(mappings.map((m) => m.profileCode))];
-        const profiles = await txProfileDef.findMany({
+        const profiles = await tx.profileDefinition.findMany({
           where: {
             profileCode: { in: profileCodes },
           },
@@ -522,7 +515,7 @@ export class ProfileManagementService {
             continue;
           }
 
-          const existing = await txMapping.findUnique({
+          const existing = await tx.workOrderProfileMapping.findUnique({
             where: {
               workOrderId_profileType_weekNumber_year: {
                 workOrderId: mapping.workOrderId,
@@ -534,7 +527,7 @@ export class ProfileManagementService {
           });
 
           if (existing) {
-            await txMapping.update({
+            await tx.workOrderProfileMapping.update({
               where: {
                 id: existing.id,
               },
@@ -545,7 +538,7 @@ export class ProfileManagementService {
             });
             updated++;
           } else {
-            await txMapping.create({
+            await tx.workOrderProfileMapping.create({
               data: {
                 workOrderId: mapping.workOrderId,
                 profileType: mapping.profileType,
@@ -564,7 +557,7 @@ export class ProfileManagementService {
           (m) => `${m.workOrderId}_${m.profileType}`,
         );
 
-        const existingMappings = await txMapping.findMany({
+        const existingMappings = await tx.workOrderProfileMapping.findMany({
           where: {
             weekNumber,
             year,
@@ -575,7 +568,7 @@ export class ProfileManagementService {
         for (const existing of existingMappings) {
           const key = `${existing.workOrderId}_${existing.profileType}`;
           if (!workOrderProfileKeys.includes(key)) {
-            await txMapping.delete({
+            await tx.workOrderProfileMapping.delete({
               where: { id: existing.id },
             });
             deleted++;

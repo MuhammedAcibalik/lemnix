@@ -587,7 +587,7 @@ export class CuttingListController {
 
                   return acc;
                 },
-                {} as Record<string, any>,
+                {} as Record<string, CuttingListItem>,
               );
 
               // Add items to existing sections
@@ -698,7 +698,7 @@ export class CuttingListController {
 
                 return acc;
               },
-              {} as Record<string, any>,
+              {} as Record<string, CuttingListItem>,
             );
 
             // Convert grouped items to sections by profileType
@@ -879,7 +879,7 @@ export class CuttingListController {
 
             return acc;
           },
-          {} as Record<string, any>,
+          {} as Record<string, CuttingListItem>,
         );
 
         // Convert grouped items to sections by profileType
@@ -910,7 +910,7 @@ export class CuttingListController {
             acc[profileType].push(workOrderItem);
             return acc;
           },
-          {} as Record<string, any[]>,
+          {} as Record<string, CuttingListItem[]>,
         );
 
         // Create sections array from grouped items
