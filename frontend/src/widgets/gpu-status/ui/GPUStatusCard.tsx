@@ -171,11 +171,7 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
         features: Array.from(adapter.features),
         limits: {
           maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize || 0,
-            }
-          ).limits.maxStorageBufferBindingSize,
-          maxBufferSize: (
-            adapter as unknown as { limits: { maxBufferSize: number } }
-          ).limits.maxBufferSize,
+          maxBufferSize: adapter.limits.maxComputeWorkgroupSizeX || 0,
         },
       };
 

@@ -113,8 +113,8 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({
     );
   };
 
-  const getVariantColor = () => {
-    const variantMap = {
+  const getVariantColor = (): "primary" | "secondary" | "info" => {
+    const variantMap: Record<string, "primary" | "secondary" | "info"> = {
       upload: "primary",
       retrieve: "secondary",
       processing: "info",
