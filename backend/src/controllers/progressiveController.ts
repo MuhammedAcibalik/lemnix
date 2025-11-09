@@ -241,7 +241,7 @@ export class ProgressiveController {
   private sendProgressUpdate(
     sessionId: string,
     operation: "upload" | "retrieve",
-    progress: any,
+    progress: ProgressUpdate["progress"],
   ): void {
     try {
       const update: ProgressUpdate = {

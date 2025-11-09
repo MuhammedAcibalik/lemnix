@@ -81,12 +81,12 @@ export const auditMiddleware = (
   const originalJson = res.json;
 
   // Override response methods to capture response data
-  res.send = function (data: any) {
+  res.send = function (data: unknown) {
     enqueueAuditEvent(req, res, startTime, data);
     return originalSend.call(this, data);
   };
 
-  res.json = function (data: any) {
+  res.json = function (data: unknown) {
     enqueueAuditEvent(req, res, startTime, data);
     return originalJson.call(this, data);
   };
@@ -101,7 +101,7 @@ function enqueueAuditEvent(
   req: Request,
   res: Response,
   startTime: number,
-  responseData: any,
+  responseData: unknown,
 ): void {
   auditQueue.enqueue(async () => {
     const duration = Date.now() - startTime;
@@ -297,9 +297,9 @@ function getRecordIdFromRequest(req: Request): string | undefined {
 /**
  * Get old data from request (for updates)
  */
-function getOldDataFromRequest(req: Request): any {
+function getOldDataFromRequest(req: Request): Record<string, unknown> | null {
   if (req.method === "PUT" || req.method === "PATCH") {
-    return req.body.oldData || null;
+    return (req.body.oldData as Record<string, unknown>) || null;
   }
   return null;
 }
@@ -307,7 +307,7 @@ function getOldDataFromRequest(req: Request): any {
 /**
  * Get new data from request/response
  */
-function getNewDataFromRequest(req: Request, responseData: any): any {
+function getNewDataFromRequest(req: Request, responseData: unknown): Record<string, unknown> | null {
   if (req.method === "POST" || req.method === "PUT" || req.method === "PATCH") {
     return {
       requestData: req.body,
@@ -377,14 +377,14 @@ export const auditDataModificationMiddleware = (
   const originalSend = res.send;
   const originalJson = res.json;
 
-  res.send = function (data: any) {
+  res.send = function (data: unknown) {
     if (res.statusCode >= 200 && res.statusCode < 300) {
       logDataModification(req, data);
     }
     return originalSend.call(this, data);
   };
 
-  res.json = function (data: any) {
+  res.json = function (data: unknown) {
     if (res.statusCode >= 200 && res.statusCode < 300) {
       logDataModification(req, data);
     }
@@ -399,7 +399,7 @@ export const auditDataModificationMiddleware = (
  */
 async function logDataModification(
   req: Request,
-  responseData: any,
+  responseData: unknown,
 ): Promise<void> {
   try {
     const operation = getOperationFromRequest(req);
@@ -441,14 +441,14 @@ export const auditSecurityMiddleware = (
   const originalSend = res.send;
   const originalJson = res.json;
 
-  res.send = function (data: any) {
+  res.send = function (data: unknown) {
     if (isAuthOperation(req)) {
       logSecurityEvent(req, data, res.statusCode);
     }
     return originalSend.call(this, data);
   };
 
-  res.json = function (data: any) {
+  res.json = function (data: unknown) {
     if (isAuthOperation(req)) {
       logSecurityEvent(req, data, res.statusCode);
     }
@@ -463,7 +463,7 @@ export const auditSecurityMiddleware = (
  */
 async function logSecurityEvent(
   req: Request,
-  responseData: any,
+  responseData: unknown,
   statusCode: number,
 ): Promise<void> {
   try {
@@ -472,7 +472,7 @@ async function logSecurityEvent(
       statusCode >= 400 ? AuditSeverity.HIGH : AuditSeverity.MEDIUM;
 
     await auditService.logSecurityEvent(
-      (req as any).user?.userId || "anonymous",
+      ((req as Request & { user?: { userId?: string } }).user?.userId) || "anonymous",
       operation,
       `Security event: ${req.method} ${req.path} - ${statusCode}`,
       severity,

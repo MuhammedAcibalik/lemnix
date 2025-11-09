@@ -411,14 +411,22 @@ export function createPaginationMeta(
   };
 }
 
+import { Request, Response } from "express";
+
 // ============================================================================
 // EXPRESS MIDDLEWARE HELPERS
 // ============================================================================
 
+// Extend Express Request type with custom properties
+interface ExtendedRequest extends Request {
+  requestId?: string;
+  startTime?: number;
+}
+
 /**
  * Attach request ID to Express request
  */
-export function attachRequestId(req: any): string {
+export function attachRequestId(req: ExtendedRequest): string {
   if (!req.requestId) {
     req.requestId = generateRequestId();
   }
@@ -428,7 +436,7 @@ export function attachRequestId(req: any): string {
 /**
  * Attach start time to Express request
  */
-export function attachStartTime(req: any): number {
+export function attachStartTime(req: ExtendedRequest): number {
   if (!req.startTime) {
     req.startTime = Date.now();
   }
@@ -439,12 +447,13 @@ export function attachStartTime(req: any): number {
  * Send standardized success response
  */
 export function sendSuccess<T>(
-  res: any,
+  res: Response,
   data: T,
   statusCode: number = 200,
 ): void {
-  const requestId = res.req?.requestId || generateRequestId();
-  const startTime = res.req?.startTime;
+  const req = res.req as ExtendedRequest;
+  const requestId = req?.requestId || generateRequestId();
+  const startTime = req?.startTime;
 
   res
     .status(statusCode)
@@ -455,14 +464,15 @@ export function sendSuccess<T>(
  * Send standardized error response
  */
 export function sendError(
-  res: any,
+  res: Response,
   code: string,
   message: string,
   details?: Record<string, unknown>,
   statusCode?: number,
 ): void {
-  const requestId = res.req?.requestId || generateRequestId();
-  const startTime = res.req?.startTime;
+  const req = res.req as ExtendedRequest;
+  const requestId = req?.requestId || generateRequestId();
+  const startTime = req?.startTime;
   const status = statusCode || ERROR_STATUS_MAP[code] || 500;
 
   res
@@ -474,13 +484,14 @@ export function sendError(
  * Send paginated response
  */
 export function sendPaginated<T>(
-  res: any,
+  res: Response,
   data: T[],
   pagination: PaginationMeta,
   statusCode: number = 200,
 ): void {
-  const requestId = res.req?.requestId || generateRequestId();
-  const startTime = res.req?.startTime;
+  const req = res.req as ExtendedRequest;
+  const requestId = req?.requestId || generateRequestId();
+  const startTime = req?.startTime;
 
   res
     .status(statusCode)
