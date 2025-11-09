@@ -1,11 +1,11 @@
 /**
  * Validation Types
- * 
+ *
  * @module shared/lib/validation
  * @version 1.0.0
  */
 
-export type ValidationSeverity = 'error' | 'warning' | 'info';
+export type ValidationSeverity = "error" | "warning" | "info";
 
 export interface ValidationError {
   readonly field: string;
@@ -19,4 +19,3 @@ export interface ValidationResult {
   readonly errors: ReadonlyArray<ValidationError>;
   readonly warnings: ReadonlyArray<ValidationError>;
 }
-

@@ -4,16 +4,9 @@
  * @version 1.0.0
  */
 
-import React from 'react';
-import { OptimizationResult, WorkOrder, Pool, Cut, GroupData } from '../types';
-import {
-  Card,
-  CardContent,
-  Tabs,
-  Tab,
-  Box,
-  Button
-} from '@mui/material';
+import React from "react";
+import { OptimizationResult, WorkOrder, Pool, Cut, GroupData } from "../types";
+import { Card, CardContent, Tabs, Tab, Box, Button } from "@mui/material";
 import {
   AccountTree as TreeIcon,
   PieChart as PieChartIcon,
@@ -22,16 +15,16 @@ import {
   Settings as SettingsIcon,
   Insights as InsightsIcon,
   Refresh as RefreshIcon,
-  Share as ShareIcon
-} from '@mui/icons-material';
+  Share as ShareIcon,
+} from "@mui/icons-material";
 
 // Import tab content components (these will be created separately)
-import { CuttingPlanTab } from './tabs/CuttingPlanTab';
-import { CostAnalysisTab } from './tabs/CostAnalysisTab';
-import { WasteAnalysisTab } from './tabs/WasteAnalysisTab';
-import { PerformanceTab } from './tabs/PerformanceTab';
-import { AlgorithmTab } from './tabs/AlgorithmTab';
-import { RecommendationsTab } from './tabs/RecommendationsTab';
+import { CuttingPlanTab } from "./tabs/CuttingPlanTab";
+import { CostAnalysisTab } from "./tabs/CostAnalysisTab";
+import { WasteAnalysisTab } from "./tabs/WasteAnalysisTab";
+import { PerformanceTab } from "./tabs/PerformanceTab";
+import { AlgorithmTab } from "./tabs/AlgorithmTab";
+import { RecommendationsTab } from "./tabs/RecommendationsTab";
 
 interface ResultsTabsProps {
   tabValue: number;
@@ -45,7 +38,11 @@ interface ResultsTabsProps {
   onWorkOrderClick: (workOrderId: string) => void;
   onCuttingPlanDetails: (stock: Cut) => void;
   textExplanationOpen: { [key: string]: boolean };
-  handleTextExplanation: (cardId: string, group: { cuts: Cut[] }, groupData: GroupData) => void;
+  handleTextExplanation: (
+    cardId: string,
+    group: { cuts: Cut[] },
+    groupData: GroupData,
+  ) => void;
   explanationData: { [key: string]: string };
   analytics: Record<string, unknown>;
   systemHealth: Record<string, unknown>;
@@ -56,7 +53,10 @@ interface ResultsTabsProps {
   profileOptimizationResult: Record<string, unknown>;
   fetchProfileOptimization: () => void;
   onNewOptimization?: () => void;
-  getAlgorithmProfile: (algorithm?: string) => { icon: React.ReactNode; label: string };
+  getAlgorithmProfile: (algorithm?: string) => {
+    icon: React.ReactNode;
+    label: string;
+  };
   getProfileTypeIcon: (profileType: string) => React.ReactNode;
   getRecommendationIcon: (severity: string) => React.ReactNode;
 }
@@ -86,7 +86,7 @@ export const ResultsTabs: React.FC<ResultsTabsProps> = ({
   onNewOptimization,
   getAlgorithmProfile,
   getProfileTypeIcon,
-  getRecommendationIcon
+  getRecommendationIcon,
 }) => {
   const renderTabContent = () => {
     switch (tabValue) {
@@ -100,7 +100,9 @@ export const ResultsTabs: React.FC<ResultsTabsProps> = ({
             aggregatedPools={aggregatedPools}
             expandedWorkOrder={expandedWorkOrder}
             onWorkOrderClick={onWorkOrderClick}
-            onCuttingPlanDetails={(stock) => onCuttingPlanDetails(stock as unknown as Cut)}
+            onCuttingPlanDetails={(stock) =>
+              onCuttingPlanDetails(stock as unknown as Cut)
+            }
             textExplanationOpen={textExplanationOpen}
             handleTextExplanation={handleTextExplanation}
             explanationData={explanationData}
@@ -152,21 +154,14 @@ export const ResultsTabs: React.FC<ResultsTabsProps> = ({
           <Tab icon={<PieChartIcon />} label="Maliyet Analizi" />
           <Tab icon={<BarChartIcon />} label="Atık Analizi" />
           <Tab icon={<ShowChartIcon />} label="Performans" />
-          <Tab
-            icon={<SettingsIcon />}
-            label="🔥 Algoritma ve Parametreler"
-          />
+          <Tab icon={<SettingsIcon />} label="🔥 Algoritma ve Parametreler" />
           <Tab icon={<InsightsIcon />} label="Öneriler" />
         </Tabs>
 
-        <Box sx={{ pt: 3 }}>
-          {renderTabContent()}
-        </Box>
+        <Box sx={{ pt: 3 }}>{renderTabContent()}</Box>
 
         {/* Action Buttons */}
-        <Box
-          sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "center" }}
-        >
+        <Box sx={{ mt: 3, display: "flex", gap: 2, justifyContent: "center" }}>
           <Button
             variant="contained"
             size="large"

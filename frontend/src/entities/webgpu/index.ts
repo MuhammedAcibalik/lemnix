@@ -1,6 +1,6 @@
 /**
  * LEMNİX WebGPU Entity - Public API
- * 
+ *
  * @module entities/webgpu
  * @version 1.0.0
  */
@@ -13,7 +13,7 @@ export type {
   WebGPUOptimizationResult,
   WebGPUPerformanceMetrics,
   WebGPUPreference,
-} from './model/types';
+} from "./model/types";
 
 // API functions
 export {
@@ -22,7 +22,7 @@ export {
   runWebGPUOptimization,
   getWebGPUInfo,
   cleanupWebGPU,
-} from './api/webgpuApi';
+} from "./api/webgpuApi";
 
 // React Query hooks
 export {
@@ -32,5 +32,4 @@ export {
   useInitializeWebGPU,
   useWebGPUOptimization,
   useCleanupWebGPU,
-} from './api/webgpuQueries';
-
+} from "./api/webgpuQueries";

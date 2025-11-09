@@ -1,6 +1,6 @@
 /**
  * Statistics Entity - Public API
- * 
+ *
  * @module entities/statistics
  * @version 2.0.0 - Complete Statistics Integration (P2-2)
  */
@@ -16,7 +16,7 @@ export type {
   SystemHealthMetrics,
   PerformanceMetrics,
   OptimizationAnalytics,
-} from './model/types';
+} from "./model/types";
 
 // API functions
 export {
@@ -34,7 +34,7 @@ export {
   type StatisticsType,
   type BatchStatisticsRequest,
   type BatchStatisticsResponse,
-} from './api/statisticsApi';
+} from "./api/statisticsApi";
 
 // React Query hooks (recommended)
 export {
@@ -50,4 +50,4 @@ export {
   useWasteReductionTrends,
   useSystemHealthMetrics,
   usePerformanceMetrics,
-} from './api/statisticsQueries';
+} from "./api/statisticsQueries";

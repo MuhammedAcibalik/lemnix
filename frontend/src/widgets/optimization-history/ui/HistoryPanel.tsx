@@ -2,13 +2,13 @@
  * @fileoverview Optimization History Panel Widget
  * @module widgets/optimization-history
  * @version 1.0.0
- * 
+ *
  * ✅ P0-4: Optimization history timeline
  * ✅ BACKEND: GET /enterprise/history
  * ✅ FSD: Widget layer (composition of features + entities)
  */
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -25,7 +25,7 @@ import {
   Tooltip,
   alpha,
   Divider,
-} from '@mui/material';
+} from "@mui/material";
 import {
   History as HistoryIcon,
   PlayArrow as LoadIcon,
@@ -34,13 +34,13 @@ import {
   CalendarToday as DateIcon,
   TrendingUp as EfficiencyIcon,
   Speed as TimeIcon,
-} from '@mui/icons-material';
-import { useDesignSystem } from '@/shared/hooks';
-import { useOptimizationHistory } from '@/entities/optimization/api/optimizationQueries';
-import type { AlgorithmType } from '@/entities/optimization/model/types';
-import { FadeIn, ScaleIn } from '@/shared';
-import { formatDistanceToNow } from 'date-fns';
-import { tr } from 'date-fns/locale';
+} from "@mui/icons-material";
+import { useDesignSystem } from "@/shared/hooks";
+import { useOptimizationHistory } from "@/entities/optimization/api/optimizationQueries";
+import type { AlgorithmType } from "@/entities/optimization/model/types";
+import { FadeIn, ScaleIn } from "@/shared";
+import { formatDistanceToNow } from "date-fns";
+import { tr } from "date-fns/locale";
 
 interface HistoryPanelProps {
   readonly onLoadResult?: (resultId: string) => void;
@@ -53,34 +53,40 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
 }) => {
   const ds = useDesignSystem();
   const [page, setPage] = useState(1);
-  const [algorithmFilter, setAlgorithmFilter] = useState<AlgorithmType | 'all'>('all');
+  const [algorithmFilter, setAlgorithmFilter] = useState<AlgorithmType | "all">(
+    "all",
+  );
   const pageSize = 10;
 
-  const { data: history, isLoading, refetch } = useOptimizationHistory(
+  const {
+    data: history,
+    isLoading,
+    refetch,
+  } = useOptimizationHistory(
     {
       page,
       pageSize,
-      algorithm: algorithmFilter === 'all' ? undefined : algorithmFilter,
+      algorithm: algorithmFilter === "all" ? undefined : algorithmFilter,
     },
     {
       staleTime: 1 * 60 * 1000, // 1 minute
-    }
+    },
   );
 
-  const handleFilterChange = (algorithm: AlgorithmType | 'all') => {
+  const handleFilterChange = (algorithm: AlgorithmType | "all") => {
     setAlgorithmFilter(algorithm);
     setPage(1); // Reset to first page
   };
 
   const getAlgorithmColor = (algorithm: string) => {
     switch (algorithm) {
-      case 'ffd':
+      case "ffd":
         return ds.colors.primary.main;
-      case 'bfd':
+      case "bfd":
         return ds.colors.accent.main;
-      case 'genetic':
+      case "genetic":
         return ds.colors.success.main;
-      case 'pooling':
+      case "pooling":
         return ds.colors.warning.main;
       default:
         return ds.colors.neutral[500];
@@ -99,27 +105,38 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
       sx={{
         borderRadius: `${ds.borderRadius.lg}px`,
         border: `1px solid ${ds.colors.neutral[300]}`,
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       {/* Header */}
       <Box
         sx={{
-          p: ds.spacing['3'],
+          p: ds.spacing["3"],
           background: alpha(ds.colors.primary.main, 0.05),
           borderBottom: `1px solid ${ds.colors.neutral[200]}`,
         }}
       >
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Stack direction="row" alignItems="center" spacing={ds.spacing['2']}>
-            <HistoryIcon sx={{ color: ds.colors.primary.main, fontSize: ds.componentSizes.icon.large }} />
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Stack direction="row" alignItems="center" spacing={ds.spacing["2"]}>
+            <HistoryIcon
+              sx={{
+                color: ds.colors.primary.main,
+                fontSize: ds.componentSizes.icon.large,
+              }}
+            />
             <Box>
-              <Typography sx={{ fontWeight: 700, fontSize: '1rem' }}>
+              <Typography sx={{ fontWeight: 700, fontSize: "1rem" }}>
                 Optimizasyon Geçmişi
               </Typography>
-              <Typography sx={{ fontSize: '0.75rem', color: ds.colors.text.secondary }}>
+              <Typography
+                sx={{ fontSize: "0.75rem", color: ds.colors.text.secondary }}
+              >
                 {history?.length || 0} kayıt
               </Typography>
             </Box>
@@ -131,7 +148,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
               size="small"
               sx={{
                 color: ds.colors.primary.main,
-                '&:hover': {
+                "&:hover": {
                   background: alpha(ds.colors.primary.main, 0.1),
                 },
               }}
@@ -143,65 +160,110 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
       </Box>
 
       {/* Filter Bar */}
-      <Box sx={{ p: ds.spacing['2'], borderBottom: `1px solid ${ds.colors.neutral[200]}` }}>
-        <Stack direction="row" spacing={ds.spacing['2']} alignItems="center">
+      <Box
+        sx={{
+          p: ds.spacing["2"],
+          borderBottom: `1px solid ${ds.colors.neutral[200]}`,
+        }}
+      >
+        <Stack direction="row" spacing={ds.spacing["2"]} alignItems="center">
           <FilterIcon sx={{ fontSize: 16, color: ds.colors.text.secondary }} />
-          <Stack direction="row" spacing={ds.spacing['1']} sx={{ flex: 1 }}>
+          <Stack direction="row" spacing={ds.spacing["1"]} sx={{ flex: 1 }}>
             <Chip
               label="Tümü"
               size="small"
-              onClick={() => handleFilterChange('all')}
+              onClick={() => handleFilterChange("all")}
               sx={{
-                background: algorithmFilter === 'all' ? ds.gradients.primary : 'transparent',
-                color: algorithmFilter === 'all' ? 'white' : ds.colors.text.secondary,
+                background:
+                  algorithmFilter === "all"
+                    ? ds.gradients.primary
+                    : "transparent",
+                color:
+                  algorithmFilter === "all"
+                    ? "white"
+                    : ds.colors.text.secondary,
                 border: `1px solid ${ds.colors.neutral[300]}`,
-                fontWeight: algorithmFilter === 'all' ? 600 : 400,
-                cursor: 'pointer',
+                fontWeight: algorithmFilter === "all" ? 600 : 400,
+                cursor: "pointer",
               }}
             />
-            {(['ffd', 'bfd', 'genetic', 'pooling'] as AlgorithmType[]).map((alg) => (
-              <Chip
-                key={alg}
-                label={alg.toUpperCase()}
-                size="small"
-                onClick={() => handleFilterChange(alg)}
-                sx={{
-                  background: algorithmFilter === alg ? getAlgorithmColor(alg) : 'transparent',
-                  color: algorithmFilter === alg ? 'white' : ds.colors.text.secondary,
-                  border: `1px solid ${ds.colors.neutral[300]}`,
-                  fontWeight: algorithmFilter === alg ? 600 : 400,
-                  cursor: 'pointer',
-                }}
-              />
-            ))}
+            {(["ffd", "bfd", "genetic", "pooling"] as AlgorithmType[]).map(
+              (alg) => (
+                <Chip
+                  key={alg}
+                  label={alg.toUpperCase()}
+                  size="small"
+                  onClick={() => handleFilterChange(alg)}
+                  sx={{
+                    background:
+                      algorithmFilter === alg
+                        ? getAlgorithmColor(alg)
+                        : "transparent",
+                    color:
+                      algorithmFilter === alg
+                        ? "white"
+                        : ds.colors.text.secondary,
+                    border: `1px solid ${ds.colors.neutral[300]}`,
+                    fontWeight: algorithmFilter === alg ? 600 : 400,
+                    cursor: "pointer",
+                  }}
+                />
+              ),
+            )}
           </Stack>
         </Stack>
       </Box>
 
       {/* History List */}
-      <Box sx={{ flex: 1, overflowY: 'auto', maxHeight, p: ds.spacing['2'] }}>
+      <Box sx={{ flex: 1, overflowY: "auto", maxHeight, p: ds.spacing["2"] }}>
         {isLoading ? (
-          <Box sx={{ textAlign: 'center', py: ds.spacing['6'] }}>
+          <Box sx={{ textAlign: "center", py: ds.spacing["6"] }}>
             <CircularProgress size={32} />
-            <Typography sx={{ fontSize: '0.875rem', color: ds.colors.text.secondary, mt: ds.spacing['2'] }}>
+            <Typography
+              sx={{
+                fontSize: "0.875rem",
+                color: ds.colors.text.secondary,
+                mt: ds.spacing["2"],
+              }}
+            >
               Geçmiş yükleniyor...
             </Typography>
           </Box>
         ) : !history || history.length === 0 ? (
-          <Box sx={{ textAlign: 'center', py: ds.spacing['6'] }}>
-            <HistoryIcon sx={{ fontSize: 48, color: ds.colors.neutral[400], mb: ds.spacing['2'] }} />
-            <Typography sx={{ fontSize: '0.9375rem', fontWeight: 600, color: ds.colors.text.primary }}>
+          <Box sx={{ textAlign: "center", py: ds.spacing["6"] }}>
+            <HistoryIcon
+              sx={{
+                fontSize: 48,
+                color: ds.colors.neutral[400],
+                mb: ds.spacing["2"],
+              }}
+            />
+            <Typography
+              sx={{
+                fontSize: "0.9375rem",
+                fontWeight: 600,
+                color: ds.colors.text.primary,
+              }}
+            >
               Henüz optimizasyon geçmişi yok
             </Typography>
-            <Typography sx={{ fontSize: '0.8125rem', color: ds.colors.text.secondary, mt: ds.spacing['1'] }}>
+            <Typography
+              sx={{
+                fontSize: "0.8125rem",
+                color: ds.colors.text.secondary,
+                mt: ds.spacing["1"],
+              }}
+            >
               İlk optimizasyonunuzu yapın ve buradan takip edin
             </Typography>
           </Box>
         ) : (
-          <Stack spacing={ds.spacing['2']}>
+          <Stack spacing={ds.spacing["2"]}>
             {history.map((entry, index) => {
               const result = entry.result;
-              const efficiencyColor = getEfficiencyColor(result.totalEfficiency);
+              const efficiencyColor = getEfficiencyColor(
+                result.totalEfficiency,
+              );
 
               return (
                 <ScaleIn key={entry.id} delay={index * 50}>
@@ -211,48 +273,79 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
                       borderRadius: `${ds.borderRadius.md}px`,
                       border: `1px solid ${ds.colors.neutral[300]}`,
                       transition: ds.transitions.base,
-                      '&:hover': {
+                      "&:hover": {
                         borderColor: ds.colors.primary.main,
                         boxShadow: ds.shadows.soft.md,
-                        transform: 'translateY(-2px)',
+                        transform: "translateY(-2px)",
                       },
-                      cursor: 'pointer',
+                      cursor: "pointer",
                     }}
                     onClick={() => onLoadResult?.(entry.id)}
                   >
-                    <CardContent sx={{ p: ds.spacing['2'], '&:last-child': { pb: ds.spacing['2'] } }}>
-                      <Stack spacing={ds.spacing['2']}>
+                    <CardContent
+                      sx={{
+                        p: ds.spacing["2"],
+                        "&:last-child": { pb: ds.spacing["2"] },
+                      }}
+                    >
+                      <Stack spacing={ds.spacing["2"]}>
                         {/* Header */}
-                        <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          justifyContent="space-between"
+                        >
                           <Chip
                             label={result.algorithm.toUpperCase()}
                             size="small"
                             sx={{
                               height: 24,
-                              fontSize: '0.75rem',
+                              fontSize: "0.75rem",
                               fontWeight: 700,
                               background: getAlgorithmColor(result.algorithm),
-                              color: 'white',
+                              color: "white",
                             }}
                           />
-                          <Typography sx={{ fontSize: '0.6875rem', color: ds.colors.text.secondary }}>
-                            {formatDistanceToNow(new Date(entry.createdAt), { 
+                          <Typography
+                            sx={{
+                              fontSize: "0.6875rem",
+                              color: ds.colors.text.secondary,
+                            }}
+                          >
+                            {formatDistanceToNow(new Date(entry.createdAt), {
                               addSuffix: true,
-                              locale: tr 
+                              locale: tr,
                             })}
                           </Typography>
                         </Stack>
 
                         {/* Metrics */}
-                        <Stack direction="row" spacing={ds.spacing['3']}>
+                        <Stack direction="row" spacing={ds.spacing["3"]}>
                           <Box sx={{ flex: 1 }}>
-                            <Stack direction="row" alignItems="center" spacing={ds.spacing['1']}>
-                              <EfficiencyIcon sx={{ fontSize: 14, color: efficiencyColor }} />
-                              <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: efficiencyColor }}>
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              spacing={ds.spacing["1"]}
+                            >
+                              <EfficiencyIcon
+                                sx={{ fontSize: 14, color: efficiencyColor }}
+                              />
+                              <Typography
+                                sx={{
+                                  fontSize: "0.75rem",
+                                  fontWeight: 600,
+                                  color: efficiencyColor,
+                                }}
+                              >
                                 %{result.totalEfficiency.toFixed(1)}
                               </Typography>
                             </Stack>
-                            <Typography sx={{ fontSize: '0.625rem', color: ds.colors.text.secondary }}>
+                            <Typography
+                              sx={{
+                                fontSize: "0.625rem",
+                                color: ds.colors.text.secondary,
+                              }}
+                            >
                               Verimlilik
                             </Typography>
                           </Box>
@@ -260,10 +353,17 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
                           <Divider orientation="vertical" flexItem />
 
                           <Box sx={{ flex: 1 }}>
-                            <Typography sx={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                            <Typography
+                              sx={{ fontSize: "0.75rem", fontWeight: 600 }}
+                            >
                               {result.totalStocks}
                             </Typography>
-                            <Typography sx={{ fontSize: '0.625rem', color: ds.colors.text.secondary }}>
+                            <Typography
+                              sx={{
+                                fontSize: "0.625rem",
+                                color: ds.colors.text.secondary,
+                              }}
+                            >
                               Stok
                             </Typography>
                           </Box>
@@ -271,13 +371,29 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
                           <Divider orientation="vertical" flexItem />
 
                           <Box sx={{ flex: 1 }}>
-                            <Stack direction="row" alignItems="center" spacing={ds.spacing['1']}>
-                              <TimeIcon sx={{ fontSize: 14, color: ds.colors.accent.main }} />
-                              <Typography sx={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              spacing={ds.spacing["1"]}
+                            >
+                              <TimeIcon
+                                sx={{
+                                  fontSize: 14,
+                                  color: ds.colors.accent.main,
+                                }}
+                              />
+                              <Typography
+                                sx={{ fontSize: "0.75rem", fontWeight: 600 }}
+                              >
                                 {result.executionTime}ms
                               </Typography>
                             </Stack>
-                            <Typography sx={{ fontSize: '0.625rem', color: ds.colors.text.secondary }}>
+                            <Typography
+                              sx={{
+                                fontSize: "0.625rem",
+                                color: ds.colors.text.secondary,
+                              }}
+                            >
                               Süre
                             </Typography>
                           </Box>
@@ -290,8 +406,8 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
                           fullWidth
                           variant="outlined"
                           sx={{
-                            textTransform: 'none',
-                            fontSize: '0.75rem',
+                            textTransform: "none",
+                            fontSize: "0.75rem",
                             py: 0.5,
                             borderRadius: `${ds.borderRadius.sm}px`,
                           }}
@@ -314,17 +430,22 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
 
       {/* Pagination */}
       {history && history.length > 0 && (
-        <Box sx={{ p: ds.spacing['2'], borderTop: `1px solid ${ds.colors.neutral[200]}` }}>
+        <Box
+          sx={{
+            p: ds.spacing["2"],
+            borderTop: `1px solid ${ds.colors.neutral[200]}`,
+          }}
+        >
           <Pagination
             count={Math.ceil((history.length || 0) / pageSize)}
             page={page}
             onChange={(_, value) => setPage(value)}
             size="small"
             sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              '& .MuiPaginationItem-root': {
-                fontSize: '0.75rem',
+              display: "flex",
+              justifyContent: "center",
+              "& .MuiPaginationItem-root": {
+                fontSize: "0.75rem",
               },
             }}
           />
@@ -333,4 +454,3 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
     </Card>
   );
 };
-

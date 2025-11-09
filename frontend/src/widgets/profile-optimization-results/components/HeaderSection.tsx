@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 import {
   Card,
   CardContent,
@@ -15,8 +15,8 @@ import {
   Chip,
   Button,
   useTheme,
-  alpha
-} from '@mui/material';
+  alpha,
+} from "@mui/material";
 import {
   Category as CategoryIcon,
   TrendingUp as TrendingUpIcon,
@@ -24,10 +24,10 @@ import {
   GroupWork as GroupWorkIcon,
   Science as ScienceIcon,
   Download as DownloadIcon,
-  Print as PrintIcon
-} from '@mui/icons-material';
-import { HeaderSectionProps } from '../types';
-import { messages, stylingConstants } from '../constants';
+  Print as PrintIcon,
+} from "@mui/icons-material";
+import { HeaderSectionProps } from "../types";
+import { messages, stylingConstants } from "../constants";
 
 /**
  * Header Section Component
@@ -35,11 +35,14 @@ import { messages, stylingConstants } from '../constants';
 export const HeaderSection: React.FC<HeaderSectionProps> = ({
   result,
   performanceMetrics,
-  onExport
+  onExport,
 }) => {
   const theme = useTheme();
 
-  const getSeverityColor = (value: number, thresholds: { good: number; warning: number }) => {
+  const getSeverityColor = (
+    value: number,
+    thresholds: { good: number; warning: number },
+  ) => {
     if (value >= thresholds.good) return "success";
     if (value >= thresholds.warning) return "warning";
     return "error";

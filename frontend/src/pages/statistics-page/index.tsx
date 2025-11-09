@@ -4,7 +4,7 @@
  * @version 1.0.0 - Enterprise Analytics Dashboard
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Container,
@@ -21,8 +21,8 @@ import {
   IconButton,
   Tooltip,
   Fade,
-  Zoom
-} from '@mui/material';
+  Zoom,
+} from "@mui/material";
 import {
   TrendingUp as TrendingUpIcon,
   Speed as SpeedIcon,
@@ -32,22 +32,22 @@ import {
   GetApp as ExportIcon,
   Timeline as TimelineIcon,
   BarChart as BarChartIcon,
-  PieChart as PieChartIcon
-} from '@mui/icons-material';
+  PieChart as PieChartIcon,
+} from "@mui/icons-material";
 // Modern Design System v2.0
-import { useDesignSystem } from '@/shared/hooks';
+import { useDesignSystem } from "@/shared/hooks";
 
 // Import widget components
-import { StatisticsOverview } from '../../widgets/statistics-page/components/StatisticsOverview';
-import { PerformanceMetrics } from '../../widgets/statistics-page/components/PerformanceMetrics';
-import { UsageAnalytics } from '../../widgets/statistics-page/components/UsageAnalytics';
-import { OptimizationAnalytics } from '../../widgets/statistics-page/components/OptimizationAnalytics';
-import { SystemHealth } from '../../widgets/statistics-page/components/SystemHealth';
+import { StatisticsOverview } from "../../widgets/statistics-page/components/StatisticsOverview";
+import { PerformanceMetrics } from "../../widgets/statistics-page/components/PerformanceMetrics";
+import { UsageAnalytics } from "../../widgets/statistics-page/components/UsageAnalytics";
+import { OptimizationAnalytics } from "../../widgets/statistics-page/components/OptimizationAnalytics";
+import { SystemHealth } from "../../widgets/statistics-page/components/SystemHealth";
 
 // Import new P0 widgets
-import { StatisticsDashboard } from '@/widgets/statistics-dashboard';
-import { OptimizationHistoryWidget } from '@/widgets/optimization-history';
-import { FadeIn, CardV2, api } from '@/shared';
+import { StatisticsDashboard } from "@/widgets/statistics-dashboard";
+import { OptimizationHistoryWidget } from "@/widgets/optimization-history";
+import { FadeIn, CardV2, api } from "@/shared";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -89,11 +89,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
     id={`statistics-tabpanel-${index}`}
     aria-labelledby={`statistics-tab-${index}`}
   >
-    {value === index && (
-      <Box sx={{ py: 3 }}>
-        {children}
-      </Box>
-    )}
+    {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
   </div>
 );
 
@@ -106,11 +102,11 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index }) => (
  */
 export const StatisticsPage: React.FC = () => {
   const ds = useDesignSystem();
-  
+
   // ============================================================================
   // STATE MANAGEMENT
   // ============================================================================
-  
+
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -120,7 +116,7 @@ export const StatisticsPage: React.FC = () => {
     performance: null,
     usage: null,
     optimization: null,
-    systemHealth: null
+    systemHealth: null,
   });
 
   // ============================================================================
@@ -133,7 +129,7 @@ export const StatisticsPage: React.FC = () => {
       setError(null);
 
       // ✅ P2-8: BATCH STATISTICS - Single request instead of 5
-      const types = 'overview,performance,usage,optimization,health';
+      const types = "overview,performance,usage,optimization,health";
       const batchData = await api.get<{
         overview: Record<string, unknown>;
         performance: Record<string, unknown>;
@@ -142,8 +138,14 @@ export const StatisticsPage: React.FC = () => {
         health: Record<string, unknown>;
       }>(`/statistics/batch?types=${types}`);
 
-      if (!batchData.data || !batchData.data.overview || !batchData.data.performance || !batchData.data.usage || !batchData.data.optimization) {
-        throw new Error('Failed to fetch statistics data');
+      if (
+        !batchData.data ||
+        !batchData.data.overview ||
+        !batchData.data.performance ||
+        !batchData.data.usage ||
+        !batchData.data.optimization
+      ) {
+        throw new Error("Failed to fetch statistics data");
       }
 
       setStatisticsData({
@@ -151,13 +153,15 @@ export const StatisticsPage: React.FC = () => {
         performance: batchData.data.performance,
         usage: batchData.data.usage,
         optimization: batchData.data.optimization,
-        systemHealth: batchData.data.health
+        systemHealth: batchData.data.health,
       });
 
       setLastUpdated(new Date());
     } catch (error) {
-      console.error('Failed to fetch statistics:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load statistics');
+      console.error("Failed to fetch statistics:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to load statistics",
+      );
     } finally {
       setLoading(false);
     }
@@ -200,12 +204,12 @@ export const StatisticsPage: React.FC = () => {
   const renderLoadingState = () => (
     <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '400px',
-        gap: 2
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "400px",
+        gap: 2,
       }}
     >
       <CircularProgress size={48} />
@@ -216,15 +220,11 @@ export const StatisticsPage: React.FC = () => {
   );
 
   const renderErrorState = () => (
-    <Alert 
-      severity="error" 
+    <Alert
+      severity="error"
       sx={{ mb: 3 }}
       action={
-        <IconButton
-          color="inherit"
-          size="small"
-          onClick={handleRefresh}
-        >
+        <IconButton color="inherit" size="small" onClick={handleRefresh}>
           <RefreshIcon />
         </IconButton>
       }
@@ -238,74 +238,83 @@ export const StatisticsPage: React.FC = () => {
   // ============================================================================
 
   return (
-    <Container maxWidth="xl" sx={{ py: ds.spacing['8'] }}>
+    <Container maxWidth="xl" sx={{ py: ds.spacing["8"] }}>
       {/* Header Section - MODERN */}
       <FadeIn direction="down" duration={0.5}>
-        <Box sx={{ mb: ds.spacing['6'] }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: ds.spacing['3'] }}>
+        <Box sx={{ mb: ds.spacing["6"] }}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ mb: ds.spacing["3"] }}
+          >
             <Box>
-              <Typography sx={{ 
-                fontSize: { xs: '1.75rem', md: '2.25rem' },
-                fontWeight: 800, 
-                background: ds.gradients.premium,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                mb: ds.spacing['1'],
-              }}>
+              <Typography
+                sx={{
+                  fontSize: { xs: "1.75rem", md: "2.25rem" },
+                  fontWeight: 800,
+                  background: ds.gradients.premium,
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  mb: ds.spacing["1"],
+                }}
+              >
                 İstatistik Paneli
               </Typography>
-              <Typography sx={{
-                fontSize: '0.9375rem',
-                color: ds.colors.text.secondary,
-              }}>
+              <Typography
+                sx={{
+                  fontSize: "0.9375rem",
+                  color: ds.colors.text.secondary,
+                }}
+              >
                 Kapsamlı analiz ve performans metrikleri
               </Typography>
             </Box>
 
-            <Stack direction="row" spacing={ds.spacing['2']}>
+            <Stack direction="row" spacing={ds.spacing["2"]}>
               <Tooltip title="Verileri Yenile">
                 <span>
-                  <IconButton 
+                  <IconButton
                     onClick={handleRefresh}
                     disabled={loading}
                     sx={{
                       width: 36,
                       height: 36,
                       background: ds.gradients.primary,
-                      color: 'white',
+                      color: "white",
                       boxShadow: ds.shadows.soft.sm,
                       transition: ds.transitions.base,
-                      '&:hover': {
+                      "&:hover": {
                         background: ds.gradients.primaryHover,
-                        transform: 'translateY(-2px)',
+                        transform: "translateY(-2px)",
                         boxShadow: ds.shadows.soft.md,
                       },
-                      '&:disabled': {
+                      "&:disabled": {
                         opacity: 0.6,
-                        color: 'white',
-                      }
+                        color: "white",
+                      },
                     }}
                   >
                     <RefreshIcon sx={{ fontSize: 18 }} />
                   </IconButton>
                 </span>
               </Tooltip>
-              
+
               <Tooltip title="Dışa Aktar">
-                <IconButton 
+                <IconButton
                   onClick={handleExport}
                   sx={{
                     width: 36,
                     height: 36,
                     background: ds.gradients.secondary,
-                    color: 'white',
+                    color: "white",
                     boxShadow: ds.shadows.soft.sm,
                     transition: ds.transitions.base,
-                    '&:hover': {
+                    "&:hover": {
                       background: ds.gradients.secondaryReverse,
-                      transform: 'translateY(-2px)',
+                      transform: "translateY(-2px)",
                       boxShadow: ds.shadows.soft.md,
-                    }
+                    },
                   }}
                 >
                   <ExportIcon sx={{ fontSize: 18 }} />
@@ -315,8 +324,10 @@ export const StatisticsPage: React.FC = () => {
           </Stack>
 
           {lastUpdated && (
-            <Typography sx={{ fontSize: '0.75rem', color: ds.colors.text.secondary }}>
-              Son güncelleme: {lastUpdated.toLocaleString('tr-TR')}
+            <Typography
+              sx={{ fontSize: "0.75rem", color: ds.colors.text.secondary }}
+            >
+              Son güncelleme: {lastUpdated.toLocaleString("tr-TR")}
             </Typography>
           )}
         </Box>
@@ -333,7 +344,7 @@ export const StatisticsPage: React.FC = () => {
         <FadeIn direction="up" duration={0.5}>
           <Box>
             {/* Navigation Tabs - MODERN */}
-            <CardV2 variant="elevated" sx={{ mb: ds.spacing['4'] }}>
+            <CardV2 variant="elevated" sx={{ mb: ds.spacing["4"] }}>
               <Tabs
                 value={activeTab}
                 onChange={handleTabChange}
@@ -341,22 +352,22 @@ export const StatisticsPage: React.FC = () => {
                 scrollButtons="auto"
                 sx={{
                   borderBottom: `1px solid ${ds.colors.neutral[200]}`,
-                  '& .MuiTab-root': {
+                  "& .MuiTab-root": {
                     minHeight: 52,
-                    textTransform: 'none',
-                    fontSize: '0.875rem',
+                    textTransform: "none",
+                    fontSize: "0.875rem",
                     fontWeight: 600,
                     color: ds.colors.text.secondary,
                     transition: ds.transitions.fast,
-                    '&.Mui-selected': {
+                    "&.Mui-selected": {
                       color: ds.colors.primary.main,
                     },
                   },
-                  '& .MuiTabs-indicator': {
+                  "& .MuiTabs-indicator": {
                     height: 3,
                     background: ds.gradients.primary,
                     borderRadius: `${ds.borderRadius.xs}px`,
-                  }
+                  },
                 }}
               >
                 <Tab
@@ -389,10 +400,10 @@ export const StatisticsPage: React.FC = () => {
 
             {/* Tab Panels */}
             <TabPanel value={activeTab} index={0}>
-              <Stack spacing={ds.spacing['4']}>
+              <Stack spacing={ds.spacing["4"]}>
                 {/* NEW: Modern Statistics Dashboard (P0-4) */}
                 <StatisticsDashboard />
-                
+
                 {/* Legacy Overview - Keep for backward compatibility */}
                 <StatisticsOverview data={statisticsData.overview} />
               </Stack>
@@ -407,12 +418,14 @@ export const StatisticsPage: React.FC = () => {
             </TabPanel>
 
             <TabPanel value={activeTab} index={3}>
-              <Stack spacing={ds.spacing['4']}>
+              <Stack spacing={ds.spacing["4"]}>
                 {/* NEW: Optimization History Widget (P0-2) */}
                 <OptimizationHistoryWidget limit={10} />
-                
+
                 {/* Legacy Analytics */}
-                <OptimizationAnalytics data={statisticsData.optimization || {}} />
+                <OptimizationAnalytics
+                  data={statisticsData.optimization || {}}
+                />
               </Stack>
             </TabPanel>
 

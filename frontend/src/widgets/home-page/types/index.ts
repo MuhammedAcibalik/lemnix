@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 
 // ============================================================================
 // MAIN COMPONENT PROPS
@@ -33,7 +33,7 @@ export interface PremiumFeature {
 export interface PerformanceMetric {
   value: string;
   label: string;
-  trend: 'up' | 'down' | 'stable';
+  trend: "up" | "down" | "stable";
   percentage: number;
 }
 
@@ -102,7 +102,7 @@ export interface CTASectionProps {
 // ============================================================================
 
 export interface TrendIconProps {
-  trend: 'up' | 'down' | 'stable';
+  trend: "up" | "down" | "stable";
 }
 
 export interface GradientBadgeProps {
@@ -144,7 +144,7 @@ export interface SectionProps {
 }
 
 export interface ContainerProps {
-  maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | false;
+  maxWidth?: "xs" | "sm" | "md" | "lg" | "xl" | false;
   children: React.ReactNode;
   className?: string;
 }
@@ -291,7 +291,7 @@ export interface StylingConstants {
 // ============================================================================
 
 export interface ExportOptions {
-  format: 'pdf' | 'excel' | 'csv';
+  format: "pdf" | "excel" | "csv";
   includeCharts: boolean;
   includeTestimonials: boolean;
 }

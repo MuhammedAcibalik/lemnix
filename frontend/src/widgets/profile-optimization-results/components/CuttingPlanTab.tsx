@@ -4,12 +4,9 @@
  * @version 1.0.0
  */
 
-import React from 'react';
-import {
-  Alert,
-  AlertTitle
-} from '@mui/material';
-import { messages } from '../constants';
+import React from "react";
+import { Alert, AlertTitle } from "@mui/material";
+import { messages } from "../constants";
 
 /**
  * Cutting Plan Tab Component

@@ -4,7 +4,7 @@
  * @version 2.0.0 - Enterprise Grade Modular Design
  */
 
-import React from 'react';
+import React from "react";
 import {
   Box,
   Card,
@@ -12,48 +12,44 @@ import {
   Tabs,
   Tab,
   Button,
-  Stack
-} from '@mui/material';
+  Stack,
+} from "@mui/material";
 import {
   Share as ShareIcon,
-  Refresh as RefreshIcon
-} from '@mui/icons-material';
+  Refresh as RefreshIcon,
+} from "@mui/icons-material";
 
 // Import modular components
-import { TabPanel } from './components/TabPanel';
-import { HeaderSection } from './components/HeaderSection';
-import { KPICards } from './components/KPICards';
-import { ProfileGroupsTab } from './components/ProfileGroupsTab';
-import { CuttingPlanTab } from './components/CuttingPlanTab';
-import { CostAnalysisTab } from './components/CostAnalysisTab';
-import { WasteAnalysisTab } from './components/WasteAnalysisTab';
-import { PerformanceTab } from './components/PerformanceTab';
-import { RecommendationsTab } from './components/RecommendationsTab';
+import { TabPanel } from "./components/TabPanel";
+import { HeaderSection } from "./components/HeaderSection";
+import { KPICards } from "./components/KPICards";
+import { ProfileGroupsTab } from "./components/ProfileGroupsTab";
+import { CuttingPlanTab } from "./components/CuttingPlanTab";
+import { CostAnalysisTab } from "./components/CostAnalysisTab";
+import { WasteAnalysisTab } from "./components/WasteAnalysisTab";
+import { PerformanceTab } from "./components/PerformanceTab";
+import { RecommendationsTab } from "./components/RecommendationsTab";
 
 // Import hooks
-import { useProfileOptimizationState } from './hooks/useProfileOptimizationState';
+import { useProfileOptimizationState } from "./hooks/useProfileOptimizationState";
 
 // Import types
-import {
-  ProfileOptimizationResultsProps
-} from './types';
+import { ProfileOptimizationResultsProps } from "./types";
 
 // Import constants
-import { tabConfig, messages } from './constants';
+import { tabConfig, messages } from "./constants";
 
 // Import CuttingPlanModal from EnterpriseOptimizationResults
-import { CuttingPlanModal } from '../EnterpriseOptimizationResults/components/CuttingPlanModal';
+import { CuttingPlanModal } from "../EnterpriseOptimizationResults/components/CuttingPlanModal";
 
 /**
  * Profile Optimization Results Component
- * 
+ *
  * Enterprise-grade profile optimization results with modular architecture
  */
-export const ProfileOptimizationResults: React.FC<ProfileOptimizationResultsProps> = ({
-  result,
-  onNewOptimization,
-  onExport
-}) => {
+export const ProfileOptimizationResults: React.FC<
+  ProfileOptimizationResultsProps
+> = ({ result, onNewOptimization, onExport }) => {
   // Custom hooks for state and functionality
   const {
     tabValue,
@@ -65,11 +61,11 @@ export const ProfileOptimizationResults: React.FC<ProfileOptimizationResultsProp
     onCuttingPlanModalClose,
     performanceMetrics,
     getSeverityColor,
-    getRecommendationIcon
+    getRecommendationIcon,
   } = useProfileOptimizationState({
     result,
     onNewOptimization,
-    onExport
+    onExport,
   });
 
   if (!result) return null;
@@ -84,21 +80,14 @@ export const ProfileOptimizationResults: React.FC<ProfileOptimizationResultsProp
       />
 
       {/* KPI Cards */}
-      <KPICards
-        result={result}
-        performanceMetrics={performanceMetrics}
-      />
+      <KPICards result={result} performanceMetrics={performanceMetrics} />
 
       {/* Detailed Analysis Tabs */}
       <Card>
         <CardContent>
           <Tabs value={tabValue} onChange={onTabChange}>
             {tabConfig.tabs.map((tab) => (
-              <Tab
-                key={tab.index}
-                icon={tab.icon}
-                label={tab.label}
-              />
+              <Tab key={tab.index} icon={tab.icon} label={tab.label} />
             ))}
           </Tabs>
 

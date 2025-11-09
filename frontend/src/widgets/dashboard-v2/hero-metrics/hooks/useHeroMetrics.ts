@@ -1,17 +1,17 @@
 /**
  * Hero Metrics Hook
  * Business logic for hero metrics calculation and formatting
- * 
+ *
  * @module widgets/dashboard-v2/hero-metrics
  * @version 1.0.0
  */
 
-import { useMemo } from 'react';
-import { 
+import { useMemo } from "react";
+import {
   useHeroMetrics as useHeroMetricsQuery,
   type DashboardHeroMetrics,
-  type DashboardMetricsOptions
-} from '@/entities/dashboard';
+  type DashboardMetricsOptions,
+} from "@/entities/dashboard";
 
 /**
  * Formatted hero metric for UI display
@@ -23,7 +23,7 @@ export interface FormattedHeroMetric {
   readonly unit?: string;
   readonly trend?: number;
   readonly sparklineData?: ReadonlyArray<number>;
-  readonly color: 'primary' | 'success' | 'warning' | 'error';
+  readonly color: "primary" | "success" | "warning" | "error";
 }
 
 /**
@@ -31,53 +31,58 @@ export interface FormattedHeroMetric {
  */
 export function useHeroMetrics(options?: DashboardMetricsOptions) {
   const { data, isLoading, error } = useHeroMetricsQuery(options);
-  
+
   const formattedMetrics = useMemo<ReadonlyArray<FormattedHeroMetric>>(() => {
     if (!data) return [];
-    
+
     return [
       {
-        id: 'active-optimizations',
-        label: 'Aktif Optimizasyonlar',
+        id: "active-optimizations",
+        label: "Aktif Optimizasyonlar",
         value: data.activeOptimizations,
-        unit: 'adet',
-        color: 'primary' as const,
+        unit: "adet",
+        color: "primary" as const,
         trend: undefined, // No trend for real-time count
       },
       {
-        id: 'cutting-lists',
-        label: 'Bu Hafta Listeler',
+        id: "cutting-lists",
+        label: "Bu Hafta Listeler",
         value: data.cuttingListsThisWeek,
-        unit: 'liste',
-        color: 'success' as const,
+        unit: "liste",
+        color: "success" as const,
         trend: calculateWeeklyTrend(data.cuttingListsThisWeek),
       },
       {
-        id: 'avg-efficiency',
-        label: 'Ortalama Verimlilik',
+        id: "avg-efficiency",
+        label: "Ortalama Verimlilik",
         value: data.averageEfficiency.toFixed(1),
-        unit: '%',
-        color: data.averageEfficiency >= 90 ? 'success' : data.averageEfficiency >= 80 ? 'warning' : 'error',
+        unit: "%",
+        color:
+          data.averageEfficiency >= 90
+            ? "success"
+            : data.averageEfficiency >= 80
+              ? "warning"
+              : "error",
         sparklineData: data.efficiencyTrend,
         trend: calculateTrend(data.efficiencyTrend),
       },
       {
-        id: 'waste-saved',
-        label: 'Toplam Fire Tasarrufu',
+        id: "waste-saved",
+        label: "Toplam Fire Tasarrufu",
         value: formatWaste(data.totalWasteSaved),
-        unit: 'm',
-        color: 'success' as const,
+        unit: "m",
+        color: "success" as const,
         sparklineData: data.wasteTrend,
         trend: calculateTrend(data.wasteTrend),
       },
     ];
   }, [data]);
-  
+
   return {
     metrics: formattedMetrics,
     isLoading,
     error,
-    raw: data
+    raw: data,
   };
 }
 
@@ -87,12 +92,12 @@ export function useHeroMetrics(options?: DashboardMetricsOptions) {
  */
 function calculateTrend(data?: ReadonlyArray<number>): number | undefined {
   if (!data || data.length < 2) return undefined;
-  
+
   const first = data[0];
   const last = data[data.length - 1];
-  
+
   if (first === 0) return undefined;
-  
+
   return ((last - first) / first) * 100;
 }
 
@@ -110,8 +115,7 @@ function calculateWeeklyTrend(currentWeek: number): number | undefined {
  */
 function formatWaste(meters: number): string {
   if (meters >= 1000) {
-    return (meters / 1000).toFixed(1) + 'k';
+    return (meters / 1000).toFixed(1) + "k";
   }
   return meters.toFixed(0);
 }
-

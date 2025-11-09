@@ -15,7 +15,7 @@ export function getISOWeek(date: Date): { week: number; year: number } {
   const firstThursday = target.valueOf();
   target.setMonth(0, 1);
   if (target.getDay() !== 4) {
-    target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+    target.setMonth(0, 1 + ((4 - target.getDay() + 7) % 7));
   }
   const week = 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000);
   const year = target.getFullYear();
@@ -29,4 +29,3 @@ export function getISOWeek(date: Date): { week: number; year: number } {
 export function getCurrentISOWeek(): { week: number; year: number } {
   return getISOWeek(new Date());
 }
-

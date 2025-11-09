@@ -2,7 +2,7 @@
  * @fileoverview Audit Logging Service
  * @module services/auditService
  * @version 1.0.0
- * 
+ *
  * 📝 CRITICAL SECURITY: This service handles comprehensive audit logging
  * - Tracks all data modifications (CREATE, UPDATE, DELETE)
  * - Records user actions and system events
@@ -10,37 +10,37 @@
  * - Supports data retention policies
  */
 
-import { prisma } from '../config/database';
-import { logger } from './logger';
-import { Request } from 'express';
+import { prisma } from "../config/database";
+import { logger } from "./logger";
+import { Request } from "express";
 
 // ============================================================================
 // AUDIT LOG TYPES
 // ============================================================================
 
 export enum AuditOperation {
-  CREATE = 'CREATE',
-  UPDATE = 'UPDATE',
-  DELETE = 'DELETE',
-  READ = 'READ',
-  LOGIN = 'LOGIN',
-  LOGOUT = 'LOGOUT',
-  UPLOAD = 'UPLOAD',
-  DOWNLOAD = 'DOWNLOAD',
-  EXPORT = 'EXPORT',
-  IMPORT = 'IMPORT',
-  SEARCH = 'SEARCH',
-  FILTER = 'FILTER',
-  AUTHENTICATE = 'AUTHENTICATE',
-  AUTHORIZE = 'AUTHORIZE',
-  SYSTEM = 'SYSTEM'
+  CREATE = "CREATE",
+  UPDATE = "UPDATE",
+  DELETE = "DELETE",
+  READ = "READ",
+  LOGIN = "LOGIN",
+  LOGOUT = "LOGOUT",
+  UPLOAD = "UPLOAD",
+  DOWNLOAD = "DOWNLOAD",
+  EXPORT = "EXPORT",
+  IMPORT = "IMPORT",
+  SEARCH = "SEARCH",
+  FILTER = "FILTER",
+  AUTHENTICATE = "AUTHENTICATE",
+  AUTHORIZE = "AUTHORIZE",
+  SYSTEM = "SYSTEM",
 }
 
 export enum AuditSeverity {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL'
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
+  CRITICAL = "CRITICAL",
 }
 
 export interface AuditLogData {
@@ -79,12 +79,12 @@ export class AuditService {
   private readonly maxLogSize: number;
 
   constructor() {
-    this.retentionDays = parseInt(process.env.AUDIT_RETENTION_DAYS || '365');
-    this.maxLogSize = parseInt(process.env.AUDIT_MAX_LOG_SIZE || '10000');
-    
-    logger.info('Audit service initialized', {
+    this.retentionDays = parseInt(process.env.AUDIT_RETENTION_DAYS || "365");
+    this.maxLogSize = parseInt(process.env.AUDIT_MAX_LOG_SIZE || "10000");
+
+    logger.info("Audit service initialized", {
       retentionDays: this.retentionDays,
-      maxLogSize: this.maxLogSize
+      maxLogSize: this.maxLogSize,
     });
   }
 
@@ -95,7 +95,7 @@ export class AuditService {
     try {
       // Validate required fields
       if (!data.userId || !data.operation || !data.tableName) {
-        logger.error('Invalid audit log data', { data });
+        logger.error("Invalid audit log data", { data });
         return;
       }
 
@@ -109,32 +109,35 @@ export class AuditService {
           userId: data.userId,
           tableName: data.tableName,
           operation: data.operation,
-          recordId: data.recordId || 'unknown',
-          oldData: sanitizedOldData ? JSON.stringify(sanitizedOldData) : undefined,
-          newData: sanitizedNewData ? JSON.stringify(sanitizedNewData) : undefined,
+          recordId: data.recordId || "unknown",
+          oldData: sanitizedOldData
+            ? JSON.stringify(sanitizedOldData)
+            : undefined,
+          newData: sanitizedNewData
+            ? JSON.stringify(sanitizedNewData)
+            : undefined,
           ipAddress: data.ipAddress || null,
           userAgent: data.userAgent || null,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       });
 
       // Log to application logger for immediate monitoring
-      logger.info('Audit log created', {
+      logger.info("Audit log created", {
         userId: data.userId,
         operation: data.operation,
         tableName: data.tableName,
         recordId: data.recordId,
-        severity: data.severity || AuditSeverity.LOW
+        severity: data.severity || AuditSeverity.LOW,
       });
-
     } catch (error) {
-      logger.error('Failed to create audit log', {
+      logger.error("Failed to create audit log", {
         error: (error as Error).message,
         data: {
           userId: data.userId,
           operation: data.operation,
-          tableName: data.tableName
-        }
+          tableName: data.tableName,
+        },
       });
     }
   }
@@ -149,12 +152,12 @@ export class AuditService {
     recordId?: string,
     oldData?: any,
     newData?: any,
-    description?: string
+    description?: string,
   ): Promise<void> {
-    const userId = (req as any).user?.userId || 'anonymous';
+    const userId = (req as any).user?.userId || "anonymous";
     const sessionId = (req as any).user?.sessionId || null;
-    const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
-    const userAgent = req.headers['user-agent'] || 'unknown';
+    const ipAddress = req.ip || req.connection.remoteAddress || "unknown";
+    const userAgent = req.headers["user-agent"] || "unknown";
 
     await this.log({
       userId,
@@ -166,7 +169,7 @@ export class AuditService {
       ipAddress,
       userAgent,
       sessionId,
-      description
+      description,
     });
   }
 
@@ -177,15 +180,15 @@ export class AuditService {
     operation: AuditOperation,
     description: string,
     severity: AuditSeverity = AuditSeverity.MEDIUM,
-    metadata?: any
+    metadata?: any,
   ): Promise<void> {
     await this.log({
-      userId: 'system',
+      userId: "system",
       operation,
-      tableName: 'system',
+      tableName: "system",
       description,
       severity,
-      metadata
+      metadata,
     });
   }
 
@@ -199,17 +202,17 @@ export class AuditService {
     severity: AuditSeverity = AuditSeverity.HIGH,
     ipAddress?: string,
     userAgent?: string,
-    metadata?: any
+    metadata?: any,
   ): Promise<void> {
     await this.log({
       userId,
       operation,
-      tableName: 'security',
+      tableName: "security",
       description,
       severity,
       ipAddress,
       userAgent,
-      metadata
+      metadata,
     });
   }
 
@@ -224,7 +227,7 @@ export class AuditService {
       if (query.operation) where.operation = query.operation;
       if (query.tableName) where.tableName = query.tableName;
       if (query.recordId) where.recordId = query.recordId;
-      
+
       if (query.startDate || query.endDate) {
         where.timestamp = {};
         if (query.startDate) where.timestamp.gte = query.startDate;
@@ -233,21 +236,20 @@ export class AuditService {
 
       const logs = await prisma.auditLog.findMany({
         where,
-        orderBy: { timestamp: 'desc' },
+        orderBy: { timestamp: "desc" },
         take: query.limit || 100,
-        skip: query.offset || 0
+        skip: query.offset || 0,
       });
 
-      return logs.map(log => ({
+      return logs.map((log) => ({
         ...log,
         oldData: log.oldData ? JSON.parse(String(log.oldData)) : null,
-        newData: log.newData ? JSON.parse(String(log.newData)) : null
+        newData: log.newData ? JSON.parse(String(log.newData)) : null,
       }));
-
     } catch (error) {
-      logger.error('Failed to query audit logs', {
+      logger.error("Failed to query audit logs", {
         error: (error as Error).message,
-        query
+        query,
       });
       return [];
     }
@@ -262,36 +264,35 @@ export class AuditService {
       startDate.setDate(startDate.getDate() - days);
 
       const stats = await prisma.auditLog.groupBy({
-        by: ['operation', 'tableName'],
+        by: ["operation", "tableName"],
         where: {
           timestamp: {
-            gte: startDate
-          }
+            gte: startDate,
+          },
         },
         _count: {
-          id: true
-        }
+          id: true,
+        },
       });
 
       const totalLogs = await prisma.auditLog.count({
         where: {
           timestamp: {
-            gte: startDate
-          }
-        }
+            gte: startDate,
+          },
+        },
       });
 
       return {
         period: `${days} days`,
         totalLogs,
         operations: stats,
-        generatedAt: new Date().toISOString()
+        generatedAt: new Date().toISOString(),
       };
-
     } catch (error) {
-      logger.error('Failed to get audit statistics', {
+      logger.error("Failed to get audit statistics", {
         error: (error as Error).message,
-        days
+        days,
       });
       return null;
     }
@@ -308,23 +309,22 @@ export class AuditService {
       const result = await prisma.auditLog.deleteMany({
         where: {
           timestamp: {
-            lt: cutoffDate
-          }
-        }
+            lt: cutoffDate,
+          },
+        },
       });
 
-      logger.info('Audit logs cleaned up', {
+      logger.info("Audit logs cleaned up", {
         deletedCount: result.count,
         cutoffDate: cutoffDate.toISOString(),
-        retentionDays: this.retentionDays
+        retentionDays: this.retentionDays,
       });
 
       return result.count;
-
     } catch (error) {
-      logger.error('Failed to cleanup audit logs', {
+      logger.error("Failed to cleanup audit logs", {
         error: (error as Error).message,
-        retentionDays: this.retentionDays
+        retentionDays: this.retentionDays,
       });
       return 0;
     }
@@ -334,34 +334,34 @@ export class AuditService {
    * Sanitize data to remove sensitive information
    */
   private sanitizeData(data: any): any {
-    if (!data || typeof data !== 'object') {
+    if (!data || typeof data !== "object") {
       return data;
     }
 
     const sensitiveFields = [
-      'password',
-      'token',
-      'secret',
-      'key',
-      'auth',
-      'credential',
-      'ssn',
-      'socialSecurityNumber',
-      'creditCard',
-      'bankAccount'
+      "password",
+      "token",
+      "secret",
+      "key",
+      "auth",
+      "credential",
+      "ssn",
+      "socialSecurityNumber",
+      "creditCard",
+      "bankAccount",
     ];
 
     const sanitized = { ...data };
 
     for (const field of sensitiveFields) {
       if (sanitized[field]) {
-        sanitized[field] = '[REDACTED]';
+        sanitized[field] = "[REDACTED]";
       }
     }
 
     // Recursively sanitize nested objects
     for (const key in sanitized) {
-      if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
+      if (typeof sanitized[key] === "object" && sanitized[key] !== null) {
         sanitized[key] = this.sanitizeData(sanitized[key]);
       }
     }
@@ -390,7 +390,7 @@ export async function auditDataChange(
   recordId: string,
   oldData?: any,
   newData?: any,
-  description?: string
+  description?: string,
 ): Promise<void> {
   await auditService.logUserAction(
     req,
@@ -399,7 +399,7 @@ export async function auditDataChange(
     recordId,
     oldData,
     newData,
-    description
+    description,
   );
 }
 
@@ -410,16 +410,16 @@ export async function auditUserAction(
   req: Request,
   operation: AuditOperation,
   description: string,
-  metadata?: any
+  metadata?: any,
 ): Promise<void> {
   await auditService.logUserAction(
     req,
     operation,
-    'user_actions',
+    "user_actions",
     undefined,
     undefined,
     undefined,
-    description
+    description,
   );
 }
 
@@ -433,7 +433,7 @@ export async function auditSecurityEvent(
   severity: AuditSeverity = AuditSeverity.HIGH,
   ipAddress?: string,
   userAgent?: string,
-  metadata?: any
+  metadata?: any,
 ): Promise<void> {
   await auditService.logSecurityEvent(
     userId,
@@ -442,6 +442,6 @@ export async function auditSecurityEvent(
     severity,
     ipAddress,
     userAgent,
-    metadata
+    metadata,
   );
 }

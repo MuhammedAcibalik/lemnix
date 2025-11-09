@@ -1,11 +1,11 @@
 /**
  * Card Component v2.0 - Modern Industrial
- * 
+ *
  * @module shared/ui/Card
  * @version 2.0.0 - Full Transform
  */
 
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useMemo } from "react";
 import {
   Card as MuiCard,
   CardContent,
@@ -14,13 +14,18 @@ import {
   Typography,
   CardProps as MuiCardProps,
   alpha,
-} from '@mui/material';
-import { useDesignSystem } from '@/shared/hooks';
+} from "@mui/material";
+import { useDesignSystem } from "@/shared/hooks";
 
-type CardVariant = 'elevated' | 'outlined' | 'glass' | 'gradient' | 'interactive';
+type CardVariant =
+  | "elevated"
+  | "outlined"
+  | "glass"
+  | "gradient"
+  | "interactive";
 export type { CardVariant };
 
-export interface CardV2Props extends Omit<MuiCardProps, 'variant'> {
+export interface CardV2Props extends Omit<MuiCardProps, "variant"> {
   readonly title?: string;
   readonly subtitle?: string;
   readonly children: React.ReactNode;
@@ -33,13 +38,13 @@ export interface CardV2Props extends Omit<MuiCardProps, 'variant'> {
 
 const buildVariantTokens = (
   ds: ReturnType<typeof useDesignSystem>,
-  variant: CardVariant
+  variant: CardVariant,
 ) => {
   const base = {
     borderRadius: `${ds.borderRadius.card}px`,
     transition: ds.transitions.base,
-    position: 'relative' as const,
-    overflow: 'hidden',
+    position: "relative" as const,
+    overflow: "hidden",
   };
 
   const tokens: Record<CardVariant, Record<string, unknown>> = {
@@ -68,14 +73,14 @@ const buildVariantTokens = (
       background: ds.gradients.card,
       border: `1px solid ${ds.colors.neutral[200]}`,
       boxShadow: ds.shadows.soft.sm,
-      cursor: 'pointer',
-      '&:hover': {
+      cursor: "pointer",
+      "&:hover": {
         borderColor: ds.colors.primary.main,
         boxShadow: ds.shadows.soft.xl,
-        transform: 'translateY(-4px)',
+        transform: "translateY(-4px)",
       },
-      '&:active': {
-        transform: 'translateY(-2px)',
+      "&:active": {
+        transform: "translateY(-2px)",
         boxShadow: ds.shadows.soft.md,
       },
     },
@@ -95,19 +100,22 @@ export const CardV2 = forwardRef<HTMLDivElement, CardV2Props>(
       children,
       actions,
       headerAction,
-      variant = 'elevated',
+      variant = "elevated",
       hoverable = false,
       onClick,
       sx,
       ...props
     },
-    ref
+    ref,
   ) => {
     const ds = useDesignSystem();
 
-    const cardStyles = useMemo(() => buildVariantTokens(ds, variant), [ds, variant]);
+    const cardStyles = useMemo(
+      () => buildVariantTokens(ds, variant),
+      [ds, variant],
+    );
 
-    const enableHover = hoverable && variant !== 'interactive';
+    const enableHover = hoverable && variant !== "interactive";
 
     return (
       <MuiCard
@@ -117,15 +125,15 @@ export const CardV2 = forwardRef<HTMLDivElement, CardV2Props>(
         sx={{
           ...cardStyles,
           ...(enableHover && {
-            '&:hover': {
-              transform: 'translateY(-2px)',
+            "&:hover": {
+              transform: "translateY(-2px)",
               boxShadow: ds.shadows.soft.lg,
               borderColor:
-                variant === 'outlined' ? ds.colors.primary.light : undefined,
+                variant === "outlined" ? ds.colors.primary.light : undefined,
             },
           }),
           ...(onClick && {
-            cursor: 'pointer',
+            cursor: "pointer",
           }),
           ...sx,
         }}
@@ -154,7 +162,7 @@ export const CardV2 = forwardRef<HTMLDivElement, CardV2Props>(
                   variant="body2"
                   sx={{
                     color: ds.colors.text.secondary,
-                    mt: ds.spacing['1'],
+                    mt: ds.spacing["1"],
                   }}
                 >
                   {subtitle}
@@ -163,18 +171,18 @@ export const CardV2 = forwardRef<HTMLDivElement, CardV2Props>(
             }
             action={headerAction}
             sx={{
-              pb: subtitle ? ds.spacing['2'] : ds.spacing['1'],
-              px: ds.spacing['4'],
-              pt: ds.spacing['4'],
+              pb: subtitle ? ds.spacing["2"] : ds.spacing["1"],
+              px: ds.spacing["4"],
+              pt: ds.spacing["4"],
             }}
           />
         )}
 
         <CardContent
           sx={{
-            px: ds.spacing['4'],
-            pt: title || subtitle ? 0 : ds.spacing['4'],
-            pb: actions ? ds.spacing['2'] : ds.spacing['4'],
+            px: ds.spacing["4"],
+            pt: title || subtitle ? 0 : ds.spacing["4"],
+            pb: actions ? ds.spacing["2"] : ds.spacing["4"],
           }}
         >
           {children}
@@ -183,11 +191,11 @@ export const CardV2 = forwardRef<HTMLDivElement, CardV2Props>(
         {actions && (
           <CardActions
             sx={{
-              px: ds.spacing['4'],
-              pb: ds.spacing['4'],
+              px: ds.spacing["4"],
+              pb: ds.spacing["4"],
               pt: 0,
-              gap: ds.spacing['2'],
-              justifyContent: 'flex-end',
+              gap: ds.spacing["2"],
+              justifyContent: "flex-end",
             }}
           >
             {actions}
@@ -195,8 +203,7 @@ export const CardV2 = forwardRef<HTMLDivElement, CardV2Props>(
         )}
       </MuiCard>
     );
-  }
+  },
 );
 
-CardV2.displayName = 'CardV2';
-
+CardV2.displayName = "CardV2";

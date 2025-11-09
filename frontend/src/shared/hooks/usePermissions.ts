@@ -2,41 +2,41 @@
  * @fileoverview usePermissions Hook
  * @module shared/hooks
  * @version 1.0.0
- * 
+ *
  * Role-Based Access Control (RBAC) for frontend UI
- * 
+ *
  * ✅ SECURITY: Hide/disable UI elements based on user permissions
  * ✅ ALIGNMENT: Synced with backend Permission enum
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from "react";
 
 /**
  * Permission enum (aligned with backend)
  */
 export enum Permission {
-  VIEW_CUTTING_PLANS = 'view:cutting-plans',
-  VIEW_OPTIMIZATION_RESULTS = 'view:optimization-results',
-  VIEW_METRICS = 'view:metrics',
-  VIEW_LOGS = 'view:logs',
-  EXPORT_REPORTS = 'export:reports',
-  START_OPTIMIZATION = 'start:optimization',
-  STOP_OPTIMIZATION = 'stop:optimization',
-  MANAGE_QUARANTINE = 'manage:quarantine',
-  MANAGE_CONFIG = 'manage:config',
-  MANAGE_USERS = 'manage:users',
-  MANAGE_ROLES = 'manage:roles',
-  TRIGGER_BACKUP = 'trigger:backup',
-  VIEW_SECURITY_LOGS = 'view:security-logs',
+  VIEW_CUTTING_PLANS = "view:cutting-plans",
+  VIEW_OPTIMIZATION_RESULTS = "view:optimization-results",
+  VIEW_METRICS = "view:metrics",
+  VIEW_LOGS = "view:logs",
+  EXPORT_REPORTS = "export:reports",
+  START_OPTIMIZATION = "start:optimization",
+  STOP_OPTIMIZATION = "stop:optimization",
+  MANAGE_QUARANTINE = "manage:quarantine",
+  MANAGE_CONFIG = "manage:config",
+  MANAGE_USERS = "manage:users",
+  MANAGE_ROLES = "manage:roles",
+  TRIGGER_BACKUP = "trigger:backup",
+  VIEW_SECURITY_LOGS = "view:security-logs",
 }
 
 /**
  * User role enum (aligned with backend)
  */
 export enum UserRole {
-  VIEWER = 'viewer',
-  PLANNER = 'planner',
-  ADMIN = 'admin',
+  VIEWER = "viewer",
+  PLANNER = "planner",
+  ADMIN = "admin",
 }
 
 /**
@@ -94,10 +94,10 @@ export interface UsePermissionsReturn {
 function getMockUser(): User {
   // In development, return admin user with all permissions
   return {
-    userId: 'dev-user',
+    userId: "dev-user",
     role: UserRole.ADMIN,
     permissions: Object.values(Permission),
-    sessionId: 'dev-session',
+    sessionId: "dev-session",
   };
 }
 
@@ -108,7 +108,7 @@ function getMockUser(): User {
 async function fetchUserPermissions(): Promise<User | null> {
   try {
     // Development mode: Return mock user
-    if (import.meta.env.MODE === 'development') {
+    if (import.meta.env.MODE === "development") {
       return getMockUser();
     }
 
@@ -118,31 +118,31 @@ async function fetchUserPermissions(): Promise<User | null> {
 
     // Fallback: Return viewer role
     return {
-      userId: 'anonymous',
+      userId: "anonymous",
       role: UserRole.VIEWER,
       permissions: ROLE_PERMISSIONS[UserRole.VIEWER],
     };
   } catch (error) {
-    console.error('[PERMISSIONS] Failed to fetch user permissions:', error);
+    console.error("[PERMISSIONS] Failed to fetch user permissions:", error);
     return null;
   }
 }
 
 /**
  * usePermissions Hook
- * 
+ *
  * Provides permission checking utilities for UI components
- * 
+ *
  * @example
  * ```tsx
  * const { hasPermission, isAdmin } = usePermissions();
- * 
+ *
  * return (
  *   <>
  *     {hasPermission(Permission.START_OPTIMIZATION) && (
  *       <Button onClick={startOptimization}>Optimize</Button>
  *     )}
- *     
+ *
  *     {isAdmin && (
  *       <AdminPanel />
  *     )}
@@ -165,7 +165,7 @@ export function usePermissions(): UsePermissionsReturn {
         }
       })
       .catch((error) => {
-        console.error('[PERMISSIONS] Error loading user:', error);
+        console.error("[PERMISSIONS] Error loading user:", error);
         if (mounted) {
           setIsLoading(false);
         }
@@ -178,35 +178,39 @@ export function usePermissions(): UsePermissionsReturn {
 
   // Permission checking functions
   const hasPermission = useMemo(
-    () => (permission: Permission): boolean => {
-      if (!user) return false;
-      return user.permissions.includes(permission);
-    },
-    [user]
+    () =>
+      (permission: Permission): boolean => {
+        if (!user) return false;
+        return user.permissions.includes(permission);
+      },
+    [user],
   );
 
   const hasAnyPermission = useMemo(
-    () => (permissions: Permission[]): boolean => {
-      if (!user) return false;
-      return permissions.some((p) => user.permissions.includes(p));
-    },
-    [user]
+    () =>
+      (permissions: Permission[]): boolean => {
+        if (!user) return false;
+        return permissions.some((p) => user.permissions.includes(p));
+      },
+    [user],
   );
 
   const hasAllPermissions = useMemo(
-    () => (permissions: Permission[]): boolean => {
-      if (!user) return false;
-      return permissions.every((p) => user.permissions.includes(p));
-    },
-    [user]
+    () =>
+      (permissions: Permission[]): boolean => {
+        if (!user) return false;
+        return permissions.every((p) => user.permissions.includes(p));
+      },
+    [user],
   );
 
   const isRole = useMemo(
-    () => (role: UserRole): boolean => {
-      if (!user) return false;
-      return user.role === role;
-    },
-    [user]
+    () =>
+      (role: UserRole): boolean => {
+        if (!user) return false;
+        return user.role === role;
+      },
+    [user],
   );
 
   // Convenience role checkers
@@ -229,11 +233,11 @@ export function usePermissions(): UsePermissionsReturn {
 
 /**
  * Hook for simple permission check
- * 
+ *
  * @example
  * ```tsx
  * const canOptimize = useHasPermission(Permission.START_OPTIMIZATION);
- * 
+ *
  * return (
  *   <Button disabled={!canOptimize}>
  *     Optimize
@@ -248,11 +252,11 @@ export function useHasPermission(permission: Permission): boolean {
 
 /**
  * Hook for role check
- * 
+ *
  * @example
  * ```tsx
  * const isAdmin = useIsAdmin();
- * 
+ *
  * if (!isAdmin) {
  *   return <AccessDenied />;
  * }
@@ -272,4 +276,3 @@ export function useIsViewer(): boolean {
   const { isViewer } = usePermissions();
   return isViewer;
 }
-

@@ -1,11 +1,11 @@
 /**
  * Statistics Entity - Zod Schemas
  * Runtime type validation for statistics data
- * 
+ *
  * @module entities/statistics/model
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // ============================================================================
 // STATISTICS OVERVIEW SCHEMA
@@ -24,7 +24,7 @@ export const StatisticsOverviewSchema = z.object({
   totalWasteReduction: z.number().nonnegative(),
   optimizationSuccessRate: z.number().nonnegative(),
   activeUsers: z.number().int().nonnegative(),
-  systemUptime: z.number().nonnegative()
+  systemUptime: z.number().nonnegative(),
 });
 
 // ============================================================================
@@ -36,7 +36,7 @@ export const AlgorithmPerformanceSchema = z.object({
   count: z.number().int().nonnegative(),
   averageEfficiency: z.number().nonnegative(),
   averageWaste: z.number().nonnegative(),
-  averageTime: z.number().nonnegative()
+  averageTime: z.number().nonnegative(),
 });
 
 // ============================================================================
@@ -47,21 +47,20 @@ export const UsageAnalyticsSchema = z.object({
   date: z.string(),
   optimizations: z.number().int().nonnegative(),
   avgEfficiency: z.number().nonnegative(),
-  totalWaste: z.number().nonnegative()
+  totalWaste: z.number().nonnegative(),
 });
-
 
 // ============================================================================
 // SYSTEM HEALTH SCHEMA
 // ============================================================================
 
 export const SystemHealthSchema = z.object({
-  status: z.enum(['healthy', 'degraded', 'critical']),
+  status: z.enum(["healthy", "degraded", "critical"]),
   uptime: z.number().nonnegative(),
   memoryUsage: z.number().min(0).max(100),
   cpuUsage: z.number().min(0).max(100),
   activeConnections: z.number().int().nonnegative(),
-  lastCheck: z.string().datetime()
+  lastCheck: z.string().datetime(),
 });
 
 export type SystemHealth = z.infer<typeof SystemHealthSchema>;
@@ -75,8 +74,7 @@ export const BatchStatisticsSchema = z.object({
   performance: z.array(AlgorithmPerformanceSchema).optional(),
   usage: z.array(UsageAnalyticsSchema).optional(),
   optimization: z.any().optional(), // TODO: Define proper schema
-  systemHealth: SystemHealthSchema.optional()
+  systemHealth: SystemHealthSchema.optional(),
 });
 
 export type BatchStatistics = z.infer<typeof BatchStatisticsSchema>;
-

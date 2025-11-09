@@ -2,7 +2,7 @@
  * @fileoverview Circuit Breaker Pattern
  * @module shared/lib
  * @version 1.0.0
- * 
+ *
  * ✅ P2-9: Prevents cascade failures when backend is down
  * ✅ STATES: CLOSED → OPEN → HALF_OPEN → CLOSED
  * ✅ RESILIENCE: Fail fast, auto-recovery
@@ -12,9 +12,9 @@
  * Circuit breaker states
  */
 export enum CircuitState {
-  CLOSED = 'CLOSED',       // Normal operation
-  OPEN = 'OPEN',           // Failing, reject immediately
-  HALF_OPEN = 'HALF_OPEN', // Testing if backend recovered
+  CLOSED = "CLOSED", // Normal operation
+  OPEN = "OPEN", // Failing, reject immediately
+  HALF_OPEN = "HALF_OPEN", // Testing if backend recovered
 }
 
 /**
@@ -41,9 +41,9 @@ export interface CircuitStats {
 
 /**
  * Circuit Breaker Implementation
- * 
+ *
  * Prevents repeated requests to failing backends
- * 
+ *
  * @example
  * ```typescript
  * const breaker = new CircuitBreaker({
@@ -52,7 +52,7 @@ export interface CircuitStats {
  *   timeout: 30000,
  *   name: 'api-backend',
  * });
- * 
+ *
  * async function callAPI() {
  *   return breaker.execute(async () => {
  *     const response = await fetch('/api/data');
@@ -75,7 +75,7 @@ export class CircuitBreaker {
       failureThreshold: options.failureThreshold,
       successThreshold: options.successThreshold,
       timeout: options.timeout,
-      name: options.name || 'circuit-breaker',
+      name: options.name || "circuit-breaker",
     };
   }
 
@@ -86,30 +86,34 @@ export class CircuitBreaker {
     // ✅ OPEN state: Reject immediately
     if (this.state === CircuitState.OPEN) {
       if (Date.now() < (this.nextAttemptTime || 0)) {
-        const waitTime = Math.ceil(((this.nextAttemptTime || 0) - Date.now()) / 1000);
+        const waitTime = Math.ceil(
+          ((this.nextAttemptTime || 0) - Date.now()) / 1000,
+        );
         throw new Error(
-          `[${this.options.name}] Circuit OPEN. Service temporarily unavailable. Retry in ${waitTime}s.`
+          `[${this.options.name}] Circuit OPEN. Service temporarily unavailable. Retry in ${waitTime}s.`,
         );
       }
-      
+
       // Timeout expired, transition to HALF_OPEN
       this.state = CircuitState.HALF_OPEN;
       this.successCount = 0;
-      console.info(`[${this.options.name}] Circuit → HALF_OPEN (testing recovery)`);
+      console.info(
+        `[${this.options.name}] Circuit → HALF_OPEN (testing recovery)`,
+      );
     }
 
     try {
       // Execute function
       const result = await fn();
-      
+
       // ✅ Success handling
       this.onSuccess();
-      
+
       return result;
     } catch (error) {
       // ✅ Failure handling
       this.onFailure();
-      
+
       throw error;
     }
   }
@@ -123,12 +127,14 @@ export class CircuitBreaker {
 
     if (this.state === CircuitState.HALF_OPEN) {
       this.successCount++;
-      
+
       // ✅ Enough successes to close circuit
       if (this.successCount >= this.options.successThreshold) {
         this.state = CircuitState.CLOSED;
         this.successCount = 0;
-        console.info(`[${this.options.name}] Circuit → CLOSED (service recovered)`);
+        console.info(
+          `[${this.options.name}] Circuit → CLOSED (service recovered)`,
+        );
       }
     }
   }
@@ -148,10 +154,10 @@ export class CircuitBreaker {
     ) {
       this.state = CircuitState.OPEN;
       this.nextAttemptTime = Date.now() + this.options.timeout;
-      
+
       console.warn(
         `[${this.options.name}] Circuit → OPEN (${this.failureCount} consecutive failures). ` +
-        `Will retry in ${Math.ceil(this.options.timeout / 1000)}s.`
+          `Will retry in ${Math.ceil(this.options.timeout / 1000)}s.`,
       );
     }
 
@@ -159,10 +165,10 @@ export class CircuitBreaker {
     if (this.state === CircuitState.HALF_OPEN) {
       this.state = CircuitState.OPEN;
       this.nextAttemptTime = Date.now() + this.options.timeout;
-      
+
       console.warn(
         `[${this.options.name}] Circuit → OPEN (recovery test failed). ` +
-        `Will retry in ${Math.ceil(this.options.timeout / 1000)}s.`
+          `Will retry in ${Math.ceil(this.options.timeout / 1000)}s.`,
       );
     }
   }
@@ -220,19 +226,18 @@ export class CircuitBreaker {
  * Default circuit breaker instance for API calls
  */
 export const apiCircuitBreaker = new CircuitBreaker({
-  failureThreshold: 5,     // Open after 5 failures
-  successThreshold: 2,     // Close after 2 successes
-  timeout: 30000,          // 30 seconds
-  name: 'api-backend',
+  failureThreshold: 5, // Open after 5 failures
+  successThreshold: 2, // Close after 2 successes
+  timeout: 30000, // 30 seconds
+  name: "api-backend",
 });
 
 /**
  * Circuit breaker for optimization calls (more tolerant)
  */
 export const optimizationCircuitBreaker = new CircuitBreaker({
-  failureThreshold: 3,     // Open after 3 failures
-  successThreshold: 1,     // Close after 1 success
-  timeout: 60000,          // 60 seconds (optimization takes time)
-  name: 'optimization-service',
+  failureThreshold: 3, // Open after 3 failures
+  successThreshold: 1, // Close after 1 success
+  timeout: 60000, // 60 seconds (optimization takes time)
+  name: "optimization-service",
 });
-

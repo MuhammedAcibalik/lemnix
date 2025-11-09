@@ -27,8 +27,8 @@ export interface WorkOrderItem {
   profiles: ProfileItem[];
   createdAt: string;
   updatedAt: string;
-  status?: 'draft' | 'ready' | 'processing' | 'completed';
-  priority?: '1' | '2';
+  status?: "draft" | "ready" | "processing" | "completed";
+  priority?: "1" | "2";
 }
 
 export interface ProductSection {
@@ -47,7 +47,7 @@ export interface CuttingList {
   sections: ProductSection[];
   createdAt: string;
   updatedAt: string;
-  status?: 'active' | 'archived' | 'template';
+  status?: "active" | "archived" | "template";
 }
 
 // ============================================================================
@@ -71,7 +71,7 @@ export interface WorkOrderForm {
   orderQuantity: string;
   size: string;
   profiles: ProfileFormItem[];
-  priority: '1' | '2';
+  priority: "1" | "2";
 }
 
 // ============================================================================
@@ -115,10 +115,10 @@ export interface CuttingListStatsProps {
 // ============================================================================
 
 export enum LoadingState {
-  IDLE = 'idle',
-  LOADING = 'loading',
-  SUCCESS = 'success',
-  ERROR = 'error'
+  IDLE = "idle",
+  LOADING = "loading",
+  SUCCESS = "success",
+  ERROR = "error",
 }
 
 // ============================================================================
@@ -127,10 +127,10 @@ export enum LoadingState {
 
 export interface ProfileCombination {
   id: string;
-  profiles: Array<{ 
-    profile: string; 
-    measurement: string; 
-    ratio: number 
+  profiles: Array<{
+    profile: string;
+    measurement: string;
+    ratio: number;
   }>;
   usageCount: number;
   lastUsed: string;
@@ -153,16 +153,16 @@ export interface PageHeaderProps {
 
 export interface ActionToolbarProps {
   children: React.ReactNode;
-  primaryAction?: { 
-    label: string; 
-    onClick: () => void; 
-    icon?: React.ReactNode 
+  primaryAction?: {
+    label: string;
+    onClick: () => void;
+    icon?: React.ReactNode;
   };
-  secondaryActions?: Array<{ 
-    label: string; 
-    onClick: () => void; 
-    icon?: React.ReactNode; 
-    color?: string 
+  secondaryActions?: Array<{
+    label: string;
+    onClick: () => void;
+    icon?: React.ReactNode;
+    color?: string;
   }>;
   loading?: boolean;
   sx?: Record<string, unknown>;
@@ -171,16 +171,16 @@ export interface ActionToolbarProps {
 export interface StyledCardProps {
   children: React.ReactNode;
   sx?: Record<string, unknown>;
-  variant?: 'elevation' | 'outlined';
+  variant?: "elevation" | "outlined";
   elevation?: number;
   [key: string]: unknown;
 }
 
 export interface StyledButtonProps {
   children: React.ReactNode;
-  variant?: 'contained' | 'outlined' | 'text';
-  color?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
-  size?: 'small' | 'medium' | 'large';
+  variant?: "contained" | "outlined" | "text";
+  color?: "primary" | "secondary" | "error" | "warning" | "info" | "success";
+  size?: "small" | "medium" | "large";
   sx?: Record<string, unknown>;
   [key: string]: unknown;
 }
@@ -192,8 +192,15 @@ export interface StyledTextFieldProps {
 
 export interface StyledChipProps {
   label: string;
-  color?: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
-  size?: 'small' | 'medium';
+  color?:
+    | "default"
+    | "primary"
+    | "secondary"
+    | "error"
+    | "info"
+    | "success"
+    | "warning";
+  size?: "small" | "medium";
   sx?: Record<string, unknown>;
   [key: string]: unknown;
 }

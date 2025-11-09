@@ -1,7 +1,7 @@
 /**
  * LEMNİX Cutting List Entity Types
  * Domain types for cutting list operations
- * 
+ *
  * @module entities/cutting-list/model
  * @version 1.0.0 - FSD Compliant
  */
@@ -33,8 +33,8 @@ export interface CuttingListItem {
   readonly orderQuantity: number;
   readonly size: string;
   readonly profiles: ReadonlyArray<ProfileItem>;
-  readonly status?: 'draft' | 'ready' | 'processing' | 'completed';
-  readonly priority?: 'low' | 'medium' | 'high' | 'urgent';
+  readonly status?: "draft" | "ready" | "processing" | "completed";
+  readonly priority?: "low" | "medium" | "high" | "urgent";
   readonly createdAt?: Timestamp;
   readonly updatedAt?: Timestamp;
 }
@@ -66,7 +66,7 @@ export interface CuttingList {
  * Create cutting list request
  */
 export interface CreateCuttingListRequest {
-  readonly name: string;  // Backend expects 'name', not 'title'
+  readonly name: string; // Backend expects 'name', not 'title'
   readonly weekNumber: number;
 }
 
@@ -89,7 +89,7 @@ export interface AddItemRequest {
   readonly orderQuantity: number;
   readonly size: string;
   readonly profiles: ReadonlyArray<ProfileItem>;
-  readonly priority?: 'low' | 'medium' | 'high' | 'urgent';
+  readonly priority?: "low" | "medium" | "high" | "urgent";
 }
 
 /**
@@ -98,4 +98,3 @@ export interface AddItemRequest {
 export interface UpdateItemRequest extends Partial<AddItemRequest> {
   // Allows partial updates
 }
-

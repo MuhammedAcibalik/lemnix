@@ -3,7 +3,7 @@
  * Reusable confirmation dialog with customizable actions
  */
 
-import React from 'react';
+import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -13,15 +13,15 @@ import {
   Button,
   Box,
   IconButton,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Close as CloseIcon,
   WarningAmber as WarningAmberIcon,
   Info as InfoIcon,
   ErrorOutline as ErrorOutlineIcon,
-} from '@mui/icons-material';
-import { useDesignSystem } from '@/shared/hooks';
-import { alpha } from '@mui/material/styles';
+} from "@mui/icons-material";
+import { useDesignSystem } from "@/shared/hooks";
+import { alpha } from "@mui/material/styles";
 
 interface ConfirmationDialogProps {
   readonly open: boolean;
@@ -31,8 +31,8 @@ interface ConfirmationDialogProps {
   readonly description: string;
   readonly confirmButtonText?: string;
   readonly cancelButtonText?: string;
-  readonly confirmButtonColor?: 'primary' | 'error' | 'warning';
-  readonly variant?: 'warning' | 'info' | 'error';
+  readonly confirmButtonColor?: "primary" | "error" | "warning";
+  readonly variant?: "warning" | "info" | "error";
 }
 
 export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
@@ -41,22 +41,43 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   onConfirm,
   title,
   description,
-  confirmButtonText = 'Onayla',
-  cancelButtonText = 'İptal',
-  confirmButtonColor = 'primary',
-  variant = 'warning',
+  confirmButtonText = "Onayla",
+  cancelButtonText = "İptal",
+  confirmButtonColor = "primary",
+  variant = "warning",
 }) => {
   const ds = useDesignSystem();
 
   const getIcon = () => {
     switch (variant) {
-      case 'warning':
-        return <WarningAmberIcon sx={{ fontSize: ds.componentSizes.icon.large, color: ds.colors.warning.main }} />;
-      case 'error':
-        return <ErrorOutlineIcon sx={{ fontSize: ds.componentSizes.icon.large, color: ds.colors.error.main }} />;
-      case 'info':
+      case "warning":
+        return (
+          <WarningAmberIcon
+            sx={{
+              fontSize: ds.componentSizes.icon.large,
+              color: ds.colors.warning.main,
+            }}
+          />
+        );
+      case "error":
+        return (
+          <ErrorOutlineIcon
+            sx={{
+              fontSize: ds.componentSizes.icon.large,
+              color: ds.colors.error.main,
+            }}
+          />
+        );
+      case "info":
       default:
-        return <InfoIcon sx={{ fontSize: ds.componentSizes.icon.large, color: ds.colors.info.main }} />;
+        return (
+          <InfoIcon
+            sx={{
+              fontSize: ds.componentSizes.icon.large,
+              color: ds.colors.info.main,
+            }}
+          />
+        );
     }
   };
 
@@ -67,31 +88,31 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
     };
 
     switch (confirmButtonColor) {
-      case 'error':
+      case "error":
         return {
           ...baseStyle,
           backgroundColor: ds.colors.error.main,
-          color: '#ffffff',
-          '&:hover': {
+          color: "#ffffff",
+          "&:hover": {
             backgroundColor: ds.colors.error[700],
           },
         };
-      case 'warning':
+      case "warning":
         return {
           ...baseStyle,
           backgroundColor: ds.colors.warning.main,
-          color: '#ffffff',
-          '&:hover': {
+          color: "#ffffff",
+          "&:hover": {
             backgroundColor: ds.colors.warning[700],
           },
         };
-      case 'primary':
+      case "primary":
       default:
         return {
           ...baseStyle,
           background: ds.gradients.primary,
-          color: '#ffffff',
-          '&:hover': {
+          color: "#ffffff",
+          "&:hover": {
             background: ds.gradients.primary,
             opacity: 0.9,
           },
@@ -117,18 +138,20 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           background: ds.glass.background,
           backdropFilter: ds.glass.backdropFilter,
           borderBottom: ds.glass.border,
-          p: ds.spacing['4'],
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          p: ds.spacing["4"],
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: ds.spacing['2'] }}>
+        <Box
+          sx={{ display: "flex", alignItems: "center", gap: ds.spacing["2"] }}
+        >
           {getIcon()}
           <DialogTitle
             sx={{
               p: 0,
-              fontSize: '1.25rem',
+              fontSize: "1.25rem",
               fontWeight: ds.typography.fontWeight.bold,
               color: ds.colors.text.primary,
             }}
@@ -142,7 +165,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           sx={{
             color: ds.colors.text.secondary,
             transition: ds.transitions.fast,
-            '&:hover': {
+            "&:hover": {
               color: ds.colors.text.primary,
               backgroundColor: alpha(ds.colors.neutral[900], 0.04),
             },
@@ -151,7 +174,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
-      <DialogContent sx={{ p: ds.spacing['4'] }}>
+      <DialogContent sx={{ p: ds.spacing["4"] }}>
         <Typography
           variant="body2"
           sx={{
@@ -162,7 +185,12 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           {description}
         </Typography>
       </DialogContent>
-      <DialogActions sx={{ p: ds.spacing['4'], borderTop: `1px solid ${ds.colors.neutral[100]}` }}>
+      <DialogActions
+        sx={{
+          p: ds.spacing["4"],
+          borderTop: `1px solid ${ds.colors.neutral[100]}`,
+        }}
+      >
         <Button
           onClick={onClose}
           variant="outlined"
@@ -171,7 +199,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
             borderRadius: `${ds.borderRadius.button}px`,
             borderColor: ds.colors.neutral[300],
             color: ds.colors.text.primary,
-            '&:hover': {
+            "&:hover": {
               borderColor: ds.colors.primary.main,
               backgroundColor: alpha(ds.colors.primary.main, 0.04),
             },
@@ -179,11 +207,14 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         >
           {cancelButtonText}
         </Button>
-        <Button onClick={onConfirm} variant="contained" sx={getConfirmButtonStyles()}>
+        <Button
+          onClick={onConfirm}
+          variant="contained"
+          sx={getConfirmButtonStyles()}
+        >
           {confirmButtonText}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
-

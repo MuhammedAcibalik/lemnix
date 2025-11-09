@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 import {
   Typography,
   TableContainer,
@@ -16,10 +16,10 @@ import {
   Paper,
   Chip,
   Alert,
-  AlertTitle
-} from '@mui/material';
-import { messages } from '../constants';
-import { ParametersTabProps } from '../types';
+  AlertTitle,
+} from "@mui/material";
+import { messages } from "../constants";
+import { ParametersTabProps } from "../types";
 
 /**
  * Parameters Tab Component

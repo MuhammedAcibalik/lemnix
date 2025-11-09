@@ -2,11 +2,11 @@
  * @fileoverview Shared Card Component
  * @module shared/ui/Card
  * @version 2.0.0 - Design System Compliant
- * 
+ *
  * Unified card component with design system integration.
  */
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef } from "react";
 import {
   Card as MuiCard,
   CardContent,
@@ -14,40 +14,40 @@ import {
   CardActions,
   Typography,
   CardProps as MuiCardProps,
-} from '@mui/material';
-import { useDesignSystem } from '@/shared/hooks';
+} from "@mui/material";
+import { useDesignSystem } from "@/shared/hooks";
 
-export interface CardProps extends Omit<MuiCardProps, 'variant'> {
+export interface CardProps extends Omit<MuiCardProps, "variant"> {
   /**
    * Card title
    */
   title?: string;
-  
+
   /**
    * Card subtitle
    */
   subtitle?: string;
-  
+
   /**
    * Card content
    */
   children: React.ReactNode;
-  
+
   /**
    * Card actions (buttons, etc.)
    */
   actions?: React.ReactNode;
-  
+
   /**
    * Header action (e.g., icon button)
    */
   headerAction?: React.ReactNode;
-  
+
   /**
    * Card variant
    */
-  variant?: 'elevated' | 'outlined' | 'glass';
-  
+  variant?: "elevated" | "outlined" | "glass";
+
   /**
    * Enable hover effect
    */
@@ -56,9 +56,9 @@ export interface CardProps extends Omit<MuiCardProps, 'variant'> {
 
 /**
  * Card Component
- * 
+ *
  * Design system compliant card with variants.
- * 
+ *
  * @example
  * ```tsx
  * <Card
@@ -82,31 +82,31 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       children,
       actions,
       headerAction,
-      variant = 'elevated',
+      variant = "elevated",
       hoverable = false,
       sx,
       ...props
     },
-    ref
+    ref,
   ) => {
     const { colors, borderRadius, shadows, spacing } = useDesignSystem();
 
     // Variant styles
     const variantStyles = {
       elevated: {
-        background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+        background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)",
         border: `1px solid ${colors.neutral[100]}`,
         boxShadow: shadows.card,
       },
       outlined: {
         background: colors.background.paper,
         border: `1px solid ${colors.neutral[200]}`,
-        boxShadow: 'none',
+        boxShadow: "none",
       },
       glass: {
         background: `linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%)`,
         border: `1px solid ${colors.neutral[100]}`,
-        backdropFilter: 'blur(10px)',
+        backdropFilter: "blur(10px)",
         boxShadow: shadows.card,
       },
     };
@@ -117,17 +117,17 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         elevation={0}
         sx={{
           borderRadius: `${borderRadius.card}px`,
-          transition: 'all 0.2s ease',
+          transition: "all 0.2s ease",
           ...variantStyles[variant],
-          
+
           // Hover effect
           ...(hoverable && {
-            '&:hover': {
-              transform: 'translateY(-2px)',
+            "&:hover": {
+              transform: "translateY(-2px)",
               boxShadow: shadows.cardHover,
             },
           }),
-          
+
           // Custom sx props
           ...sx,
         }}
@@ -138,12 +138,12 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           <CardHeader
             title={
               title && (
-                <Typography 
-                  variant="h6" 
-                  component="h3" 
-                  sx={{ 
+                <Typography
+                  variant="h6"
+                  component="h3"
+                  sx={{
                     fontWeight: 600,
-                    color: colors.text.primary 
+                    color: colors.text.primary,
                   }}
                 >
                   {title}
@@ -152,11 +152,11 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             }
             subheader={
               subtitle && (
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
+                <Typography
+                  variant="body2"
+                  sx={{
                     color: colors.text.secondary,
-                    mt: 0.5
+                    mt: 0.5,
                   }}
                 >
                   {subtitle}
@@ -166,7 +166,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             action={headerAction}
             sx={{
               pb: spacing.xs,
-              '& .MuiCardHeader-content': {
+              "& .MuiCardHeader-content": {
                 minWidth: 0,
               },
             }}
@@ -174,8 +174,8 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         )}
 
         {/* Content */}
-        <CardContent 
-          sx={{ 
+        <CardContent
+          sx={{
             pt: title || subtitle ? 0 : spacing.md,
           }}
         >
@@ -190,8 +190,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         )}
       </MuiCard>
     );
-  }
+  },
 );
 
-Card.displayName = 'Card';
-
+Card.displayName = "Card";

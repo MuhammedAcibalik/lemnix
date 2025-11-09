@@ -1,13 +1,13 @@
 /**
  * Quick Create Hook
- * 
+ *
  * @module features/quick-cutting-list-create
  * @version 1.0.0 - Quick Create Hook
  */
 
-import { useState } from 'react';
-import { useCreateCuttingList } from '@/entities/cutting-list';
-import type { CreateCuttingListRequest } from '@/entities/cutting-list';
+import { useState } from "react";
+import { useCreateCuttingList } from "@/entities/cutting-list";
+import type { CreateCuttingListRequest } from "@/entities/cutting-list";
 
 export interface QuickCreateParams {
   readonly title: string;
@@ -34,7 +34,7 @@ export function useQuickCreate() {
     },
     onError: (error) => {
       setIsLoading(false);
-      setError(error.message || 'Kesim listesi oluşturulurken bir hata oluştu');
+      setError(error.message || "Kesim listesi oluşturulurken bir hata oluştu");
     },
   });
 
@@ -51,7 +51,7 @@ export function useQuickCreate() {
       const result = await createMutation.mutateAsync(request);
       return result;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Bilinmeyen hata');
+      setError(err instanceof Error ? err.message : "Bilinmeyen hata");
       throw err;
     }
   };

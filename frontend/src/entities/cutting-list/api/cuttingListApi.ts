@@ -1,12 +1,12 @@
 /**
  * LEMNİX Cutting List Entity API
  * Backend API calls for cutting list operations
- * 
+ *
  * @module entities/cutting-list/api
  * @version 1.0.0 - Professional FSD Implementation
  */
 
-import { apiClient } from '@/shared/api/client';
+import { apiClient } from "@/shared/api/client";
 import type {
   CuttingList,
   ProductSection,
@@ -15,20 +15,21 @@ import type {
   AddProductSectionRequest,
   AddItemRequest,
   UpdateItemRequest,
-} from '../model/types';
+} from "../model/types";
 
 /**
  * API endpoints
  */
 const ENDPOINTS = {
-  CUTTING_LISTS: '/cutting-list',
+  CUTTING_LISTS: "/cutting-list",
   CUTTING_LIST_BY_ID: (id: string) => `/cutting-list/${id}`,
-  SECTIONS: (cuttingListId: string) => `/cutting-list/${cuttingListId}/sections`,
-  SECTION_BY_ID: (cuttingListId: string, sectionId: string) => 
+  SECTIONS: (cuttingListId: string) =>
+    `/cutting-list/${cuttingListId}/sections`,
+  SECTION_BY_ID: (cuttingListId: string, sectionId: string) =>
     `/cutting-list/${cuttingListId}/sections/${sectionId}`,
-  ITEMS: (cuttingListId: string, sectionId: string) => 
+  ITEMS: (cuttingListId: string, sectionId: string) =>
     `/cutting-list/${cuttingListId}/sections/${sectionId}/items`,
-  ITEM_BY_ID: (cuttingListId: string, sectionId: string, itemId: string) => 
+  ITEM_BY_ID: (cuttingListId: string, sectionId: string, itemId: string) =>
     `/cutting-list/${cuttingListId}/sections/${sectionId}/items/${itemId}`,
 } as const;
 
@@ -38,28 +39,40 @@ const ENDPOINTS = {
  */
 export async function getCuttingLists(): Promise<ReadonlyArray<CuttingList>> {
   try {
-    console.log('[CuttingListAPI] 🚀 Starting API call at:', new Date().toISOString());
-    
+    console.log(
+      "[CuttingListAPI] 🚀 Starting API call at:",
+      new Date().toISOString(),
+    );
+
     const response = await apiClient.get<{
       success: boolean;
       data?: CuttingList[];
     }>(ENDPOINTS.CUTTING_LISTS);
 
-    console.log('[CuttingListAPI] 📡 API Response received at:', new Date().toISOString());
-    console.log('[CuttingListAPI] Response.data.data length:', response.data.data?.length);
+    console.log(
+      "[CuttingListAPI] 📡 API Response received at:",
+      new Date().toISOString(),
+    );
+    console.log(
+      "[CuttingListAPI] Response.data.data length:",
+      response.data.data?.length,
+    );
 
     if (response.data.success && response.data.data) {
       // ✅ Ensure array
       const lists = Array.isArray(response.data.data) ? response.data.data : [];
-      console.log('[CuttingListAPI] ✅ Returning lists:', lists.length);
-      console.log('[CuttingListAPI] List titles:', lists.map(l => l.title));
+      console.log("[CuttingListAPI] ✅ Returning lists:", lists.length);
+      console.log(
+        "[CuttingListAPI] List titles:",
+        lists.map((l) => l.title),
+      );
       return lists;
     }
 
-    console.warn('[CuttingListAPI] ❌ No data or unsuccessful response');
+    console.warn("[CuttingListAPI] ❌ No data or unsuccessful response");
     return [];
   } catch (error) {
-    console.error('[CuttingListAPI] Failed to fetch cutting lists:', error);
+    console.error("[CuttingListAPI] Failed to fetch cutting lists:", error);
     return [];
   }
 }
@@ -67,7 +80,9 @@ export async function getCuttingLists(): Promise<ReadonlyArray<CuttingList>> {
 /**
  * Get cutting list by ID
  */
-export async function getCuttingListById(id: string): Promise<CuttingList | null> {
+export async function getCuttingListById(
+  id: string,
+): Promise<CuttingList | null> {
   try {
     const response = await apiClient.get<{
       success: boolean;
@@ -80,7 +95,10 @@ export async function getCuttingListById(id: string): Promise<CuttingList | null
 
     return null;
   } catch (error) {
-    console.error(`[CuttingListAPI] Failed to fetch cutting list ${id}:`, error);
+    console.error(
+      `[CuttingListAPI] Failed to fetch cutting list ${id}:`,
+      error,
+    );
     return null;
   }
 }
@@ -89,7 +107,7 @@ export async function getCuttingListById(id: string): Promise<CuttingList | null
  * Create new cutting list
  */
 export async function createCuttingList(
-  request: CreateCuttingListRequest
+  request: CreateCuttingListRequest,
 ): Promise<CuttingList> {
   const response = await apiClient.post<{
     success: boolean;
@@ -97,7 +115,7 @@ export async function createCuttingList(
   }>(ENDPOINTS.CUTTING_LISTS, request);
 
   if (!response.data.success || !response.data.data) {
-    throw new Error('Failed to create cutting list');
+    throw new Error("Failed to create cutting list");
   }
 
   return response.data.data;
@@ -108,7 +126,7 @@ export async function createCuttingList(
  */
 export async function updateCuttingList(
   id: string,
-  updates: Partial<CuttingList>
+  updates: Partial<CuttingList>,
 ): Promise<CuttingList> {
   const response = await apiClient.put<{
     success: boolean;
@@ -116,7 +134,7 @@ export async function updateCuttingList(
   }>(ENDPOINTS.CUTTING_LIST_BY_ID(id), updates);
 
   if (!response.data.success || !response.data.data) {
-    throw new Error('Failed to update cutting list');
+    throw new Error("Failed to update cutting list");
   }
 
   return response.data.data;
@@ -134,7 +152,7 @@ export async function deleteCuttingList(id: string): Promise<void> {
  */
 export async function addProductSection(
   cuttingListId: string,
-  request: AddProductSectionRequest
+  request: AddProductSectionRequest,
 ): Promise<ProductSection> {
   const response = await apiClient.post<{
     success: boolean;
@@ -142,7 +160,7 @@ export async function addProductSection(
   }>(ENDPOINTS.SECTIONS(cuttingListId), request);
 
   if (!response.data.success || !response.data.data) {
-    throw new Error('Failed to add product section');
+    throw new Error("Failed to add product section");
   }
 
   return response.data.data;
@@ -153,7 +171,7 @@ export async function addProductSection(
  */
 export async function deleteProductSection(
   cuttingListId: string,
-  sectionId: string
+  sectionId: string,
 ): Promise<void> {
   await apiClient.delete(ENDPOINTS.SECTION_BY_ID(cuttingListId, sectionId));
 }
@@ -164,7 +182,7 @@ export async function deleteProductSection(
 export async function addItemToSection(
   cuttingListId: string,
   sectionId: string,
-  request: AddItemRequest
+  request: AddItemRequest,
 ): Promise<CuttingListItem> {
   const response = await apiClient.post<{
     success: boolean;
@@ -172,7 +190,7 @@ export async function addItemToSection(
   }>(ENDPOINTS.ITEMS(cuttingListId, sectionId), request);
 
   if (!response.data.success || !response.data.data) {
-    throw new Error('Failed to add item');
+    throw new Error("Failed to add item");
   }
 
   return response.data.data;
@@ -185,7 +203,7 @@ export async function updateItemInSection(
   cuttingListId: string,
   sectionId: string,
   itemId: string,
-  request: UpdateItemRequest
+  request: UpdateItemRequest,
 ): Promise<CuttingListItem> {
   const response = await apiClient.put<{
     success: boolean;
@@ -193,7 +211,7 @@ export async function updateItemInSection(
   }>(ENDPOINTS.ITEM_BY_ID(cuttingListId, sectionId, itemId), request);
 
   if (!response.data.success || !response.data.data) {
-    throw new Error('Failed to update item');
+    throw new Error("Failed to update item");
   }
 
   return response.data.data;
@@ -205,8 +223,9 @@ export async function updateItemInSection(
 export async function deleteItemFromSection(
   cuttingListId: string,
   sectionId: string,
-  itemId: string
+  itemId: string,
 ): Promise<void> {
-  await apiClient.delete(ENDPOINTS.ITEM_BY_ID(cuttingListId, sectionId, itemId));
+  await apiClient.delete(
+    ENDPOINTS.ITEM_BY_ID(cuttingListId, sectionId, itemId),
+  );
 }
-

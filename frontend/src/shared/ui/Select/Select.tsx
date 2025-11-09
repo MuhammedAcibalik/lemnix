@@ -2,12 +2,12 @@
  * @fileoverview Shared Select Component
  * @module shared/ui/Select
  * @version 1.0.0
- * 
+ *
  * Unified select/dropdown component with design system integration.
  * Replaces all custom Select implementations.
  */
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef } from "react";
 import {
   FormControl,
   InputLabel,
@@ -16,9 +16,9 @@ import {
   SelectProps as MuiSelectProps,
   FormHelperText,
   Box,
-  Chip
-} from '@mui/material';
-import { useDesignSystem } from '@/shared/hooks';
+  Chip,
+} from "@mui/material";
+import { useDesignSystem } from "@/shared/hooks";
 
 export interface SelectOption {
   value: string | number;
@@ -28,27 +28,27 @@ export interface SelectOption {
   icon?: React.ReactNode;
 }
 
-export interface SelectProps extends Omit<MuiSelectProps, 'size'> {
+export interface SelectProps extends Omit<MuiSelectProps, "size"> {
   /**
    * Select size from design system
    */
-  size?: 'small' | 'medium' | 'large';
-  
+  size?: "small" | "medium" | "large";
+
   /**
    * Options array
    */
   options: SelectOption[];
-  
+
   /**
    * Helper text below select
    */
   helperText?: string;
-  
+
   /**
    * Show color chip for each option
    */
   showColorChip?: boolean;
-  
+
   /**
    * Custom empty text
    */
@@ -57,9 +57,9 @@ export interface SelectProps extends Omit<MuiSelectProps, 'size'> {
 
 /**
  * Select Component
- * 
+ *
  * Design system compliant dropdown/select with icons and colors.
- * 
+ *
  * @example
  * ```tsx
  * <Select
@@ -77,11 +77,11 @@ export interface SelectProps extends Omit<MuiSelectProps, 'size'> {
 export const Select = forwardRef<HTMLDivElement, SelectProps>(
   (
     {
-      size = 'medium',
+      size = "medium",
       options,
       helperText,
       showColorChip,
-      emptyText = 'Seçiniz...',
+      emptyText = "Seçiniz...",
       label,
       error,
       required,
@@ -90,12 +90,13 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
       sx,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const { componentSizes, colors, borderRadius, spacing, zIndex } = useDesignSystem();
-    
+    const { componentSizes, colors, borderRadius, spacing, zIndex } =
+      useDesignSystem();
+
     const sizeConfig = componentSizes.input[size];
-    const labelId = `select-label-${label?.toString().replace(/\s+/g, '-').toLowerCase()}`;
+    const labelId = `select-label-${label?.toString().replace(/\s+/g, "-").toLowerCase()}`;
 
     return (
       <FormControl
@@ -111,7 +112,7 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
             {label}
           </InputLabel>
         )}
-        
+
         <MuiSelect
           labelId={labelId}
           value={value}
@@ -122,42 +123,42 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
               sx: {
                 maxHeight: 400,
                 borderRadius: `${borderRadius.base}px`,
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
                 mt: 0.5,
-              }
+              },
             },
             // ✅ FIXED: Consistent z-index from design system
             sx: {
-              zIndex: zIndex.dropdown
-            }
+              zIndex: zIndex.dropdown,
+            },
           }}
           sx={{
             height: sizeConfig.height,
             fontSize: sizeConfig.fontSize,
-            
-            '& .MuiOutlinedInput-notchedOutline': {
+
+            "& .MuiOutlinedInput-notchedOutline": {
               borderRadius: `${borderRadius.input}px`,
               borderColor: colors.neutral[200],
             },
-            
-            '&:hover .MuiOutlinedInput-notchedOutline': {
+
+            "&:hover .MuiOutlinedInput-notchedOutline": {
               borderColor: colors.neutral[300],
             },
-            
-            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+
+            "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
               borderColor: colors.primary[600],
               borderWidth: 2,
             },
-            
-            '&.Mui-error .MuiOutlinedInput-notchedOutline': {
+
+            "&.Mui-error .MuiOutlinedInput-notchedOutline": {
               borderColor: colors.error[500],
             },
-            
-            '& .MuiSelect-select': {
-              display: 'flex',
-              alignItems: 'center',
+
+            "& .MuiSelect-select": {
+              display: "flex",
+              alignItems: "center",
               gap: spacing.xs,
-            }
+            },
           }}
           {...props}
         >
@@ -167,7 +168,7 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
               <em>{emptyText}</em>
             </MenuItem>
           )}
-          
+
           {/* Options */}
           {options.map((option) => (
             <MenuItem
@@ -175,19 +176,19 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
               value={option.value}
               disabled={option.disabled}
               sx={{
-                display: 'flex',
-                alignItems: 'center',
+                display: "flex",
+                alignItems: "center",
                 gap: spacing.xs,
                 minHeight: 40,
-                
-                '&:hover': {
+
+                "&:hover": {
                   backgroundColor: colors.neutral[50],
                 },
-                
-                '&.Mui-selected': {
+
+                "&.Mui-selected": {
                   backgroundColor: colors.primary[50],
-                  
-                  '&:hover': {
+
+                  "&:hover": {
                     backgroundColor: colors.primary[100],
                   },
                 },
@@ -195,43 +196,43 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
             >
               {/* Option icon */}
               {option.icon && (
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
                   {option.icon}
                 </Box>
               )}
-              
+
               {/* Option label */}
               <span>{option.label}</span>
-              
+
               {/* Color chip */}
               {showColorChip && option.color && (
                 <Chip
                   size="small"
                   sx={{
-                    ml: 'auto',
+                    ml: "auto",
                     height: 20,
                     backgroundColor: option.color,
                     border: `1px solid ${colors.neutral[300]}`,
-                    '& .MuiChip-label': {
+                    "& .MuiChip-label": {
                       px: 1,
-                      fontSize: '0.625rem',
-                      color: '#000000',
-                      mixBlendMode: 'difference'
-                    }
+                      fontSize: "0.625rem",
+                      color: "#000000",
+                      mixBlendMode: "difference",
+                    },
                   }}
                 />
               )}
             </MenuItem>
           ))}
         </MuiSelect>
-        
+
         {/* Helper Text */}
         {helperText && (
           <FormHelperText
             sx={{
               color: error ? colors.error[500] : colors.neutral[600],
-              fontSize: '0.75rem',
-              mx: spacing.sm
+              fontSize: "0.75rem",
+              mx: spacing.sm,
             }}
           >
             {helperText}
@@ -239,8 +240,7 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
         )}
       </FormControl>
     );
-  }
+  },
 );
 
-Select.displayName = 'Select';
-
+Select.displayName = "Select";

@@ -2,7 +2,7 @@
  * Profile Definitions Table
  */
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Table,
@@ -17,7 +17,7 @@ import {
   CircularProgress,
   Stack,
   Tooltip,
-} from '@mui/material';
+} from "@mui/material";
 import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
@@ -25,24 +25,38 @@ import {
   Delete as DeleteIcon,
   Save as SaveIcon,
   Close as CloseIcon,
-} from '@mui/icons-material';
-import { useDesignSystem } from '@/shared/hooks';
-import { TextField } from '@/shared';
-import { useProfileDefinitions, useUpdateProfileDefinition, useDeleteProfileDefinition } from '../model/useProfileManagement';
-import { alpha } from '@mui/material/styles';
+} from "@mui/icons-material";
+import { useDesignSystem } from "@/shared/hooks";
+import { TextField } from "@/shared";
+import {
+  useProfileDefinitions,
+  useUpdateProfileDefinition,
+  useDeleteProfileDefinition,
+} from "../model/useProfileManagement";
+import { alpha } from "@mui/material/styles";
 
 export const ProfileDefinitionsTable: React.FC = () => {
   const ds = useDesignSystem();
   const { data: profiles, isLoading } = useProfileDefinitions(false);
   const updateMutation = useUpdateProfileDefinition();
   const deleteMutation = useDeleteProfileDefinition();
-  
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ profileCode: '', profileName: '' });
 
-  const handleEdit = (profile: { id: string; profileCode: string; profileName: string }) => {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    profileCode: "",
+    profileName: "",
+  });
+
+  const handleEdit = (profile: {
+    id: string;
+    profileCode: string;
+    profileName: string;
+  }) => {
     setEditingId(profile.id);
-    setEditForm({ profileCode: profile.profileCode, profileName: profile.profileName });
+    setEditForm({
+      profileCode: profile.profileCode,
+      profileName: profile.profileName,
+    });
   };
 
   const handleSave = async (id: string) => {
@@ -50,26 +64,30 @@ export const ProfileDefinitionsTable: React.FC = () => {
       id,
       data: {
         profileCode: editForm.profileCode,
-        profileName: editForm.profileName
-      }
+        profileName: editForm.profileName,
+      },
     });
     setEditingId(null);
   };
 
   const handleCancel = () => {
     setEditingId(null);
-    setEditForm({ profileCode: '', profileName: '' });
+    setEditForm({ profileCode: "", profileName: "" });
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Bu profil tanımını silmek istediğinizden emin misiniz?')) {
+    if (
+      window.confirm("Bu profil tanımını silmek istediğinizden emin misiniz?")
+    ) {
       await deleteMutation.mutateAsync(id);
     }
   };
 
   if (isLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: ds.spacing['6'] }}>
+      <Box
+        sx={{ display: "flex", justifyContent: "center", py: ds.spacing["6"] }}
+      >
         <CircularProgress />
       </Box>
     );
@@ -77,7 +95,7 @@ export const ProfileDefinitionsTable: React.FC = () => {
 
   if (!profiles || profiles.length === 0) {
     return (
-      <Box sx={{ textAlign: 'center', py: ds.spacing['6'] }}>
+      <Box sx={{ textAlign: "center", py: ds.spacing["6"] }}>
         <Typography color="text.secondary">Henüz profil tanımı yok</Typography>
         <Typography variant="caption" color="text.secondary">
           Excel yükleyerek profil ekleyebilirsiniz
@@ -87,7 +105,7 @@ export const ProfileDefinitionsTable: React.FC = () => {
   }
 
   return (
-    <TableContainer sx={{ px: 0, pb: ds.spacing['1'] }}>
+    <TableContainer sx={{ px: 0, pb: ds.spacing["1"] }}>
       <Table>
         <TableHead>
           <TableRow>
@@ -103,7 +121,9 @@ export const ProfileDefinitionsTable: React.FC = () => {
             <TableCell sx={{ fontWeight: ds.typography.fontWeight.semibold }}>
               Durum
             </TableCell>
-            <TableCell sx={{ fontWeight: ds.typography.fontWeight.semibold, width: 120 }}>
+            <TableCell
+              sx={{ fontWeight: ds.typography.fontWeight.semibold, width: 120 }}
+            >
               İşlemler
             </TableCell>
           </TableRow>
@@ -113,9 +133,9 @@ export const ProfileDefinitionsTable: React.FC = () => {
             <TableRow
               key={profile.id}
               sx={{
-                '&:hover': {
+                "&:hover": {
                   backgroundColor: alpha(ds.colors.primary.main, 0.05),
-                }
+                },
               }}
             >
               <TableCell>
@@ -123,14 +143,16 @@ export const ProfileDefinitionsTable: React.FC = () => {
                   <TextField
                     size="small"
                     value={editForm.profileCode}
-                    onChange={(e) => setEditForm({ ...editForm, profileCode: e.target.value })}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, profileCode: e.target.value })
+                    }
                     sx={{ width: 140 }}
                   />
                 ) : (
                   <Typography
                     sx={{
                       fontWeight: ds.typography.fontWeight.medium,
-                      fontFamily: 'monospace'
+                      fontFamily: "monospace",
                     }}
                   >
                     {profile.profileCode}
@@ -142,7 +164,9 @@ export const ProfileDefinitionsTable: React.FC = () => {
                   <TextField
                     size="small"
                     value={editForm.profileName}
-                    onChange={(e) => setEditForm({ ...editForm, profileName: e.target.value })}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, profileName: e.target.value })
+                    }
                     sx={{ width: 200 }}
                   />
                 ) : (
@@ -158,12 +182,12 @@ export const ProfileDefinitionsTable: React.FC = () => {
                         key={sl.id}
                         label={`${sl.stockLength}mm`}
                         size="small"
-                        variant={sl.isDefault ? 'filled' : 'outlined'}
-                        color={sl.isDefault ? 'primary' : 'default'}
+                        variant={sl.isDefault ? "filled" : "outlined"}
+                        color={sl.isDefault ? "primary" : "default"}
                         sx={{
-                          fontSize: '0.7rem',
+                          fontSize: "0.7rem",
                           height: 22,
-                          borderRadius: `${ds.borderRadius.sm}px`
+                          borderRadius: `${ds.borderRadius.sm}px`,
                         }}
                       />
                     ))}
@@ -172,12 +196,12 @@ export const ProfileDefinitionsTable: React.FC = () => {
               <TableCell>
                 <Chip
                   icon={profile.isActive ? <CheckCircleIcon /> : <CancelIcon />}
-                  label={profile.isActive ? 'Aktif' : 'Pasif'}
+                  label={profile.isActive ? "Aktif" : "Pasif"}
                   size="small"
-                  color={profile.isActive ? 'success' : 'default'}
+                  color={profile.isActive ? "success" : "default"}
                   sx={{
                     borderRadius: `${ds.borderRadius.sm}px`,
-                    fontWeight: ds.typography.fontWeight.medium
+                    fontWeight: ds.typography.fontWeight.medium,
                   }}
                 />
               </TableCell>
@@ -208,7 +232,7 @@ export const ProfileDefinitionsTable: React.FC = () => {
                         onClick={() => handleEdit(profile)}
                         sx={{
                           color: ds.colors.text.secondary,
-                          '&:hover': { color: ds.colors.primary.main }
+                          "&:hover": { color: ds.colors.primary.main },
                         }}
                       >
                         <EditIcon fontSize="small" />
@@ -221,7 +245,7 @@ export const ProfileDefinitionsTable: React.FC = () => {
                         disabled={deleteMutation.isPending}
                         sx={{
                           color: ds.colors.text.secondary,
-                          '&:hover': { color: ds.colors.error.main }
+                          "&:hover": { color: ds.colors.error.main },
                         }}
                       >
                         <DeleteIcon fontSize="small" />
@@ -237,4 +261,3 @@ export const ProfileDefinitionsTable: React.FC = () => {
     </TableContainer>
   );
 };
-

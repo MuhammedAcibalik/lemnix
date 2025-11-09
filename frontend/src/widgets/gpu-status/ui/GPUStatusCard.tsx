@@ -2,12 +2,12 @@
  * @fileoverview GPU Status Card Widget
  * @module widgets/gpu-status
  * @version 1.0.0
- * 
+ *
  * FSD: Widget layer - GPU status detection and display
  * Design System v2.0: Uses tokens and glassmorphism
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Card,
@@ -19,16 +19,16 @@ import {
   CircularProgress,
   Tooltip,
   IconButton,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Memory as GPUIcon,
   Refresh as RefreshIcon,
   CheckCircle as ActiveIcon,
   Cancel as InactiveIcon,
   Info as InfoIcon,
-} from '@mui/icons-material';
-import { useDesignSystem } from '@/shared/hooks';
-import { apiClient } from '@/shared/api/client';
+} from "@mui/icons-material";
+import { useDesignSystem } from "@/shared/hooks";
+import { apiClient } from "@/shared/api/client";
 
 export interface GPUInfo {
   readonly vendor: string;
@@ -44,7 +44,7 @@ export interface GPUInfo {
 export interface GPUStatus {
   readonly available: boolean;
   readonly webGPUSupported?: boolean;
-  readonly environment?: 'browser' | 'nodejs';
+  readonly environment?: "browser" | "nodejs";
   readonly gpu?: GPUInfo | null;
   readonly lastChecked: Date;
   readonly error?: string;
@@ -60,7 +60,7 @@ export interface GPUStatusCardProps {
 
 /**
  * GPU Status Card Component
- * 
+ *
  * Features:
  * - Real-time GPU detection via WebGPU API
  * - Vendor, memory, and capability information
@@ -92,15 +92,24 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
         return {
           available: false,
           webGPUSupported: false,
-          environment: 'browser',
+          environment: "browser",
           lastChecked: new Date(),
-          recommendation: 'WebGPU not enabled. Open chrome://flags and enable "Unsafe WebGPU" flag, then restart browser.',
+          recommendation:
+            'WebGPU not enabled. Open chrome://flags and enable "Unsafe WebGPU" flag, then restart browser.',
         };
       }
 
       // Request adapter
-      const adapter = await (navigator as unknown as { gpu: { requestAdapter: (options: { powerPreference: string }) => Promise<GPUAdapter | null> } }).gpu.requestAdapter({
-        powerPreference: 'high-performance',
+      const adapter = await (
+        navigator as unknown as {
+          gpu: {
+            requestAdapter: (options: {
+              powerPreference: string;
+            }) => Promise<GPUAdapter | null>;
+          };
+        }
+      ).gpu.requestAdapter({
+        powerPreference: "high-performance",
       });
 
       if (!adapter) {
@@ -108,43 +117,64 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
           available: false,
           webGPUSupported: true,
           lastChecked: new Date(),
-          recommendation: 'WebGPU supported but no GPU adapter found. Check GPU drivers.',
+          recommendation:
+            "WebGPU supported but no GPU adapter found. Check GPU drivers.",
         };
       }
 
       // Get adapter info
-      const info = await (adapter as unknown as { requestAdapterInfo: () => Promise<{ vendor?: string; architecture?: string; description?: string }> }).requestAdapterInfo();
-      
+      const info = await (
+        adapter as unknown as {
+          requestAdapterInfo: () => Promise<{
+            vendor?: string;
+            architecture?: string;
+            description?: string;
+          }>;
+        }
+      ).requestAdapterInfo();
+
       // Request device to test actual GPU access
-      const device = await (adapter as unknown as { requestDevice: () => Promise<GPUDevice> }).requestDevice();
-      
+      const device = await (
+        adapter as unknown as { requestDevice: () => Promise<GPUDevice> }
+      ).requestDevice();
+
       const gpuInfo: GPUInfo = {
-        vendor: info.vendor || 'Unknown',
-        architecture: info.architecture || 'Unknown',
-        description: info.description || 'Unknown',
-        features: Array.from((adapter as unknown as { features: GPUFeatureName[] }).features),
+        vendor: info.vendor || "Unknown",
+        architecture: info.architecture || "Unknown",
+        description: info.description || "Unknown",
+        features: Array.from(
+          (adapter as unknown as { features: GPUFeatureName[] }).features,
+        ),
         limits: {
-          maxStorageBufferBindingSize: (adapter as unknown as { limits: { maxStorageBufferBindingSize: number } }).limits.maxStorageBufferBindingSize,
-          maxBufferSize: (adapter as unknown as { limits: { maxBufferSize: number } }).limits.maxBufferSize,
+          maxStorageBufferBindingSize: (
+            adapter as unknown as {
+              limits: { maxStorageBufferBindingSize: number };
+            }
+          ).limits.maxStorageBufferBindingSize,
+          maxBufferSize: (
+            adapter as unknown as { limits: { maxBufferSize: number } }
+          ).limits.maxBufferSize,
         },
       };
-      
+
       return {
         available: true,
         webGPUSupported: true,
-        environment: 'browser',
+        environment: "browser",
         gpu: gpuInfo,
         lastChecked: new Date(),
-        recommendation: 'GPU acceleration available for optimization algorithms',
+        recommendation:
+          "GPU acceleration available for optimization algorithms",
       };
     } catch (error) {
-      console.warn('[GPUStatusCard] GPU detection failed:', error);
+      console.warn("[GPUStatusCard] GPU detection failed:", error);
       return {
         available: false,
         webGPUSupported: false,
         lastChecked: new Date(),
-        error: error instanceof Error ? error.message : 'GPU detection failed',
-        recommendation: 'Failed to detect GPU. Ensure WebGPU is enabled in your browser.',
+        error: error instanceof Error ? error.message : "GPU detection failed",
+        recommendation:
+          "Failed to detect GPU. Ensure WebGPU is enabled in your browser.",
       };
     }
   };
@@ -154,7 +184,11 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
    */
   const fetchGpuStatusFromBackend = async () => {
     try {
-      const response = await apiClient.get<{ success: boolean; data: GPUStatus; error?: { message: string } }>('/health/gpu');
+      const response = await apiClient.get<{
+        success: boolean;
+        data: GPUStatus;
+        error?: { message: string };
+      }>("/health/gpu");
       if (response.data.success && response.data.data) {
         setGpuStatus({
           ...response.data.data,
@@ -165,19 +199,27 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
           lastChecked: new Date(response.data.data.lastChecked),
         });
       } else {
-        setError(response.data.error?.message || 'Failed to fetch GPU status from backend');
+        setError(
+          response.data.error?.message ||
+            "Failed to fetch GPU status from backend",
+        );
         setGpuStatus({
           available: false,
           lastChecked: new Date(),
-          error: response.data.error?.message || 'Backend GPU status unavailable',
+          error:
+            response.data.error?.message || "Backend GPU status unavailable",
         });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Network error fetching GPU status');
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Network error fetching GPU status",
+      );
       setGpuStatus({
         available: false,
         lastChecked: new Date(),
-        error: err instanceof Error ? err.message : 'Network error',
+        error: err instanceof Error ? err.message : "Network error",
       });
     }
   };
@@ -200,11 +242,11 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
         await fetchGpuStatusFromBackend();
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'GPU detection failed');
+      setError(error instanceof Error ? error.message : "GPU detection failed");
       setGpuStatus({
         available: false,
         lastChecked: new Date(),
-        error: error instanceof Error ? error.message : 'GPU detection failed',
+        error: error instanceof Error ? error.message : "GPU detection failed",
       });
     } finally {
       setIsChecking(false);
@@ -231,16 +273,16 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
 
   const getStatusIcon = () => {
     if (isChecking) return <CircularProgress size={16} />;
-    if (gpuStatus.available) return <ActiveIcon sx={{ color: ds.colors.success.main }} />;
+    if (gpuStatus.available)
+      return <ActiveIcon sx={{ color: ds.colors.success.main }} />;
     return <InactiveIcon sx={{ color: ds.colors.error.main }} />;
   };
 
   const getStatusText = () => {
-    if (isChecking) return 'Kontrol Ediliyor...';
-    if (gpuStatus.available) return 'GPU Aktif';
-    return 'GPU Pasif';
+    if (isChecking) return "Kontrol Ediliyor...";
+    if (gpuStatus.available) return "GPU Aktif";
+    return "GPU Pasif";
   };
-
 
   return (
     <Card
@@ -248,41 +290,46 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
       sx={{
         border: `1px solid ${alpha(ds.colors.neutral[300], 0.5)}`,
         borderRadius: `${ds.borderRadius.lg}px`,
-        background: gpuStatus.available 
+        background: gpuStatus.available
           ? alpha(ds.colors.success[50], 0.1)
           : alpha(ds.colors.error[50], 0.1),
         transition: ds.transitions.base,
-        '&:hover': {
+        "&:hover": {
           borderColor: getStatusColor(),
           boxShadow: ds.shadows.soft.md,
         },
       }}
     >
-      <CardContent sx={{ p: ds.spacing['3'] }}>
+      <CardContent sx={{ p: ds.spacing["3"] }}>
         {/* Header */}
-        <Stack direction="row" alignItems="center" spacing={ds.spacing['2']} sx={{ mb: ds.spacing['2'] }}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={ds.spacing["2"]}
+          sx={{ mb: ds.spacing["2"] }}
+        >
           <Box
             sx={{
               width: 32,
               height: 32,
               borderRadius: `${ds.borderRadius.md}px`,
-              background: gpuStatus.available 
+              background: gpuStatus.available
                 ? `linear-gradient(135deg, ${ds.colors.success[500]} 0%, ${ds.colors.success[700]} 100%)`
                 : `linear-gradient(135deg, ${ds.colors.error[500]} 0%, ${ds.colors.error[700]} 100%)`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               boxShadow: ds.shadows.soft.sm,
             }}
           >
             <GPUIcon sx={{ fontSize: 18, color: ds.colors.text.inverse }} />
           </Box>
-          
+
           <Box sx={{ flex: 1 }}>
             <Typography
               variant="subtitle1"
               sx={{
-                fontSize: '0.875rem',
+                fontSize: "0.875rem",
                 fontWeight: ds.typography.fontWeight.semibold,
                 color: ds.colors.text.primary,
                 mb: 0.25,
@@ -290,7 +337,11 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
             >
               GPU Durumu
             </Typography>
-            <Stack direction="row" alignItems="center" spacing={ds.spacing['1']}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={ds.spacing["1"]}
+            >
               {getStatusIcon()}
               <Typography
                 variant="body2"
@@ -304,7 +355,7 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
             </Stack>
           </Box>
 
-          <Stack direction="row" spacing={ds.spacing['1']}>
+          <Stack direction="row" spacing={ds.spacing["1"]}>
             <Tooltip title="GPU durumunu yenile">
               <IconButton
                 size="small"
@@ -312,20 +363,20 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
                 disabled={isChecking}
                 sx={{
                   color: ds.colors.text.secondary,
-                  '&:hover': { color: ds.colors.primary.main },
+                  "&:hover": { color: ds.colors.primary.main },
                 }}
               >
                 <RefreshIcon sx={{ fontSize: 16 }} />
               </IconButton>
             </Tooltip>
-            
+
             {showDetails && (
               <Tooltip title="GPU detayları">
                 <IconButton
                   size="small"
                   sx={{
                     color: ds.colors.text.secondary,
-                    '&:hover': { color: ds.colors.primary.main },
+                    "&:hover": { color: ds.colors.primary.main },
                   }}
                 >
                   <InfoIcon sx={{ fontSize: 16 }} />
@@ -339,7 +390,7 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
         {error && (
           <Box
             sx={{
-              p: ds.spacing['2'],
+              p: ds.spacing["2"],
               backgroundColor: alpha(ds.colors.error[50], 0.1),
               borderRadius: `${ds.borderRadius.md}px`,
               border: `1px solid ${alpha(ds.colors.error[500], 0.2)}`,
@@ -349,7 +400,7 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
               variant="body2"
               sx={{
                 color: ds.colors.error.main,
-                fontSize: '0.75rem',
+                fontSize: "0.75rem",
               }}
             >
               {error}
@@ -361,52 +412,101 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
         {showDetails && gpuStatus.available && (
           <Box
             sx={{
-              mt: ds.spacing['2'],
-              p: ds.spacing['2'],
+              mt: ds.spacing["2"],
+              p: ds.spacing["2"],
               backgroundColor: alpha(ds.colors.neutral[100], 0.5),
               borderRadius: `${ds.borderRadius.md}px`,
             }}
           >
-            <Stack spacing={ds.spacing['1']}>
+            <Stack spacing={ds.spacing["1"]}>
               {gpuStatus.gpu?.vendor && (
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Typography variant="body2" sx={{ color: ds.colors.text.secondary, fontSize: '0.75rem' }}>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: ds.colors.text.secondary,
+                      fontSize: "0.75rem",
+                    }}
+                  >
                     Üretici:
                   </Typography>
-                  <Typography variant="body2" sx={{ color: ds.colors.text.primary, fontSize: '0.75rem' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: ds.colors.text.primary, fontSize: "0.75rem" }}
+                  >
                     {gpuStatus.gpu.vendor}
                   </Typography>
                 </Stack>
               )}
-              
+
               {gpuStatus.gpu?.architecture && (
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Typography variant="body2" sx={{ color: ds.colors.text.secondary, fontSize: '0.75rem' }}>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: ds.colors.text.secondary,
+                      fontSize: "0.75rem",
+                    }}
+                  >
                     Mimari:
                   </Typography>
-                  <Typography variant="body2" sx={{ color: ds.colors.text.primary, fontSize: '0.75rem' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: ds.colors.text.primary, fontSize: "0.75rem" }}
+                  >
                     {gpuStatus.gpu.architecture}
                   </Typography>
                 </Stack>
               )}
-              
+
               {gpuStatus.gpu?.description && (
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Typography variant="body2" sx={{ color: ds.colors.text.secondary, fontSize: '0.75rem' }}>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: ds.colors.text.secondary,
+                      fontSize: "0.75rem",
+                    }}
+                  >
                     Açıklama:
                   </Typography>
-                  <Typography variant="body2" sx={{ color: ds.colors.text.primary, fontSize: '0.75rem' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ color: ds.colors.text.primary, fontSize: "0.75rem" }}
+                  >
                     {gpuStatus.gpu.description}
                   </Typography>
                 </Stack>
               )}
-              
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography variant="body2" sx={{ color: ds.colors.text.secondary, fontSize: '0.75rem' }}>
+
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Typography
+                  variant="body2"
+                  sx={{ color: ds.colors.text.secondary, fontSize: "0.75rem" }}
+                >
                   Son kontrol:
                 </Typography>
-                <Typography variant="body2" sx={{ color: ds.colors.text.primary, fontSize: '0.75rem' }}>
-                  {gpuStatus.lastChecked.toLocaleTimeString('tr-TR')}
+                <Typography
+                  variant="body2"
+                  sx={{ color: ds.colors.text.primary, fontSize: "0.75rem" }}
+                >
+                  {gpuStatus.lastChecked.toLocaleTimeString("tr-TR")}
                 </Typography>
               </Stack>
             </Stack>
@@ -415,7 +515,7 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
 
         {/* Performance Indicator */}
         {gpuStatus.available && (
-          <Box sx={{ mt: ds.spacing['2'] }}>
+          <Box sx={{ mt: ds.spacing["2"] }}>
             <Chip
               label="GPU Hızlandırması Aktif"
               size="small"
@@ -423,7 +523,7 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
                 backgroundColor: ds.colors.success[50],
                 color: ds.colors.success[700],
                 fontWeight: ds.typography.fontWeight.semibold,
-                fontSize: '0.75rem',
+                fontSize: "0.75rem",
               }}
             />
           </Box>

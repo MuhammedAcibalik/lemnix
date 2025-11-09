@@ -4,8 +4,8 @@
  * @version 1.0.0
  */
 
-import React, { useState } from 'react';
-import { Cut } from './types';
+import React, { useState } from "react";
+import { Cut } from "./types";
 import {
   Box,
   Card,
@@ -25,8 +25,8 @@ import {
   ListItemText,
   Badge,
   useTheme,
-  alpha
-} from '@mui/material';
+  alpha,
+} from "@mui/material";
 import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
@@ -34,16 +34,16 @@ import {
   Engineering as EngineeringIcon,
   ContentCut as CutIcon,
   Warning as WarningIcon,
-  CheckCircle as CheckIcon
-} from '@mui/icons-material';
-import { OptimizationResult } from './types';
+  CheckCircle as CheckIcon,
+} from "@mui/icons-material";
+import { OptimizationResult } from "./types";
 
 // Modern utility functions with proper typing
-const formatNumber = (num: number): string => 
-  Number.isFinite(num) ? num.toLocaleString('tr-TR') : '—';
+const formatNumber = (num: number): string =>
+  Number.isFinite(num) ? num.toLocaleString("tr-TR") : "—";
 
-const formatPercentage = (num: number): string => 
-  Number.isFinite(num) ? `${num.toFixed(1)}%` : '—%';
+const formatPercentage = (num: number): string =>
+  Number.isFinite(num) ? `${num.toFixed(1)}%` : "—%";
 
 interface CutsDisplayProps {
   result: OptimizationResult;
@@ -52,17 +52,22 @@ interface CutsDisplayProps {
 export const CutsDisplay: React.FC<CutsDisplayProps> = ({ result }) => {
   const theme = useTheme();
   const [expandedCuts, setExpandedCuts] = useState<Set<string>>(new Set());
-  const [showCuttingPlanModal, setShowCuttingPlanModal] = useState<{ open: boolean; stock: Cut | null }>({
+  const [showCuttingPlanModal, setShowCuttingPlanModal] = useState<{
+    open: boolean;
+    stock: Cut | null;
+  }>({
     open: false,
-    stock: null
+    stock: null,
   });
 
   const toggleCutExpansion = (cutId: string): void => {
     // Modern functional approach with Set operations
-    setExpandedCuts(prev => {
+    setExpandedCuts((prev) => {
       const newExpanded = new Set(prev);
       // Modern conditional with logical operators
-      newExpanded.has(cutId) ? newExpanded.delete(cutId) : newExpanded.add(cutId);
+      newExpanded.has(cutId)
+        ? newExpanded.delete(cutId)
+        : newExpanded.add(cutId);
       return newExpanded;
     });
   };
@@ -72,10 +77,13 @@ export const CutsDisplay: React.FC<CutsDisplayProps> = ({ result }) => {
     const efficiencyMap = [
       { threshold: 90, color: theme.palette.success.main },
       { threshold: 80, color: theme.palette.warning.main },
-      { threshold: 0, color: theme.palette.error.main }
+      { threshold: 0, color: theme.palette.error.main },
     ];
-    
-    return efficiencyMap.find(({ threshold }) => efficiency >= threshold)?.color || theme.palette.error.main;
+
+    return (
+      efficiencyMap.find(({ threshold }) => efficiency >= threshold)?.color ||
+      theme.palette.error.main
+    );
   };
 
   const getWasteColor = (waste: number): string => {
@@ -83,49 +91,62 @@ export const CutsDisplay: React.FC<CutsDisplayProps> = ({ result }) => {
     const wasteMap = [
       { threshold: 100, color: theme.palette.success.main },
       { threshold: 300, color: theme.palette.warning.main },
-      { threshold: Infinity, color: theme.palette.error.main }
+      { threshold: Infinity, color: theme.palette.error.main },
     ];
-    
-    return wasteMap.find(({ threshold }) => waste <= threshold)?.color || theme.palette.error.main;
+
+    return (
+      wasteMap.find(({ threshold }) => waste <= threshold)?.color ||
+      theme.palette.error.main
+    );
   };
 
   return (
     <Box sx={{ mb: 4 }}>
-      <Typography variant="h5" fontWeight="bold" sx={{ mb: 3, color: theme.palette.primary.main }}>
+      <Typography
+        variant="h5"
+        fontWeight="bold"
+        sx={{ mb: 3, color: theme.palette.primary.main }}
+      >
         📏 Kesim Detayları ({result.cuts.length} Stok)
       </Typography>
-      
+
       <Grid container spacing={3}>
         {result.cuts.map((cut, index) => {
           const efficiency = (cut.usedLength / cut.stockLength) * 100;
           const waste = cut.remainingLength;
           const isExpanded = expandedCuts.has(cut.id || `cut-${index}`);
-          
+
           return (
             <Grid item xs={12} key={cut.id || `cut-${index}`}>
               <Card
                 sx={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)',
+                  background:
+                    "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)",
                   border: `2px solid ${alpha(theme.palette.primary.main, 0.1)}`,
                   borderRadius: 3,
-                  overflow: 'hidden',
-                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
+                  overflow: "hidden",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  "&:hover": {
+                    transform: "translateY(-2px)",
                     boxShadow: `0 8px 32px ${alpha(theme.palette.primary.main, 0.15)}`,
-                    border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`
-                  }
+                    border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                  },
                 }}
               >
                 <CardContent>
                   {/* Header */}
-                  <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    sx={{ mb: 2 }}
+                  >
                     <Stack direction="row" alignItems="center" spacing={2}>
                       <Avatar
                         sx={{
                           bgcolor: theme.palette.primary.main,
                           width: 48,
-                          height: 48
+                          height: 48,
                         }}
                       >
                         <EngineeringIcon />
@@ -135,11 +156,12 @@ export const CutsDisplay: React.FC<CutsDisplayProps> = ({ result }) => {
                           Stok #{index + 1} - {formatNumber(cut.stockLength)}mm
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {cut.segments?.length || 0} parça • {cut.workOrderId || 'Genel'}
+                          {cut.segments?.length || 0} parça •{" "}
+                          {cut.workOrderId || "Genel"}
                         </Typography>
                       </Box>
                     </Stack>
-                    
+
                     <Stack direction="row" alignItems="center" spacing={1}>
                       <Chip
                         label={`${formatPercentage(efficiency)} Verimlilik`}
@@ -147,7 +169,7 @@ export const CutsDisplay: React.FC<CutsDisplayProps> = ({ result }) => {
                         sx={{
                           bgcolor: alpha(getEfficiencyColor(efficiency), 0.1),
                           color: getEfficiencyColor(efficiency),
-                          fontWeight: 600
+                          fontWeight: 600,
                         }}
                       />
                       <Chip
@@ -156,16 +178,18 @@ export const CutsDisplay: React.FC<CutsDisplayProps> = ({ result }) => {
                         sx={{
                           bgcolor: alpha(getWasteColor(waste), 0.1),
                           color: getWasteColor(waste),
-                          fontWeight: 600
+                          fontWeight: 600,
                         }}
                       />
                       <IconButton
-                        onClick={() => toggleCutExpansion(cut.id || `cut-${index}`)}
+                        onClick={() =>
+                          toggleCutExpansion(cut.id || `cut-${index}`)
+                        }
                         sx={{
                           bgcolor: alpha(theme.palette.primary.main, 0.1),
-                          '&:hover': {
-                            bgcolor: alpha(theme.palette.primary.main, 0.2)
-                          }
+                          "&:hover": {
+                            bgcolor: alpha(theme.palette.primary.main, 0.2),
+                          },
                         }}
                       >
                         {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
@@ -176,8 +200,12 @@ export const CutsDisplay: React.FC<CutsDisplayProps> = ({ result }) => {
                   {/* Summary Stats */}
                   <Grid container spacing={2} sx={{ mb: 2 }}>
                     <Grid item xs={6} sm={3}>
-                      <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="h6" fontWeight="bold" color="primary">
+                      <Box sx={{ textAlign: "center" }}>
+                        <Typography
+                          variant="h6"
+                          fontWeight="bold"
+                          color="primary"
+                        >
                           {formatNumber(cut.usedLength)}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
@@ -186,8 +214,12 @@ export const CutsDisplay: React.FC<CutsDisplayProps> = ({ result }) => {
                       </Box>
                     </Grid>
                     <Grid item xs={6} sm={3}>
-                      <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="h6" fontWeight="bold" color="warning.main">
+                      <Box sx={{ textAlign: "center" }}>
+                        <Typography
+                          variant="h6"
+                          fontWeight="bold"
+                          color="warning.main"
+                        >
                           {formatNumber(waste)}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
@@ -196,8 +228,12 @@ export const CutsDisplay: React.FC<CutsDisplayProps> = ({ result }) => {
                       </Box>
                     </Grid>
                     <Grid item xs={6} sm={3}>
-                      <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="h6" fontWeight="bold" color="success.main">
+                      <Box sx={{ textAlign: "center" }}>
+                        <Typography
+                          variant="h6"
+                          fontWeight="bold"
+                          color="success.main"
+                        >
                           {cut.segments?.length || 0}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
@@ -206,8 +242,12 @@ export const CutsDisplay: React.FC<CutsDisplayProps> = ({ result }) => {
                       </Box>
                     </Grid>
                     <Grid item xs={6} sm={3}>
-                      <Box sx={{ textAlign: 'center' }}>
-                        <Typography variant="h6" fontWeight="bold" color="info.main">
+                      <Box sx={{ textAlign: "center" }}>
+                        <Typography
+                          variant="h6"
+                          fontWeight="bold"
+                          color="info.main"
+                        >
                           {formatPercentage(efficiency)}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
@@ -220,12 +260,16 @@ export const CutsDisplay: React.FC<CutsDisplayProps> = ({ result }) => {
                   {/* Expandable Details */}
                   <Collapse in={isExpanded}>
                     <Divider sx={{ my: 2 }} />
-                    
+
                     {/* Segments List */}
-                    <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 2 }}>
+                    <Typography
+                      variant="subtitle2"
+                      fontWeight="bold"
+                      sx={{ mb: 2 }}
+                    >
                       Kesim Parçaları:
                     </Typography>
-                    
+
                     <List dense>
                       {(cut.segments || []).map((segment, segmentIndex) => (
                         <ListItem
@@ -234,7 +278,7 @@ export const CutsDisplay: React.FC<CutsDisplayProps> = ({ result }) => {
                             bgcolor: alpha(theme.palette.primary.main, 0.02),
                             borderRadius: 2,
                             mb: 1,
-                            border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`
+                            border: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
                           }}
                         >
                           <ListItemIcon>
@@ -242,11 +286,11 @@ export const CutsDisplay: React.FC<CutsDisplayProps> = ({ result }) => {
                               badgeContent={segment.quantity}
                               color="primary"
                               sx={{
-                                '& .MuiBadge-badge': {
+                                "& .MuiBadge-badge": {
                                   bgcolor: theme.palette.primary.main,
-                                  color: 'white',
-                                  fontWeight: 'bold'
-                                }
+                                  color: "white",
+                                  fontWeight: "bold",
+                                },
                               }}
                             >
                               <CutIcon color="primary" />
@@ -255,13 +299,17 @@ export const CutsDisplay: React.FC<CutsDisplayProps> = ({ result }) => {
                           <ListItemText
                             primary={
                               <Typography variant="body2" fontWeight="bold">
-                                {formatNumber(segment.length)}mm • {segment.profileType}
+                                {formatNumber(segment.length)}mm •{" "}
+                                {segment.profileType}
                               </Typography>
                             }
                             secondary={
-                              <Typography variant="caption" color="text.secondary">
-                                İş Emri: {segment.workOrderId || 'Genel'} • 
-                                ID: {segment.workOrderItemId || segment.id}
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                İş Emri: {segment.workOrderId || "Genel"} • ID:{" "}
+                                {segment.workOrderItemId || segment.id}
                               </Typography>
                             }
                           />

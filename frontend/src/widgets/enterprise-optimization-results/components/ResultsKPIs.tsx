@@ -4,8 +4,8 @@
  * @version 1.0.0
  */
 
-import React from 'react';
-import { OptimizationResult } from '../types';
+import React from "react";
+import { OptimizationResult } from "../types";
 import {
   Grid,
   Card,
@@ -13,15 +13,15 @@ import {
   Box,
   Typography,
   Avatar,
-  LinearProgress
-} from '@mui/material';
+  LinearProgress,
+} from "@mui/material";
 import {
   TrendingUp as TrendingUpIcon,
   Recycling as RecyclingIcon,
   AttachMoney as MoneyIcon,
-  Engineering as EngineeringIcon
-} from '@mui/icons-material';
-import { useTheme, alpha } from '@mui/material/styles';
+  Engineering as EngineeringIcon,
+} from "@mui/icons-material";
+import { useTheme, alpha } from "@mui/material/styles";
 
 interface ResultsKPIsProps {
   result: OptimizationResult;
@@ -32,7 +32,7 @@ interface ResultsKPIsProps {
 export const ResultsKPIs: React.FC<ResultsKPIsProps> = ({
   result,
   performanceMetrics,
-  wasteAnalysis
+  wasteAnalysis,
 }) => {
   const theme = useTheme();
 
@@ -53,12 +53,11 @@ export const ResultsKPIs: React.FC<ResultsKPIsProps> = ({
                 <TrendingUpIcon color="success" />
               </Avatar>
               <Box>
-                <Typography
-                  variant="h4"
-                  fontWeight="bold"
-                  color="success.main"
-                >
-                  {typeof performanceMetrics.efficiency === 'number' ? performanceMetrics.efficiency.toFixed(1) : '0.0'}%
+                <Typography variant="h4" fontWeight="bold" color="success.main">
+                  {typeof performanceMetrics.efficiency === "number"
+                    ? performanceMetrics.efficiency.toFixed(1)
+                    : "0.0"}
+                  %
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   Verimlilik Oranı
@@ -67,7 +66,11 @@ export const ResultsKPIs: React.FC<ResultsKPIsProps> = ({
             </Box>
             <LinearProgress
               variant="determinate"
-              value={typeof performanceMetrics.efficiency === 'number' ? performanceMetrics.efficiency : 0}
+              value={
+                typeof performanceMetrics.efficiency === "number"
+                  ? performanceMetrics.efficiency
+                  : 0
+              }
               color="success"
               sx={{ height: 8, borderRadius: 4 }}
             />
@@ -88,11 +91,7 @@ export const ResultsKPIs: React.FC<ResultsKPIsProps> = ({
                 <RecyclingIcon color="warning" />
               </Avatar>
               <Box>
-                <Typography
-                  variant="h4"
-                  fontWeight="bold"
-                  color="warning.main"
-                >
+                <Typography variant="h4" fontWeight="bold" color="warning.main">
                   {result.totalWaste} mm
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -120,11 +119,7 @@ export const ResultsKPIs: React.FC<ResultsKPIsProps> = ({
                 <MoneyIcon color="primary" />
               </Avatar>
               <Box>
-                <Typography
-                  variant="h4"
-                  fontWeight="bold"
-                  color="primary.main"
-                >
+                <Typography variant="h4" fontWeight="bold" color="primary.main">
                   ₺{result.totalCost?.toFixed(0)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -152,11 +147,7 @@ export const ResultsKPIs: React.FC<ResultsKPIsProps> = ({
                 <EngineeringIcon color="info" />
               </Avatar>
               <Box>
-                <Typography
-                  variant="h4"
-                  fontWeight="bold"
-                  color="info.main"
-                >
+                <Typography variant="h4" fontWeight="bold" color="info.main">
                   {String(performanceMetrics.performanceScore || 0)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">

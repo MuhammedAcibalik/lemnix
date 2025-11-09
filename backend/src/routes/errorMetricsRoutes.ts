@@ -4,37 +4,51 @@
  * @version 2.0.0
  */
 
-import { Router, Request, Response, NextFunction, RequestHandler } from 'express';
-import { ErrorClass, ErrorSeverity } from '../types/errorTypes';
-import { getErrorMetricsService } from '../services/monitoring/errorMetricsService';
-import { logger } from '../services/logger';
-import { createRateLimit } from '../middleware/rateLimiting';
-import { verifyToken, requirePermission, Permission } from '../middleware/authorization';
+import {
+  Router,
+  Request,
+  Response,
+  NextFunction,
+  RequestHandler,
+} from "express";
+import { ErrorClass, ErrorSeverity } from "../types/errorTypes";
+import { getErrorMetricsService } from "../services/monitoring/errorMetricsService";
+import { logger } from "../services/logger";
+import { createRateLimit } from "../middleware/rateLimiting";
+import {
+  verifyToken,
+  requirePermission,
+  Permission,
+} from "../middleware/authorization";
 
 const RATE_LIMITERS = {
-  monitoring: createRateLimit('monitoring'),
-  default: createRateLimit('default')
+  monitoring: createRateLimit("monitoring"),
+  default: createRateLimit("default"),
 } as const;
 
 type RateLimiterKey = keyof typeof RATE_LIMITERS;
-type HTTPVerb = 'get' | 'post';
-type ControllerHandler = (req: Request, res: Response, next: NextFunction) => unknown;
+type HTTPVerb = "get" | "post";
+type ControllerHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => unknown;
 
 const SLO_THRESHOLDS = {
   [ErrorClass.CLIENT]: 5,
   [ErrorClass.BUSINESS]: 2,
   [ErrorClass.INTEGRATION]: 1,
-  [ErrorClass.SYSTEM]: 0.5
+  [ErrorClass.SYSTEM]: 0.5,
 } as const;
 
 const ERROR_RATE_THRESHOLDS = {
   WARNING: 10,
   CRITICAL: 20,
   HIGH_THRESHOLD: 10,
-  TREND_THRESHOLD: 50
+  TREND_THRESHOLD: 50,
 } as const;
 
-type HealthStatus = 'healthy' | 'warning' | 'critical';
+type HealthStatus = "healthy" | "warning" | "critical";
 
 interface RouteConfig {
   readonly path: string;
@@ -55,16 +69,16 @@ interface IRouteRegistry {
 const asyncify = (fn: ControllerHandler): RequestHandler => {
   return (req: Request, res: Response, next: NextFunction): void => {
     const startedAt = Date.now();
-    
-    res.once('finish', () => {
+
+    res.once("finish", () => {
       const duration = Date.now() - startedAt;
       if (duration > 3000) {
-        logger.warn('Slow error metrics request', {
+        logger.warn("Slow error metrics request", {
           path: req.path,
           method: req.method,
           duration,
           userId: req.user?.userId,
-          statusCode: res.statusCode
+          statusCode: res.statusCode,
         });
       }
     });
@@ -72,23 +86,23 @@ const asyncify = (fn: ControllerHandler): RequestHandler => {
     try {
       Promise.resolve(fn(req, res, next)).catch((error: unknown) => {
         const err = error as Error;
-        logger.error('Error metrics route error', {
+        logger.error("Error metrics route error", {
           error: err.message,
           path: req.path,
           method: req.method,
           userId: req.user?.userId,
-          stack: err.stack
+          stack: err.stack,
         });
         next(error);
       });
     } catch (error: unknown) {
       const err = error as Error;
-      logger.error('Error metrics route sync error', {
+      logger.error("Error metrics route sync error", {
         error: err.message,
         path: req.path,
         method: req.method,
         userId: req.user?.userId,
-        stack: err.stack
+        stack: err.stack,
       });
       next(error);
     }
@@ -102,19 +116,19 @@ class RouteRegistry implements IRouteRegistry {
 
   public register(config: RouteConfig): void {
     const middlewares: RequestHandler[] = [];
-    
+
     if (config.rateLimit) {
       middlewares.push(this.rateLimiters[config.rateLimit]);
     }
-    
+
     if (config.requiresAuth) {
       middlewares.push(verifyToken);
     }
-    
+
     if (config.permission) {
       middlewares.push(requirePermission(config.permission));
     }
-    
+
     if (config.middleware) {
       middlewares.push(...config.middleware);
     }
@@ -124,7 +138,7 @@ class RouteRegistry implements IRouteRegistry {
   }
 
   public registerBatch(configs: ReadonlyArray<RouteConfig>): void {
-    configs.forEach(config => this.register(config));
+    configs.forEach((config) => this.register(config));
   }
 
   public build(): Router {
@@ -138,46 +152,61 @@ interface HealthCheckResult {
 }
 
 class ErrorMetricsHandlers {
-  constructor(private readonly errorMetricsService: ReturnType<typeof getErrorMetricsService>) {}
+  constructor(
+    private readonly errorMetricsService: ReturnType<
+      typeof getErrorMetricsService
+    >,
+  ) {}
 
   private createTimestampedResponse<T>(data: T): { timestamp: string } & T {
     return {
       timestamp: new Date().toISOString(),
-      ...data
+      ...data,
     };
   }
 
   private calculateHealthStatus(
     currentRate: number,
     trends: ReturnType<typeof this.errorMetricsService.getErrorTrends>,
-    distribution: ReturnType<typeof this.errorMetricsService.getErrorDistribution>
+    distribution: ReturnType<
+      typeof this.errorMetricsService.getErrorDistribution
+    >,
   ): HealthCheckResult {
-    let status: HealthStatus = 'healthy';
+    let status: HealthStatus = "healthy";
     const issues: string[] = [];
 
     if (currentRate > ERROR_RATE_THRESHOLDS.CRITICAL) {
-      status = 'critical';
+      status = "critical";
       issues.push(`High error rate: ${currentRate} errors/min`);
     } else if (currentRate > ERROR_RATE_THRESHOLDS.WARNING) {
-      status = 'warning';
+      status = "warning";
       issues.push(`Elevated error rate: ${currentRate} errors/min`);
     }
 
-    if (trends.trend === 'increasing' && trends.changePercent > ERROR_RATE_THRESHOLDS.TREND_THRESHOLD) {
-      if (status === 'healthy') status = 'warning';
-      issues.push(`Increasing error trend: +${trends.changePercent.toFixed(1)}%`);
+    if (
+      trends.trend === "increasing" &&
+      trends.changePercent > ERROR_RATE_THRESHOLDS.TREND_THRESHOLD
+    ) {
+      if (status === "healthy") status = "warning";
+      issues.push(
+        `Increasing error trend: +${trends.changePercent.toFixed(1)}%`,
+      );
     }
 
-    const criticalErrors = distribution.bySeverity.get(ErrorSeverity.CRITICAL) || 0;
+    const criticalErrors =
+      distribution.bySeverity.get(ErrorSeverity.CRITICAL) || 0;
     if (criticalErrors > 0) {
-      status = 'critical';
+      status = "critical";
       issues.push(`${criticalErrors} critical errors detected`);
     }
 
     return { status, issues };
   }
 
-  public getAllMetrics: ControllerHandler = (_req: Request, res: Response): void => {
+  public getAllMetrics: ControllerHandler = (
+    _req: Request,
+    res: Response,
+  ): void => {
     const metrics = this.errorMetricsService.getErrorMetrics();
     const distribution = this.errorMetricsService.getErrorDistribution();
     const trends = this.errorMetricsService.getErrorTrends();
@@ -189,34 +218,40 @@ class ErrorMetricsHandlers {
       distribution: {
         byClass: Object.fromEntries(distribution.byClass),
         bySeverity: Object.fromEntries(distribution.bySeverity),
-        byEndpoint: Object.fromEntries(distribution.byEndpoint)
+        byEndpoint: Object.fromEntries(distribution.byEndpoint),
       },
-      detailedMetrics: Array.from(metrics.values()).map(metric => ({
+      detailedMetrics: Array.from(metrics.values()).map((metric) => ({
         class: metric.class,
         severity: metric.severity,
         count: metric.count,
         rate: metric.rate,
         lastOccurrence: metric.lastOccurrence,
         affectedEndpoints: metric.affectedEndpoints,
-        uniqueUsers: metric.uniqueUsers
-      }))
+        uniqueUsers: metric.uniqueUsers,
+      })),
     });
 
     res.json(response);
   };
 
-  public getMetricsByClass: ControllerHandler = (_req: Request, res: Response): void => {
+  public getMetricsByClass: ControllerHandler = (
+    _req: Request,
+    res: Response,
+  ): void => {
     const rates = this.errorMetricsService.getErrorRateByClass();
-    
+
     const response = this.createTimestampedResponse({
       errorRatesByClass: Object.fromEntries(rates),
-      sloThresholds: SLO_THRESHOLDS
+      sloThresholds: SLO_THRESHOLDS,
     });
 
     res.json(response);
   };
 
-  public getTrends: ControllerHandler = (_req: Request, res: Response): void => {
+  public getTrends: ControllerHandler = (
+    _req: Request,
+    res: Response,
+  ): void => {
     const trends = this.errorMetricsService.getErrorTrends();
     const distribution = this.errorMetricsService.getErrorDistribution();
     const currentRate = this.errorMetricsService.getCurrentErrorRate();
@@ -227,24 +262,34 @@ class ErrorMetricsHandlers {
       changePercent: trends.changePercent,
       distribution: {
         byClass: Object.fromEntries(distribution.byClass),
-        bySeverity: Object.fromEntries(distribution.bySeverity)
+        bySeverity: Object.fromEntries(distribution.bySeverity),
       },
       alerts: {
-        highErrorRate: this.errorMetricsService.isErrorRateHigh(ERROR_RATE_THRESHOLDS.HIGH_THRESHOLD),
-        increasingTrend: trends.trend === 'increasing',
-        criticalErrors: distribution.bySeverity.get(ErrorSeverity.CRITICAL) || 0
-      }
+        highErrorRate: this.errorMetricsService.isErrorRateHigh(
+          ERROR_RATE_THRESHOLDS.HIGH_THRESHOLD,
+        ),
+        increasingTrend: trends.trend === "increasing",
+        criticalErrors:
+          distribution.bySeverity.get(ErrorSeverity.CRITICAL) || 0,
+      },
     });
 
     res.json(response);
   };
 
-  public getHealth: ControllerHandler = (_req: Request, res: Response): void => {
+  public getHealth: ControllerHandler = (
+    _req: Request,
+    res: Response,
+  ): void => {
     const currentRate = this.errorMetricsService.getCurrentErrorRate();
     const trends = this.errorMetricsService.getErrorTrends();
     const distribution = this.errorMetricsService.getErrorDistribution();
 
-    const { status, issues } = this.calculateHealthStatus(currentRate, trends, distribution);
+    const { status, issues } = this.calculateHealthStatus(
+      currentRate,
+      trends,
+      distribution,
+    );
 
     const response = this.createTimestampedResponse({
       status,
@@ -252,27 +297,37 @@ class ErrorMetricsHandlers {
       trend: trends.trend,
       issues,
       summary: {
-        totalErrors: Array.from(distribution.byClass.values()).reduce((sum, count) => sum + count, 0),
-        criticalErrors: distribution.bySeverity.get(ErrorSeverity.CRITICAL) || 0,
+        totalErrors: Array.from(distribution.byClass.values()).reduce(
+          (sum, count) => sum + count,
+          0,
+        ),
+        criticalErrors:
+          distribution.bySeverity.get(ErrorSeverity.CRITICAL) || 0,
         systemErrors: distribution.byClass.get(ErrorClass.SYSTEM) || 0,
-        integrationErrors: distribution.byClass.get(ErrorClass.INTEGRATION) || 0
-      }
+        integrationErrors:
+          distribution.byClass.get(ErrorClass.INTEGRATION) || 0,
+      },
     });
 
-    res.status(status === 'critical' ? 503 : 200).json(response);
+    res.status(status === "critical" ? 503 : 200).json(response);
   };
 
-  public resetMetrics: ControllerHandler = (req: Request, res: Response): void => {
+  public resetMetrics: ControllerHandler = (
+    req: Request,
+    res: Response,
+  ): void => {
     this.errorMetricsService.resetMetrics();
-    
-    logger.info('Error metrics reset', {
+
+    logger.info("Error metrics reset", {
       userId: req.user?.userId,
-      correlationId: req.headers['x-correlation-id']
+      correlationId: req.headers["x-correlation-id"],
     });
 
-    res.json(this.createTimestampedResponse({
-      message: 'Error metrics reset successfully'
-    }));
+    res.json(
+      this.createTimestampedResponse({
+        message: "Error metrics reset successfully",
+      }),
+    );
   };
 }
 
@@ -282,43 +337,43 @@ class ErrorMetricsRouterFactory {
   constructor(private readonly handlers: ErrorMetricsHandlers) {
     this.routes = [
       {
-        path: '/',
-        method: 'get',
+        path: "/",
+        method: "get",
         handler: handlers.getAllMetrics,
         requiresAuth: true,
         permission: Permission.VIEW_METRICS,
-        rateLimit: 'monitoring'
+        rateLimit: "monitoring",
       },
       {
-        path: '/by-class',
-        method: 'get',
+        path: "/by-class",
+        method: "get",
         handler: handlers.getMetricsByClass,
         requiresAuth: true,
         permission: Permission.VIEW_METRICS,
-        rateLimit: 'monitoring'
+        rateLimit: "monitoring",
       },
       {
-        path: '/trends',
-        method: 'get',
+        path: "/trends",
+        method: "get",
         handler: handlers.getTrends,
         requiresAuth: true,
         permission: Permission.VIEW_METRICS,
-        rateLimit: 'monitoring'
+        rateLimit: "monitoring",
       },
       {
-        path: '/health',
-        method: 'get',
+        path: "/health",
+        method: "get",
         handler: handlers.getHealth,
         requiresAuth: false,
-        rateLimit: 'monitoring'
+        rateLimit: "monitoring",
       },
       {
-        path: '/reset',
-        method: 'post',
+        path: "/reset",
+        method: "post",
         handler: handlers.resetMetrics,
         requiresAuth: true,
-        permission: Permission.MANAGE_CONFIG
-      }
+        permission: Permission.MANAGE_CONFIG,
+      },
     ];
   }
 

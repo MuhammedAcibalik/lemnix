@@ -1,11 +1,11 @@
 /**
  * Quick Optimize Dialog Component
- * 
+ *
  * @module features/quick-optimization
  * @version 1.0.0 - Quick Optimize Dialog
  */
 
-import React from 'react';
+import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -21,9 +21,9 @@ import {
   InputLabel,
   Select,
   MenuItem,
-} from '@mui/material';
-import { useDesignSystem } from '@/shared/hooks';
-import { useQuickOptimize } from '../model/useQuickOptimize';
+} from "@mui/material";
+import { useDesignSystem } from "@/shared/hooks";
+import { useQuickOptimize } from "../model/useQuickOptimize";
 
 export interface QuickOptimizeDialogProps {
   readonly open: boolean;
@@ -39,8 +39,10 @@ export const QuickOptimizeDialog: React.FC<QuickOptimizeDialogProps> = ({
   const ds = useDesignSystem();
   const { optimize, isLoading, error } = useQuickOptimize();
 
-  const [algorithm, setAlgorithm] = React.useState<'ffd' | 'bfd' | 'genetic' | 'pooling'>('ffd');
-  const [inputData, setInputData] = React.useState('');
+  const [algorithm, setAlgorithm] = React.useState<
+    "ffd" | "bfd" | "genetic" | "pooling"
+  >("ffd");
+  const [inputData, setInputData] = React.useState("");
 
   const handleSubmit = async () => {
     if (!inputData.trim()) return;
@@ -49,19 +51,19 @@ export const QuickOptimizeDialog: React.FC<QuickOptimizeDialogProps> = ({
       // Parse input data (simple format: length,quantity per line)
       const items = inputData
         .trim()
-        .split('\n')
-        .filter(line => line.trim())
-        .map(line => {
-          const [length, quantity] = line.split(',').map(s => s.trim());
+        .split("\n")
+        .filter((line) => line.trim())
+        .map((line) => {
+          const [length, quantity] = line.split(",").map((s) => s.trim());
           return {
             length: parseFloat(length) || 0,
             quantity: parseInt(quantity) || 0,
           };
         })
-        .filter(item => item.length > 0 && item.quantity > 0);
+        .filter((item) => item.length > 0 && item.quantity > 0);
 
       if (items.length === 0) {
-        throw new Error('Geçerli veri giriniz');
+        throw new Error("Geçerli veri giriniz");
       }
 
       const result = await optimize({
@@ -72,17 +74,17 @@ export const QuickOptimizeDialog: React.FC<QuickOptimizeDialogProps> = ({
       if (result) {
         onSuccess?.(result.id);
         onClose();
-        setInputData('');
+        setInputData("");
       }
     } catch (err) {
-      console.error('Failed to optimize:', err);
+      console.error("Failed to optimize:", err);
     }
   };
 
   const handleClose = () => {
     if (!isLoading) {
       onClose();
-      setInputData('');
+      setInputData("");
     }
   };
 
@@ -126,7 +128,11 @@ export const QuickOptimizeDialog: React.FC<QuickOptimizeDialogProps> = ({
             <InputLabel>Algoritma</InputLabel>
             <Select
               value={algorithm}
-              onChange={(e) => setAlgorithm(e.target.value as 'ffd' | 'bfd' | 'genetic' | 'pooling')}
+              onChange={(e) =>
+                setAlgorithm(
+                  e.target.value as "ffd" | "bfd" | "genetic" | "pooling",
+                )
+              }
               label="Algoritma"
               disabled={isLoading}
             >
@@ -152,8 +158,8 @@ export const QuickOptimizeDialog: React.FC<QuickOptimizeDialogProps> = ({
             disabled={isLoading}
             helperText="Her satırda: uzunluk,miktar formatında veri giriniz"
             sx={{
-              '& .MuiOutlinedInput-root': {
-                '&.Mui-focused fieldset': {
+              "& .MuiOutlinedInput-root": {
+                "&.Mui-focused fieldset": {
                   borderColor: ds.colors.primary.main,
                 },
               },
@@ -193,21 +199,21 @@ export const QuickOptimizeDialog: React.FC<QuickOptimizeDialogProps> = ({
           variant="contained"
           sx={{
             bgcolor: ds.colors.primary.main,
-            '&:hover': {
+            "&:hover": {
               bgcolor: ds.colors.primary.dark,
             },
-            '&:disabled': {
+            "&:disabled": {
               bgcolor: ds.colors.text.disabled,
             },
           }}
         >
           {isLoading ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <CircularProgress size={16} color="inherit" />
               Optimize ediliyor...
             </Box>
           ) : (
-            'Optimize Et'
+            "Optimize Et"
           )}
         </Button>
       </DialogActions>

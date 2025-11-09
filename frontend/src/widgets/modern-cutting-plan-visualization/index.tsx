@@ -4,7 +4,7 @@
  * @version 2.0.0 - Enterprise Grade Modular Design
  */
 
-import React, { useRef } from 'react';
+import React, { useRef } from "react";
 import {
   Box,
   Typography,
@@ -12,41 +12,38 @@ import {
   Button,
   Card,
   CardContent,
-  Alert
-} from '@mui/material';
-import {
-  Info as InfoIcon
-} from '@mui/icons-material';
+  Alert,
+} from "@mui/material";
+import { Info as InfoIcon } from "@mui/icons-material";
 
 // Import modular components
-import { StockVisualization } from './components/StockVisualization';
-import { StatisticsDisplay } from './components/StatisticsDisplay';
-import { ControlsPanel } from './components/ControlsPanel';
-import { SettingsDialog } from './components/SettingsDialog';
-import { QuickActionsMenu } from './components/QuickActionsMenu';
+import { StockVisualization } from "./components/StockVisualization";
+import { StatisticsDisplay } from "./components/StatisticsDisplay";
+import { ControlsPanel } from "./components/ControlsPanel";
+import { SettingsDialog } from "./components/SettingsDialog";
+import { QuickActionsMenu } from "./components/QuickActionsMenu";
 
 // Import hooks
-import { useVisualizationState } from './hooks/useVisualizationState';
-import { useVisualizationData } from './hooks/useVisualizationData';
+import { useVisualizationState } from "./hooks/useVisualizationState";
+import { useVisualizationData } from "./hooks/useVisualizationData";
 
 // Import types
-import {
-  ModernCuttingPlanProps,
-  ExportFormat
-} from './types';
+import { ModernCuttingPlanProps, ExportFormat } from "./types";
 
 /**
  * Modern Cutting Plan Visualization Component
- * 
+ *
  * Enterprise-grade cutting plan visualization with modular architecture
  */
-export const ModernCuttingPlanVisualization: React.FC<ModernCuttingPlanProps> = ({
+export const ModernCuttingPlanVisualization: React.FC<
+  ModernCuttingPlanProps
+> = ({
   optimizationResult,
   stockLength = 6000,
   title = "Kesim Planı",
   showStatistics = true,
   showExportOptions = true,
-  onExport
+  onExport,
 }) => {
   // Container ref for DOM operations
   const containerRef = useRef<HTMLDivElement>(null);
@@ -74,7 +71,7 @@ export const ModernCuttingPlanVisualization: React.FC<ModernCuttingPlanProps> = 
     closeQuickMenu,
     handlePageChange,
     toggleFullscreen,
-    openQuickMenu
+    openQuickMenu,
   } = useVisualizationState();
 
   const {
@@ -83,12 +80,12 @@ export const ModernCuttingPlanVisualization: React.FC<ModernCuttingPlanProps> = 
     paginatedData,
     hasData,
     hasValidResult,
-    totalPages
+    totalPages,
   } = useVisualizationData(
     optimizationResult,
     stockLength,
     stocksPerPage,
-    currentPage
+    currentPage,
   );
 
   // Export handler
@@ -103,7 +100,7 @@ export const ModernCuttingPlanVisualization: React.FC<ModernCuttingPlanProps> = 
 
   // Copy handler
   const handleCopy = () => {
-    console.log('Data copied to clipboard');
+    console.log("Data copied to clipboard");
   };
 
   // Early return for invalid data
@@ -118,18 +115,26 @@ export const ModernCuttingPlanVisualization: React.FC<ModernCuttingPlanProps> = 
   }
 
   return (
-    <Box ref={containerRef} sx={{ maxWidth: '100%', mx: 'auto', p: 2 }}>
+    <Box ref={containerRef} sx={{ maxWidth: "100%", mx: "auto", p: 2 }}>
       {/* Header */}
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ mb: 3 }}
+      >
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: '#1a237e' }}>
+          <Typography variant="h4" sx={{ fontWeight: 700, color: "#1a237e" }}>
             {title}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            {paginatedData.showingCount} / {paginatedData.totalStocks} profil • {overallStatistics.totalPieces} parça • %{overallStatistics.overallEfficiency.toFixed(1)} verimlilik • {overallStatistics.totalWaste}mm fire
+            {paginatedData.showingCount} / {paginatedData.totalStocks} profil •{" "}
+            {overallStatistics.totalPieces} parça • %
+            {overallStatistics.overallEfficiency.toFixed(1)} verimlilik •{" "}
+            {overallStatistics.totalWaste}mm fire
           </Typography>
         </Box>
-        
+
         <Button
           variant="contained"
           startIcon={<InfoIcon />}
@@ -156,12 +161,15 @@ export const ModernCuttingPlanVisualization: React.FC<ModernCuttingPlanProps> = 
       />
 
       {/* Statistics Display */}
-      {showStatistics && (
-        <StatisticsDisplay statistics={overallStatistics} />
-      )}
+      {showStatistics && <StatisticsDisplay statistics={overallStatistics} />}
 
       {/* Main Visualization */}
-      <Box sx={{ transform: `scale(${settings.zoomLevel})`, transformOrigin: 'top left' }}>
+      <Box
+        sx={{
+          transform: `scale(${settings.zoomLevel})`,
+          transformOrigin: "top left",
+        }}
+      >
         {paginatedData.data.map((stock) => (
           <StockVisualization
             key={stock.id}
@@ -178,12 +186,17 @@ export const ModernCuttingPlanVisualization: React.FC<ModernCuttingPlanProps> = 
 
       {/* Pagination Info */}
       {paginatedData.totalPages > 1 && (
-        <Card elevation={1} sx={{ mt: 3, bgcolor: 'grey.50' }}>
+        <Card elevation={1} sx={{ mt: 3, bgcolor: "grey.50" }}>
           <CardContent sx={{ py: 2 }}>
-            <Stack direction="row" justifyContent="center" alignItems="center" spacing={2}>
+            <Stack
+              direction="row"
+              justifyContent="center"
+              alignItems="center"
+              spacing={2}
+            >
               <Typography variant="body2" color="text.secondary">
-                Sayfa {currentPage + 1} / {paginatedData.totalPages} 
-                • {paginatedData.showingCount} profil gösteriliyor
+                Sayfa {currentPage + 1} / {paginatedData.totalPages}•{" "}
+                {paginatedData.showingCount} profil gösteriliyor
               </Typography>
             </Stack>
           </CardContent>

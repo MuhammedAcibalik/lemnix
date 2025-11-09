@@ -1,4 +1,4 @@
-import { logger } from './logger';
+import { logger } from "./logger";
 
 type AuditTask = () => Promise<void> | void;
 
@@ -27,7 +27,7 @@ class AuditQueue {
       try {
         await task();
       } catch (error) {
-        logger.error('Audit task failed', error as Error);
+        logger.error("Audit task failed", error as Error);
       }
     }
 

@@ -2,12 +2,12 @@
  * @fileoverview useDesignSystem Hook v2.0
  * @module shared/hooks
  * @version 2.0.0 - Full Transform
- * 
+ *
  * Modern design system hook with enhanced functionality
  */
 
-import { useTheme } from '@mui/material';
-import * as DS from '@/App/theme/designSystem.v2';
+import { useTheme } from "@mui/material";
+import * as DS from "@/App/theme/designSystem.v2";
 
 // Helper type for nested object access
 type NestedObject = {
@@ -16,13 +16,13 @@ type NestedObject = {
 
 /**
  * Design System Hook v2.0
- * 
+ *
  * Provides type-safe access to all modern design system values
- * 
+ *
  * @example
  * ```tsx
  * const ds = useDesignSystem();
- * 
+ *
  * <Box sx={{
  *   backgroundColor: ds.colors.primary.main,
  *   padding: ds.spacing['4'],
@@ -40,19 +40,19 @@ export const useDesignSystem = () => {
    * @example getColor('primary.600') → '#2563eb'
    */
   const getColor = (path: string): string => {
-    const keys = path.split('.');
+    const keys = path.split(".");
     let value: NestedObject | string | number = DS.colors;
-    
+
     for (const key of keys) {
-      if (typeof value === 'object' && value !== null && key in value) {
+      if (typeof value === "object" && value !== null && key in value) {
         value = value[key];
       } else {
         console.warn(`Color path "${path}" not found in design system`);
-        return '#000000';
+        return "#000000";
       }
     }
-    
-    return typeof value === 'string' ? value : String(value);
+
+    return typeof value === "string" ? value : String(value);
   };
 
   /**
@@ -68,7 +68,7 @@ export const useDesignSystem = () => {
    */
   const getComponentSize = (
     component: keyof typeof DS.componentSizes,
-    size: 'small' | 'medium' | 'large'
+    size: "small" | "medium" | "large",
   ) => {
     return DS.componentSizes[component][size];
   };
@@ -78,19 +78,19 @@ export const useDesignSystem = () => {
    * @example getShadow('soft.md')
    */
   const getShadow = (path: string): string => {
-    const keys = path.split('.');
+    const keys = path.split(".");
     let value: NestedObject | string | number = DS.shadows;
-    
+
     for (const key of keys) {
-      if (typeof value === 'object' && value !== null && key in value) {
+      if (typeof value === "object" && value !== null && key in value) {
         value = value[key];
       } else {
         console.warn(`Shadow path "${path}" not found`);
-        return 'none';
+        return "none";
       }
     }
-    
-    return typeof value === 'string' ? value : String(value);
+
+    return typeof value === "string" ? value : String(value);
   };
 
   /**
@@ -104,18 +104,18 @@ export const useDesignSystem = () => {
    * Get gradient
    */
   const getGradient = (key: string): string => {
-    const keys = key.split('.');
+    const keys = key.split(".");
     let value: NestedObject | string | number = DS.gradients;
-    
+
     for (const k of keys) {
-      if (typeof value === 'object' && value !== null && k in value) {
+      if (typeof value === "object" && value !== null && k in value) {
         value = value[k];
       } else {
         return DS.gradients.primary;
       }
     }
-    
-    return typeof value === 'string' ? value : String(value);
+
+    return typeof value === "string" ? value : String(value);
   };
 
   /**
@@ -128,25 +128,29 @@ export const useDesignSystem = () => {
   /**
    * Get typography style
    */
-  const getTypography = (path: string): Record<string, unknown> | string | number => {
-    const keys = path.split('.');
+  const getTypography = (
+    path: string,
+  ): Record<string, unknown> | string | number => {
+    const keys = path.split(".");
     let value: NestedObject | string | number = DS.typography;
-    
+
     for (const key of keys) {
-      if (typeof value === 'object' && value !== null && key in value) {
+      if (typeof value === "object" && value !== null && key in value) {
         value = value[key];
       } else {
         return DS.typography.body.base;
       }
     }
-    
+
     return value;
   };
 
   /**
    * Get transition
    */
-  const getTransition = (type: keyof typeof DS.transitions): string | Record<string, string> => {
+  const getTransition = (
+    type: keyof typeof DS.transitions,
+  ): string | Record<string, string> => {
     return DS.transitions[type];
   };
 
@@ -156,7 +160,7 @@ export const useDesignSystem = () => {
   const getResponsiveSpacing = (
     xs: keyof typeof DS.spacing,
     md?: keyof typeof DS.spacing,
-    lg?: keyof typeof DS.spacing
+    lg?: keyof typeof DS.spacing,
   ) => {
     return DS.responsive.spacing(xs, md, lg);
   };
@@ -171,7 +175,11 @@ export const useDesignSystem = () => {
   /**
    * Create custom gradient
    */
-  const createGradient = (color1: string, color2: string, angle?: number): string => {
+  const createGradient = (
+    color1: string,
+    color2: string,
+    angle?: number,
+  ): string => {
     return DS.createGradient(color1, color2, angle);
   };
 
@@ -197,15 +205,17 @@ export const useDesignSystem = () => {
   /**
    * Get focus ring style
    */
-  const getFocusRing = (variant: 'default' | 'error' | 'success' = 'default') => {
+  const getFocusRing = (
+    variant: "default" | "error" | "success" = "default",
+  ) => {
     const rings = {
       default: DS.focus.ring,
       error: DS.focus.ringError,
       success: DS.focus.ringSuccess,
     };
-    
+
     return {
-      outline: 'none',
+      outline: "none",
       boxShadow: `${rings[variant]}, ${DS.focus.ringOffset}`,
     };
   };
@@ -224,10 +234,10 @@ export const useDesignSystem = () => {
     glass: DS.glass,
     focus: DS.focus,
     breakpoints: DS.breakpoints,
-    
+
     // MUI theme
     muiTheme,
-    
+
     // Helper functions
     getColor,
     getSpacing,
@@ -270,5 +280,4 @@ export {
   withOpacity,
   createGradient,
   createGlow,
-} from '@/App/theme/designSystem.v2';
-
+} from "@/App/theme/designSystem.v2";

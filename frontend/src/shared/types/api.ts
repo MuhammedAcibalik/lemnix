@@ -1,7 +1,7 @@
 /**
  * LEMNİX Shared API Types
  * Common types for API requests and responses
- * 
+ *
  * @module shared/types
  * @version 1.0.0 - FSD Compliant
  */
@@ -69,7 +69,7 @@ export interface PaginatedResponse<T> {
 /**
  * Sort order
  */
-export type SortOrder = 'asc' | 'desc';
+export type SortOrder = "asc" | "desc";
 
 /**
  * Sort criteria
@@ -82,7 +82,16 @@ export interface SortCriteria {
 /**
  * Filter operator
  */
-export type FilterOperator = 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'like' | 'in' | 'nin';
+export type FilterOperator =
+  | "eq"
+  | "ne"
+  | "gt"
+  | "gte"
+  | "lt"
+  | "lte"
+  | "like"
+  | "in"
+  | "nin";
 
 /**
  * Filter criteria
@@ -103,4 +112,3 @@ export interface ListQueryParams {
   readonly filters?: ReadonlyArray<FilterCriteria>;
   readonly search?: string;
 }
-

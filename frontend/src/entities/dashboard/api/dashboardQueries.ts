@@ -1,20 +1,20 @@
 /**
  * LEMNİX Dashboard React Query Hooks
  * TanStack Query hooks for dashboard data fetching
- * 
+ *
  * @module entities/dashboard/api
  * @version 1.0.0 - FSD Compliant
  */
 
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import {
   getDashboardData,
   getHeroMetrics,
   getOptimizationPerformance,
   getActiveOperations,
   getSmartInsights,
-  getActivityTimeline
-} from './dashboardApi';
+  getActivityTimeline,
+} from "./dashboardApi";
 import type {
   DashboardData,
   DashboardHeroMetrics,
@@ -23,33 +23,32 @@ import type {
   SmartInsightsData,
   ActivityTimelineData,
   DashboardMetricsOptions,
-  ActivityFilter
-} from '../model/types';
+  ActivityFilter,
+} from "../model/types";
 
 /**
  * Query keys for dashboard
  */
 export const dashboardKeys = {
-  all: ['dashboard'] as const,
-  data: (options?: DashboardMetricsOptions) => 
-    ['dashboard', 'data', options] as const,
-  heroMetrics: (options?: DashboardMetricsOptions) => 
-    ['dashboard', 'hero-metrics', options] as const,
-  performance: (options?: DashboardMetricsOptions) => 
-    ['dashboard', 'performance', options] as const,
-  activeOperations: () => 
-    ['dashboard', 'active-operations'] as const,
-  insights: (options?: DashboardMetricsOptions) => 
-    ['dashboard', 'insights', options] as const,
-  timeline: (filter?: ActivityFilter) => 
-    ['dashboard', 'timeline', filter] as const,
+  all: ["dashboard"] as const,
+  data: (options?: DashboardMetricsOptions) =>
+    ["dashboard", "data", options] as const,
+  heroMetrics: (options?: DashboardMetricsOptions) =>
+    ["dashboard", "hero-metrics", options] as const,
+  performance: (options?: DashboardMetricsOptions) =>
+    ["dashboard", "performance", options] as const,
+  activeOperations: () => ["dashboard", "active-operations"] as const,
+  insights: (options?: DashboardMetricsOptions) =>
+    ["dashboard", "insights", options] as const,
+  timeline: (filter?: ActivityFilter) =>
+    ["dashboard", "timeline", filter] as const,
 } as const;
 
 /**
  * Hook to fetch complete dashboard data
  */
 export function useDashboardData(
-  options?: DashboardMetricsOptions
+  options?: DashboardMetricsOptions,
 ): UseQueryResult<DashboardData, Error> {
   return useQuery({
     queryKey: dashboardKeys.data(options),
@@ -64,7 +63,7 @@ export function useDashboardData(
  * Hook to fetch hero metrics only (lightweight)
  */
 export function useHeroMetrics(
-  options?: DashboardMetricsOptions
+  options?: DashboardMetricsOptions,
 ): UseQueryResult<DashboardHeroMetrics, Error> {
   return useQuery({
     queryKey: dashboardKeys.heroMetrics(options),
@@ -79,7 +78,7 @@ export function useHeroMetrics(
  * Hook to fetch optimization performance data
  */
 export function useOptimizationPerformance(
-  options?: DashboardMetricsOptions
+  options?: DashboardMetricsOptions,
 ): UseQueryResult<OptimizationPerformanceData, Error> {
   return useQuery({
     queryKey: dashboardKeys.performance(options),
@@ -93,7 +92,10 @@ export function useOptimizationPerformance(
 /**
  * Hook to fetch active operations (real-time updates)
  */
-export function useActiveOperations(): UseQueryResult<ActiveOperationsData, Error> {
+export function useActiveOperations(): UseQueryResult<
+  ActiveOperationsData,
+  Error
+> {
   return useQuery({
     queryKey: dashboardKeys.activeOperations(),
     queryFn: getActiveOperations,
@@ -108,7 +110,7 @@ export function useActiveOperations(): UseQueryResult<ActiveOperationsData, Erro
  * Hook to fetch smart insights
  */
 export function useSmartInsights(
-  options?: DashboardMetricsOptions
+  options?: DashboardMetricsOptions,
 ): UseQueryResult<SmartInsightsData, Error> {
   return useQuery({
     queryKey: dashboardKeys.insights(options),
@@ -123,7 +125,7 @@ export function useSmartInsights(
  * Hook to fetch activity timeline
  */
 export function useActivityTimeline(
-  filter?: ActivityFilter
+  filter?: ActivityFilter,
 ): UseQueryResult<ActivityTimelineData, Error> {
   return useQuery({
     queryKey: dashboardKeys.timeline(filter),
@@ -135,4 +137,3 @@ export function useActivityTimeline(
     enabled: true, // Always enabled
   });
 }
-

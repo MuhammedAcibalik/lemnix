@@ -4,27 +4,21 @@
  * @version 1.0.0
  */
 
-import React from 'react';
-import {
-  Stack,
-  Alert,
-  AlertTitle,
-  Typography,
-  Chip
-} from '@mui/material';
+import React from "react";
+import { Stack, Alert, AlertTitle, Typography, Chip } from "@mui/material";
 import {
   Info as InfoIcon,
   Warning as WarningIcon,
-  Error as ErrorIcon
-} from '@mui/icons-material';
-import { RecommendationsTabProps } from '../types';
-import { messages, iconMappings } from '../constants';
+  Error as ErrorIcon,
+} from "@mui/icons-material";
+import { RecommendationsTabProps } from "../types";
+import { messages, iconMappings } from "../constants";
 
 /**
  * Recommendations Tab Component
  */
 export const RecommendationsTab: React.FC<RecommendationsTabProps> = ({
-  recommendations
+  recommendations,
 }) => {
   const getRecommendationIcon = (severity: string) => {
     switch (severity) {
@@ -44,11 +38,7 @@ export const RecommendationsTab: React.FC<RecommendationsTabProps> = ({
         <Alert
           key={index}
           severity={
-            (rec.severity as
-              | "error"
-              | "warning"
-              | "info"
-              | "success") || "info"
+            (rec.severity as "error" | "warning" | "info" | "success") || "info"
           }
           icon={getRecommendationIcon(rec.severity || "info")}
         >

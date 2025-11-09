@@ -1,7 +1,7 @@
 /**
  * LEMNİX WebGPU Entity Types
  * GPU-accelerated optimization domain types
- * 
+ *
  * @module entities/webgpu/model
  * @version 1.0.0 - FSD Compliant
  */
@@ -52,7 +52,7 @@ export interface WebGPUOptimizationRequest {
     readonly quantity: number;
   }>;
   readonly stockLength: number;
-  readonly algorithm: 'ffd' | 'bfd';
+  readonly algorithm: "ffd" | "bfd";
 }
 
 /**
@@ -99,6 +99,5 @@ export interface WebGPUPerformanceMetrics {
 export interface WebGPUPreference {
   readonly enabled: boolean;
   readonly fallbackToCPU: boolean;
-  readonly preferredAlgorithms: ReadonlyArray<'ffd' | 'bfd'>;
+  readonly preferredAlgorithms: ReadonlyArray<"ffd" | "bfd">;
 }
-

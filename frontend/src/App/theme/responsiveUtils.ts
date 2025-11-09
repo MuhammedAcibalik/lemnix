@@ -3,21 +3,33 @@
  * Grid sistem ve responsive tasarım için yardımcı fonksiyonlar
  */
 
-import * as DS from './designSystem.v2';
+import * as DS from "./designSystem.v2";
 
-const spacingUnit = DS.spacing['1'];
+const spacingUnit = DS.spacing["1"];
 
 const multiply = (value: number) => value * spacingUnit;
 
 export const responsive = {
-  spacing: (xs: number, sm?: number, md?: number, lg?: number, xl?: number) => ({
+  spacing: (
+    xs: number,
+    sm?: number,
+    md?: number,
+    lg?: number,
+    xl?: number,
+  ) => ({
     xs: multiply(xs),
     ...(sm && { sm: multiply(sm) }),
     ...(md && { md: multiply(md) }),
     ...(lg && { lg: multiply(lg) }),
     ...(xl && { xl: multiply(xl) }),
   }),
-  fontSize: (xs: string, sm?: string, md?: string, lg?: string, xl?: string) => ({
+  fontSize: (
+    xs: string,
+    sm?: string,
+    md?: string,
+    lg?: string,
+    xl?: string,
+  ) => ({
     xs,
     ...(sm && { sm }),
     ...(md && { md }),
@@ -58,13 +70,13 @@ export const containerSizes = {
   md: 768,
   lg: 1024,
   xl: 1280,
-  '2xl': 1536,
-  full: '100%',
+  "2xl": 1536,
+  full: "100%",
 } as const;
 
-export const container = (size: keyof typeof containerSizes = 'xl') => ({
+export const container = (size: keyof typeof containerSizes = "xl") => ({
   maxWidth: containerSizes[size],
-  mx: 'auto',
+  mx: "auto",
   px: responsive.padding(2, 3, 4),
 });
 
@@ -84,7 +96,7 @@ export const mediaQuery = {
 
 export const layouts = {
   hero: {
-    textAlign: 'center' as const,
+    textAlign: "center" as const,
     py: responsive.padding(6, 8, 12),
     px: responsive.padding(2, 4),
   },
@@ -100,11 +112,11 @@ export const layouts = {
   },
   form: {
     maxWidth: 600,
-    mx: 'auto',
+    mx: "auto",
     p: responsive.padding(3, 4),
   },
   sidebar: {
-    width: { xs: '100%', md: 280 },
+    width: { xs: "100%", md: 280 },
     flexShrink: 0,
   },
   mainWithSidebar: {

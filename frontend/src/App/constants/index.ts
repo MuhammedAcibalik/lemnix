@@ -8,35 +8,35 @@
  * Route paths configuration
  */
 export const routes = {
-  home: '/',
-  dashboard: '/dashboard',
-  cuttingList: '/cutting-list',
-  enterpriseOptimization: '/enterprise-optimization',
-  statistics: '/statistics',
-  productionPlan: '/production-plan',
-  profileManagement: '/profile-management',
-  settings: '/settings'
+  home: "/",
+  dashboard: "/dashboard",
+  cuttingList: "/cutting-list",
+  enterpriseOptimization: "/enterprise-optimization",
+  statistics: "/statistics",
+  productionPlan: "/production-plan",
+  profileManagement: "/profile-management",
+  settings: "/settings",
 } as const;
 
 /**
  * Page IDs configuration
  */
 export const pageIds = {
-  home: 'home',
-  dashboard: 'dashboard',
-  cuttingList: 'cutting-list',
-  enterpriseOptimization: 'enterprise-optimization',
-  statistics: 'statistics',
-  productionPlan: 'production-plan',
-  profileManagement: 'profile-management',
-  settings: 'settings'
+  home: "home",
+  dashboard: "dashboard",
+  cuttingList: "cutting-list",
+  enterpriseOptimization: "enterprise-optimization",
+  statistics: "statistics",
+  productionPlan: "production-plan",
+  profileManagement: "profile-management",
+  settings: "settings",
 } as const;
 
 /**
  * Navigation configuration
  */
 export const navigationConfig = {
-  useModernNavigation: true
+  useModernNavigation: true,
 } as const;
 
 /**
@@ -45,23 +45,23 @@ export const navigationConfig = {
 export const snackbarConfig = {
   autoHideDuration: 6000,
   anchorOrigin: {
-    vertical: 'bottom' as const,
-    horizontal: 'right' as const
-  }
+    vertical: "bottom" as const,
+    horizontal: "right" as const,
+  },
 } as const;
 
 /**
  * Mobile breakpoints
  */
 export const breakpoints = {
-  mobile: 'md'
+  mobile: "md",
 } as const;
 
 /**
  * Z-index values
  */
 export const zIndex = {
-  mobileMenu: 1300
+  mobileMenu: 1300,
 } as const;
 
 /**
@@ -72,9 +72,9 @@ export const defaultState = {
   isLoading: false,
   snackbar: {
     open: false,
-    message: '',
-    severity: 'info' as const
+    message: "",
+    severity: "info" as const,
   },
   excelItems: [],
-  optimizationResult: null
+  optimizationResult: null,
 } as const;

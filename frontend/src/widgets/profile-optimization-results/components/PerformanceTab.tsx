@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 import {
   Grid,
   Paper,
@@ -14,22 +14,20 @@ import {
   ListItemIcon,
   ListItemText,
   Box,
-  LinearProgress
-} from '@mui/material';
+  LinearProgress,
+} from "@mui/material";
 import {
   Speed as SpeedIcon,
   Science as ScienceIcon,
-  Assessment as AssessmentIcon
-} from '@mui/icons-material';
-import { PerformanceTabProps } from '../types';
-import { messages } from '../constants';
+  Assessment as AssessmentIcon,
+} from "@mui/icons-material";
+import { PerformanceTabProps } from "../types";
+import { messages } from "../constants";
 
 /**
  * Performance Tab Component
  */
-export const PerformanceTab: React.FC<PerformanceTabProps> = ({
-  result
-}) => {
+export const PerformanceTab: React.FC<PerformanceTabProps> = ({ result }) => {
   return (
     <Grid container spacing={3}>
       <Grid item xs={12} md={6}>

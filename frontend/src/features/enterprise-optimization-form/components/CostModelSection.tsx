@@ -2,12 +2,12 @@
  * @fileoverview Cost Model Configuration Section
  * @module EnterpriseOptimizationForm/components
  * @version 1.0.0
- * 
+ *
  * ✅ P1-6: Cost model configuration UI
  * ✅ BACKEND: costModel: CostModel
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 import {
   Box,
   Typography,
@@ -21,7 +21,7 @@ import {
   CardContent,
   Chip,
   alpha,
-} from '@mui/material';
+} from "@mui/material";
 import {
   ExpandMore as ExpandMoreIcon,
   AttachMoney as MoneyIcon,
@@ -30,9 +30,9 @@ import {
   AccessTime as TimeIcon,
   Delete as WasteIcon,
   Work as LaborIcon,
-} from '@mui/icons-material';
-import { useDesignSystem } from '@/shared/hooks';
-import type { CostModel } from '@/entities/optimization/model/types';
+} from "@mui/icons-material";
+import { useDesignSystem } from "@/shared/hooks";
+import type { CostModel } from "@/entities/optimization/model/types";
 
 interface CostModelSectionProps {
   readonly costModel: CostModel;
@@ -42,39 +42,39 @@ interface CostModelSectionProps {
 
 const COST_FIELDS = [
   {
-    key: 'materialCostPerMeter' as keyof CostModel,
-    label: 'Malzeme Maliyeti',
-    description: 'Metre başına malzeme maliyeti',
+    key: "materialCostPerMeter" as keyof CostModel,
+    label: "Malzeme Maliyeti",
+    description: "Metre başına malzeme maliyeti",
     icon: <MoneyIcon />,
-    color: '#2196f3',
+    color: "#2196f3",
   },
   {
-    key: 'cuttingCostPerCut' as keyof CostModel,
-    label: 'Kesim Maliyeti',
-    description: 'Kesim başına işçilik ve enerji',
+    key: "cuttingCostPerCut" as keyof CostModel,
+    label: "Kesim Maliyeti",
+    description: "Kesim başına işçilik ve enerji",
     icon: <CuttingIcon />,
-    color: '#ff9800',
+    color: "#ff9800",
   },
   {
-    key: 'setupCostPerStock' as keyof CostModel,
-    label: 'Kurulum Maliyeti',
-    description: 'Stok başına kurulum maliyeti',
+    key: "setupCostPerStock" as keyof CostModel,
+    label: "Kurulum Maliyeti",
+    description: "Stok başına kurulum maliyeti",
     icon: <SetupIcon />,
-    color: '#9c27b0',
+    color: "#9c27b0",
   },
   {
-    key: 'laborCostPerHour' as keyof CostModel,
-    label: 'İşçilik Maliyeti',
-    description: 'Saat başına işçilik maliyeti',
+    key: "laborCostPerHour" as keyof CostModel,
+    label: "İşçilik Maliyeti",
+    description: "Saat başına işçilik maliyeti",
     icon: <LaborIcon />,
-    color: '#4caf50',
+    color: "#4caf50",
   },
   {
-    key: 'wasteCostPerMeter' as keyof CostModel,
-    label: 'Fire Maliyeti',
-    description: 'Metre başına fire maliyeti',
+    key: "wasteCostPerMeter" as keyof CostModel,
+    label: "Fire Maliyeti",
+    description: "Metre başına fire maliyeti",
     icon: <WasteIcon />,
-    color: '#f44336',
+    color: "#f44336",
   },
 ];
 
@@ -111,9 +111,9 @@ export const CostModelSection: React.FC<CostModelSectionProps> = ({
       sx={{
         borderRadius: `${ds.borderRadius.lg}px`,
         border: `1px solid ${ds.colors.neutral[300]}`,
-        boxShadow: 'none',
-        '&:before': { display: 'none' },
-        mb: ds.spacing['3'],
+        boxShadow: "none",
+        "&:before": { display: "none" },
+        mb: ds.spacing["3"],
       }}
     >
       <AccordionSummary
@@ -121,32 +121,44 @@ export const CostModelSection: React.FC<CostModelSectionProps> = ({
         sx={{
           background: alpha(ds.colors.warning.main, 0.05),
           borderRadius: `${ds.borderRadius.lg}px`,
-          '&:hover': {
+          "&:hover": {
             background: alpha(ds.colors.warning.main, 0.08),
           },
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={ds.spacing['2']} sx={{ flex: 1 }}>
-          <MoneyIcon sx={{ color: ds.colors.warning.main, fontSize: ds.componentSizes.icon.medium }} />
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={ds.spacing["2"]}
+          sx={{ flex: 1 }}
+        >
+          <MoneyIcon
+            sx={{
+              color: ds.colors.warning.main,
+              fontSize: ds.componentSizes.icon.medium,
+            }}
+          />
           <Box>
-            <Typography sx={{ fontWeight: 600, fontSize: '0.9375rem' }}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.9375rem" }}>
               Maliyet Modeli
             </Typography>
-            <Typography sx={{ fontSize: '0.75rem', color: ds.colors.text.secondary }}>
+            <Typography
+              sx={{ fontSize: "0.75rem", color: ds.colors.text.secondary }}
+            >
               Detaylı maliyet hesaplama parametreleri
             </Typography>
           </Box>
         </Stack>
       </AccordionSummary>
 
-      <AccordionDetails sx={{ p: ds.spacing['3'] }}>
-        <Stack spacing={ds.spacing['3']}>
+      <AccordionDetails sx={{ p: ds.spacing["3"] }}>
+        <Stack spacing={ds.spacing["3"]}>
           {/* Cost Inputs Grid */}
           <Box
             sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
-              gap: ds.spacing['3'],
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
+              gap: ds.spacing["3"],
             }}
           >
             {COST_FIELDS.map((field) => (
@@ -164,13 +176,22 @@ export const CostModelSection: React.FC<CostModelSectionProps> = ({
                   startAdornment: (
                     <InputAdornment position="start">
                       {React.cloneElement(field.icon, {
-                        sx: { color: field.color, fontSize: ds.componentSizes.icon.small },
+                        sx: {
+                          color: field.color,
+                          fontSize: ds.componentSizes.icon.small,
+                        },
                       })}
                     </InputAdornment>
                   ),
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: ds.colors.text.secondary }}>
+                      <Typography
+                        sx={{
+                          fontSize: "0.75rem",
+                          fontWeight: 600,
+                          color: ds.colors.text.secondary,
+                        }}
+                      >
                         ₺
                       </Typography>
                     </InputAdornment>
@@ -188,13 +209,33 @@ export const CostModelSection: React.FC<CostModelSectionProps> = ({
               borderRadius: `${ds.borderRadius.md}px`,
             }}
           >
-            <CardContent sx={{ p: ds.spacing['2'], '&:last-child': { pb: ds.spacing['2'] } }}>
-              <Stack direction="row" alignItems="center" justifyContent="space-between">
+            <CardContent
+              sx={{
+                p: ds.spacing["2"],
+                "&:last-child": { pb: ds.spacing["2"] },
+              }}
+            >
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+              >
                 <Box>
-                  <Typography sx={{ fontSize: '0.75rem', color: ds.colors.text.secondary }}>
+                  <Typography
+                    sx={{
+                      fontSize: "0.75rem",
+                      color: ds.colors.text.secondary,
+                    }}
+                  >
                     Tahmini Maliyet (Örnek İş Emri)
                   </Typography>
-                  <Typography sx={{ fontSize: '1.25rem', fontWeight: 700, color: ds.colors.success[700] }}>
+                  <Typography
+                    sx={{
+                      fontSize: "1.25rem",
+                      fontWeight: 700,
+                      color: ds.colors.success[700],
+                    }}
+                  >
                     ₺{totalEstimate.toFixed(2)}
                   </Typography>
                 </Box>
@@ -214,14 +255,17 @@ export const CostModelSection: React.FC<CostModelSectionProps> = ({
           {/* Help Text */}
           <Box
             sx={{
-              p: ds.spacing['2'],
+              p: ds.spacing["2"],
               background: alpha(ds.colors.neutral[100], 0.5),
               borderRadius: `${ds.borderRadius.md}px`,
             }}
           >
-            <Typography sx={{ fontSize: '0.75rem', color: ds.colors.text.secondary }}>
-              💡 <strong>İpucu:</strong> Maliyet modeli, her algoritmanın toplam maliyetini hesaplamak için kullanılır.
-              Gerçek değerlerinizi girerek en doğru maliyet analizini elde edin.
+            <Typography
+              sx={{ fontSize: "0.75rem", color: ds.colors.text.secondary }}
+            >
+              💡 <strong>İpucu:</strong> Maliyet modeli, her algoritmanın toplam
+              maliyetini hesaplamak için kullanılır. Gerçek değerlerinizi
+              girerek en doğru maliyet analizini elde edin.
             </Typography>
           </Box>
         </Stack>
@@ -229,4 +273,3 @@ export const CostModelSection: React.FC<CostModelSectionProps> = ({
     </Accordion>
   );
 };
-

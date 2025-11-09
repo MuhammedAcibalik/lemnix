@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 
 // ============================================================================
 // MAIN COMPONENT PROPS
@@ -211,11 +211,16 @@ export interface SeverityColor {
 // EVENT HANDLER TYPES
 // ============================================================================
 
-export type TabChangeHandler = (event: React.SyntheticEvent, newValue: number) => void;
+export type TabChangeHandler = (
+  event: React.SyntheticEvent,
+  newValue: number,
+) => void;
 
 export type ProfileClickHandler = (profileType: string) => void;
 
-export type CuttingPlanDetailsHandler = (stock: Record<string, unknown>) => void;
+export type CuttingPlanDetailsHandler = (
+  stock: Record<string, unknown>,
+) => void;
 
 export type ModalCloseHandler = () => void;
 
@@ -286,7 +291,7 @@ export interface AnimationConfig {
 export interface TableColumn {
   id: string;
   label: string;
-  align?: 'left' | 'center' | 'right';
+  align?: "left" | "center" | "right";
   minWidth?: number;
   format?: (value: unknown) => string;
 }
@@ -376,7 +381,7 @@ export interface ProfileGroupValidation {
 // ============================================================================
 
 export interface ExportOptions {
-  format: 'pdf' | 'excel' | 'csv' | 'json';
+  format: "pdf" | "excel" | "csv" | "json";
   includeCharts: boolean;
   includeDetails: boolean;
   includeRecommendations: boolean;
@@ -398,14 +403,14 @@ export interface PerformanceBenchmark {
   value: number;
   unit: string;
   target: number;
-  status: 'excellent' | 'good' | 'warning' | 'poor';
+  status: "excellent" | "good" | "warning" | "poor";
 }
 
 export interface PerformanceComparison {
   current: number;
   previous: number;
   improvement: number;
-  trend: 'up' | 'down' | 'stable';
+  trend: "up" | "down" | "stable";
 }
 
 // ============================================================================

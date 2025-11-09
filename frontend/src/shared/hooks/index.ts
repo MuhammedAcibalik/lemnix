@@ -4,8 +4,8 @@
  */
 
 // Export v2 as default (modern)
-export { useDesignSystem } from './useDesignSystem.v2';
-export type { DesignSystemV2 as DesignSystem } from './useDesignSystem.v2';
+export { useDesignSystem } from "./useDesignSystem.v2";
+export type { DesignSystemV2 as DesignSystem } from "./useDesignSystem.v2";
 export {
   colors,
   spacing,
@@ -28,7 +28,14 @@ export {
   layouts,
   componentVariants,
   animations,
-} from '@/App/theme';
-export { usePermissions, useHasPermission, useIsAdmin, useIsPlanner, useIsViewer, Permission, UserRole } from './usePermissions';
-export type { User, UsePermissionsReturn } from './usePermissions';
-
+} from "@/App/theme";
+export {
+  usePermissions,
+  useHasPermission,
+  useIsAdmin,
+  useIsPlanner,
+  useIsViewer,
+  Permission,
+  UserRole,
+} from "./usePermissions";
+export type { User, UsePermissionsReturn } from "./usePermissions";

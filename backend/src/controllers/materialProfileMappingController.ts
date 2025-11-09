@@ -4,8 +4,11 @@
  * @version 1.0.0
  */
 
-import { Request, Response } from 'express';
-import { materialProfileMappingService, type SaveMappingRequest } from '../services/materialProfileMappingService';
+import { Request, Response } from "express";
+import {
+  materialProfileMappingService,
+  type SaveMappingRequest,
+} from "../services/materialProfileMappingService";
 
 export class MaterialProfileMappingController {
   /**
@@ -16,25 +19,26 @@ export class MaterialProfileMappingController {
     try {
       const { malzemeNo } = req.query;
 
-      if (!malzemeNo || typeof malzemeNo !== 'string') {
+      if (!malzemeNo || typeof malzemeNo !== "string") {
         res.status(400).json({
           success: false,
-          error: 'Malzeme numarası gerekli'
+          error: "Malzeme numarası gerekli",
         });
         return;
       }
 
-      const suggestions = await materialProfileMappingService.getSuggestions(malzemeNo);
+      const suggestions =
+        await materialProfileMappingService.getSuggestions(malzemeNo);
 
       res.json({
         success: true,
-        data: suggestions
+        data: suggestions,
       });
     } catch (error) {
-      console.error('Error in getSuggestions:', error);
+      console.error("Error in getSuggestions:", error);
       res.status(500).json({
         success: false,
-        error: 'Profil önerileri alınamadı'
+        error: "Profil önerileri alınamadı",
       });
     }
   }
@@ -51,7 +55,7 @@ export class MaterialProfileMappingController {
       if (!data.malzemeNo || !data.profileType || !data.length) {
         res.status(400).json({
           success: false,
-          error: 'Malzeme numarası, profil tipi ve uzunluk gerekli'
+          error: "Malzeme numarası, profil tipi ve uzunluk gerekli",
         });
         return;
       }
@@ -59,7 +63,7 @@ export class MaterialProfileMappingController {
       if (data.length <= 0) {
         res.status(400).json({
           success: false,
-          error: 'Uzunluk pozitif bir sayı olmalı'
+          error: "Uzunluk pozitif bir sayı olmalı",
         });
         return;
       }
@@ -68,13 +72,13 @@ export class MaterialProfileMappingController {
 
       res.json({
         success: true,
-        message: 'Profil mapping kaydedildi'
+        message: "Profil mapping kaydedildi",
       });
     } catch (error) {
-      console.error('Error in saveMappingFromUserInput:', error);
+      console.error("Error in saveMappingFromUserInput:", error);
       res.status(500).json({
         success: false,
-        error: 'Profil mapping kaydedilemedi'
+        error: "Profil mapping kaydedilemedi",
       });
     }
   }
@@ -87,25 +91,26 @@ export class MaterialProfileMappingController {
     try {
       const { malzemeNo } = req.query;
 
-      if (!malzemeNo || typeof malzemeNo !== 'string') {
+      if (!malzemeNo || typeof malzemeNo !== "string") {
         res.status(400).json({
           success: false,
-          error: 'Malzeme numarası gerekli'
+          error: "Malzeme numarası gerekli",
         });
         return;
       }
 
-      const mapping = await materialProfileMappingService.getMostPopularMapping(malzemeNo);
+      const mapping =
+        await materialProfileMappingService.getMostPopularMapping(malzemeNo);
 
       res.json({
         success: true,
-        data: mapping
+        data: mapping,
       });
     } catch (error) {
-      console.error('Error in getMostPopularMapping:', error);
+      console.error("Error in getMostPopularMapping:", error);
       res.status(500).json({
         success: false,
-        error: 'En popüler mapping alınamadı'
+        error: "En popüler mapping alınamadı",
       });
     }
   }
@@ -118,28 +123,30 @@ export class MaterialProfileMappingController {
     try {
       const { malzemeNo } = req.query;
 
-      if (!malzemeNo || typeof malzemeNo !== 'string') {
+      if (!malzemeNo || typeof malzemeNo !== "string") {
         res.status(400).json({
           success: false,
-          error: 'Malzeme numarası gerekli'
+          error: "Malzeme numarası gerekli",
         });
         return;
       }
 
-      const suggestions = await materialProfileMappingService.getSimilarSuggestions(malzemeNo);
+      const suggestions =
+        await materialProfileMappingService.getSimilarSuggestions(malzemeNo);
 
       res.json({
         success: true,
-        data: suggestions
+        data: suggestions,
       });
     } catch (error) {
-      console.error('Error in getSimilarSuggestions:', error);
+      console.error("Error in getSimilarSuggestions:", error);
       res.status(500).json({
         success: false,
-        error: 'Benzer öneriler alınamadı'
+        error: "Benzer öneriler alınamadı",
       });
     }
   }
 }
 
-export const materialProfileMappingController = new MaterialProfileMappingController();
+export const materialProfileMappingController =
+  new MaterialProfileMappingController();

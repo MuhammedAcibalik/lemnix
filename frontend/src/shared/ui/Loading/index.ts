@@ -8,12 +8,11 @@ export {
   LoadingBar,
   LoadingSkeleton,
   LoadingContainer,
-} from './Loading';
+} from "./Loading";
 
 export type {
   LoadingSpinnerProps,
   LoadingBarProps,
   LoadingSkeletonProps,
   LoadingContainerProps,
-} from './Loading';
-
+} from "./Loading";

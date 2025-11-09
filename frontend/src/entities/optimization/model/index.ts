@@ -1,6 +1,6 @@
 /**
  * LEMNİX Optimization Entity Model Barrel Export
- * 
+ *
  * @module entities/optimization/model
  * @version 1.0.0 - FSD Compliant
  */
@@ -36,10 +36,10 @@ export type {
   ExportFormat,
   ExportOptimizationRequest,
   ExportOptimizationResponse,
-} from './types';
+} from "./types";
 
 // Constants
-export { ALGORITHM_CATALOG } from './types';
+export { ALGORITHM_CATALOG } from "./types";
 
 // Validation schemas
 export {
@@ -60,7 +60,7 @@ export {
   DEFAULT_CONSTRAINTS,
   DEFAULT_OBJECTIVES,
   DEFAULT_PERFORMANCE_SETTINGS,
-} from './schemas';
+} from "./schemas";
 
 export type {
   OptimizationRequestInput,
@@ -68,8 +68,7 @@ export type {
   PerformanceSettingsInput,
   OptimizationObjectiveInput,
   OptimizationItemInput,
-} from './schemas';
+} from "./schemas";
 
 // Store
-export { useOptimizationUI } from './optimizationStore';
-
+export { useOptimizationUI } from "./optimizationStore";

@@ -1,6 +1,6 @@
 /**
  * LEMNİX Shared Config Barrel Export
- * 
+ *
  * @module shared/config
  * @version 1.0.0 - FSD Compliant
  */
@@ -14,5 +14,4 @@ export {
   HTTP_STATUS,
   DATE_FORMATS,
   REGEX,
-} from './constants';
-
+} from "./constants";

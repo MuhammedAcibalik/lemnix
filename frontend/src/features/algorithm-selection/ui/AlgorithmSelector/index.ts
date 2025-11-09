@@ -2,5 +2,4 @@
  * AlgorithmSelector Barrel Export
  */
 
-export { AlgorithmSelector } from './AlgorithmSelector';
-
+export { AlgorithmSelector } from "./AlgorithmSelector";

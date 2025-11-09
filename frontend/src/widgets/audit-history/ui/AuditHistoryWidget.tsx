@@ -1,12 +1,12 @@
 /**
  * Audit History Widget
  * Enterprise audit log viewer with timeline, filters, and export
- * 
+ *
  * @module widgets/audit-history
  * @version 1.0.0 - Professional Enterprise Feature
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 import {
   Box,
   Stack,
@@ -14,18 +14,18 @@ import {
   CircularProgress,
   Alert,
   Pagination,
-} from '@mui/material';
+} from "@mui/material";
 import {
   History as HistoryIcon,
   Warning as WarningIcon,
-} from '@mui/icons-material';
-import { useDesignSystem } from '@/shared/hooks';
-import { useAuditLogs } from '@/entities/audit';
-import { useAuditFilters } from '../hooks/useAuditFilters';
-import { AuditFilterBar } from './AuditFilterBar';
-import { AuditTimelineView } from './AuditTimelineView';
-import { AuditStatisticsCard } from './AuditStatisticsCard';
-import { WidgetErrorBoundary } from '@/shared/ui/ErrorBoundary/WidgetErrorBoundary';
+} from "@mui/icons-material";
+import { useDesignSystem } from "@/shared/hooks";
+import { useAuditLogs } from "@/entities/audit";
+import { useAuditFilters } from "../hooks/useAuditFilters";
+import { AuditFilterBar } from "./AuditFilterBar";
+import { AuditTimelineView } from "./AuditTimelineView";
+import { AuditStatisticsCard } from "./AuditStatisticsCard";
+import { WidgetErrorBoundary } from "@/shared/ui/ErrorBoundary/WidgetErrorBoundary";
 
 /**
  * Audit History Widget Props
@@ -38,7 +38,7 @@ export interface AuditHistoryWidgetProps {
 
 /**
  * Main Audit History Widget
- * 
+ *
  * Features:
  * - Timeline view with grouping
  * - Advanced filtering (action, severity, outcome, date range)
@@ -46,7 +46,7 @@ export interface AuditHistoryWidgetProps {
  * - Export to Excel/CSV/JSON
  * - Permission-based access control
  * - Responsive design
- * 
+ *
  * Architecture:
  * - Single Responsibility: Display audit logs
  * - Separation of Concerns: Filters, timeline, statistics in separate components
@@ -59,7 +59,7 @@ export const AuditHistoryWidget: React.FC<AuditHistoryWidgetProps> = ({
   enableExport = true,
 }) => {
   const ds = useDesignSystem();
-  
+
   // Filter management (custom hook - single responsibility)
   const {
     apiQuery,
@@ -76,13 +76,7 @@ export const AuditHistoryWidget: React.FC<AuditHistoryWidgetProps> = ({
   } = useAuditFilters();
 
   // Data fetching (React Query)
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useAuditLogs(apiQuery);
+  const { data, isLoading, isError, error, refetch } = useAuditLogs(apiQuery);
 
   // Calculate total pages
   const totalPages = useMemo(() => {
@@ -95,31 +89,31 @@ export const AuditHistoryWidget: React.FC<AuditHistoryWidgetProps> = ({
     return (
       <Box
         sx={{
-          textAlign: 'center',
-          py: ds.spacing['8'],
-          px: ds.spacing['4'],
+          textAlign: "center",
+          py: ds.spacing["8"],
+          px: ds.spacing["4"],
         }}
       >
         <HistoryIcon
           sx={{
             fontSize: 64,
             color: ds.colors.neutral[400],
-            mb: ds.spacing['3'],
+            mb: ds.spacing["3"],
           }}
         />
         <Typography
           sx={{
-            fontSize: '1.125rem',
+            fontSize: "1.125rem",
             fontWeight: 600,
             color: ds.colors.text.primary,
-            mb: ds.spacing['1'],
+            mb: ds.spacing["1"],
           }}
         >
           Henüz audit kaydı yok
         </Typography>
         <Typography
           sx={{
-            fontSize: '0.875rem',
+            fontSize: "0.875rem",
             color: ds.colors.text.secondary,
           }}
         >
@@ -131,9 +125,10 @@ export const AuditHistoryWidget: React.FC<AuditHistoryWidgetProps> = ({
 
   // Error state
   if (isError) {
-    const errorMessage = (error as { response?: { status?: number } })?.response?.status === 403
-      ? 'Audit loglarını görüntüleme yetkiniz yok'
-      : 'Audit logları yüklenirken bir hata oluştu';
+    const errorMessage =
+      (error as { response?: { status?: number } })?.response?.status === 403
+        ? "Audit loglarını görüntüleme yetkiniz yok"
+        : "Audit logları yüklenirken bir hata oluştu";
 
     return (
       <Alert
@@ -151,21 +146,23 @@ export const AuditHistoryWidget: React.FC<AuditHistoryWidgetProps> = ({
   return (
     <WidgetErrorBoundary
       widgetName="Audit History"
-      showDetails={process.env.NODE_ENV === 'development'}
+      showDetails={process.env.NODE_ENV === "development"}
       recoveryAction={() => refetch()}
     >
-      <Stack spacing={ds.spacing['4']}>
+      <Stack spacing={ds.spacing["4"]}>
         {/* Header */}
         <Box
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            pb: ds.spacing['3'],
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            pb: ds.spacing["3"],
             borderBottom: `1px solid ${ds.colors.neutral[200]}`,
           }}
         >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: ds.spacing['2'] }}>
+          <Box
+            sx={{ display: "flex", alignItems: "center", gap: ds.spacing["2"] }}
+          >
             <HistoryIcon
               sx={{
                 fontSize: ds.componentSizes.icon.lg,
@@ -174,12 +171,12 @@ export const AuditHistoryWidget: React.FC<AuditHistoryWidgetProps> = ({
             />
             <Typography
               sx={{
-                fontSize: '1.5rem',
+                fontSize: "1.5rem",
                 fontWeight: ds.typography.fontWeight.bold,
                 background: ds.gradients.primary,
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
                 letterSpacing: ds.typography.letterSpacing.tight,
               }}
             >
@@ -190,7 +187,7 @@ export const AuditHistoryWidget: React.FC<AuditHistoryWidgetProps> = ({
           {data && (
             <Typography
               sx={{
-                fontSize: '0.875rem',
+                fontSize: "0.875rem",
                 color: ds.colors.text.secondary,
                 fontWeight: ds.typography.fontWeight.medium,
               }}
@@ -217,10 +214,10 @@ export const AuditHistoryWidget: React.FC<AuditHistoryWidgetProps> = ({
         {isLoading && (
           <Box
             sx={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              py: ds.spacing['8'],
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              py: ds.spacing["8"],
             }}
           >
             <CircularProgress
@@ -244,9 +241,9 @@ export const AuditHistoryWidget: React.FC<AuditHistoryWidgetProps> = ({
             {totalPages > 1 && (
               <Box
                 sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  pt: ds.spacing['4'],
+                  display: "flex",
+                  justifyContent: "center",
+                  pt: ds.spacing["4"],
                 }}
               >
                 <Pagination
@@ -258,7 +255,7 @@ export const AuditHistoryWidget: React.FC<AuditHistoryWidgetProps> = ({
                   showFirstButton
                   showLastButton
                   sx={{
-                    '& .MuiPaginationItem-root': {
+                    "& .MuiPaginationItem-root": {
                       fontWeight: ds.typography.fontWeight.medium,
                       borderRadius: `${ds.borderRadius.md}px`,
                     },
@@ -273,24 +270,24 @@ export const AuditHistoryWidget: React.FC<AuditHistoryWidgetProps> = ({
         {!isLoading && data && data.logs.length === 0 && hasActiveFilters && (
           <Box
             sx={{
-              textAlign: 'center',
-              py: ds.spacing['6'],
-              px: ds.spacing['4'],
+              textAlign: "center",
+              py: ds.spacing["6"],
+              px: ds.spacing["4"],
             }}
           >
             <Typography
               sx={{
-                fontSize: '1rem',
+                fontSize: "1rem",
                 fontWeight: 600,
                 color: ds.colors.text.primary,
-                mb: ds.spacing['1'],
+                mb: ds.spacing["1"],
               }}
             >
               Filtrelerle eşleşen kayıt bulunamadı
             </Typography>
             <Typography
               sx={{
-                fontSize: '0.875rem',
+                fontSize: "0.875rem",
                 color: ds.colors.text.secondary,
               }}
             >
@@ -302,4 +299,3 @@ export const AuditHistoryWidget: React.FC<AuditHistoryWidgetProps> = ({
     </WidgetErrorBoundary>
   );
 };
-

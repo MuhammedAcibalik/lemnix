@@ -16,8 +16,8 @@ export type {
   ProductionPlanMetricsResponse,
   ProductionPlanError,
   BackorderItem,
-  ProductionPlanStatistics
-} from './model/types';
+  ProductionPlanStatistics,
+} from "./model/types";
 
 export {
   PRIORITY_LABELS,
@@ -27,11 +27,11 @@ export {
   WEEK_OPTIONS,
   getYearOptions,
   isProductionPlan,
-  isProductionPlanItem
-} from './model/types';
+  isProductionPlanItem,
+} from "./model/types";
 
 // API
-export { productionPlanApi } from './api/productionPlanApi';
+export { productionPlanApi } from "./api/productionPlanApi";
 
 // React Query Hooks
 export {
@@ -48,5 +48,5 @@ export {
   useUnlinkPlanItemFromCuttingList,
   useBackorderItems,
   useProductionPlanStatistics,
-  productionPlanKeys
-} from './api/productionPlanQueries';
+  productionPlanKeys,
+} from "./api/productionPlanQueries";

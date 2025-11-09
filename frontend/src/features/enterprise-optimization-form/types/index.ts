@@ -4,8 +4,12 @@
  * @version 1.0.0
  */
 
-import { OptimizationItem, OptimizationFormData, CuttingListItem } from '@/shared/types/legacy';
-import type { CostModel } from '@/entities/optimization/model/types';
+import {
+  OptimizationItem,
+  OptimizationFormData,
+  CuttingListItem,
+} from "@/shared/types/legacy";
+import type { CostModel } from "@/entities/optimization/model/types";
 
 // Form specific types
 export interface OptimizationParams {
@@ -46,11 +50,16 @@ export interface OptimizationConstraints {
 }
 
 // Union types for better type safety (Use @/entities/optimization/AlgorithmType for new code)
-export type AlgorithmType = 'ffd' | 'bfd' | 'genetic' | 'pooling'; // Updated to match backend
-export type LengthUnit = 'mm' | 'cm' | 'm';
-export type ObjectiveType = 'minimize-waste' | 'maximize-efficiency' | 'minimize-cost' | 'minimize-time' | 'maximize-quality';
-export type PriorityLevel = 'high' | 'medium' | 'low';
-export type SnackbarSeverity = 'success' | 'error' | 'warning' | 'info';
+export type AlgorithmType = "ffd" | "bfd" | "genetic" | "pooling"; // Updated to match backend
+export type LengthUnit = "mm" | "cm" | "m";
+export type ObjectiveType =
+  | "minimize-waste"
+  | "maximize-efficiency"
+  | "minimize-cost"
+  | "minimize-time"
+  | "maximize-quality";
+export type PriorityLevel = "high" | "medium" | "low";
+export type SnackbarSeverity = "success" | "error" | "warning" | "info";
 
 // Algorithm metadata
 export interface AlgorithmInfo {

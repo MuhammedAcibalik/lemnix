@@ -1,16 +1,19 @@
 /**
  * Quality Metrics Tab Component
  * Display quality scores and compliance metrics
- * 
+ *
  * @module enterprise-optimization-wizard/components/results
  * @version 1.0.0
  */
 
-import React from 'react';
-import { Box, Typography, Grid, CircularProgress, alpha } from '@mui/material';
-import { CardV2 } from '@/shared';
-import { useDesignSystem } from '@/shared/hooks';
-import { CheckCircle as CheckIcon, Warning as WarningIcon } from '@mui/icons-material';
+import React from "react";
+import { Box, Typography, Grid, CircularProgress, alpha } from "@mui/material";
+import { CardV2 } from "@/shared";
+import { useDesignSystem } from "@/shared/hooks";
+import {
+  CheckCircle as CheckIcon,
+  Warning as WarningIcon,
+} from "@mui/icons-material";
 
 export interface QualityMetricsTabProps {
   readonly qualityScore?: number;
@@ -33,30 +36,41 @@ export const QualityMetricsTab: React.FC<QualityMetricsTabProps> = ({
 
   const metrics = [
     {
-      label: 'Kalite Skoru',
+      label: "Kalite Skoru",
       value: qualityScore,
-      unit: '/100',
-      color: qualityScore >= 80 ? ds.colors.success.main : qualityScore >= 60 ? ds.colors.warning.main : ds.colors.error.main,
+      unit: "/100",
+      color:
+        qualityScore >= 80
+          ? ds.colors.success.main
+          : qualityScore >= 60
+            ? ds.colors.warning.main
+            : ds.colors.error.main,
       icon: qualityScore >= 80 ? CheckIcon : WarningIcon,
     },
     {
-      label: 'Materyal Kullanımı',
+      label: "Materyal Kullanımı",
       value: materialUtilization,
-      unit: '%',
-      color: materialUtilization >= 90 ? ds.colors.success.main : ds.colors.primary.main,
+      unit: "%",
+      color:
+        materialUtilization >= 90
+          ? ds.colors.success.main
+          : ds.colors.primary.main,
       icon: CheckIcon,
     },
     {
-      label: 'Kesim Karmaşıklığı',
+      label: "Kesim Karmaşıklığı",
       value: cuttingComplexity,
-      unit: '/100',
-      color: cuttingComplexity <= 50 ? ds.colors.success.main : ds.colors.warning.main,
+      unit: "/100",
+      color:
+        cuttingComplexity <= 50
+          ? ds.colors.success.main
+          : ds.colors.warning.main,
       icon: cuttingComplexity <= 50 ? CheckIcon : WarningIcon,
     },
     {
-      label: 'Verimlilik',
+      label: "Verimlilik",
       value: efficiency,
-      unit: '%',
+      unit: "%",
       color: efficiency >= 90 ? ds.colors.success.main : ds.colors.warning.main,
       icon: CheckIcon,
     },
@@ -64,51 +78,63 @@ export const QualityMetricsTab: React.FC<QualityMetricsTabProps> = ({
 
   return (
     <Box>
-      <CardV2 variant="glass" sx={{ p: ds.spacing['4'] }}>
+      <CardV2 variant="glass" sx={{ p: ds.spacing["4"] }}>
         <Typography
           sx={{
-            fontSize: '1.125rem',
+            fontSize: "1.125rem",
             fontWeight: ds.typography.fontWeight.bold,
             color: ds.colors.text.primary,
-            mb: ds.spacing['4'],
+            mb: ds.spacing["4"],
           }}
         >
           Kalite Metrikleri
         </Typography>
 
-        <Grid container spacing={ds.spacing['4']}>
+        <Grid container spacing={ds.spacing["4"]}>
           {metrics.map((metric) => {
             const Icon = metric.icon;
-            
+
             return (
               <Grid item xs={12} sm={6} md={3} key={metric.label}>
                 <Box
                   sx={{
-                    textAlign: 'center',
-                    p: ds.spacing['3'],
+                    textAlign: "center",
+                    p: ds.spacing["3"],
                     borderRadius: `${ds.borderRadius.lg}px`,
                     backgroundColor: alpha(metric.color, 0.05),
                     border: `1px solid ${alpha(metric.color, 0.2)}`,
                   }}
                 >
                   {/* Icon */}
-                  <Icon sx={{ fontSize: 32, color: metric.color, mb: ds.spacing['2'] }} />
+                  <Icon
+                    sx={{
+                      fontSize: 32,
+                      color: metric.color,
+                      mb: ds.spacing["2"],
+                    }}
+                  />
 
                   {/* Label */}
                   <Typography
                     sx={{
-                      fontSize: '0.75rem',
+                      fontSize: "0.75rem",
                       color: ds.colors.text.secondary,
-                      mb: ds.spacing['2'],
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
+                      mb: ds.spacing["2"],
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
                     }}
                   >
                     {metric.label}
                   </Typography>
 
                   {/* Circular Progress */}
-                  <Box sx={{ position: 'relative', display: 'inline-flex', mb: ds.spacing['2'] }}>
+                  <Box
+                    sx={{
+                      position: "relative",
+                      display: "inline-flex",
+                      mb: ds.spacing["2"],
+                    }}
+                  >
                     <CircularProgress
                       variant="determinate"
                       value={metric.value}
@@ -116,8 +142,8 @@ export const QualityMetricsTab: React.FC<QualityMetricsTabProps> = ({
                       thickness={6}
                       sx={{
                         color: metric.color,
-                        '& .MuiCircularProgress-circle': {
-                          strokeLinecap: 'round',
+                        "& .MuiCircularProgress-circle": {
+                          strokeLinecap: "round",
                         },
                       }}
                     />
@@ -127,15 +153,15 @@ export const QualityMetricsTab: React.FC<QualityMetricsTabProps> = ({
                         left: 0,
                         bottom: 0,
                         right: 0,
-                        position: 'absolute',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        position: "absolute",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
                       <Typography
                         sx={{
-                          fontSize: '1.25rem',
+                          fontSize: "1.25rem",
                           fontWeight: 700,
                           color: metric.color,
                         }}
@@ -148,7 +174,7 @@ export const QualityMetricsTab: React.FC<QualityMetricsTabProps> = ({
                   {/* Unit */}
                   <Typography
                     sx={{
-                      fontSize: '0.6875rem',
+                      fontSize: "0.6875rem",
                       color: ds.colors.text.secondary,
                     }}
                   >
@@ -163,4 +189,3 @@ export const QualityMetricsTab: React.FC<QualityMetricsTabProps> = ({
     </Box>
   );
 };
-

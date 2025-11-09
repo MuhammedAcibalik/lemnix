@@ -4,32 +4,60 @@
  * @version 1.0.0
  */
 
-import React, { useState } from 'react';
-import { Box, Typography, Button, Chip, useTheme, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Tooltip } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-import { Warning as WarningIcon, Refresh as RefreshIcon, FilterList as FilterIcon } from '@mui/icons-material';
-import { useDesignSystem } from '@/shared/hooks';
-import { Card } from '@/shared/ui/Card';
-import { useBackorderItems, type ProductionPlanFilters, type BackorderItem } from '@/entities/production-plan';
-import { ProductionPlanFilters as ProductionPlanFiltersComponent } from '@/widgets/production-plan-manager/ui/ProductionPlanFilters';
+import React, { useState } from "react";
+import {
+  Box,
+  Typography,
+  Button,
+  Chip,
+  useTheme,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
+import { alpha } from "@mui/material/styles";
+import {
+  Warning as WarningIcon,
+  Refresh as RefreshIcon,
+  FilterList as FilterIcon,
+} from "@mui/icons-material";
+import { useDesignSystem } from "@/shared/hooks";
+import { Card } from "@/shared/ui/Card";
+import {
+  useBackorderItems,
+  type ProductionPlanFilters,
+  type BackorderItem,
+} from "@/entities/production-plan";
+import { ProductionPlanFilters as ProductionPlanFiltersComponent } from "@/widgets/production-plan-manager/ui/ProductionPlanFilters";
 
 export const ProductionPlanBackorderPage: React.FC = () => {
   const theme = useTheme();
   const ds = useDesignSystem();
-  
+
   const [filters, setFilters] = useState<ProductionPlanFilters>({
-    status: 'active',
+    status: "active",
     page: 1,
-    limit: 50
+    limit: 50,
   });
 
   const [showFilters, setShowFilters] = useState(false);
 
   // Query
-  const { data: backorderItems = [], isLoading, error, refetch } = useBackorderItems(filters);
+  const {
+    data: backorderItems = [],
+    isLoading,
+    error,
+    refetch,
+  } = useBackorderItems(filters);
 
   const handleFiltersChange = (newFilters: ProductionPlanFilters) => {
-    setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
+    setFilters((prev) => ({ ...prev, ...newFilters, page: 1 }));
   };
 
   const calculateDaysOverdue = (planlananBitisTarihi: string): number => {
@@ -39,27 +67,35 @@ export const ProductionPlanBackorderPage: React.FC = () => {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  const getRiskLevel = (daysOverdue: number): 'high' | 'medium' | 'low' => {
-    if (daysOverdue >= 15) return 'high';
-    if (daysOverdue >= 7) return 'medium';
-    return 'low';
+  const getRiskLevel = (daysOverdue: number): "high" | "medium" | "low" => {
+    if (daysOverdue >= 15) return "high";
+    if (daysOverdue >= 7) return "medium";
+    return "low";
   };
 
-  const getRiskColor = (riskLevel: 'high' | 'medium' | 'low'): string => {
+  const getRiskColor = (riskLevel: "high" | "medium" | "low"): string => {
     switch (riskLevel) {
-      case 'high': return theme.palette.error.main;
-      case 'medium': return theme.palette.warning.main;
-      case 'low': return theme.palette.info.main;
-      default: return theme.palette.grey[500];
+      case "high":
+        return theme.palette.error.main;
+      case "medium":
+        return theme.palette.warning.main;
+      case "low":
+        return theme.palette.info.main;
+      default:
+        return theme.palette.grey[500];
     }
   };
 
-  const getRiskLabel = (riskLevel: 'high' | 'medium' | 'low'): string => {
+  const getRiskLabel = (riskLevel: "high" | "medium" | "low"): string => {
     switch (riskLevel) {
-      case 'high': return 'Yüksek Risk';
-      case 'medium': return 'Orta Risk';
-      case 'low': return 'Düşük Risk';
-      default: return 'Bilinmeyen';
+      case "high":
+        return "Yüksek Risk";
+      case "medium":
+        return "Orta Risk";
+      case "low":
+        return "Düşük Risk";
+      default:
+        return "Bilinmeyen";
     }
   };
 
@@ -68,38 +104,38 @@ export const ProductionPlanBackorderPage: React.FC = () => {
     return (
       <Box
         sx={{
-          p: ds.spacing['4'],
-          minHeight: '50vh',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: ds.spacing['3']
+          p: ds.spacing["4"],
+          minHeight: "50vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: ds.spacing["3"],
         }}
       >
-        <WarningIcon 
-          sx={{ 
-            fontSize: 64, 
+        <WarningIcon
+          sx={{
+            fontSize: 64,
             color: theme.palette.success.main,
-            mb: ds.spacing['2']
-          }} 
+            mb: ds.spacing["2"],
+          }}
         />
-        <Typography 
-          variant="h4" 
-          sx={{ 
+        <Typography
+          variant="h4"
+          sx={{
             fontWeight: 600,
             color: theme.palette.success.main,
-            mb: ds.spacing['1']
+            mb: ds.spacing["1"],
           }}
         >
           Gecikmiş İş Yok - Tebrikler! 🎉
         </Typography>
-        <Typography 
-          variant="body1" 
-          sx={{ 
+        <Typography
+          variant="body1"
+          sx={{
             color: theme.palette.grey[600],
-            textAlign: 'center',
-            maxWidth: 400
+            textAlign: "center",
+            maxWidth: 400,
           }}
         >
           Tüm üretim planı öğeleri zamanında tamamlanmış durumda
@@ -111,19 +147,19 @@ export const ProductionPlanBackorderPage: React.FC = () => {
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        minHeight: "100vh",
         backgroundColor: theme.palette.grey[50],
       }}
     >
       {/* Header */}
       <Box
         sx={{
-          mb: ds.spacing['3'],
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: ds.spacing['2']
+          mb: ds.spacing["3"],
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: ds.spacing["2"],
         }}
       >
         <Box>
@@ -131,9 +167,9 @@ export const ProductionPlanBackorderPage: React.FC = () => {
             variant="h5"
             sx={{
               fontWeight: 700,
-              fontSize: '1.25rem',
+              fontSize: "1.25rem",
               color: theme.palette.error.main,
-              mb: ds.spacing['1']
+              mb: ds.spacing["1"],
             }}
           >
             Backorder - Gecikmiş İşler
@@ -142,30 +178,30 @@ export const ProductionPlanBackorderPage: React.FC = () => {
             variant="body2"
             sx={{
               color: theme.palette.grey[600],
-              fontSize: '0.875rem'
+              fontSize: "0.875rem",
             }}
           >
             {backorderItems.length} gecikmiş iş bulundu
           </Typography>
         </Box>
-        
-        <Box sx={{ display: 'flex', gap: ds.spacing['2'] }}>
+
+        <Box sx={{ display: "flex", gap: ds.spacing["2"] }}>
           <Button
             variant="outlined"
             size="small"
             startIcon={<FilterIcon />}
             onClick={() => setShowFilters(!showFilters)}
             sx={{
-              px: ds.spacing['3'],
-              py: ds.spacing['1'],
-              fontSize: '0.75rem',
+              px: ds.spacing["3"],
+              py: ds.spacing["1"],
+              fontSize: "0.75rem",
               fontWeight: 600,
-              borderRadius: ds.borderRadius['sm'],
+              borderRadius: ds.borderRadius["sm"],
             }}
           >
-            {showFilters ? 'Filtreleri Gizle' : 'Filtreler'}
+            {showFilters ? "Filtreleri Gizle" : "Filtreler"}
           </Button>
-          
+
           <Button
             variant="outlined"
             size="small"
@@ -173,11 +209,11 @@ export const ProductionPlanBackorderPage: React.FC = () => {
             onClick={() => refetch()}
             disabled={isLoading}
             sx={{
-              px: ds.spacing['3'],
-              py: ds.spacing['1'],
-              fontSize: '0.75rem',
+              px: ds.spacing["3"],
+              py: ds.spacing["1"],
+              fontSize: "0.75rem",
               fontWeight: 600,
-              borderRadius: ds.borderRadius['sm'],
+              borderRadius: ds.borderRadius["sm"],
             }}
           >
             Yenile
@@ -187,7 +223,7 @@ export const ProductionPlanBackorderPage: React.FC = () => {
 
       {/* Filters */}
       {showFilters && (
-        <Box sx={{ mb: ds.spacing['3'] }}>
+        <Box sx={{ mb: ds.spacing["3"] }}>
           <Card variant="outlined">
             <ProductionPlanFiltersComponent
               filters={filters}
@@ -203,20 +239,39 @@ export const ProductionPlanBackorderPage: React.FC = () => {
           <Table>
             <TableHead>
               <TableRow sx={{ backgroundColor: theme.palette.grey[50] }}>
-                <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>İş Tanımı</TableCell>
-                <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Sipariş No</TableCell>
-                <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Planlanan Bitiş</TableCell>
-                <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Gecikme</TableCell>
-                <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Risk Seviyesi</TableCell>
-                <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Bölüm</TableCell>
-                <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Öncelik</TableCell>
-                <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Miktar</TableCell>
+                <TableCell sx={{ fontWeight: 600, fontSize: "0.875rem" }}>
+                  İş Tanımı
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, fontSize: "0.875rem" }}>
+                  Sipariş No
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, fontSize: "0.875rem" }}>
+                  Planlanan Bitiş
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, fontSize: "0.875rem" }}>
+                  Gecikme
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, fontSize: "0.875rem" }}>
+                  Risk Seviyesi
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, fontSize: "0.875rem" }}>
+                  Bölüm
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, fontSize: "0.875rem" }}>
+                  Öncelik
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, fontSize: "0.875rem" }}>
+                  Miktar
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} sx={{ textAlign: 'center', py: ds.spacing['4'] }}>
+                  <TableCell
+                    colSpan={8}
+                    sx={{ textAlign: "center", py: ds.spacing["4"] }}
+                  >
                     <Typography variant="body2" color="text.secondary">
                       Yükleniyor...
                     </Typography>
@@ -224,7 +279,10 @@ export const ProductionPlanBackorderPage: React.FC = () => {
                 </TableRow>
               ) : error ? (
                 <TableRow>
-                  <TableCell colSpan={8} sx={{ textAlign: 'center', py: ds.spacing['4'] }}>
+                  <TableCell
+                    colSpan={8}
+                    sx={{ textAlign: "center", py: ds.spacing["4"] }}
+                  >
                     <Typography variant="body2" color="error">
                       Hata: {error.message}
                     </Typography>
@@ -232,7 +290,10 @@ export const ProductionPlanBackorderPage: React.FC = () => {
                 </TableRow>
               ) : backorderItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} sx={{ textAlign: 'center', py: ds.spacing['4'] }}>
+                  <TableCell
+                    colSpan={8}
+                    sx={{ textAlign: "center", py: ds.spacing["4"] }}
+                  >
                     <Typography variant="body2" color="text.secondary">
                       Gecikmiş iş bulunamadı
                     </Typography>
@@ -240,16 +301,18 @@ export const ProductionPlanBackorderPage: React.FC = () => {
                 </TableRow>
               ) : (
                 backorderItems.map((item: BackorderItem) => {
-                  const daysOverdue = calculateDaysOverdue(item.planlananBitisTarihi);
+                  const daysOverdue = calculateDaysOverdue(
+                    item.planlananBitisTarihi,
+                  );
                   const riskLevel = getRiskLevel(daysOverdue);
-                  
+
                   return (
-                    <TableRow 
+                    <TableRow
                       key={item.id}
-                      sx={{ 
-                        '&:hover': { 
-                          backgroundColor: theme.palette.action.hover 
-                        }
+                      sx={{
+                        "&:hover": {
+                          backgroundColor: theme.palette.action.hover,
+                        },
                       }}
                     >
                       <TableCell>
@@ -261,13 +324,18 @@ export const ProductionPlanBackorderPage: React.FC = () => {
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontFamily: "monospace" }}
+                        >
                           {item.siparis}
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body2">
-                          {new Date(item.planlananBitisTarihi).toLocaleDateString('tr-TR')}
+                          {new Date(
+                            item.planlananBitisTarihi,
+                          ).toLocaleDateString("tr-TR")}
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -276,9 +344,9 @@ export const ProductionPlanBackorderPage: React.FC = () => {
                           size="small"
                           sx={{
                             backgroundColor: getRiskColor(riskLevel),
-                            color: 'white',
+                            color: "white",
                             fontWeight: 600,
-                            fontSize: '0.75rem'
+                            fontSize: "0.75rem",
                           }}
                         />
                       </TableCell>
@@ -291,21 +359,25 @@ export const ProductionPlanBackorderPage: React.FC = () => {
                             borderColor: getRiskColor(riskLevel),
                             color: getRiskColor(riskLevel),
                             fontWeight: 600,
-                            fontSize: '0.75rem'
+                            fontSize: "0.75rem",
                           }}
                         />
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2">
-                          {item.bolum}
-                        </Typography>
+                        <Typography variant="body2">{item.bolum}</Typography>
                       </TableCell>
                       <TableCell>
                         <Chip
                           label={item.oncelik}
                           size="small"
-                          color={item.oncelik === 'yuksek' ? 'error' : item.oncelik === 'orta' ? 'warning' : 'success'}
-                          sx={{ fontSize: '0.75rem' }}
+                          color={
+                            item.oncelik === "yuksek"
+                              ? "error"
+                              : item.oncelik === "orta"
+                                ? "warning"
+                                : "success"
+                          }
+                          sx={{ fontSize: "0.75rem" }}
                         />
                       </TableCell>
                       <TableCell>

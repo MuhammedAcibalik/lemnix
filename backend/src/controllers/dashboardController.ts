@@ -4,9 +4,9 @@
  * @version 1.0.0 - Real Database Integration
  */
 
-import { Request, Response, NextFunction } from 'express';
-import { dashboardService } from '../services/monitoring/dashboardService';
-import { logger } from '../services/logger';
+import { Request, Response, NextFunction } from "express";
+import { dashboardService } from "../services/monitoring/dashboardService";
+import { logger } from "../services/logger";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -43,7 +43,7 @@ export class DashboardController {
     data?: T,
     error?: string,
     message?: string,
-    requestId?: string
+    requestId?: string,
   ): ApiResponse<T> {
     return {
       success,
@@ -106,9 +106,17 @@ export class DashboardController {
         };
 
         logger.info(`[${requestId}] Dashboard data retrieved successfully`);
-        res.status(200).json(
-          this.createResponse(true, responseData, undefined, 'Dashboard data retrieved successfully', requestId)
-        );
+        res
+          .status(200)
+          .json(
+            this.createResponse(
+              true,
+              responseData,
+              undefined,
+              "Dashboard data retrieved successfully",
+              requestId,
+            ),
+          );
       } catch (error: unknown) {
         const err = error as Error;
         logger.error(`[${requestId}] Failed to get dashboard data`, {
@@ -116,17 +124,19 @@ export class DashboardController {
           stack: err.stack,
         });
 
-        res.status(500).json(
-          this.createResponse(
-            false,
-            undefined,
-            'Failed to retrieve dashboard data',
-            err.message,
-            requestId
-          )
-        );
+        res
+          .status(500)
+          .json(
+            this.createResponse(
+              false,
+              undefined,
+              "Failed to retrieve dashboard data",
+              err.message,
+              requestId,
+            ),
+          );
       }
-    }
+    },
   );
 
   /**
@@ -140,18 +150,36 @@ export class DashboardController {
       try {
         const metrics = await dashboardService.getDashboardMetrics();
 
-        res.status(200).json(
-          this.createResponse(true, metrics, undefined, 'Metrics retrieved successfully', requestId)
-        );
+        res
+          .status(200)
+          .json(
+            this.createResponse(
+              true,
+              metrics,
+              undefined,
+              "Metrics retrieved successfully",
+              requestId,
+            ),
+          );
       } catch (error: unknown) {
         const err = error as Error;
-        logger.error(`[${requestId}] Failed to get metrics`, { error: err.message });
+        logger.error(`[${requestId}] Failed to get metrics`, {
+          error: err.message,
+        });
 
-        res.status(500).json(
-          this.createResponse(false, undefined, 'Failed to retrieve metrics', err.message, requestId)
-        );
+        res
+          .status(500)
+          .json(
+            this.createResponse(
+              false,
+              undefined,
+              "Failed to retrieve metrics",
+              err.message,
+              requestId,
+            ),
+          );
       }
-    }
+    },
   );
 
   /**
@@ -165,24 +193,36 @@ export class DashboardController {
       try {
         const data = await dashboardService.getAlgorithmPerformance();
 
-        res.status(200).json(
-          this.createResponse(true, data, undefined, 'Algorithm performance retrieved', requestId)
-        );
+        res
+          .status(200)
+          .json(
+            this.createResponse(
+              true,
+              data,
+              undefined,
+              "Algorithm performance retrieved",
+              requestId,
+            ),
+          );
       } catch (error: unknown) {
         const err = error as Error;
-        logger.error(`[${requestId}] Failed to get algorithm performance`, { error: err.message });
+        logger.error(`[${requestId}] Failed to get algorithm performance`, {
+          error: err.message,
+        });
 
-        res.status(500).json(
-          this.createResponse(
-            false,
-            undefined,
-            'Failed to retrieve algorithm performance',
-            err.message,
-            requestId
-          )
-        );
+        res
+          .status(500)
+          .json(
+            this.createResponse(
+              false,
+              undefined,
+              "Failed to retrieve algorithm performance",
+              err.message,
+              requestId,
+            ),
+          );
       }
-    }
+    },
   );
 
   /**
@@ -197,18 +237,36 @@ export class DashboardController {
       try {
         const data = await dashboardService.getWasteReductionTrend(days);
 
-        res.status(200).json(
-          this.createResponse(true, data, undefined, 'Waste trend retrieved', requestId)
-        );
+        res
+          .status(200)
+          .json(
+            this.createResponse(
+              true,
+              data,
+              undefined,
+              "Waste trend retrieved",
+              requestId,
+            ),
+          );
       } catch (error: unknown) {
         const err = error as Error;
-        logger.error(`[${requestId}] Failed to get waste trend`, { error: err.message });
+        logger.error(`[${requestId}] Failed to get waste trend`, {
+          error: err.message,
+        });
 
-        res.status(500).json(
-          this.createResponse(false, undefined, 'Failed to retrieve waste trend', err.message, requestId)
-        );
+        res
+          .status(500)
+          .json(
+            this.createResponse(
+              false,
+              undefined,
+              "Failed to retrieve waste trend",
+              err.message,
+              requestId,
+            ),
+          );
       }
-    }
+    },
   );
 
   /**
@@ -223,18 +281,36 @@ export class DashboardController {
       try {
         const data = await dashboardService.getRecentActivities(limit);
 
-        res.status(200).json(
-          this.createResponse(true, data, undefined, 'Activities retrieved', requestId)
-        );
+        res
+          .status(200)
+          .json(
+            this.createResponse(
+              true,
+              data,
+              undefined,
+              "Activities retrieved",
+              requestId,
+            ),
+          );
       } catch (error: unknown) {
         const err = error as Error;
-        logger.error(`[${requestId}] Failed to get activities`, { error: err.message });
+        logger.error(`[${requestId}] Failed to get activities`, {
+          error: err.message,
+        });
 
-        res.status(500).json(
-          this.createResponse(false, undefined, 'Failed to retrieve activities', err.message, requestId)
-        );
+        res
+          .status(500)
+          .json(
+            this.createResponse(
+              false,
+              undefined,
+              "Failed to retrieve activities",
+              err.message,
+              requestId,
+            ),
+          );
       }
-    }
+    },
   );
 
   /**
@@ -249,24 +325,36 @@ export class DashboardController {
       try {
         const data = await dashboardService.getProfileUsageStats(limit);
 
-        res.status(200).json(
-          this.createResponse(true, data, undefined, 'Profile usage retrieved', requestId)
-        );
+        res
+          .status(200)
+          .json(
+            this.createResponse(
+              true,
+              data,
+              undefined,
+              "Profile usage retrieved",
+              requestId,
+            ),
+          );
       } catch (error: unknown) {
         const err = error as Error;
-        logger.error(`[${requestId}] Failed to get profile usage`, { error: err.message });
+        logger.error(`[${requestId}] Failed to get profile usage`, {
+          error: err.message,
+        });
 
-        res.status(500).json(
-          this.createResponse(
-            false,
-            undefined,
-            'Failed to retrieve profile usage',
-            err.message,
-            requestId
-          )
-        );
+        res
+          .status(500)
+          .json(
+            this.createResponse(
+              false,
+              undefined,
+              "Failed to retrieve profile usage",
+              err.message,
+              requestId,
+            ),
+          );
       }
-    }
+    },
   );
 
   /**
@@ -280,21 +368,38 @@ export class DashboardController {
       try {
         const data = await dashboardService.getSystemHealth();
 
-        res.status(200).json(
-          this.createResponse(true, data, undefined, 'System health retrieved', requestId)
-        );
+        res
+          .status(200)
+          .json(
+            this.createResponse(
+              true,
+              data,
+              undefined,
+              "System health retrieved",
+              requestId,
+            ),
+          );
       } catch (error: unknown) {
         const err = error as Error;
-        logger.error(`[${requestId}] Failed to get system health`, { error: err.message });
+        logger.error(`[${requestId}] Failed to get system health`, {
+          error: err.message,
+        });
 
-        res.status(500).json(
-          this.createResponse(false, undefined, 'Failed to retrieve system health', err.message, requestId)
-        );
+        res
+          .status(500)
+          .json(
+            this.createResponse(
+              false,
+              undefined,
+              "Failed to retrieve system health",
+              err.message,
+              requestId,
+            ),
+          );
       }
-    }
+    },
   );
 }
 
 // Export singleton instance
 export const dashboardController = new DashboardController();
-

@@ -4,9 +4,9 @@
  * @version 1.0.0
  */
 
-import { Request, Response, NextFunction } from 'express';
-import { logger } from '../services/logger';
-import { UserRole } from './authorization';
+import { Request, Response, NextFunction } from "express";
+import { logger } from "../services/logger";
+import { UserRole } from "./authorization";
 
 // ============================================================================
 // AUDIT EVENT TYPES
@@ -14,35 +14,35 @@ import { UserRole } from './authorization';
 
 export enum AuditEventType {
   // Authentication events
-  LOGIN_SUCCESS = 'auth:login_success',
-  LOGIN_FAILED = 'auth:login_failed',
-  LOGOUT = 'auth:logout',
-  TOKEN_REFRESH = 'auth:token_refresh',
-  TOKEN_EXPIRED = 'auth:token_expired',
-  
+  LOGIN_SUCCESS = "auth:login_success",
+  LOGIN_FAILED = "auth:login_failed",
+  LOGOUT = "auth:logout",
+  TOKEN_REFRESH = "auth:token_refresh",
+  TOKEN_EXPIRED = "auth:token_expired",
+
   // Authorization events
-  PERMISSION_GRANTED = 'authz:permission_granted',
-  PERMISSION_DENIED = 'authz:permission_denied',
-  ROLE_CHANGED = 'authz:role_changed',
-  
+  PERMISSION_GRANTED = "authz:permission_granted",
+  PERMISSION_DENIED = "authz:permission_denied",
+  ROLE_CHANGED = "authz:role_changed",
+
   // Optimization events
-  OPTIMIZATION_STARTED = 'opt:optimization_started',
-  OPTIMIZATION_COMPLETED = 'opt:optimization_completed',
-  OPTIMIZATION_FAILED = 'opt:optimization_failed',
-  OPTIMIZATION_CANCELLED = 'opt:optimization_cancelled',
-  
+  OPTIMIZATION_STARTED = "opt:optimization_started",
+  OPTIMIZATION_COMPLETED = "opt:optimization_completed",
+  OPTIMIZATION_FAILED = "opt:optimization_failed",
+  OPTIMIZATION_CANCELLED = "opt:optimization_cancelled",
+
   // Configuration events
-  CONFIG_CHANGED = 'config:changed',
-  POLICY_CHANGED = 'config:policy_changed',
-  
+  CONFIG_CHANGED = "config:changed",
+  POLICY_CHANGED = "config:policy_changed",
+
   // Quarantine events
-  QUARANTINE_DECISION = 'quarantine:decision',
-  QUARANTINE_EXCEPTION = 'quarantine:exception',
-  
+  QUARANTINE_DECISION = "quarantine:decision",
+  QUARANTINE_EXCEPTION = "quarantine:exception",
+
   // System events
-  BACKUP_TRIGGERED = 'system:backup_triggered',
-  RATE_LIMIT_EXCEEDED = 'system:rate_limit_exceeded',
-  SECURITY_ALERT = 'system:security_alert'
+  BACKUP_TRIGGERED = "system:backup_triggered",
+  RATE_LIMIT_EXCEEDED = "system:rate_limit_exceeded",
+  SECURITY_ALERT = "system:security_alert",
 }
 
 // ============================================================================
@@ -60,9 +60,9 @@ export interface AuditEvent {
   userAgent: string | undefined;
   resource: string | undefined;
   action: string | undefined;
-  result: 'success' | 'failure' | 'blocked';
+  result: "success" | "failure" | "blocked";
   details: Record<string, unknown> | undefined;
-  riskLevel: 'low' | 'medium' | 'high' | 'critical';
+  riskLevel: "low" | "medium" | "high" | "critical";
   correlationId: string | undefined;
 }
 
@@ -81,14 +81,14 @@ class AuditStore {
   storeEvent(event: AuditEvent): void {
     // Add to main events array
     this.events.push(event);
-    
+
     // Keep only last maxEvents
     if (this.events.length > this.maxEvents) {
       this.events = this.events.slice(-this.maxEvents);
     }
 
     // Store critical events separately
-    if (event.riskLevel === 'critical' || event.riskLevel === 'high') {
+    if (event.riskLevel === "critical" || event.riskLevel === "high") {
       this.criticalEvents.push(event);
     }
 
@@ -101,8 +101,8 @@ class AuditStore {
    */
   private logEvent(event: AuditEvent): void {
     const logLevel = this.getLogLevel(event.riskLevel);
-    
-    logger[logLevel]('Audit Event', {
+
+    logger[logLevel]("Audit Event", {
       eventId: event.eventId,
       eventType: event.eventType,
       userId: event.userId,
@@ -115,22 +115,22 @@ class AuditStore {
       result: event.result,
       riskLevel: event.riskLevel,
       correlationId: event.correlationId,
-      details: event.details
+      details: event.details,
     });
   }
 
   /**
    * Get log level based on risk level
    */
-  private getLogLevel(riskLevel: string): 'info' | 'warn' | 'error' {
+  private getLogLevel(riskLevel: string): "info" | "warn" | "error" {
     switch (riskLevel) {
-      case 'critical':
-      case 'high':
-        return 'error';
-      case 'medium':
-        return 'warn';
+      case "critical":
+      case "high":
+        return "error";
+      case "medium":
+        return "warn";
       default:
-        return 'info';
+        return "info";
     }
   }
 
@@ -149,31 +149,46 @@ class AuditStore {
     let filteredEvents = this.events;
 
     if (criteria.eventType) {
-      filteredEvents = filteredEvents.filter(e => e.eventType === criteria.eventType);
+      filteredEvents = filteredEvents.filter(
+        (e) => e.eventType === criteria.eventType,
+      );
     }
 
     if (criteria.userId) {
-      filteredEvents = filteredEvents.filter(e => e.userId === criteria.userId);
+      filteredEvents = filteredEvents.filter(
+        (e) => e.userId === criteria.userId,
+      );
     }
 
     if (criteria.sessionId) {
-      filteredEvents = filteredEvents.filter(e => e.sessionId === criteria.sessionId);
+      filteredEvents = filteredEvents.filter(
+        (e) => e.sessionId === criteria.sessionId,
+      );
     }
 
     if (criteria.riskLevel) {
-      filteredEvents = filteredEvents.filter(e => e.riskLevel === criteria.riskLevel);
+      filteredEvents = filteredEvents.filter(
+        (e) => e.riskLevel === criteria.riskLevel,
+      );
     }
 
     if (criteria.startTime) {
-      filteredEvents = filteredEvents.filter(e => e.timestamp >= criteria.startTime!);
+      filteredEvents = filteredEvents.filter(
+        (e) => e.timestamp >= criteria.startTime!,
+      );
     }
 
     if (criteria.endTime) {
-      filteredEvents = filteredEvents.filter(e => e.timestamp <= criteria.endTime!);
+      filteredEvents = filteredEvents.filter(
+        (e) => e.timestamp <= criteria.endTime!,
+      );
     }
 
     // Sort by timestamp (newest first)
-    filteredEvents.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    filteredEvents.sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
 
     if (criteria.limit) {
       filteredEvents = filteredEvents.slice(0, criteria.limit);
@@ -187,7 +202,10 @@ class AuditStore {
    */
   getCriticalEvents(limit: number = 100): AuditEvent[] {
     return this.criticalEvents
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      )
       .slice(0, limit);
   }
 
@@ -207,13 +225,13 @@ class AuditStore {
     const eventsByType: Record<string, number> = {};
     const eventsByRisk: Record<string, number> = {};
 
-    this.events.forEach(event => {
+    this.events.forEach((event) => {
       eventsByType[event.eventType] = (eventsByType[event.eventType] || 0) + 1;
       eventsByRisk[event.riskLevel] = (eventsByRisk[event.riskLevel] || 0) + 1;
     });
 
     const recentActivity = this.events.filter(
-      event => new Date(event.timestamp) > oneHourAgo
+      (event) => new Date(event.timestamp) > oneHourAgo,
     ).length;
 
     return {
@@ -221,7 +239,7 @@ class AuditStore {
       criticalEvents: this.criticalEvents.length,
       eventsByType,
       eventsByRisk,
-      recentActivity
+      recentActivity,
     };
   }
 }
@@ -243,31 +261,40 @@ const generateEventId = (): string => {
 /**
  * Determine risk level based on event type and context
  */
-const determineRiskLevel = (eventType: AuditEventType, result: string): 'low' | 'medium' | 'high' | 'critical' => {
+const determineRiskLevel = (
+  eventType: AuditEventType,
+  result: string,
+): "low" | "medium" | "high" | "critical" => {
   // Critical events
-  if (eventType === AuditEventType.SECURITY_ALERT || 
-      eventType === AuditEventType.PERMISSION_DENIED ||
-      eventType === AuditEventType.RATE_LIMIT_EXCEEDED) {
-    return 'critical';
+  if (
+    eventType === AuditEventType.SECURITY_ALERT ||
+    eventType === AuditEventType.PERMISSION_DENIED ||
+    eventType === AuditEventType.RATE_LIMIT_EXCEEDED
+  ) {
+    return "critical";
   }
 
   // High risk events
-  if (eventType === AuditEventType.LOGIN_FAILED ||
-      eventType === AuditEventType.ROLE_CHANGED ||
-      eventType === AuditEventType.CONFIG_CHANGED ||
-      eventType === AuditEventType.OPTIMIZATION_FAILED) {
-    return 'high';
+  if (
+    eventType === AuditEventType.LOGIN_FAILED ||
+    eventType === AuditEventType.ROLE_CHANGED ||
+    eventType === AuditEventType.CONFIG_CHANGED ||
+    eventType === AuditEventType.OPTIMIZATION_FAILED
+  ) {
+    return "high";
   }
 
   // Medium risk events
-  if (eventType === AuditEventType.OPTIMIZATION_STARTED ||
-      eventType === AuditEventType.QUARANTINE_DECISION ||
-      result === 'failure') {
-    return 'medium';
+  if (
+    eventType === AuditEventType.OPTIMIZATION_STARTED ||
+    eventType === AuditEventType.QUARANTINE_DECISION ||
+    result === "failure"
+  ) {
+    return "medium";
   }
 
   // Low risk events (default)
-  return 'low';
+  return "low";
 };
 
 /**
@@ -276,9 +303,9 @@ const determineRiskLevel = (eventType: AuditEventType, result: string): 'low' | 
 export const createAuditEvent = (
   eventType: AuditEventType,
   req: Request,
-  result: 'success' | 'failure' | 'blocked',
+  result: "success" | "failure" | "blocked",
   details?: Record<string, any>,
-  correlationId?: string
+  correlationId?: string,
 ): AuditEvent => {
   return {
     eventId: generateEventId(),
@@ -287,14 +314,14 @@ export const createAuditEvent = (
     userId: req.user?.userId,
     sessionId: req.user?.sessionId,
     userRole: req.user?.role,
-    ipAddress: req.ip || 'unknown',
-    userAgent: req.get('User-Agent'),
+    ipAddress: req.ip || "unknown",
+    userAgent: req.get("User-Agent"),
     resource: req.path,
     action: req.method,
     result,
     details,
     riskLevel: determineRiskLevel(eventType, result),
-    correlationId
+    correlationId,
   };
 };
 
@@ -304,25 +331,40 @@ export const createAuditEvent = (
 export const createAuditMiddleware = (eventType: AuditEventType) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     const startTime = Date.now();
-    
+
     // Store original end function
     const originalEnd = res.end.bind(res);
-    res.end = function(chunk?: unknown, encoding?: unknown, cb?: unknown): Response {
+    res.end = function (
+      chunk?: unknown,
+      encoding?: unknown,
+      cb?: unknown,
+    ): Response {
       const duration = Date.now() - startTime;
-      const result = res.statusCode >= 200 && res.statusCode < 400 ? 'success' : 'failure';
-      
+      const result =
+        res.statusCode >= 200 && res.statusCode < 400 ? "success" : "failure";
+
       // Create audit event
       const event = createAuditEvent(eventType, req, result, {
         statusCode: res.statusCode,
         duration,
-        responseSize: chunk ? (typeof chunk === 'string' ? chunk.length : Buffer.isBuffer(chunk) ? chunk.length : 0) : 0
+        responseSize: chunk
+          ? typeof chunk === "string"
+            ? chunk.length
+            : Buffer.isBuffer(chunk)
+              ? chunk.length
+              : 0
+          : 0,
       });
-      
+
       // Store event
       auditStore.storeEvent(event);
-      
+
       // Call original end function with proper parameters
-      return originalEnd(chunk, encoding as BufferEncoding, cb as (() => void) | undefined);
+      return originalEnd(
+        chunk,
+        encoding as BufferEncoding,
+        cb as (() => void) | undefined,
+      );
     };
 
     next();
@@ -332,31 +374,35 @@ export const createAuditMiddleware = (eventType: AuditEventType) => {
 /**
  * Specialized audit middleware for authentication
  */
-export const auditAuth = (req: Request, res: Response, next: NextFunction): void => {
+export const auditAuth = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
   const originalJson = res.json;
-  
-  res.json = function(obj: unknown) {
+
+  res.json = function (obj: unknown) {
     let eventType: AuditEventType;
-    let result: 'success' | 'failure' | 'blocked';
-    
+    let result: "success" | "failure" | "blocked";
+
     if (res.statusCode === 200 && (obj as { success?: boolean }).success) {
       eventType = AuditEventType.LOGIN_SUCCESS;
-      result = 'success';
+      result = "success";
     } else if (res.statusCode === 401) {
       eventType = AuditEventType.LOGIN_FAILED;
-      result = 'failure';
+      result = "failure";
     } else {
       eventType = AuditEventType.LOGIN_FAILED;
-      result = 'failure';
+      result = "failure";
     }
 
     const event = createAuditEvent(eventType, req, result, {
       username: req.body?.username,
-      statusCode: res.statusCode
+      statusCode: res.statusCode,
     });
 
     auditStore.storeEvent(event);
-    
+
     return originalJson.call(this, obj);
   };
 
@@ -366,30 +412,35 @@ export const auditAuth = (req: Request, res: Response, next: NextFunction): void
 /**
  * Audit middleware for optimization operations
  */
-export const auditOptimization = (req: Request, res: Response, next: NextFunction): void => {
+export const auditOptimization = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
   const originalJson = res.json;
-  
-  res.json = function(obj: unknown) {
+
+  res.json = function (obj: unknown) {
     let eventType: AuditEventType;
-    
-    if (req.method === 'POST' && req.path.includes('/optimize')) {
+
+    if (req.method === "POST" && req.path.includes("/optimize")) {
       eventType = AuditEventType.OPTIMIZATION_STARTED;
-    } else if (req.method === 'DELETE' && req.path.includes('/optimize')) {
+    } else if (req.method === "DELETE" && req.path.includes("/optimize")) {
       eventType = AuditEventType.OPTIMIZATION_CANCELLED;
     } else {
       return originalJson.call(this, obj);
     }
 
-    const result = res.statusCode >= 200 && res.statusCode < 400 ? 'success' : 'failure';
-    
+    const result =
+      res.statusCode >= 200 && res.statusCode < 400 ? "success" : "failure";
+
     const event = createAuditEvent(eventType, req, result, {
       algorithm: req.body?.algorithm,
       itemCount: req.body?.items?.length,
-      statusCode: res.statusCode
+      statusCode: res.statusCode,
     });
 
     auditStore.storeEvent(event);
-    
+
     return originalJson.call(this, obj);
   };
 
@@ -406,12 +457,17 @@ export const auditOptimization = (req: Request, res: Response, next: NextFunctio
 export const logSecurityAlert = (
   req: Request,
   alertType: string,
-  details: Record<string, any>
+  details: Record<string, any>,
 ): void => {
-  const event = createAuditEvent(AuditEventType.SECURITY_ALERT, req, 'blocked', {
-    alertType,
-    ...details
-  });
+  const event = createAuditEvent(
+    AuditEventType.SECURITY_ALERT,
+    req,
+    "blocked",
+    {
+      alertType,
+      ...details,
+    },
+  );
 
   auditStore.storeEvent(event);
 };
@@ -422,13 +478,18 @@ export const logSecurityAlert = (
 export const logPermissionDenied = (
   req: Request,
   permission: string,
-  resource: string
+  resource: string,
 ): void => {
-  const event = createAuditEvent(AuditEventType.PERMISSION_DENIED, req, 'blocked', {
-    permission,
-    resource,
-    attemptedAction: req.method
-  });
+  const event = createAuditEvent(
+    AuditEventType.PERMISSION_DENIED,
+    req,
+    "blocked",
+    {
+      permission,
+      resource,
+      attemptedAction: req.method,
+    },
+  );
 
   auditStore.storeEvent(event);
 };
@@ -439,13 +500,18 @@ export const logPermissionDenied = (
 export const logRateLimitExceeded = (
   req: Request,
   limitType: string,
-  retryAfter: number
+  retryAfter: number,
 ): void => {
-  const event = createAuditEvent(AuditEventType.RATE_LIMIT_EXCEEDED, req, 'blocked', {
-    limitType,
-    retryAfter,
-    userAgent: req.get('User-Agent')
-  });
+  const event = createAuditEvent(
+    AuditEventType.RATE_LIMIT_EXCEEDED,
+    req,
+    "blocked",
+    {
+      limitType,
+      retryAfter,
+      userAgent: req.get("User-Agent"),
+    },
+  );
 
   auditStore.storeEvent(event);
 };

@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 import {
   Grid,
   Alert,
@@ -16,25 +16,30 @@ import {
   TableRow,
   TableCell,
   Paper,
-  Chip
-} from '@mui/material';
-import { WasteAnalysisTabProps } from '../types';
-import { messages } from '../constants';
+  Chip,
+} from "@mui/material";
+import { WasteAnalysisTabProps } from "../types";
+import { messages } from "../constants";
 
 /**
  * Waste Analysis Tab Component
  */
 export const WasteAnalysisTab: React.FC<WasteAnalysisTabProps> = ({
-  result
+  result,
 }) => {
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
         <Alert
-          severity={result.optimizationResult.wastePercentage < 10 ? "success" : "warning"}
+          severity={
+            result.optimizationResult.wastePercentage < 10
+              ? "success"
+              : "warning"
+          }
         >
           <AlertTitle>
-            {messages.wasteAnalysis.wasteRate}: %{result.optimizationResult.wastePercentage?.toFixed(1)}
+            {messages.wasteAnalysis.wasteRate}: %
+            {result.optimizationResult.wastePercentage?.toFixed(1)}
           </AlertTitle>
           {result.optimizationResult.wastePercentage < 10
             ? messages.wasteAnalysis.excellentMessage
@@ -57,14 +62,28 @@ export const WasteAnalysisTab: React.FC<WasteAnalysisTabProps> = ({
                 <TableRow key={group.profileType}>
                   <TableCell>{group.profileType}</TableCell>
                   <TableCell align="center">{group.waste}</TableCell>
-                  <TableCell align="center">{group.efficiency.toFixed(1)}%</TableCell>
+                  <TableCell align="center">
+                    {group.efficiency.toFixed(1)}%
+                  </TableCell>
                   <TableCell>
                     {group.waste < 200 && group.efficiency > 85 ? (
-                      <Chip label={messages.wasteAnalysis.status.excellent} color="success" size="small" />
+                      <Chip
+                        label={messages.wasteAnalysis.status.excellent}
+                        color="success"
+                        size="small"
+                      />
                     ) : group.waste < 500 && group.efficiency > 70 ? (
-                      <Chip label={messages.wasteAnalysis.status.good} color="warning" size="small" />
+                      <Chip
+                        label={messages.wasteAnalysis.status.good}
+                        color="warning"
+                        size="small"
+                      />
                     ) : (
-                      <Chip label={messages.wasteAnalysis.status.improvable} color="error" size="small" />
+                      <Chip
+                        label={messages.wasteAnalysis.status.improvable}
+                        color="error"
+                        size="small"
+                      />
                     )}
                   </TableCell>
                 </TableRow>

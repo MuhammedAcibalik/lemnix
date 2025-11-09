@@ -3,7 +3,7 @@
  * Design System v2.0 compliant
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,24 +13,27 @@ import {
   IconButton,
   Alert,
   CircularProgress,
-  Stack
-} from '@mui/material';
+  Stack,
+} from "@mui/material";
 import {
   Close as CloseIcon,
   Upload as UploadIcon,
   CloudUpload as CloudUploadIcon,
-  CheckCircle as CheckCircleIcon
-} from '@mui/icons-material';
-import { useDesignSystem } from '@/shared/hooks';
-import { alpha } from '@mui/material/styles';
-import { useUploadProfileManagement } from '../model/useProfileManagement';
+  CheckCircle as CheckCircleIcon,
+} from "@mui/icons-material";
+import { useDesignSystem } from "@/shared/hooks";
+import { alpha } from "@mui/material/styles";
+import { useUploadProfileManagement } from "../model/useProfileManagement";
 
 interface UploadDialogProps {
   readonly open: boolean;
   readonly onClose: () => void;
 }
 
-export const UploadDialog: React.FC<UploadDialogProps> = ({ open, onClose }) => {
+export const UploadDialog: React.FC<UploadDialogProps> = ({
+  open,
+  onClose,
+}) => {
   const ds = useDesignSystem();
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -39,9 +42,9 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({ open, onClose }) => 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
+    if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
-    } else if (e.type === 'dragleave') {
+    } else if (e.type === "dragleave") {
       setDragActive(false);
     }
   }, []);
@@ -56,18 +59,21 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({ open, onClose }) => 
     }
   }, []);
 
-  const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
-  }, []);
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+        setFile(e.target.files[0]);
+      }
+    },
+    [],
+  );
 
   const handleUpload = async () => {
     if (!file) return;
 
     try {
       const result = await uploadMutation.mutateAsync(file);
-      
+
       if (result.success) {
         setTimeout(() => {
           onClose();
@@ -96,8 +102,8 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({ open, onClose }) => 
       PaperProps={{
         sx: {
           borderRadius: `${ds.borderRadius.xl}px`,
-          overflow: 'hidden'
-        }
+          overflow: "hidden",
+        },
       }}
     >
       {/* Glass Header */}
@@ -106,28 +112,30 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({ open, onClose }) => 
           background: ds.glass.background,
           backdropFilter: ds.glass.backdropFilter,
           borderBottom: ds.glass.border,
-          p: ds.spacing['4'],
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
+          p: ds.spacing["4"],
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: ds.spacing['2'] }}>
+        <Box
+          sx={{ display: "flex", alignItems: "center", gap: ds.spacing["2"] }}
+        >
           <CloudUploadIcon
             sx={{
               color: ds.colors.primary.main,
-              fontSize: ds.componentSizes.icon.large
+              fontSize: ds.componentSizes.icon.large,
             }}
           />
           <Typography
             sx={{
-              fontSize: '1.5rem',
+              fontSize: "1.5rem",
               fontWeight: ds.typography.fontWeight.bold,
               background: ds.gradients.primary,
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              letterSpacing: ds.typography.letterSpacing.tight
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              letterSpacing: ds.typography.letterSpacing.tight,
             }}
           >
             Profil Yönetimi Yükle
@@ -141,18 +149,18 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({ open, onClose }) => 
           sx={{
             color: ds.colors.text.secondary,
             transition: ds.transitions.fast,
-            '&:hover': {
+            "&:hover": {
               color: ds.colors.text.primary,
-              backgroundColor: alpha(ds.colors.neutral[900], 0.04)
-            }
+              backgroundColor: alpha(ds.colors.neutral[900], 0.04),
+            },
           }}
         >
           <CloseIcon fontSize="small" />
         </IconButton>
       </Box>
 
-      <DialogContent sx={{ p: ds.spacing['6'] }}>
-        <Stack spacing={ds.spacing['4']}>
+      <DialogContent sx={{ p: ds.spacing["6"] }}>
+        <Stack spacing={ds.spacing["4"]}>
           {/* Upload Area */}
           <Box
             onDragEnter={handleDrag}
@@ -164,33 +172,33 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({ open, onClose }) => 
                 dragActive ? ds.colors.primary.main : ds.colors.neutral[300]
               }`,
               borderRadius: `${ds.borderRadius.lg}px`,
-              p: ds.spacing['8'],
-              textAlign: 'center',
+              p: ds.spacing["8"],
+              textAlign: "center",
               backgroundColor: dragActive
                 ? alpha(ds.colors.primary.main, 0.02)
                 : ds.colors.neutral[50],
               transition: ds.transitions.base,
-              cursor: 'pointer',
-              '&:hover': {
+              cursor: "pointer",
+              "&:hover": {
                 borderColor: ds.colors.primary.main,
-                backgroundColor: alpha(ds.colors.primary.main, 0.02)
-              }
+                backgroundColor: alpha(ds.colors.primary.main, 0.02),
+              },
             }}
-            onClick={() => document.getElementById('file-input')?.click()}
+            onClick={() => document.getElementById("file-input")?.click()}
           >
             <input
               id="file-input"
               type="file"
               accept=".xlsx,.xls"
               onChange={handleFileInput}
-              style={{ display: 'none' }}
+              style={{ display: "none" }}
             />
 
             <UploadIcon
               sx={{
                 fontSize: 64,
                 color: file ? ds.colors.success.main : ds.colors.neutral[400],
-                mb: ds.spacing['2']
+                mb: ds.spacing["2"],
               }}
             />
 
@@ -201,7 +209,7 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({ open, onClose }) => 
                   sx={{
                     fontWeight: ds.typography.fontWeight.semibold,
                     color: ds.colors.text.primary,
-                    mb: ds.spacing['1']
+                    mb: ds.spacing["1"],
                   }}
                 >
                   {file.name}
@@ -216,7 +224,7 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({ open, onClose }) => 
                   variant="body1"
                   sx={{
                     fontWeight: ds.typography.fontWeight.medium,
-                    mb: ds.spacing['1']
+                    mb: ds.spacing["1"],
                   }}
                 >
                   Excel dosyasını sürükleyin veya seçin
@@ -236,18 +244,21 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({ open, onClose }) => 
               sx={{
                 borderRadius: `${ds.borderRadius.md}px`,
                 backgroundColor: alpha(ds.colors.success.main, 0.1),
-                '& .MuiAlert-icon': {
-                  color: ds.colors.success.main
-                }
+                "& .MuiAlert-icon": {
+                  color: ds.colors.success.main,
+                },
               }}
             >
-              <Typography variant="body2" sx={{ fontWeight: ds.typography.fontWeight.medium }}>
+              <Typography
+                variant="body2"
+                sx={{ fontWeight: ds.typography.fontWeight.medium }}
+              >
                 Profil yönetimi başarıyla yüklendi!
               </Typography>
               {uploadMutation.data?.data && (
                 <Typography variant="caption" color="text.secondary">
-                  {uploadMutation.data.data.profilesCreated} profil oluşturuldu,{' '}
-                  {uploadMutation.data.data.profilesUpdated} profil güncellendi,{' '}
+                  {uploadMutation.data.data.profilesCreated} profil oluşturuldu,{" "}
+                  {uploadMutation.data.data.profilesUpdated} profil güncellendi,{" "}
                   {uploadMutation.data.data.mappingsCreated} eşleştirme eklendi
                 </Typography>
               )}
@@ -260,44 +271,60 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({ open, onClose }) => 
               severity="error"
               sx={{
                 borderRadius: `${ds.borderRadius.md}px`,
-                backgroundColor: alpha(ds.colors.error.main, 0.1)
+                backgroundColor: alpha(ds.colors.error.main, 0.1),
               }}
             >
               <Typography variant="body2">
-                {(uploadMutation.error as Error)?.message || 'Yükleme başarısız oldu'}
+                {(uploadMutation.error as Error)?.message ||
+                  "Yükleme başarısız oldu"}
               </Typography>
             </Alert>
           )}
 
           {/* Warnings */}
-          {uploadMutation.data?.warnings && uploadMutation.data.warnings.length > 0 && (
-            <Alert
-              severity="warning"
-              sx={{
-                borderRadius: `${ds.borderRadius.md}px`,
-                backgroundColor: alpha(ds.colors.warning.main, 0.1)
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: ds.typography.fontWeight.medium, mb: ds.spacing['1'] }}>
-                Uyarılar:
-              </Typography>
-              {uploadMutation.data.warnings.slice(0, 3).map((warning, idx) => (
-                <Typography key={idx} variant="caption" display="block">
-                  • {warning}
+          {uploadMutation.data?.warnings &&
+            uploadMutation.data.warnings.length > 0 && (
+              <Alert
+                severity="warning"
+                sx={{
+                  borderRadius: `${ds.borderRadius.md}px`,
+                  backgroundColor: alpha(ds.colors.warning.main, 0.1),
+                }}
+              >
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: ds.typography.fontWeight.medium,
+                    mb: ds.spacing["1"],
+                  }}
+                >
+                  Uyarılar:
                 </Typography>
-              ))}
-            </Alert>
-          )}
+                {uploadMutation.data.warnings
+                  .slice(0, 3)
+                  .map((warning, idx) => (
+                    <Typography key={idx} variant="caption" display="block">
+                      • {warning}
+                    </Typography>
+                  ))}
+              </Alert>
+            )}
 
           {/* Action Buttons */}
-          <Box sx={{ display: 'flex', gap: ds.spacing['2'], justifyContent: 'flex-end' }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: ds.spacing["2"],
+              justifyContent: "flex-end",
+            }}
+          >
             <Button
               onClick={handleClose}
               disabled={uploadMutation.isPending}
               sx={{
                 borderRadius: `${ds.borderRadius.button}px`,
-                textTransform: 'none',
-                fontWeight: ds.typography.fontWeight.medium
+                textTransform: "none",
+                fontWeight: ds.typography.fontWeight.medium,
               }}
             >
               İptal
@@ -305,7 +332,9 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({ open, onClose }) => 
 
             <Button
               onClick={handleUpload}
-              disabled={!file || uploadMutation.isPending || uploadMutation.isSuccess}
+              disabled={
+                !file || uploadMutation.isPending || uploadMutation.isSuccess
+              }
               variant="contained"
               startIcon={
                 uploadMutation.isPending ? (
@@ -316,16 +345,16 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({ open, onClose }) => 
               }
               sx={{
                 borderRadius: `${ds.borderRadius.button}px`,
-                textTransform: 'none',
+                textTransform: "none",
                 fontWeight: ds.typography.fontWeight.semibold,
                 background: ds.gradients.primary,
-                '&:hover': {
+                "&:hover": {
                   background: ds.gradients.primary,
-                  opacity: 0.9
-                }
+                  opacity: 0.9,
+                },
               }}
             >
-              {uploadMutation.isPending ? 'Yükleniyor...' : 'Yükle'}
+              {uploadMutation.isPending ? "Yükleniyor..." : "Yükle"}
             </Button>
           </Box>
         </Stack>
@@ -333,4 +362,3 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({ open, onClose }) => 
     </Dialog>
   );
 };
-

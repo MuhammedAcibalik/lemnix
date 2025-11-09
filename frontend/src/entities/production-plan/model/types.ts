@@ -8,7 +8,7 @@ export interface ProductionPlan {
   readonly id: string;
   readonly weekNumber: number;
   readonly year: number;
-  readonly status: 'active' | 'archived';
+  readonly status: "active" | "archived";
   readonly uploadedAt: string;
   readonly uploadedBy?: string;
   readonly metadata?: Record<string, unknown>;
@@ -28,13 +28,13 @@ export interface ProductionPlanItem {
   readonly miktar: number;
   readonly planlananBitisTarihi: string; // ISO date string
   readonly bolum: string;
-  readonly oncelik: 'yuksek' | 'orta' | 'dusuk';
+  readonly oncelik: "yuksek" | "orta" | "dusuk";
   readonly linkedCuttingListId?: string; // Yeni alan eklendi
 }
 
 export interface BackorderItem extends ProductionPlanItem {
   readonly daysOverdue: number;
-  readonly riskLevel: 'high' | 'medium' | 'low';
+  readonly riskLevel: "high" | "medium" | "low";
 }
 
 export interface ProductionPlanStatistics {
@@ -66,9 +66,9 @@ export interface ProductionPlanStatistics {
 export interface ProductionPlanFilters {
   readonly weekNumber?: number;
   readonly year?: number;
-  readonly status?: 'active' | 'archived';
+  readonly status?: "active" | "archived";
   readonly bolum?: string;
-  readonly oncelik?: 'yuksek' | 'orta' | 'dusuk';
+  readonly oncelik?: "yuksek" | "orta" | "dusuk";
   readonly page?: number;
   readonly limit?: number;
 }
@@ -116,72 +116,74 @@ export interface ProductionPlanError {
 // Type guards
 export const isProductionPlan = (value: unknown): value is ProductionPlan => {
   return (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
-    typeof (value as ProductionPlan).id === 'string' &&
-    typeof (value as ProductionPlan).weekNumber === 'number' &&
-    typeof (value as ProductionPlan).year === 'number' &&
+    typeof (value as ProductionPlan).id === "string" &&
+    typeof (value as ProductionPlan).weekNumber === "number" &&
+    typeof (value as ProductionPlan).year === "number" &&
     Array.isArray((value as ProductionPlan).items)
   );
 };
 
-export const isProductionPlanItem = (value: unknown): value is ProductionPlanItem => {
+export const isProductionPlanItem = (
+  value: unknown,
+): value is ProductionPlanItem => {
   return (
-    typeof value === 'object' &&
+    typeof value === "object" &&
     value !== null &&
-    typeof (value as ProductionPlanItem).id === 'string' &&
-    typeof (value as ProductionPlanItem).planId === 'string' &&
-    typeof (value as ProductionPlanItem).ad === 'string' &&
-    typeof (value as ProductionPlanItem).siparis === 'string'
+    typeof (value as ProductionPlanItem).id === "string" &&
+    typeof (value as ProductionPlanItem).planId === "string" &&
+    typeof (value as ProductionPlanItem).ad === "string" &&
+    typeof (value as ProductionPlanItem).siparis === "string"
   );
 };
 
 // Priority mapping
 export const PRIORITY_LABELS: Record<string, string> = {
-  yuksek: 'Yüksek',
-  orta: 'Orta',
-  dusuk: 'Düşük',
+  yuksek: "Yüksek",
+  orta: "Orta",
+  dusuk: "Düşük",
   // Türkçe değerler için de mapping ekle
-  'Yüksek': 'Yüksek',
-  'Orta': 'Orta',
-  'Düşük': 'Düşük',
-  'YUKSEK': 'Yüksek',
-  'ORTA': 'Orta',
-  'DUSUK': 'Düşük'
+  Yüksek: "Yüksek",
+  Orta: "Orta",
+  Düşük: "Düşük",
+  YUKSEK: "Yüksek",
+  ORTA: "Orta",
+  DUSUK: "Düşük",
 } as const;
 
 export const PRIORITY_COLORS: Record<string, string> = {
-  yuksek: 'error',
-  orta: 'warning',
-  dusuk: 'success',
+  yuksek: "error",
+  orta: "warning",
+  dusuk: "success",
   // Türkçe değerler için de mapping ekle
-  'Yüksek': 'error',
-  'Orta': 'warning',
-  'Düşük': 'success',
-  'YUKSEK': 'error',
-  'ORTA': 'warning',
-  'DUSUK': 'success'
+  Yüksek: "error",
+  Orta: "warning",
+  Düşük: "success",
+  YUKSEK: "error",
+  ORTA: "warning",
+  DUSUK: "success",
 } as const;
 
 // Department options (will be populated from API)
 export const DEPARTMENT_OPTIONS = [
-  'MONTAJ',
-  'HELEZON',
-  'ABOARD',
-  'UYUP'
+  "MONTAJ",
+  "HELEZON",
+  "ABOARD",
+  "UYUP",
 ] as const;
 
 // Department mapping (number to name)
 export const DEPARTMENT_MAPPING: Record<string, string> = {
-  '1 MONTAJ': 'MONTAJ',
-  '3 HELEZON': 'HELEZON',
-  '4 ABOARD': 'ABOARD',
-  '6 UYUP': 'UYUP',
+  "1 MONTAJ": "MONTAJ",
+  "3 HELEZON": "HELEZON",
+  "4 ABOARD": "ABOARD",
+  "6 UYUP": "UYUP",
   // Sadece rakamlar için de mapping ekle
-  '1': 'MONTAJ',
-  '3': 'HELEZON',
-  '4': 'ABOARD',
-  '6': 'UYUP'
+  "1": "MONTAJ",
+  "3": "HELEZON",
+  "4": "ABOARD",
+  "6": "UYUP",
 } as const;
 
 // Week number options (1-53)

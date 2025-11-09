@@ -1,7 +1,7 @@
 /**
  * LEMNİX Optimization Entity DTOs
  * Data Transfer Object transformations for backend-frontend alignment
- * 
+ *
  * @module entities/optimization/api/dto
  * @version 2.0.0 - Backend Response Normalization + Zod Validation
  */
@@ -14,8 +14,8 @@ import type {
   OptimizationRecommendation,
   AlgorithmMetadata,
   CostBreakdown,
-} from '../model/types';
-import type { Timestamp, ID } from '@/shared';
+} from "../model/types";
+import type { Timestamp, ID } from "@/shared";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -80,7 +80,7 @@ interface BackendCostBreakdown {
   readonly totalCost?: number;
   readonly cuttingCost?: number;
 }
-import { validateOptimizationResult as zodValidate } from '../model/responseSchemas';
+import { validateOptimizationResult as zodValidate } from "../model/responseSchemas";
 
 /**
  * Backend response type (as returned by API)
@@ -123,40 +123,42 @@ interface BackendOptimizationResult {
  * Handles field name differences and missing fields
  */
 export function normalizeOptimizationResult(
-  backendResult: BackendOptimizationResult
+  backendResult: BackendOptimizationResult,
 ): OptimizationResult {
   // Normalize algorithm type
   const algorithm = normalizeAlgorithmType(backendResult.algorithm);
-  
+
   // Normalize cuts
   const cuts = backendResult.cuts.map(normalizeCut);
-  
+
   // Calculate totalStocks from cuts if stockCount is missing
   const totalStocks = backendResult.stockCount ?? cuts.length;
-  
+
   // Normalize efficiency field name
   const totalEfficiency = backendResult.efficiency;
-  
+
   // Normalize waste distribution
-  const wasteDistribution = backendResult.wasteDistribution 
+  const wasteDistribution = backendResult.wasteDistribution
     ? normalizeWasteDistribution(backendResult.wasteDistribution)
     : undefined;
-  
+
   // Normalize recommendations
   const recommendations = (backendResult.recommendations ?? []).map(
-    normalizeRecommendation
+    normalizeRecommendation,
   );
-  
+
   // Normalize algorithm metadata
   const algorithmMetadata = backendResult.algorithmMetadata
-    ? normalizeAlgorithmMetadata(backendResult.algorithmMetadata as BackendAlgorithmMetadata)
+    ? normalizeAlgorithmMetadata(
+        backendResult.algorithmMetadata as BackendAlgorithmMetadata,
+      )
     : undefined;
-  
+
   // Normalize cost breakdown
   const costBreakdown = backendResult.costBreakdown
     ? normalizeCostBreakdown(backendResult.costBreakdown)
     : undefined;
-  
+
   return {
     cuts,
     totalStocks,
@@ -190,35 +192,39 @@ export function normalizeOptimizationResult(
 /**
  * Normalize algorithm type string to AlgorithmType
  */
-function normalizeAlgorithmType(algorithm: string): 'ffd' | 'bfd' | 'genetic' | 'pooling' {
+function normalizeAlgorithmType(
+  algorithm: string,
+): "ffd" | "bfd" | "genetic" | "pooling" {
   const normalized = algorithm.toLowerCase();
-  
+
   // Handle various backend naming variations
   switch (normalized) {
-    case 'ffd':
-    case 'first-fit-decreasing':
-    case 'first_fit_decreasing':
-      return 'ffd';
-    
-    case 'bfd':
-    case 'best-fit-decreasing':
-    case 'best_fit_decreasing':
-      return 'bfd';
-    
-    case 'genetic':
-    case 'genetic-algorithm':
-    case 'genetic_algorithm':
-    case 'ga':
-      return 'genetic';
-    
-    case 'pooling':
-    case 'profile-pooling':
-    case 'profile_pooling':
-      return 'pooling';
-    
+    case "ffd":
+    case "first-fit-decreasing":
+    case "first_fit_decreasing":
+      return "ffd";
+
+    case "bfd":
+    case "best-fit-decreasing":
+    case "best_fit_decreasing":
+      return "bfd";
+
+    case "genetic":
+    case "genetic-algorithm":
+    case "genetic_algorithm":
+    case "ga":
+      return "genetic";
+
+    case "pooling":
+    case "profile-pooling":
+    case "profile_pooling":
+      return "pooling";
+
     default:
-      console.warn(`Unknown algorithm type: ${algorithm}, defaulting to 'genetic'`);
-      return 'genetic';
+      console.warn(
+        `Unknown algorithm type: ${algorithm}, defaulting to 'genetic'`,
+      );
+      return "genetic";
   }
 }
 
@@ -227,17 +233,24 @@ function normalizeAlgorithmType(algorithm: string): 'ffd' | 'bfd' | 'genetic' | 
  */
 function normalizeCut(backendCut: BackendCut): Cut {
   // Handle both 'materialType' and 'profileType' fields from backend
-  const profileType = (backendCut as { profileType?: string; materialType?: string }).profileType ?? 
-                     (backendCut as { profileType?: string; materialType?: string }).materialType;
-  
+  const profileType =
+    (backendCut as { profileType?: string; materialType?: string })
+      .profileType ??
+    (backendCut as { profileType?: string; materialType?: string })
+      .materialType;
+
   return {
-    id: (backendCut.id ?? `cut-${Math.random().toString(36).substr(2, 9)}`) as unknown as ID,
+    id: (backendCut.id ??
+      `cut-${Math.random().toString(36).substr(2, 9)}`) as unknown as ID,
     stockLength: backendCut.stockLength,
     segments: (backendCut.segments ?? []).map(normalizeSegment),
     usedLength: backendCut.usedLength,
     remainingLength: backendCut.remainingLength,
-    wasteCategory: normalizeWasteCategory((backendCut as { wasteCategory?: string }).wasteCategory),
-    isReclaimable: (backendCut as { isReclaimable?: boolean }).isReclaimable ?? false,
+    wasteCategory: normalizeWasteCategory(
+      (backendCut as { wasteCategory?: string }).wasteCategory,
+    ),
+    isReclaimable:
+      (backendCut as { isReclaimable?: boolean }).isReclaimable ?? false,
     workOrderId: (backendCut as { workOrderId?: string }).workOrderId,
     profileType,
     quantity: (backendCut as { quantity?: number }).quantity,
@@ -249,17 +262,28 @@ function normalizeCut(backendCut: BackendCut): Cut {
  */
 function normalizeSegment(backendSegment: BackendSegment): CuttingSegment {
   return {
-    id: (backendSegment.id ?? `segment-${Math.random().toString(36).substr(2, 9)}`) as unknown as ID,
+    id: (backendSegment.id ??
+      `segment-${Math.random().toString(36).substr(2, 9)}`) as unknown as ID,
     length: backendSegment.length,
     quantity: backendSegment.quantity ?? 1,
     position: (backendSegment as { position?: number }).position ?? 0,
-    endPosition: (backendSegment as { endPosition?: number; position?: number; length: number }).endPosition ?? 
-                ((backendSegment as { position?: number; length: number }).position ?? 0) + backendSegment.length,
+    endPosition:
+      (
+        backendSegment as {
+          endPosition?: number;
+          position?: number;
+          length: number;
+        }
+      ).endPosition ??
+      ((backendSegment as { position?: number; length: number }).position ??
+        0) + backendSegment.length,
     workOrderId: backendSegment.workOrderId,
-    workOrderItemId: (backendSegment as { workOrderItemId?: string }).workOrderItemId ?? backendSegment.workOrderId,
+    workOrderItemId:
+      (backendSegment as { workOrderItemId?: string }).workOrderItemId ??
+      backendSegment.workOrderId,
     profileType: backendSegment.profileType,
-    color: (backendSegment as { color?: string }).color ?? '#000000',
-    version: (backendSegment as { version?: string }).version ?? '1.0',
+    color: (backendSegment as { color?: string }).color ?? "#000000",
+    version: (backendSegment as { version?: string }).version ?? "1.0",
     note: (backendSegment as { note?: string }).note,
   };
 }
@@ -267,20 +291,26 @@ function normalizeSegment(backendSegment: BackendSegment): CuttingSegment {
 /**
  * Normalize waste category string
  */
-function normalizeWasteCategory(category: string | undefined): 'minimal' | 'small' | 'medium' | 'large' | 'excessive' {
-  const normalized = category?.toLowerCase() ?? 'minimal';
-  
-  if (['minimal', 'small', 'medium', 'large', 'excessive'].includes(normalized)) {
-    return normalized as 'minimal' | 'small' | 'medium' | 'large' | 'excessive';
+function normalizeWasteCategory(
+  category: string | undefined,
+): "minimal" | "small" | "medium" | "large" | "excessive" {
+  const normalized = category?.toLowerCase() ?? "minimal";
+
+  if (
+    ["minimal", "small", "medium", "large", "excessive"].includes(normalized)
+  ) {
+    return normalized as "minimal" | "small" | "medium" | "large" | "excessive";
   }
-  
-  return 'minimal';
+
+  return "minimal";
 }
 
 /**
  * Normalize waste distribution
  */
-function normalizeWasteDistribution(distribution: BackendWasteDistribution): WasteDistribution {
+function normalizeWasteDistribution(
+  distribution: BackendWasteDistribution,
+): WasteDistribution {
   return {
     minimal: distribution?.minimal ?? 0,
     small: distribution?.small ?? 0,
@@ -295,11 +325,15 @@ function normalizeWasteDistribution(distribution: BackendWasteDistribution): Was
 /**
  * Normalize recommendation
  */
-function normalizeRecommendation(rec: BackendRecommendation): OptimizationRecommendation {
+function normalizeRecommendation(
+  rec: BackendRecommendation,
+): OptimizationRecommendation {
   return {
-    type: (rec.type as 'performance' | 'cost' | 'quality' | 'waste') ?? 'performance',
-    priority: (rec.priority as 'low' | 'medium' | 'high') ?? 'medium',
-    message: rec.message ?? '',
+    type:
+      (rec.type as "performance" | "cost" | "quality" | "waste") ??
+      "performance",
+    priority: (rec.priority as "low" | "medium" | "high") ?? "medium",
+    message: rec.message ?? "",
     impact: rec.impact,
     actionable: rec.actionable,
   };
@@ -308,14 +342,23 @@ function normalizeRecommendation(rec: BackendRecommendation): OptimizationRecomm
 /**
  * Normalize algorithm metadata (GA telemetry)
  */
-function normalizeAlgorithmMetadata(metadata: BackendAlgorithmMetadata): AlgorithmMetadata {
+function normalizeAlgorithmMetadata(
+  metadata: BackendAlgorithmMetadata,
+): AlgorithmMetadata {
   return {
-    effectiveComplexity: metadata.effectiveComplexity ?? 'N/A',
+    effectiveComplexity: metadata.effectiveComplexity ?? "N/A",
     actualGenerations: metadata.actualGenerations ?? 0,
-    convergenceReason: (metadata.convergenceReason as 'early_stop' | 'max_generations' | 'stagnation') ?? 'max_generations',
+    convergenceReason:
+      (metadata.convergenceReason as
+        | "early_stop"
+        | "max_generations"
+        | "stagnation") ?? "max_generations",
     bestFitness: metadata.bestFitness ?? 0,
     executionTimeMs: metadata.executionTimeMs ?? 0,
-    deterministicSeed: typeof metadata.deterministicSeed === 'number' ? metadata.deterministicSeed : undefined,
+    deterministicSeed:
+      typeof metadata.deterministicSeed === "number"
+        ? metadata.deterministicSeed
+        : undefined,
     populationSize: (metadata as { populationSize?: number }).populationSize,
     finalGeneration: (metadata as { finalGeneration?: number }).finalGeneration,
   };
@@ -324,7 +367,9 @@ function normalizeAlgorithmMetadata(metadata: BackendAlgorithmMetadata): Algorit
 /**
  * Normalize cost breakdown
  */
-function normalizeCostBreakdown(breakdown: BackendCostBreakdown): CostBreakdown {
+function normalizeCostBreakdown(
+  breakdown: BackendCostBreakdown,
+): CostBreakdown {
   return {
     materialCost: breakdown.materialCost ?? 0,
     laborCost: breakdown.laborCost ?? 0,
@@ -339,21 +384,26 @@ function normalizeCostBreakdown(breakdown: BackendCostBreakdown): CostBreakdown 
 /**
  * Type guard: Check if response is valid OptimizationResult
  */
-export function isValidOptimizationResult(data: unknown): data is BackendOptimizationResult {
-  if (typeof data !== 'object' || data === null) {
+export function isValidOptimizationResult(
+  data: unknown,
+): data is BackendOptimizationResult {
+  if (typeof data !== "object" || data === null) {
     return false;
   }
-  
+
   const result = data as BackendOptimizationResult;
-  
+
   // Check required fields
   return (
     Array.isArray(result.cuts) &&
-    typeof result.totalWaste === 'number' &&
-    (typeof result.efficiency === 'number' || typeof (result as { totalEfficiency?: number }).totalEfficiency === 'number') &&
-    (typeof result.stockCount === 'number' || typeof (result as { totalStocks?: number }).totalStocks === 'number') &&
-    typeof result.wastePercentage === 'number' &&
-    typeof result.algorithm === 'string'
+    typeof result.totalWaste === "number" &&
+    (typeof result.efficiency === "number" ||
+      typeof (result as { totalEfficiency?: number }).totalEfficiency ===
+        "number") &&
+    (typeof result.stockCount === "number" ||
+      typeof (result as { totalStocks?: number }).totalStocks === "number") &&
+    typeof result.wastePercentage === "number" &&
+    typeof result.algorithm === "string"
   );
 }
 
@@ -362,28 +412,27 @@ export function isValidOptimizationResult(data: unknown): data is BackendOptimiz
  * ✅ P2-5: Dual-layer validation (Zod + Type Guard)
  */
 export function safeNormalizeOptimizationResult(
-  data: unknown
+  data: unknown,
 ): OptimizationResult | null {
   // Layer 1: Zod validation
   const zodValidated = zodValidate(data);
-  
+
   if (!zodValidated) {
-    console.error('Zod validation failed for optimization result');
+    console.error("Zod validation failed for optimization result");
     return null;
   }
-  
+
   // Layer 2: Type guard validation (backward compatibility)
   if (!isValidOptimizationResult(zodValidated)) {
-    console.error('Type guard validation failed for optimization result');
+    console.error("Type guard validation failed for optimization result");
     return null;
   }
-  
+
   // Layer 3: Normalization
   try {
     return normalizeOptimizationResult(zodValidated);
   } catch (error) {
-    console.error('Failed to normalize optimization result:', error);
+    console.error("Failed to normalize optimization result:", error);
     return null;
   }
 }
-

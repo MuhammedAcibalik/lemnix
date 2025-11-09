@@ -1,18 +1,18 @@
 /**
  * FadeIn Animation Component
- * 
+ *
  * @module shared/ui/Motion
  * @version 2.0.0
  */
 
-import React from 'react';
-import { motion, type Variants } from 'framer-motion';
+import React from "react";
+import { motion, type Variants } from "framer-motion";
 
 export interface FadeInProps {
   readonly children: React.ReactNode;
   readonly delay?: number;
   readonly duration?: number;
-  readonly direction?: 'up' | 'down' | 'left' | 'right' | 'none';
+  readonly direction?: "up" | "down" | "left" | "right" | "none";
   readonly distance?: number;
 }
 
@@ -43,20 +43,24 @@ export const FadeIn: React.FC<FadeInProps> = ({
   children,
   delay = 0,
   duration = 0.3,
-  direction = 'up',
+  direction = "up",
   distance = 20,
 }) => {
-  const customVariants: Variants = direction === 'up' || direction === 'down'
-    ? {
-        hidden: { opacity: 0, y: direction === 'up' ? distance : -distance },
-        visible: { opacity: 1, y: 0 },
-      }
-    : direction === 'left' || direction === 'right'
-    ? {
-        hidden: { opacity: 0, x: direction === 'left' ? distance : -distance },
-        visible: { opacity: 1, x: 0 },
-      }
-    : variants.none;
+  const customVariants: Variants =
+    direction === "up" || direction === "down"
+      ? {
+          hidden: { opacity: 0, y: direction === "up" ? distance : -distance },
+          visible: { opacity: 1, y: 0 },
+        }
+      : direction === "left" || direction === "right"
+        ? {
+            hidden: {
+              opacity: 0,
+              x: direction === "left" ? distance : -distance,
+            },
+            visible: { opacity: 1, x: 0 },
+          }
+        : variants.none;
 
   return (
     <motion.div
@@ -73,4 +77,3 @@ export const FadeIn: React.FC<FadeInProps> = ({
     </motion.div>
   );
 };
-

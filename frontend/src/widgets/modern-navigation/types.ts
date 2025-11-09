@@ -2,7 +2,7 @@
  * Command Palette Types - Design System v2.0
  */
 
-import { SvgIconComponent } from '@mui/icons-material';
+import { SvgIconComponent } from "@mui/icons-material";
 
 export interface CommandItem {
   readonly id: string;
@@ -55,7 +55,7 @@ export interface CategoryHeaderProps {
   readonly description?: string;
   // Additional fields for compatibility
   readonly category?: string;
-  readonly theme?: 'light' | 'dark';
+  readonly theme?: "light" | "dark";
   readonly itemCount?: number;
 }
 

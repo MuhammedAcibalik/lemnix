@@ -1,12 +1,12 @@
 /**
  * Optimization History Widget Component
  * Compact widget showing recent optimization history
- * 
+ *
  * @module widgets/optimization-history
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 import {
   Card,
   CardHeader,
@@ -21,14 +21,18 @@ import {
   IconButton,
   CircularProgress,
   Alert,
-} from '@mui/material';
+} from "@mui/material";
 import {
   History as HistoryIcon,
   CheckCircle as SuccessIcon,
   Refresh as RefreshIcon,
   OpenInNew as OpenIcon,
-} from '@mui/icons-material';
-import { useOptimizationHistory, ALGORITHM_CATALOG, type AlgorithmType } from '@/entities/optimization';
+} from "@mui/icons-material";
+import {
+  useOptimizationHistory,
+  ALGORITHM_CATALOG,
+  type AlgorithmType,
+} from "@/entities/optimization";
 
 export interface OptimizationHistoryWidgetProps {
   readonly limit?: number;
@@ -39,22 +43,26 @@ const formatTimeAgo = (timestamp: string): string => {
   const now = Date.now();
   const then = new Date(timestamp).getTime();
   const diff = now - then;
-  
+
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-  
-  if (minutes < 1) return 'Az önce';
+
+  if (minutes < 1) return "Az önce";
   if (minutes < 60) return `${minutes} dakika önce`;
   if (hours < 24) return `${hours} saat önce`;
   return `${days} gün önce`;
 };
 
-export const OptimizationHistoryWidget: React.FC<OptimizationHistoryWidgetProps> = ({
-  limit = 5,
-  onItemClick,
-}) => {
-  const { data: history, isLoading, error, refetch } = useOptimizationHistory({
+export const OptimizationHistoryWidget: React.FC<
+  OptimizationHistoryWidgetProps
+> = ({ limit = 5, onItemClick }) => {
+  const {
+    data: history,
+    isLoading,
+    error,
+    refetch,
+  } = useOptimizationHistory({
     page: 1,
     pageSize: limit,
   });
@@ -78,16 +86,10 @@ export const OptimizationHistoryWidget: React.FC<OptimizationHistoryWidgetProps>
           </Box>
         )}
 
-        {error && (
-          <Alert severity="error">
-            Geçmiş yüklenemedi
-          </Alert>
-        )}
+        {error && <Alert severity="error">Geçmiş yüklenemedi</Alert>}
 
         {!isLoading && !error && history && history.length === 0 && (
-          <Alert severity="info">
-            Henüz optimizasyon geçmişi yok
-          </Alert>
+          <Alert severity="info">Henüz optimizasyon geçmişi yok</Alert>
         )}
 
         {!isLoading && !error && history && history.length > 0 && (
@@ -95,7 +97,7 @@ export const OptimizationHistoryWidget: React.FC<OptimizationHistoryWidgetProps>
             {history.map((item) => {
               const algorithm = item.result.algorithm;
               const algorithmInfo = ALGORITHM_CATALOG[algorithm];
-              
+
               return (
                 <ListItem
                   key={item.id}
@@ -103,9 +105,9 @@ export const OptimizationHistoryWidget: React.FC<OptimizationHistoryWidgetProps>
                   sx={{
                     py: 1,
                     px: 0,
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    '&:last-child': { borderBottom: 'none' },
+                    borderBottom: "1px solid",
+                    borderColor: "divider",
+                    "&:last-child": { borderBottom: "none" },
                   }}
                   secondaryAction={
                     onItemClick && (
@@ -159,4 +161,3 @@ export const OptimizationHistoryWidget: React.FC<OptimizationHistoryWidgetProps>
     </Card>
   );
 };
-

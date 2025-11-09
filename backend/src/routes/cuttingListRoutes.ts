@@ -4,9 +4,15 @@
  * @version 3.1.0
  */
 
-import { Router, Request, Response, NextFunction, RequestHandler } from 'express';
-import { 
-  CuttingListController, 
+import {
+  Router,
+  Request,
+  Response,
+  NextFunction,
+  RequestHandler,
+} from "express";
+import {
+  CuttingListController,
   cuttingListErrorHandler,
   getSmartProductSuggestions,
   getSmartSizeSuggestions,
@@ -20,22 +26,30 @@ import {
   getWorkOrderTemplates,
   duplicateWorkOrder,
   getAvailableSizes,
-  getProfileCombinations
-} from '../controllers/cuttingListController';
-import { handleValidationErrors } from '../middleware/validation';
-import { createRateLimit } from '../middleware/rateLimiting';
-import { verifyToken, requirePermission, Permission } from '../middleware/authorization';
-import { logger } from '../services/logger';
+  getProfileCombinations,
+} from "../controllers/cuttingListController";
+import { handleValidationErrors } from "../middleware/validation";
+import { createRateLimit } from "../middleware/rateLimiting";
+import {
+  verifyToken,
+  requirePermission,
+  Permission,
+} from "../middleware/authorization";
+import { logger } from "../services/logger";
 
 const RATE_LIMITERS = {
-  default: createRateLimit('default'),
-  export: createRateLimit('export'),
-  optimization: createRateLimit('optimization')
+  default: createRateLimit("default"),
+  export: createRateLimit("export"),
+  optimization: createRateLimit("optimization"),
 } as const;
 
 type RateLimiterKey = keyof typeof RATE_LIMITERS;
-type HTTPVerb = 'get' | 'post' | 'put' | 'delete' | 'patch';
-type ControllerHandler = (req: Request, res: Response, next: NextFunction) => unknown;
+type HTTPVerb = "get" | "post" | "put" | "delete" | "patch";
+type ControllerHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => unknown;
 type FnKeys<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
 
 interface RouteConfig {
@@ -63,16 +77,16 @@ interface IRouteRegistry {
 const asyncify = (fn: ControllerHandler): RequestHandler => {
   return (req: Request, res: Response, next: NextFunction): void => {
     const startedAt = Date.now();
-    
-    res.once('finish', () => {
+
+    res.once("finish", () => {
       const duration = Date.now() - startedAt;
       if (duration > 3000) {
-        logger.warn('Slow request detected', {
+        logger.warn("Slow request detected", {
           path: req.path,
           method: req.method,
           duration,
           userId: req.user?.userId,
-          statusCode: res.statusCode
+          statusCode: res.statusCode,
         });
       }
     });
@@ -80,23 +94,23 @@ const asyncify = (fn: ControllerHandler): RequestHandler => {
     try {
       Promise.resolve(fn(req, res, next)).catch((error: unknown) => {
         const err = error as Error;
-        logger.error('Route handler error', {
+        logger.error("Route handler error", {
           error: err.message,
           path: req.path,
           method: req.method,
           userId: req.user?.userId,
-          stack: err.stack
+          stack: err.stack,
         });
         next(error);
       });
     } catch (error: unknown) {
       const err = error as Error;
-      logger.error('Route handler sync error', {
+      logger.error("Route handler sync error", {
         error: err.message,
         path: req.path,
         method: req.method,
         userId: req.user?.userId,
-        stack: err.stack
+        stack: err.stack,
       });
       next(error);
     }
@@ -116,7 +130,7 @@ class BoundMethodCache<T extends object> implements IMethodCache<T> {
     }
 
     const value = (this.instance as Record<string, unknown>)[key as string];
-    if (typeof value !== 'function') {
+    if (typeof value !== "function") {
       throw new TypeError(`${String(key)} is not a method`);
     }
 
@@ -139,38 +153,39 @@ class RouteRegistry implements IRouteRegistry {
 
   constructor(
     private readonly router: Router,
-    private readonly cache: IMethodCache<CuttingListController>
+    private readonly cache: IMethodCache<CuttingListController>,
   ) {}
 
   public register(config: RouteConfig): void {
     const middlewares: RequestHandler[] = [];
-    
+
     if (config.rateLimit) {
       middlewares.push(this.rateLimiters[config.rateLimit]);
     }
-    
+
     if (config.requiresAuth) {
       middlewares.push(verifyToken);
     }
-    
+
     if (config.permission) {
       middlewares.push(requirePermission(config.permission));
     }
-    
+
     if (config.middleware) {
       middlewares.push(...config.middleware);
     }
 
-    const handler = typeof config.handler === 'string' 
-      ? asyncify(this.cache.getBound(config.handler) as ControllerHandler)
-      : asyncify(config.handler as ControllerHandler);
+    const handler =
+      typeof config.handler === "string"
+        ? asyncify(this.cache.getBound(config.handler) as ControllerHandler)
+        : asyncify(config.handler as ControllerHandler);
 
     middlewares.push(handler);
     this.router[config.method](config.path, ...middlewares);
   }
 
   public registerBatch(configs: ReadonlyArray<RouteConfig>): void {
-    configs.forEach(config => this.register(config));
+    configs.forEach((config) => this.register(config));
   }
 
   public build(): Router {
@@ -178,9 +193,12 @@ class RouteRegistry implements IRouteRegistry {
   }
 }
 
-
-const queryNormalizer: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {
-  const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+const queryNormalizer: RequestHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
+  const q = typeof req.query.q === "string" ? req.query.q.trim() : "";
   if (q.length > 0) {
     res.locals.query = q;
   }
@@ -189,61 +207,299 @@ const queryNormalizer: RequestHandler = (req: Request, res: Response, next: Next
 
 class CuttingListRouterFactory {
   private readonly routes: ReadonlyArray<RouteConfig> = [
-    { path: '/', method: 'post', handler: 'createCuttingList', requiresAuth: false }, // TODO: Re-enable auth after testing
-    { path: '/', method: 'get', handler: 'getAllCuttingLists', requiresAuth: false }, // TODO: Re-enable auth after testing
-    { path: '/test-pdf', method: 'get', handler: 'testPDFExport', requiresAuth: true },
-    
+    {
+      path: "/",
+      method: "post",
+      handler: "createCuttingList",
+      requiresAuth: false,
+    }, // TODO: Re-enable auth after testing
+    {
+      path: "/",
+      method: "get",
+      handler: "getAllCuttingLists",
+      requiresAuth: false,
+    }, // TODO: Re-enable auth after testing
+    {
+      path: "/test-pdf",
+      method: "get",
+      handler: "testPDFExport",
+      requiresAuth: true,
+    },
+
     // ✅ CRITICAL FIX: Specific routes BEFORE generic /:id routes to prevent path hijacking
-    { path: '/:cuttingListId/sections/:sectionId/items/:itemId', method: 'put', handler: 'updateItemInSection', requiresAuth: true, permission: Permission.START_OPTIMIZATION, middleware: [handleValidationErrors] },
-    { path: '/:cuttingListId/sections/:sectionId/items/:itemId', method: 'delete', handler: 'deleteItemFromSection', requiresAuth: true, permission: Permission.MANAGE_QUARANTINE },
-    { path: '/:cuttingListId/sections/:sectionId/items', method: 'post', handler: 'addItemToSection', requiresAuth: true, permission: Permission.START_OPTIMIZATION, middleware: [handleValidationErrors] },
-    
-    { path: '/:cuttingListId/sections/:sectionId', method: 'delete', handler: 'deleteProductSection', requiresAuth: true, permission: Permission.MANAGE_QUARANTINE },
-    { path: '/:cuttingListId/sections', method: 'post', handler: 'addProductSection', requiresAuth: false }, // TODO: Re-enable auth after testing
-    
+    {
+      path: "/:cuttingListId/sections/:sectionId/items/:itemId",
+      method: "put",
+      handler: "updateItemInSection",
+      requiresAuth: true,
+      permission: Permission.START_OPTIMIZATION,
+      middleware: [handleValidationErrors],
+    },
+    {
+      path: "/:cuttingListId/sections/:sectionId/items/:itemId",
+      method: "delete",
+      handler: "deleteItemFromSection",
+      requiresAuth: true,
+      permission: Permission.MANAGE_QUARANTINE,
+    },
+    {
+      path: "/:cuttingListId/sections/:sectionId/items",
+      method: "post",
+      handler: "addItemToSection",
+      requiresAuth: true,
+      permission: Permission.START_OPTIMIZATION,
+      middleware: [handleValidationErrors],
+    },
+
+    {
+      path: "/:cuttingListId/sections/:sectionId",
+      method: "delete",
+      handler: "deleteProductSection",
+      requiresAuth: true,
+      permission: Permission.MANAGE_QUARANTINE,
+    },
+    {
+      path: "/:cuttingListId/sections",
+      method: "post",
+      handler: "addProductSection",
+      requiresAuth: false,
+    }, // TODO: Re-enable auth after testing
+
     // Generic /:id routes LAST
-    { path: '/:id', method: 'get', handler: 'getCuttingListById', requiresAuth: true, permission: Permission.VIEW_CUTTING_PLANS },
-    { path: '/:id', method: 'put', handler: 'updateCuttingList', requiresAuth: true, permission: Permission.START_OPTIMIZATION },
-    { path: '/:id', method: 'delete', handler: 'deleteCuttingList', requiresAuth: true, permission: Permission.MANAGE_QUARANTINE }, // ✅ RE-ENABLED: Allow cutting list deletion
-    
-    { path: '/export/pdf', method: 'post', handler: 'exportToPDF', requiresAuth: true, permission: Permission.EXPORT_REPORTS, rateLimit: 'export' },
-    { path: '/export/excel', method: 'post', handler: 'exportToExcel', requiresAuth: true, permission: Permission.EXPORT_REPORTS, rateLimit: 'export' },
-    
-    { path: '/suggestions/variations', method: 'get', handler: 'getProfileVariations', requiresAuth: true },
-    { path: '/suggestions/profiles', method: 'get', handler: 'getProfileSuggestions', requiresAuth: true },
-    { path: '/suggestions/products', method: 'get', handler: 'searchSimilarProducts', requiresAuth: true },
-    { path: '/suggestions/sizes', method: 'get', handler: 'getSizesForProduct', requiresAuth: true },
-    { path: '/suggestions/stats', method: 'get', handler: 'getProfileSuggestionStats', requiresAuth: true },
-    
-    { path: '/quantity/calculate', method: 'post', handler: 'calculateQuantity', requiresAuth: true, rateLimit: 'optimization' },
-    { path: '/quantity/suggestions', method: 'post', handler: 'getQuantitySuggestions', requiresAuth: true, rateLimit: 'optimization' },
-    { path: '/quantity/validate', method: 'post', handler: 'validateQuantity', requiresAuth: true },
-    { path: '/quantity/possibilities', method: 'post', handler: 'getPossibleQuantities', requiresAuth: true, rateLimit: 'optimization' },
-    
-        { path: '/import/excel', method: 'post', handler: 'importExcelData', requiresAuth: true, permission: Permission.MANAGE_CONFIG },
-    
-    { path: '/enterprise/profiles', method: 'get', handler: 'getEnterpriseProfileSuggestions', requiresAuth: true },
-    { path: '/enterprise/measurements', method: 'get', handler: 'getSmartMeasurementSuggestions', requiresAuth: true },
-    { path: '/enterprise/stats', method: 'get', handler: 'getEnterpriseSuggestionStats', requiresAuth: true },
-    { path: '/enterprise/refresh', method: 'post', handler: 'refreshEnterpriseAnalysis', requiresAuth: true, permission: Permission.MANAGE_CONFIG },
-    { path: '/enterprise/product-sizes', method: 'get', handler: 'getProductSizes', requiresAuth: true },
-    { path: '/enterprise/complete-profile-set', method: 'get', handler: 'getCompleteProfileSet', requiresAuth: true },
-    
-    { path: '/smart/products', method: 'get', handler: getSmartProductSuggestions, requiresAuth: true },
-    { path: '/smart/sizes', method: 'get', handler: getSmartSizeSuggestions, requiresAuth: true },
-    { path: '/smart/profiles', method: 'get', handler: getSmartProfileSuggestions, requiresAuth: true },
-    { path: '/smart/autocomplete', method: 'get', handler: getAutoCompleteSuggestions, requiresAuth: true },
-    { path: '/smart/stats', method: 'get', handler: getSmartSuggestionStats, requiresAuth: true },
-    { path: '/smart/reload', method: 'post', handler: reloadSmartSuggestionDatabase, requiresAuth: true, permission: Permission.MANAGE_CONFIG },
-    { path: '/smart/suggestions', method: 'get', handler: getSmartWorkOrderSuggestions, requiresAuth: true },
-    { path: '/smart/insights', method: 'post', handler: getSmartWorkOrderInsights, requiresAuth: true, rateLimit: 'optimization' },
-    { path: '/smart/apply-profile-set', method: 'post', handler: applySmartProfileSet, requiresAuth: true, permission: Permission.START_OPTIMIZATION },
-    { path: '/smart/templates', method: 'get', handler: getWorkOrderTemplates, requiresAuth: true },
-    { path: '/smart/duplicate', method: 'post', handler: duplicateWorkOrder, requiresAuth: true, permission: Permission.START_OPTIMIZATION },
-    
-    { path: '/profiles/suggestions', method: 'get', handler: getSmartProfileSuggestions, requiresAuth: true, middleware: [queryNormalizer] },
-    { path: '/smart-suggestions/sizes', method: 'get', handler: getAvailableSizes, requiresAuth: true },
-    { path: '/smart-suggestions/combinations', method: 'get', handler: getProfileCombinations, requiresAuth: true }
+    {
+      path: "/:id",
+      method: "get",
+      handler: "getCuttingListById",
+      requiresAuth: true,
+      permission: Permission.VIEW_CUTTING_PLANS,
+    },
+    {
+      path: "/:id",
+      method: "put",
+      handler: "updateCuttingList",
+      requiresAuth: true,
+      permission: Permission.START_OPTIMIZATION,
+    },
+    {
+      path: "/:id",
+      method: "delete",
+      handler: "deleteCuttingList",
+      requiresAuth: true,
+      permission: Permission.MANAGE_QUARANTINE,
+    }, // ✅ RE-ENABLED: Allow cutting list deletion
+
+    {
+      path: "/export/pdf",
+      method: "post",
+      handler: "exportToPDF",
+      requiresAuth: true,
+      permission: Permission.EXPORT_REPORTS,
+      rateLimit: "export",
+    },
+    {
+      path: "/export/excel",
+      method: "post",
+      handler: "exportToExcel",
+      requiresAuth: true,
+      permission: Permission.EXPORT_REPORTS,
+      rateLimit: "export",
+    },
+
+    {
+      path: "/suggestions/variations",
+      method: "get",
+      handler: "getProfileVariations",
+      requiresAuth: true,
+    },
+    {
+      path: "/suggestions/profiles",
+      method: "get",
+      handler: "getProfileSuggestions",
+      requiresAuth: true,
+    },
+    {
+      path: "/suggestions/products",
+      method: "get",
+      handler: "searchSimilarProducts",
+      requiresAuth: true,
+    },
+    {
+      path: "/suggestions/sizes",
+      method: "get",
+      handler: "getSizesForProduct",
+      requiresAuth: true,
+    },
+    {
+      path: "/suggestions/stats",
+      method: "get",
+      handler: "getProfileSuggestionStats",
+      requiresAuth: true,
+    },
+
+    {
+      path: "/quantity/calculate",
+      method: "post",
+      handler: "calculateQuantity",
+      requiresAuth: true,
+      rateLimit: "optimization",
+    },
+    {
+      path: "/quantity/suggestions",
+      method: "post",
+      handler: "getQuantitySuggestions",
+      requiresAuth: true,
+      rateLimit: "optimization",
+    },
+    {
+      path: "/quantity/validate",
+      method: "post",
+      handler: "validateQuantity",
+      requiresAuth: true,
+    },
+    {
+      path: "/quantity/possibilities",
+      method: "post",
+      handler: "getPossibleQuantities",
+      requiresAuth: true,
+      rateLimit: "optimization",
+    },
+
+    {
+      path: "/import/excel",
+      method: "post",
+      handler: "importExcelData",
+      requiresAuth: true,
+      permission: Permission.MANAGE_CONFIG,
+    },
+
+    {
+      path: "/enterprise/profiles",
+      method: "get",
+      handler: "getEnterpriseProfileSuggestions",
+      requiresAuth: true,
+    },
+    {
+      path: "/enterprise/measurements",
+      method: "get",
+      handler: "getSmartMeasurementSuggestions",
+      requiresAuth: true,
+    },
+    {
+      path: "/enterprise/stats",
+      method: "get",
+      handler: "getEnterpriseSuggestionStats",
+      requiresAuth: true,
+    },
+    {
+      path: "/enterprise/refresh",
+      method: "post",
+      handler: "refreshEnterpriseAnalysis",
+      requiresAuth: true,
+      permission: Permission.MANAGE_CONFIG,
+    },
+    {
+      path: "/enterprise/product-sizes",
+      method: "get",
+      handler: "getProductSizes",
+      requiresAuth: true,
+    },
+    {
+      path: "/enterprise/complete-profile-set",
+      method: "get",
+      handler: "getCompleteProfileSet",
+      requiresAuth: true,
+    },
+
+    {
+      path: "/smart/products",
+      method: "get",
+      handler: getSmartProductSuggestions,
+      requiresAuth: true,
+    },
+    {
+      path: "/smart/sizes",
+      method: "get",
+      handler: getSmartSizeSuggestions,
+      requiresAuth: true,
+    },
+    {
+      path: "/smart/profiles",
+      method: "get",
+      handler: getSmartProfileSuggestions,
+      requiresAuth: true,
+    },
+    {
+      path: "/smart/autocomplete",
+      method: "get",
+      handler: getAutoCompleteSuggestions,
+      requiresAuth: true,
+    },
+    {
+      path: "/smart/stats",
+      method: "get",
+      handler: getSmartSuggestionStats,
+      requiresAuth: true,
+    },
+    {
+      path: "/smart/reload",
+      method: "post",
+      handler: reloadSmartSuggestionDatabase,
+      requiresAuth: true,
+      permission: Permission.MANAGE_CONFIG,
+    },
+    {
+      path: "/smart/suggestions",
+      method: "get",
+      handler: getSmartWorkOrderSuggestions,
+      requiresAuth: true,
+    },
+    {
+      path: "/smart/insights",
+      method: "post",
+      handler: getSmartWorkOrderInsights,
+      requiresAuth: true,
+      rateLimit: "optimization",
+    },
+    {
+      path: "/smart/apply-profile-set",
+      method: "post",
+      handler: applySmartProfileSet,
+      requiresAuth: true,
+      permission: Permission.START_OPTIMIZATION,
+    },
+    {
+      path: "/smart/templates",
+      method: "get",
+      handler: getWorkOrderTemplates,
+      requiresAuth: true,
+    },
+    {
+      path: "/smart/duplicate",
+      method: "post",
+      handler: duplicateWorkOrder,
+      requiresAuth: true,
+      permission: Permission.START_OPTIMIZATION,
+    },
+
+    {
+      path: "/profiles/suggestions",
+      method: "get",
+      handler: getSmartProfileSuggestions,
+      requiresAuth: true,
+      middleware: [queryNormalizer],
+    },
+    {
+      path: "/smart-suggestions/sizes",
+      method: "get",
+      handler: getAvailableSizes,
+      requiresAuth: true,
+    },
+    {
+      path: "/smart-suggestions/combinations",
+      method: "get",
+      handler: getProfileCombinations,
+      requiresAuth: true,
+    },
   ];
 
   constructor(private readonly controller: CuttingListController) {}
@@ -253,13 +509,18 @@ class CuttingListRouterFactory {
     const cache = new BoundMethodCache(this.controller);
     const registry = new RouteRegistry(router, cache);
 
-    console.log('🔧 [CuttingListRoutes] Registering routes:', this.routes.length);
-    this.routes.forEach(route => {
-      console.log(`  - ${route.method.toUpperCase()} ${route.path} -> ${route.handler}`);
+    console.log(
+      "🔧 [CuttingListRoutes] Registering routes:",
+      this.routes.length,
+    );
+    this.routes.forEach((route) => {
+      console.log(
+        `  - ${route.method.toUpperCase()} ${route.path} -> ${route.handler}`,
+      );
     });
 
     registry.registerBatch(this.routes);
-router.use(cuttingListErrorHandler);
+    router.use(cuttingListErrorHandler);
 
     return registry.build();
   }

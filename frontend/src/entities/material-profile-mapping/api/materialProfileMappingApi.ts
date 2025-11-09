@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import { apiClient } from '@/shared/api/client';
+import { apiClient } from "@/shared/api/client";
 import type {
   ProfileSuggestion,
   SaveMappingRequest,
@@ -12,22 +12,22 @@ import type {
   SaveMappingResponse,
   PopularMappingsResponse,
   IncrementUsageRequest,
-  IncrementUsageResponse
-} from '../model/types';
+  IncrementUsageResponse,
+} from "../model/types";
 
 class MaterialProfileMappingApi {
-  private readonly baseUrl = '/api/material-profile-mappings';
+  private readonly baseUrl = "/api/material-profile-mappings";
 
   /**
    * Malzeme numarası için profil önerileri getir
    */
   async getSuggestions(malzemeNo: string): Promise<ProfileSuggestion[]> {
     const response = await apiClient.get<ProfileSuggestionsResponse>(
-      `${this.baseUrl}/suggestions?malzemeNo=${encodeURIComponent(malzemeNo)}`
+      `${this.baseUrl}/suggestions?malzemeNo=${encodeURIComponent(malzemeNo)}`,
     );
 
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Profil önerileri alınamadı');
+      throw new Error(response.data.error || "Profil önerileri alınamadı");
     }
 
     return response.data.data;
@@ -39,24 +39,26 @@ class MaterialProfileMappingApi {
   async saveMapping(request: SaveMappingRequest): Promise<void> {
     const response = await apiClient.post<SaveMappingResponse>(
       this.baseUrl,
-      request
+      request,
     );
 
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Mapping kaydedilemedi');
+      throw new Error(response.data.error || "Mapping kaydedilemedi");
     }
   }
 
   /**
    * Malzeme numarası için tüm mapping'leri getir
    */
-  async getAllMappingsForMaterial(malzemeNo: string): Promise<ProfileSuggestion[]> {
+  async getAllMappingsForMaterial(
+    malzemeNo: string,
+  ): Promise<ProfileSuggestion[]> {
     const response = await apiClient.get<ProfileSuggestionsResponse>(
-      `${this.baseUrl}/material/${encodeURIComponent(malzemeNo)}`
+      `${this.baseUrl}/material/${encodeURIComponent(malzemeNo)}`,
     );
 
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Malzeme mapping\'leri alınamadı');
+      throw new Error(response.data.error || "Malzeme mapping'leri alınamadı");
     }
 
     return response.data.data;
@@ -67,11 +69,11 @@ class MaterialProfileMappingApi {
    */
   async getPopularMappings(limit: number = 20): Promise<ProfileSuggestion[]> {
     const response = await apiClient.get<PopularMappingsResponse>(
-      `${this.baseUrl}/popular?limit=${limit}`
+      `${this.baseUrl}/popular?limit=${limit}`,
     );
 
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Popüler mapping\'ler alınamadı');
+      throw new Error(response.data.error || "Popüler mapping'ler alınamadı");
     }
 
     return response.data.data;
@@ -83,11 +85,11 @@ class MaterialProfileMappingApi {
   async incrementUsageCount(request: IncrementUsageRequest): Promise<void> {
     const response = await apiClient.post<IncrementUsageResponse>(
       `${this.baseUrl}/increment-usage`,
-      request
+      request,
     );
 
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Usage count artırılamadı');
+      throw new Error(response.data.error || "Usage count artırılamadı");
     }
   }
 }

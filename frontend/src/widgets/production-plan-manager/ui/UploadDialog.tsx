@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -16,12 +16,15 @@ import {
   LinearProgress,
   Alert,
   Chip,
-  useTheme
-} from '@mui/material';
-import { CloudUpload as CloudUploadIcon, CheckCircle as CheckCircleIcon } from '@mui/icons-material';
-import { useDesignSystem } from '@/shared/hooks';
-import { useUploadProductionPlan } from '@/entities/production-plan';
-import { useQueryClient } from '@tanstack/react-query';
+  useTheme,
+} from "@mui/material";
+import {
+  CloudUpload as CloudUploadIcon,
+  CheckCircle as CheckCircleIcon,
+} from "@mui/icons-material";
+import { useDesignSystem } from "@/shared/hooks";
+import { useUploadProductionPlan } from "@/entities/production-plan";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface UploadDialogProps {
   readonly open: boolean;
@@ -32,7 +35,7 @@ interface UploadDialogProps {
 export const UploadDialog: React.FC<UploadDialogProps> = ({
   open,
   onClose,
-  onSuccess
+  onSuccess,
 }) => {
   const theme = useTheme();
   const ds = useDesignSystem();
@@ -46,9 +49,9 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
+    if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
-    } else if (e.type === 'dragleave') {
+    } else if (e.type === "dragleave") {
       setDragActive(false);
     }
   }, []);
@@ -67,19 +70,19 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
   const handleFileSelect = (file: File) => {
     // Validate file type
     const allowedTypes = [
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-      'application/vnd.ms-excel', // .xls
-      'application/vnd.ms-excel.sheet.macroEnabled.12' // .xlsm
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+      "application/vnd.ms-excel", // .xls
+      "application/vnd.ms-excel.sheet.macroEnabled.12", // .xlsm
     ];
 
     if (!allowedTypes.includes(file.type)) {
-      alert('Sadece Excel dosyaları (.xlsx, .xls) yüklenebilir');
+      alert("Sadece Excel dosyaları (.xlsx, .xls) yüklenebilir");
       return;
     }
 
     // Validate file size (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      alert('Dosya boyutu 10MB\'dan büyük olamaz');
+      alert("Dosya boyutu 10MB'dan büyük olamaz");
       return;
     }
 
@@ -101,10 +104,10 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
 
     try {
       setUploadProgress(0);
-      
+
       // Simulate progress
       const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
+        setUploadProgress((prev) => {
           if (prev >= 90) {
             clearInterval(progressInterval);
             return 90;
@@ -114,24 +117,26 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
       }, 200);
 
       const result = await uploadMutation.mutateAsync({ file: fileToUpload });
-      
-      console.log('✅ [UploadDialog] Upload result:', result);
-      
+
+      console.log("✅ [UploadDialog] Upload result:", result);
+
       clearInterval(progressInterval);
       setUploadProgress(100);
 
       if (result.success) {
-        console.log('✅ [UploadDialog] Upload successful, calling onSuccess...');
+        console.log(
+          "✅ [UploadDialog] Upload successful, calling onSuccess...",
+        );
         // Mutation onSuccess will handle cache invalidation
         setTimeout(() => {
           onSuccess();
           handleClose();
         }, 1000);
       } else {
-        console.error('❌ [UploadDialog] Upload failed:', result);
+        console.error("❌ [UploadDialog] Upload failed:", result);
       }
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error("Upload error:", error);
     }
   };
 
@@ -154,40 +159,37 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
       disableEscapeKeyDown={false}
       sx={{
         zIndex: 9999,
-        '& .MuiDialog-paper': {
+        "& .MuiDialog-paper": {
           zIndex: 9999,
-        }
+        },
       }}
     >
       <DialogTitle
         sx={{
-          textAlign: 'center',
-          py: ds.spacing['6'],
+          textAlign: "center",
+          py: ds.spacing["6"],
           background: ds.gradients.primary,
-          backgroundClip: 'text',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          fontSize: '1.5rem',
+          backgroundClip: "text",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          fontSize: "1.5rem",
           fontWeight: 700,
         }}
       >
         Üretim Planı Yükle
       </DialogTitle>
 
-      <DialogContent sx={{ px: ds.spacing['6'], pb: ds.spacing['4'] }}>
+      <DialogContent sx={{ px: ds.spacing["6"], pb: ds.spacing["4"] }}>
         {uploadMutation.error && (
-          <Alert 
-            severity="error" 
-            sx={{ mb: ds.spacing['4'] }}
-          >
-            {uploadMutation.error.message || 'Dosya yüklenirken hata oluştu'}
+          <Alert severity="error" sx={{ mb: ds.spacing["4"] }}>
+            {uploadMutation.error.message || "Dosya yüklenirken hata oluştu"}
           </Alert>
         )}
 
         {isSuccess && (
-          <Alert 
-            severity="success" 
-            sx={{ mb: ds.spacing['4'] }}
+          <Alert
+            severity="success"
+            sx={{ mb: ds.spacing["4"] }}
             icon={<CheckCircleIcon />}
           >
             Üretim planı başarıyla yüklendi!
@@ -198,44 +200,46 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
           <Box
             sx={{
               border: `2px dashed ${dragActive ? theme.palette.primary.main : theme.palette.grey[300]}`,
-              borderRadius: ds.borderRadius['lg'],
-              p: ds.spacing['8'],
-              textAlign: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease-in-out',
-              backgroundColor: dragActive ? theme.palette.primary.light + '20' : 'transparent',
-              '&:hover': {
+              borderRadius: ds.borderRadius["lg"],
+              p: ds.spacing["8"],
+              textAlign: "center",
+              cursor: "pointer",
+              transition: "all 0.2s ease-in-out",
+              backgroundColor: dragActive
+                ? theme.palette.primary.light + "20"
+                : "transparent",
+              "&:hover": {
                 borderColor: theme.palette.primary.main,
-                backgroundColor: theme.palette.primary.light + '10',
-              }
+                backgroundColor: theme.palette.primary.light + "10",
+              },
             }}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            onClick={() => document.getElementById('file-input')?.click()}
+            onClick={() => document.getElementById("file-input")?.click()}
           >
-            <CloudUploadIcon 
-              sx={{ 
-                fontSize: 48, 
+            <CloudUploadIcon
+              sx={{
+                fontSize: 48,
                 color: theme.palette.grey[400],
-                mb: ds.spacing['3']
-              }} 
+                mb: ds.spacing["3"],
+              }}
             />
-            <Typography 
-              variant="h6" 
-              sx={{ 
+            <Typography
+              variant="h6"
+              sx={{
                 fontWeight: 600,
-                mb: ds.spacing['2']
+                mb: ds.spacing["2"],
               }}
             >
               Excel dosyasını sürükleyin veya tıklayın
             </Typography>
-            <Typography 
-              variant="body2" 
-              sx={{ 
+            <Typography
+              variant="body2"
+              sx={{
                 color: theme.palette.grey[600],
-                mb: ds.spacing['3']
+                mb: ds.spacing["3"],
               }}
             >
               .xlsx, .xls dosyaları desteklenir (Max: 10MB)
@@ -245,20 +249,20 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
               type="file"
               accept=".xlsx,.xls,.xlsm"
               onChange={handleFileInputChange}
-              style={{ display: 'none' }}
+              style={{ display: "none" }}
             />
           </Box>
         ) : (
           <Box>
             <Box
               sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: ds.spacing['3'],
-                p: ds.spacing['4'],
+                display: "flex",
+                alignItems: "center",
+                gap: ds.spacing["3"],
+                p: ds.spacing["4"],
                 backgroundColor: theme.palette.grey[50],
-                borderRadius: ds.borderRadius['lg'],
-                mb: ds.spacing['4']
+                borderRadius: ds.borderRadius["lg"],
+                mb: ds.spacing["4"],
               }}
             >
               <CloudUploadIcon color="primary" />
@@ -270,30 +274,30 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
                   {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                 </Typography>
               </Box>
-              <Chip 
-                label="Excel" 
-                color="primary" 
-                size="small" 
+              <Chip
+                label="Excel"
+                color="primary"
+                size="small"
                 variant="outlined"
               />
             </Box>
 
             {isUploading && (
               <Box>
-                <Typography variant="body2" sx={{ mb: ds.spacing['2'] }}>
+                <Typography variant="body2" sx={{ mb: ds.spacing["2"] }}>
                   Yükleniyor... {uploadProgress}%
                 </Typography>
-                <LinearProgress 
-                  variant="determinate" 
+                <LinearProgress
+                  variant="determinate"
                   value={uploadProgress}
                   sx={{
                     height: 8,
-                    borderRadius: ds.borderRadius['sm'],
+                    borderRadius: ds.borderRadius["sm"],
                     backgroundColor: theme.palette.grey[200],
-                    '& .MuiLinearProgress-bar': {
-                      borderRadius: ds.borderRadius['sm'],
+                    "& .MuiLinearProgress-bar": {
+                      borderRadius: ds.borderRadius["sm"],
                       background: ds.gradients.primary,
-                    }
+                    },
                   }}
                 />
               </Box>
@@ -302,15 +306,15 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
         )}
       </DialogContent>
 
-      <DialogActions sx={{ px: ds.spacing['6'], pb: ds.spacing['6'] }}>
+      <DialogActions sx={{ px: ds.spacing["6"], pb: ds.spacing["6"] }}>
         <Button
           onClick={handleClose}
           disabled={isUploading}
-          sx={{ mr: ds.spacing['2'] }}
+          sx={{ mr: ds.spacing["2"] }}
         >
-          {isSuccess ? 'Tamam' : 'İptal'}
+          {isSuccess ? "Tamam" : "İptal"}
         </Button>
-        
+
         {selectedFile && !isSuccess && (
           <Button
             onClick={() => handleUpload()}
@@ -318,13 +322,13 @@ export const UploadDialog: React.FC<UploadDialogProps> = ({
             disabled={isUploading}
             sx={{
               background: ds.gradients.primary,
-              px: ds.spacing['4'],
-              py: ds.spacing['2'],
+              px: ds.spacing["4"],
+              py: ds.spacing["2"],
               fontWeight: 600,
-              borderRadius: ds.borderRadius['lg'],
+              borderRadius: ds.borderRadius["lg"],
             }}
           >
-            {isUploading ? 'Yükleniyor...' : 'Yükle'}
+            {isUploading ? "Yükleniyor..." : "Yükle"}
           </Button>
         )}
       </DialogActions>

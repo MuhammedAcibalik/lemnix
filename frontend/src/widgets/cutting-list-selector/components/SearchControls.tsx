@@ -4,7 +4,7 @@
  * @version 2.0.0 - Design System v2 Compliant
  */
 
-import React from 'react';
+import React from "react";
 import {
   TextField,
   InputAdornment,
@@ -12,17 +12,17 @@ import {
   Chip,
   alpha,
   Stack,
-} from '@mui/material';
-import { 
+} from "@mui/material";
+import {
   Search as SearchIcon,
   CheckCircle as CheckIcon,
-} from '@mui/icons-material';
-import { SearchControlsProps } from '../types';
-import { textContent, accessibilityConstants } from '../constants';
+} from "@mui/icons-material";
+import { SearchControlsProps } from "../types";
+import { textContent, accessibilityConstants } from "../constants";
 
 // Design System v2.0
-import { useDesignSystem } from '@/shared/hooks';
-import { CardV2 } from '@/shared';
+import { useDesignSystem } from "@/shared/hooks";
+import { CardV2 } from "@/shared";
 
 /**
  * Search Controls Component
@@ -31,14 +31,15 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
   searchTerm,
   onSearchChange,
   totalItems,
-  selectedItems
+  selectedItems,
 }) => {
   const ds = useDesignSystem();
-  const selectionPercentage = totalItems > 0 ? Math.round((selectedItems / totalItems) * 100) : 0;
+  const selectionPercentage =
+    totalItems > 0 ? Math.round((selectedItems / totalItems) * 100) : 0;
 
   return (
-    <CardV2 variant="glass" sx={{ p: ds.spacing['4'] }}>
-      <Stack spacing={ds.spacing['3']}>
+    <CardV2 variant="glass" sx={{ p: ds.spacing["4"] }}>
+      <Stack spacing={ds.spacing["3"]}>
         {/* Modern Search Input */}
         <TextField
           fullWidth
@@ -48,42 +49,44 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: ds.colors.primary.main, fontSize: 20 }} />
+                <SearchIcon
+                  sx={{ color: ds.colors.primary.main, fontSize: 20 }}
+                />
               </InputAdornment>
             ),
           }}
           sx={{
-            '& .MuiOutlinedInput-root': {
+            "& .MuiOutlinedInput-root": {
               borderRadius: `${ds.borderRadius.md}px`,
               transition: ds.transitions.fast,
-              '& fieldset': {
+              "& fieldset": {
                 borderColor: alpha(ds.colors.primary.main, 0.2),
               },
-              '&:hover fieldset': {
+              "&:hover fieldset": {
                 borderColor: alpha(ds.colors.primary.main, 0.4),
               },
-              '&.Mui-focused fieldset': {
+              "&.Mui-focused fieldset": {
                 borderColor: ds.colors.primary.main,
                 borderWidth: 2,
               },
             },
-            '& .MuiOutlinedInput-input': {
-              fontSize: '0.875rem',
+            "& .MuiOutlinedInput-input": {
+              fontSize: "0.875rem",
               fontWeight: 500,
             },
           }}
           aria-label={accessibilityConstants.ariaLabels.searchInput}
         />
-        
+
         {/* Modern Stats Badges */}
-        <Stack direction="row" spacing={ds.spacing['2']} flexWrap="wrap">
+        <Stack direction="row" spacing={ds.spacing["2"]} flexWrap="wrap">
           <Chip
             label={`${selectedItems}/${totalItems} ${textContent.selection.selectedItems}`}
             icon={<CheckIcon sx={{ fontSize: 16 }} />}
             sx={{
               height: 28,
               fontWeight: 600,
-              fontSize: '0.8125rem',
+              fontSize: "0.8125rem",
               background: alpha(ds.colors.primary.main, 0.1),
               color: ds.colors.primary.main,
               border: `1px solid ${alpha(ds.colors.primary.main, 0.2)}`,
@@ -93,11 +96,11 @@ export const SearchControls: React.FC<SearchControlsProps> = ({
           {selectedItems > 0 && (
             <Chip
               label={`%${selectionPercentage} Tamamlandı`}
-              color={selectionPercentage === 100 ? 'success' : 'default'}
+              color={selectionPercentage === 100 ? "success" : "default"}
               sx={{
                 height: 28,
                 fontWeight: 600,
-                fontSize: '0.8125rem',
+                fontSize: "0.8125rem",
                 borderRadius: `${ds.borderRadius.md}px`,
               }}
             />

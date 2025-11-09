@@ -5,9 +5,9 @@
  * @license MIT
  */
 
-import * as XLSX from 'xlsx';
-import * as path from 'path';
-import * as fs from 'fs';
+import * as XLSX from "xlsx";
+import * as path from "path";
+import * as fs from "fs";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -16,7 +16,7 @@ import * as fs from 'fs';
 export type CellValue = string | number | boolean | Date | null | undefined;
 export type ExcelRow = ReadonlyArray<CellValue>;
 export type ExcelData = ReadonlyArray<ExcelRow>;
-export type ErrorSeverity = 'critical' | 'error' | 'warning' | 'info';
+export type ErrorSeverity = "critical" | "error" | "warning" | "info";
 
 export interface ColumnMapping {
   readonly workOrderId?: number;
@@ -32,9 +32,9 @@ export interface ColumnMapping {
 }
 
 export interface ProfileItem {
-  readonly profileType: string;      // Profil tipi (KAPALI ALT, AÇIK ALT, vs.)
-  readonly measurement: string;      // Ölçü
-  readonly quantity: number;         // Parça miktarı
+  readonly profileType: string; // Profil tipi (KAPALI ALT, AÇIK ALT, vs.)
+  readonly measurement: string; // Ölçü
+  readonly quantity: number; // Parça miktarı
   readonly rowIndex: number;
   readonly confidence: number;
 }
@@ -46,7 +46,7 @@ export interface WorkOrderItem {
   readonly rowIndex: number;
   readonly confidence: number;
   readonly source: DataSource;
-  readonly totalQuantity: number;    // Toplam parça miktarı
+  readonly totalQuantity: number; // Toplam parça miktarı
 }
 
 export interface WorkOrderMetadata {
@@ -59,7 +59,7 @@ export interface WorkOrderMetadata {
 }
 
 export interface DataSource {
-  readonly type: 'direct' | 'inherited' | 'merged';
+  readonly type: "direct" | "inherited" | "merged";
   readonly parentWorkOrderId?: string;
   readonly originalRowIndex: number;
 }
@@ -70,8 +70,8 @@ export interface ProductGroup {
   readonly confidence: number;
   readonly metadata: ProductMetadata;
   readonly validation: ValidationSummary;
-  readonly totalProfiles: number;        // Toplam profil sayısı
-  readonly totalQuantity: number;        // Toplam parça miktarı
+  readonly totalProfiles: number; // Toplam profil sayısı
+  readonly totalQuantity: number; // Toplam parça miktarı
   readonly profileTypes: ReadonlyArray<string>; // Kullanılan profil tipleri
 }
 
@@ -117,20 +117,20 @@ export interface ValidationError {
 }
 
 export enum ErrorCode {
-  MISSING_WORK_ORDER = 'MISSING_WORK_ORDER',
-  MISSING_PROFILE = 'MISSING_PROFILE',
-  MISSING_MEASUREMENT = 'MISSING_MEASUREMENT',
-  INVALID_QUANTITY = 'INVALID_QUANTITY',
-  QUANTITY_OVERFLOW = 'QUANTITY_OVERFLOW',
-  HIGH_QUANTITY = 'HIGH_QUANTITY',
-  INHERITED_ID = 'INHERITED_ID',
-  GENERATED_ID = 'GENERATED_ID',
-  INVALID_FORMAT = 'INVALID_FORMAT',
-  PARSE_FAILED = 'PARSE_FAILED',
-  FILE_NOT_FOUND = 'FILE_NOT_FOUND',
-  EMPTY_WORKSHEET = 'EMPTY_WORKSHEET',
-  NO_HEADER_FOUND = 'NO_HEADER_FOUND',
-  NO_PRODUCTS_FOUND = 'NO_PRODUCTS_FOUND'
+  MISSING_WORK_ORDER = "MISSING_WORK_ORDER",
+  MISSING_PROFILE = "MISSING_PROFILE",
+  MISSING_MEASUREMENT = "MISSING_MEASUREMENT",
+  INVALID_QUANTITY = "INVALID_QUANTITY",
+  QUANTITY_OVERFLOW = "QUANTITY_OVERFLOW",
+  HIGH_QUANTITY = "HIGH_QUANTITY",
+  INHERITED_ID = "INHERITED_ID",
+  GENERATED_ID = "GENERATED_ID",
+  INVALID_FORMAT = "INVALID_FORMAT",
+  PARSE_FAILED = "PARSE_FAILED",
+  FILE_NOT_FOUND = "FILE_NOT_FOUND",
+  EMPTY_WORKSHEET = "EMPTY_WORKSHEET",
+  NO_HEADER_FOUND = "NO_HEADER_FOUND",
+  NO_PRODUCTS_FOUND = "NO_PRODUCTS_FOUND",
 }
 
 export interface ValidationResult {
@@ -182,8 +182,6 @@ export interface ILogger {
   debug(message: string, context?: Record<string, unknown>): void;
 }
 
-
-
 interface PatternConfig {
   readonly pattern: RegExp;
   readonly field: keyof ColumnMapping;
@@ -197,11 +195,11 @@ interface PatternConfig {
 
 export class TypeGuards {
   public static isString(value: CellValue): value is string {
-    return typeof value === 'string';
+    return typeof value === "string";
   }
 
   public static isNumber(value: CellValue): value is number {
-    return typeof value === 'number' && !isNaN(value) && isFinite(value);
+    return typeof value === "number" && !isNaN(value) && isFinite(value);
   }
 
   public static isDate(value: CellValue): value is Date {
@@ -219,7 +217,7 @@ export class TypeGuards {
 
 export class DataTransformers {
   public static toString(value: CellValue): string {
-    if (TypeGuards.isNullOrUndefined(value)) return '';
+    if (TypeGuards.isNullOrUndefined(value)) return "";
     if (TypeGuards.isString(value)) return value.trim();
     if (TypeGuards.isDate(value)) return value.toISOString();
     return String(value).trim();
@@ -228,13 +226,13 @@ export class DataTransformers {
   public static toNumber(value: CellValue): number | undefined {
     if (TypeGuards.isNullOrUndefined(value)) return undefined;
     if (TypeGuards.isNumber(value)) return value;
-    
+
     const str = this.toString(value);
     if (!str) return undefined;
-    
-    const normalized = str.replace(/[^\d.,-]/g, '').replace(',', '.');
+
+    const normalized = str.replace(/[^\d.,-]/g, "").replace(",", ".");
     const num = Number(normalized);
-    
+
     return TypeGuards.isNumber(num) ? num : undefined;
   }
 
@@ -249,12 +247,22 @@ export class DataTransformers {
       .toLowerCase()
       .replace(/[ğüşıöçĞÜŞİÖÇ]/g, (char) => {
         const map: Record<string, string> = {
-          'ğ': 'g', 'ü': 'u', 'ş': 's', 'ı': 'i', 'ö': 'o', 'ç': 'c',
-          'Ğ': 'g', 'Ü': 'u', 'Ş': 's', 'İ': 'i', 'Ö': 'o', 'Ç': 'c'
+          ğ: "g",
+          ü: "u",
+          ş: "s",
+          ı: "i",
+          ö: "o",
+          ç: "c",
+          Ğ: "g",
+          Ü: "u",
+          Ş: "s",
+          İ: "i",
+          Ö: "o",
+          Ç: "c",
         };
         return map[char] || char;
       })
-      .replace(/\s+/g, ' ')
+      .replace(/\s+/g, " ")
       .trim();
   }
 }
@@ -267,81 +275,84 @@ export class PatternDetector {
   private static readonly HEADER_PATTERNS: ReadonlyArray<PatternConfig> = [
     {
       pattern: /^(iş\s*emri|is\s*emri|work\s*order|wo|i̇ş\s*emri|i̇s\s*emri)/i,
-      field: 'workOrderId',
+      field: "workOrderId",
       weight: 1.0,
-      required: false
+      required: false,
     },
     {
       pattern: /^(tarih|date|tarıh)/i,
-      field: 'date',
+      field: "date",
       weight: 0.8,
-      required: false
+      required: false,
     },
     {
       pattern: /^(versiyon|version|ver)/i,
-      field: 'version',
+      field: "version",
       weight: 0.7,
-      required: false
+      required: false,
     },
     {
       pattern: /^(renk|color|rang)/i,
-      field: 'color',
+      field: "color",
       weight: 0.7,
-      required: false
+      required: false,
     },
     {
       pattern: /^(not|note|açıklama|description)/i,
-      field: 'note',
+      field: "note",
       weight: 0.6,
-      required: false
+      required: false,
     },
     {
       pattern: /^(sip\.?\s*adet|sipariş\s*adet|sıp\.?\s*adet)/i,
-      field: 'sipQuantity',
+      field: "sipQuantity",
       weight: 0.8,
-      required: false
+      required: false,
     },
     {
       pattern: /^(ebat|size|boyut|ölçek)/i,
-      field: 'size',
+      field: "size",
       weight: 0.7,
-      required: false
+      required: false,
     },
     {
       pattern: /^(profil|profile|profıl)/i,
-      field: 'profile',
+      field: "profile",
       weight: 1.0,
-      required: true
+      required: true,
     },
     {
       pattern: /^(ölçü|measure|ölçüm|measurement)/i,
-      field: 'measurement',
+      field: "measurement",
       weight: 1.0,
-      required: true
+      required: true,
     },
     {
       pattern: /^(adet|quantity|miktar|qty)/i,
-      field: 'quantity',
+      field: "quantity",
       weight: 1.0,
-      required: true
-    }
+      required: true,
+    },
   ];
 
-  public static detectHeaderRow(data: ExcelData, startIndex = 0): HeaderPattern | null {
+  public static detectHeaderRow(
+    data: ExcelData,
+    startIndex = 0,
+  ): HeaderPattern | null {
     // GERÇEK EXCEL YAPISINA GÖRE: Header her zaman row 3'te
     const headerRowIndex = 3;
-    
+
     if (headerRowIndex >= data.length) {
       return null;
     }
-    
+
     const row = data[headerRowIndex];
     if (!row || row.length === 0) {
       return null;
     }
 
     const pattern = this.analyzeRowAsHeader(row, headerRowIndex);
-    
+
     // If row 3 doesn't look like header, fall back to search
     if (!pattern || pattern.confidence < 0.5) {
       const searchLimit = Math.min(data.length, startIndex + 50);
@@ -352,7 +363,10 @@ export class PatternDetector {
         if (!searchRow || searchRow.length === 0) continue;
 
         const searchPattern = this.analyzeRowAsHeader(searchRow, i);
-        if (searchPattern && (!bestPattern || searchPattern.confidence > bestPattern.confidence)) {
+        if (
+          searchPattern &&
+          (!bestPattern || searchPattern.confidence > bestPattern.confidence)
+        ) {
           bestPattern = searchPattern;
         }
 
@@ -360,14 +374,17 @@ export class PatternDetector {
           break;
         }
       }
-      
+
       return bestPattern;
     }
 
     return pattern;
   }
 
-  private static analyzeRowAsHeader(row: ExcelRow, rowIndex: number): HeaderPattern | null {
+  private static analyzeRowAsHeader(
+    row: ExcelRow,
+    rowIndex: number,
+  ): HeaderPattern | null {
     const columns: Record<string, number> = {};
     let matchedWeight = 0;
     let totalPossibleWeight = 0;
@@ -390,61 +407,76 @@ export class PatternDetector {
     }
 
     // Calculate total possible weight for detected fields
-    const detectedPatterns = this.HEADER_PATTERNS.filter(p => 
-      Object.keys(columns).includes(p.field)
+    const detectedPatterns = this.HEADER_PATTERNS.filter((p) =>
+      Object.keys(columns).includes(p.field),
     );
-    totalPossibleWeight = detectedPatterns.reduce((sum, p) => sum + p.weight, 0);
+    totalPossibleWeight = detectedPatterns.reduce(
+      (sum, p) => sum + p.weight,
+      0,
+    );
 
-    const requiredFieldsCount = this.HEADER_PATTERNS.filter(p => p.required).length;
-    const hasMinimumFields = requiredFieldsFound >= Math.floor(requiredFieldsCount * 0.5);
+    const requiredFieldsCount = this.HEADER_PATTERNS.filter(
+      (p) => p.required,
+    ).length;
+    const hasMinimumFields =
+      requiredFieldsFound >= Math.floor(requiredFieldsCount * 0.5);
 
     if (!hasMinimumFields || Object.keys(columns).length < 3) {
       return null;
     }
 
-    const confidence = totalPossibleWeight > 0 ? matchedWeight / totalPossibleWeight : 0;
+    const confidence =
+      totalPossibleWeight > 0 ? matchedWeight / totalPossibleWeight : 0;
 
     return {
       columns: columns as ColumnMapping,
       confidence,
       rowIndex,
-      detectedFields: Object.keys(columns).length
+      detectedFields: Object.keys(columns).length,
     };
   }
 
   public static detectProductSections(
     data: ExcelData,
-    headerPattern: HeaderPattern | null = null
+    headerPattern: HeaderPattern | null = null,
   ): ReadonlyArray<ProductSection> {
     const sections: ProductSection[] = [];
     const productNamesUsed = new Set<string>(); // Duplicate prevention
-    
+
     // ULTRA AGGRESSIVE: Start from row 0 to catch ALL products
     const dataStartIndex = 0; // Always start from beginning
-    
-    console.log('🔍 Starting AGGRESSIVE product section detection from row 0...');
+
+    console.log(
+      "🔍 Starting AGGRESSIVE product section detection from row 0...",
+    );
 
     // First pass: Scan entire document for products
     let nextStartIndex = dataStartIndex;
     let searchAttempts = 0;
     const maxAttempts = data.length; // Check every row if needed
-    
+
     while (nextStartIndex < data.length && searchAttempts < maxAttempts) {
       searchAttempts++;
-      const nextSection = this.findNextProductSection(data, nextStartIndex, headerPattern);
-      
+      const nextSection = this.findNextProductSection(
+        data,
+        nextStartIndex,
+        headerPattern,
+      );
+
       if (nextSection) {
         // Check for duplicate product names
         const normalizedName = nextSection.productName.toUpperCase().trim();
-        
+
         if (!productNamesUsed.has(normalizedName)) {
           sections.push(nextSection);
           productNamesUsed.add(normalizedName);
-          console.log(`➕ Added unique product: ${nextSection.productName} at row ${nextSection.startRow}`);
+          console.log(
+            `➕ Added unique product: ${nextSection.productName} at row ${nextSection.startRow}`,
+          );
         } else {
           // Merge with existing section
-          const existingIndex = sections.findIndex(s => 
-            s.productName.toUpperCase().trim() === normalizedName
+          const existingIndex = sections.findIndex(
+            (s) => s.productName.toUpperCase().trim() === normalizedName,
           );
           if (existingIndex >= 0) {
             const existing = sections[existingIndex];
@@ -453,12 +485,19 @@ export class PatternDetector {
                 productName: existing.productName,
                 startRow: Math.min(existing.startRow, nextSection.startRow),
                 headerRow: existing.headerRow,
-                confidence: Math.max(existing.confidence || 0.8, nextSection.confidence || 0.8),
+                confidence: Math.max(
+                  existing.confidence || 0.8,
+                  nextSection.confidence || 0.8,
+                ),
                 endRow: Math.max(existing.endRow, nextSection.endRow),
-                dataRows: [...new Set([...existing.dataRows, ...nextSection.dataRows])].sort((a, b) => a - b)
+                dataRows: [
+                  ...new Set([...existing.dataRows, ...nextSection.dataRows]),
+                ].sort((a, b) => a - b),
               };
               sections[existingIndex] = mergedSection;
-              console.log(`🔗 Merged duplicate product: ${nextSection.productName}`);
+              console.log(
+                `🔗 Merged duplicate product: ${nextSection.productName}`,
+              );
             }
           }
         }
@@ -471,7 +510,11 @@ export class PatternDetector {
 
     // Strategy 2: If no clear sections found, create a single section
     if (sections.length === 0) {
-      const fallbackSection = this.createFallbackSection(data, dataStartIndex, headerPattern);
+      const fallbackSection = this.createFallbackSection(
+        data,
+        dataStartIndex,
+        headerPattern,
+      );
       if (fallbackSection) {
         sections.push(fallbackSection);
       }
@@ -484,18 +527,24 @@ export class PatternDetector {
   private static findNextProductSection(
     data: ExcelData,
     startIndex: number,
-    headerPattern: HeaderPattern | null
+    headerPattern: HeaderPattern | null,
   ): ProductSection | null {
-    let productName = '';
+    let productName = "";
     let sectionStartRow = startIndex;
     const headerRow = headerPattern?.rowIndex ?? -1;
     const dataRows: number[] = [];
 
-    console.log(`🔍 Searching for product section starting from row ${startIndex}`);
+    console.log(
+      `🔍 Searching for product section starting from row ${startIndex}`,
+    );
 
     // PHASE 1: Comprehensive product name search
-    const productCandidates: Array<{name: string; row: number; confidence: number}> = [];
-    
+    const productCandidates: Array<{
+      name: string;
+      row: number;
+      confidence: number;
+    }> = [];
+
     // Look through more rows to find potential product names
     for (let i = startIndex; i < Math.min(startIndex + 50, data.length); i++) {
       const row = data[i];
@@ -505,13 +554,19 @@ export class PatternDetector {
       for (let j = 0; j < Math.min(row.length, 8); j++) {
         const cellValue = DataTransformers.toString(row[j]);
         if (this.isValidProductName(cellValue)) {
-          const confidence = this.calculateProductNameConfidence(cellValue, i, j);
+          const confidence = this.calculateProductNameConfidence(
+            cellValue,
+            i,
+            j,
+          );
           productCandidates.push({
             name: cellValue,
             row: i,
-            confidence
+            confidence,
           });
-          console.log(`📋 Product candidate: "${cellValue}" at row ${i}, col ${j}, confidence: ${confidence}`);
+          console.log(
+            `📋 Product candidate: "${cellValue}" at row ${i}, col ${j}, confidence: ${confidence}`,
+          );
         }
       }
     }
@@ -520,27 +575,38 @@ export class PatternDetector {
     if (productCandidates.length > 0) {
       productCandidates.sort((a, b) => b.confidence - a.confidence);
       const bestCandidate = productCandidates[0];
-      
-      if (bestCandidate && bestCandidate.confidence > 0.4) { // Lower threshold for more products
+
+      if (bestCandidate && bestCandidate.confidence > 0.4) {
+        // Lower threshold for more products
         productName = bestCandidate.name;
         sectionStartRow = bestCandidate.row;
-        console.log(`✅ Selected product: "${productName}" with confidence ${bestCandidate.confidence}`);
+        console.log(
+          `✅ Selected product: "${productName}" with confidence ${bestCandidate.confidence}`,
+        );
       }
     }
 
     // PHASE 2: If no good product name found, try data-driven approach
     if (!productName) {
-      console.log('⚠️ No clear product name found, analyzing data patterns...');
-      
+      console.log("⚠️ No clear product name found, analyzing data patterns...");
+
       // Find first data row and use it to infer product context
-      for (let i = Math.max(startIndex, headerRow + 1); i < Math.min(startIndex + 100, data.length); i++) {
+      for (
+        let i = Math.max(startIndex, headerRow + 1);
+        i < Math.min(startIndex + 100, data.length);
+        i++
+      ) {
         const row = data[i];
         if (!row) continue;
 
         if (this.isDataRow(row, headerPattern)) {
           // Extract product info from data context - convert readonly array to mutable
           const mutableRow = [...row];
-          const inferredProduct = this.inferProductFromDataRow(mutableRow, i, data);
+          const inferredProduct = this.inferProductFromDataRow(
+            mutableRow,
+            i,
+            data,
+          );
           if (inferredProduct) {
             productName = inferredProduct;
             sectionStartRow = i;
@@ -553,15 +619,21 @@ export class PatternDetector {
 
     // PHASE 3: Final fallback - but don't use generic names
     if (!productName) {
-      console.log('❌ Could not determine product name, section will be skipped');
+      console.log(
+        "❌ Could not determine product name, section will be skipped",
+      );
       return null; // Don't create sections with generic names
     }
 
     // PHASE 4: Find data rows for this product
     let foundDataRows = false;
     const maxScanRows = Math.min(sectionStartRow + 200, data.length);
-    
-    for (let i = Math.max(sectionStartRow, headerRow + 1); i < maxScanRows; i++) {
+
+    for (
+      let i = Math.max(sectionStartRow, headerRow + 1);
+      i < maxScanRows;
+      i++
+    ) {
       const row = data[i];
       if (!row) continue;
 
@@ -571,10 +643,15 @@ export class PatternDetector {
       } else if (foundDataRows) {
         // Check if we've hit another product section
         const nextProductCandidate = DataTransformers.toString(row[0]);
-        if (this.isValidProductName(nextProductCandidate) && 
-            nextProductCandidate !== productName &&
-            this.calculateProductNameConfidence(nextProductCandidate, i, 0) > 0.7) { // Lower threshold for better separation
-          console.log(`🛑 Found next product "${nextProductCandidate}" at row ${i}, stopping current section`);
+        if (
+          this.isValidProductName(nextProductCandidate) &&
+          nextProductCandidate !== productName &&
+          this.calculateProductNameConfidence(nextProductCandidate, i, 0) > 0.7
+        ) {
+          // Lower threshold for better separation
+          console.log(
+            `🛑 Found next product "${nextProductCandidate}" at row ${i}, stopping current section`,
+          );
           break;
         }
       }
@@ -586,7 +663,9 @@ export class PatternDetector {
     }
 
     const endRow = Math.max(...dataRows);
-    console.log(`✅ Created product section "${productName}": rows ${sectionStartRow}-${endRow} with ${dataRows.length} data rows`);
+    console.log(
+      `✅ Created product section "${productName}": rows ${sectionStartRow}-${endRow} with ${dataRows.length} data rows`,
+    );
 
     return {
       productName,
@@ -594,26 +673,26 @@ export class PatternDetector {
       endRow,
       headerRow: headerRow >= 0 ? headerRow : sectionStartRow,
       dataRows,
-      confidence: 0.8 // Always high confidence since we validated the product name
+      confidence: 0.8, // Always high confidence since we validated the product name
     };
   }
-  
+
   private static isObviouslyNotProduct(value: string): boolean {
     const notProductPatterns = [
       /^\d+$/, // Pure numbers
       /^[A-Z]$/, // Single letters
       /^(iş|is|work|tarih|date|renk|color|not|note|adet|quantity|profil|profile|ölçü|ebat|sip)/i,
       /^(hafta|sayfa|toplam|özet|rapor)$/i,
-      
+
       // KRITIK: Profil tipleri asla ürün değil
       /^(kapalı\s*alt|açık\s*alt|kapalı\s*üst|açık\s*üst)$/i,
       /^(kapali\s*alt|acik\s*alt|kapali\s*ust|acik\s*ust)$/i,
       /^(closed\s*bottom|open\s*bottom|closed\s*top|open\s*top)$/i,
-      
+
       // Sistem elementleri
       /^\d+\.?\s*hafta$/i, // 27.HAFTA, 27 HAFTA
-      /^sayfa\s*\d+$/i,    // SAYFA 7, SAYFA 8
-      
+      /^sayfa\s*\d+$/i, // SAYFA 7, SAYFA 8
+
       // Header pattern'leri - KESIN RED
       /^(iş\s*emri|is\s*emri|work\s*order)$/i, // Bu kritik!
       /^(tarih|date)$/i,
@@ -624,44 +703,44 @@ export class PatternDetector {
       /^(profil|profile)$/i,
       /^(ölçü|olcu|measure|measurement)$/i,
       /^(adet|quantity|miktar)$/i,
-      /^(sip\.?adet|siparis\s*adet)$/i
+      /^(sip\.?adet|siparis\s*adet)$/i,
     ];
-    
-    return notProductPatterns.some(pattern => pattern.test(value));
+
+    return notProductPatterns.some((pattern) => pattern.test(value));
   }
-  
+
   private static hasProductCharacteristics(value: string): boolean {
     // Look for characteristics that suggest this is a product name
     const characteristics = [
       // Güçlü ürün göstergeleri
       /(frame|gönye|ledbox|totem|kapı|door|pencere|window|poster|broşür|tabela|aboard|slide|convex)/i,
-      
+
       // Boyut göstergeleri
       /\d+['"]?[lı|li|lu|lü]k/i, // 25'lik, 32'lik
-      
+
       // Çok kelimeli ürün adları
       /^[A-ZÇĞIİÖŞÜ][a-zA-ZÇĞIİÖŞÜçğıiöşü\s]+[A-ZÇĞIİÖŞÜa-zA-Zçğıiöşü]$/, // En az 2 kelime
-      
+
       // Ürün varyantları
       /(premium|standart|ekonomik|deluxe|pro|max|slim|eco|best|plus)/i,
-      
+
       // Özel özellikler
       /(su\s*korumalı|waterproof|manyetik|zor\s*açılan|çift\s*taraflı|tek\s*taraflı)/i,
-      
+
       // Malzeme göstergeleri
       /(alüminyum|aluminium|pvc|metal|plastik|akrilik)/i,
-      
+
       // Büyük harfler (en az 3 tane)
       /[A-ZÇĞIİÖŞÜ]{3,}/,
-      
+
       // Sistem adları
       /(sistem|system|set|kit)/i,
-      
+
       // Genel ürün pattern'i - büyük harfle başlayan, makul uzunlukta
-      /^[A-ZÇĞIİÖŞÜ][a-zA-ZÇĞIİÖŞÜçğıiöşü0-9\s\-_'".()]{3,50}$/
+      /^[A-ZÇĞIİÖŞÜ][a-zA-ZÇĞIİÖŞÜçğıiöşü0-9\s\-_'".()]{3,50}$/,
     ];
-    
-    return characteristics.some(pattern => pattern.test(value));
+
+    return characteristics.some((pattern) => pattern.test(value));
   }
 
   /**
@@ -669,41 +748,43 @@ export class PatternDetector {
    */
   private static isValidProductName(value: string): boolean {
     if (!value || value.length < 3 || value.length > 100) return false;
-    
+
     // KESIN RED: Obvious non-products
     if (this.isObviouslyNotProduct(value)) return false;
-    
+
     // KESIN RED: Profil tipleri asla ürün değil
     const profileTypePatterns = [
       /^(kapalı|açık)\s*(alt|üst)$/i,
       /^(kapali|acik)\s*(alt|ust)$/i,
-      /^(closed|open)\s*(bottom|top)$/i
+      /^(closed|open)\s*(bottom|top)$/i,
     ];
-    
-    if (profileTypePatterns.some(pattern => pattern.test(value.trim()))) {
+
+    if (profileTypePatterns.some((pattern) => pattern.test(value.trim()))) {
       return false;
     }
-    
+
     // KESIN RED: Sadece boyut olan değerler
     if (/^\d+[xX]\d+$/.test(value.trim())) return false;
-    
+
     // Must have product characteristics (relaxed requirement)
     return this.hasProductCharacteristics(value);
   }
 
-
-
   /**
    * Calculate confidence score for product name - BALANCED VERSION
    */
-  private static calculateProductNameConfidence(value: string, rowIndex: number, colIndex: number): number {
+  private static calculateProductNameConfidence(
+    value: string,
+    rowIndex: number,
+    colIndex: number,
+  ): number {
     let confidence = 0.5; // Higher base confidence
-    
+
     // KRITIK: Header ve sistem elementleri kesin red
     if (this.isObviouslyNotProduct(value)) {
       return 0; // Kesin red
     }
-    
+
     // ULTRA HIGH PRIORITY: Known missing products - GUARANTEED ACCEPTANCE
     const missingProductPatterns = [
       /^İNCE HELEZON$/,
@@ -717,85 +798,106 @@ export class PatternDetector {
       /^İÇ ÇENE\/DIŞ ÇENE$/,
       /^70X70 İKİ KANALLI STAND PROFİLİ$/,
       /^25'LİK RONDOLU$/,
-      /^25'LİK SÜRGÜLÜ ÇERÇEVE$/
+      /^25'LİK SÜRGÜLÜ ÇERÇEVE$/,
     ];
-    
+
     for (const pattern of missingProductPatterns) {
       if (pattern.test(value)) {
         return 1.0; // GUARANTEED acceptance
       }
     }
-    
+
     // Position-based confidence
     if (colIndex === 0) confidence += 0.2; // First column more likely
     if (rowIndex < 50) confidence += 0.05; // Earlier rows slightly more likely
-    
+
     // Content-based confidence - more aggressive
-    if (/(frame|gönye|ledbox|totem|poster|tabela|door|window|aboard|slide|convex|broşür|helezon|çene|menülük)/i.test(value)) {
+    if (
+      /(frame|gönye|ledbox|totem|poster|tabela|door|window|aboard|slide|convex|broşür|helezon|çene|menülük)/i.test(
+        value,
+      )
+    ) {
       confidence += 0.3; // Strong product indicators
     }
     if (/\d+['"]?[lı|li|lu|lü]k/i.test(value)) confidence += 0.2; // Size indicators (25'lik, 32'lik)
-    if (/(premium|standart|ekonomik|deluxe|plus|slim|pro|max)/i.test(value)) confidence += 0.1; // Quality indicators
-    if (/(su\s*korumalı|waterproof|manyetik|zor\s*açılan|cam\s*çerçeve|kanallı|kanalsız)/i.test(value)) confidence += 0.15; // Special features
-    if (/\s+/.test(value) && value.split(' ').length >= 2) confidence += 0.05; // Multi-word names
+    if (/(premium|standart|ekonomik|deluxe|plus|slim|pro|max)/i.test(value))
+      confidence += 0.1; // Quality indicators
+    if (
+      /(su\s*korumalı|waterproof|manyetik|zor\s*açılan|cam\s*çerçeve|kanallı|kanalsız)/i.test(
+        value,
+      )
+    )
+      confidence += 0.15; // Special features
+    if (/\s+/.test(value) && value.split(" ").length >= 2) confidence += 0.05; // Multi-word names
     if (/[A-ZÇĞIİÖŞÜ]{3,}/.test(value)) confidence += 0.05; // Multiple capitals
-    
+
     // Length-based confidence - wider range
     if (value.length >= 5 && value.length <= 60) confidence += 0.05;
-    
+
     // CEZA SİSTEMİ - less aggressive
     if (/^\d+$/.test(value)) confidence = 0; // Pure numbers - kesin red
     if (value.length < 3) confidence = 0; // Too short - kesin red
     if (value.length > 100) confidence -= 0.2; // Very long
-    
+
     // Header benzeri ifadeler için kesin ceza
     if (/^(iş|emri|tarih|renk|not|adet|profil|ölçü|ebat)$/i.test(value)) {
       confidence = 0; // Kesin red
     }
-    
+
     return Math.max(0, Math.min(1, confidence));
   }
 
   /**
    * Infer product name from data row context
    */
-  private static inferProductFromDataRow(row: unknown[], rowIndex: number, data: ExcelData): string | null {
+  private static inferProductFromDataRow(
+    row: unknown[],
+    rowIndex: number,
+    data: ExcelData,
+  ): string | null {
     // Look backwards for potential product names
     for (let i = rowIndex - 1; i >= Math.max(0, rowIndex - 20); i--) {
       const prevRow = data[i];
       if (!prevRow) continue;
-      
+
       for (let j = 0; j < Math.min(prevRow.length, 5); j++) {
         const cellValue = DataTransformers.toString(prevRow[j]);
         if (this.isValidProductName(cellValue)) {
-          const confidence = this.calculateProductNameConfidence(cellValue, i, j);
+          const confidence = this.calculateProductNameConfidence(
+            cellValue,
+            i,
+            j,
+          );
           if (confidence > 0.5) {
             return cellValue;
           }
         }
       }
     }
-    
+
     // Look for profile type patterns in current row to infer product category
-    const profileTypes = row.map(cell => DataTransformers.toString(cell as string | number | boolean | null))
-      .filter(cell => /(kapalı|açık|alt|üst|frame|gönye)/i.test(cell));
-    
+    const profileTypes = row
+      .map((cell) =>
+        DataTransformers.toString(cell as string | number | boolean | null),
+      )
+      .filter((cell) => /(kapalı|açık|alt|üst|frame|gönye)/i.test(cell));
+
     if (profileTypes.length > 0) {
       const mainType = profileTypes[0];
       if (mainType) {
-        if (/(frame|gönye)/i.test(mainType)) return 'FRAME SİSTEMİ';
-        if (/(kapalı|açık)/i.test(mainType)) return 'PROFİL SİSTEMİ';
-        return 'ALÜMİNYUM PROFİL';
+        if (/(frame|gönye)/i.test(mainType)) return "FRAME SİSTEMİ";
+        if (/(kapalı|açık)/i.test(mainType)) return "PROFİL SİSTEMİ";
+        return "ALÜMİNYUM PROFİL";
       }
     }
-    
+
     return null;
   }
 
   private static createFallbackSection(
     data: ExcelData,
     startIndex: number,
-    headerPattern: HeaderPattern | null
+    headerPattern: HeaderPattern | null,
   ): ProductSection | null {
     const dataRows: number[] = [];
     const headerRow = headerPattern?.rowIndex ?? startIndex;
@@ -815,20 +917,21 @@ export class PatternDetector {
     }
 
     return {
-      productName: 'All Items',
+      productName: "All Items",
       startRow: startIndex,
       endRow: Math.max(...dataRows),
       headerRow,
       dataRows,
-      confidence: 0.5
+      confidence: 0.5,
     };
   }
 
-
-
-  private static isDataRow(row: ExcelRow, _headerPattern: HeaderPattern | null): boolean {
+  private static isDataRow(
+    row: ExcelRow,
+    _headerPattern: HeaderPattern | null,
+  ): boolean {
     // Must have some content
-    const hasContent = row.some(cell => {
+    const hasContent = row.some((cell) => {
       const value = DataTransformers.toString(cell);
       return value && value.trim().length > 0;
     });
@@ -839,120 +942,142 @@ export class PatternDetector {
     // 1. Work Order ID (col 0) VEYA
     // 2. Profile bilgisi (col 7) + Quantity (col 9) VEYA
     // 3. En azından col 7,8,9'da anlamlı veri
-    
+
     const workOrderId = DataTransformers.toString(row[0]);
     const profile = DataTransformers.toString(row[7]);
     const measurement = DataTransformers.toString(row[8]);
     const quantity = DataTransformers.toNumber(row[9]);
 
     // Check for work order row
-    const hasWorkOrder = Boolean(workOrderId && PatternDetector.isValidWorkOrderId(workOrderId));
-    
+    const hasWorkOrder = Boolean(
+      workOrderId && PatternDetector.isValidWorkOrderId(workOrderId),
+    );
+
     // Check for profile data
-    const hasProfile = Boolean(profile && profile.trim().length > 0 && PatternDetector.looksLikeProfileType(profile));
+    const hasProfile = Boolean(
+      profile &&
+        profile.trim().length > 0 &&
+        PatternDetector.looksLikeProfileType(profile),
+    );
     const hasQuantity = Boolean(quantity !== undefined && quantity > 0);
-    const hasMeasurement = Boolean(measurement && measurement.trim().length > 0);
+    const hasMeasurement = Boolean(
+      measurement && measurement.trim().length > 0,
+    );
 
     // Veri satırı olabilmesi için:
     // - Work Order ID var VEYA
-    // - Profile + Quantity var VEYA  
+    // - Profile + Quantity var VEYA
     // - En azından profile + measurement var
-    return hasWorkOrder || 
-           (hasProfile && hasQuantity) || 
-           (hasProfile && hasMeasurement);
+    return (
+      hasWorkOrder ||
+      (hasProfile && hasQuantity) ||
+      (hasProfile && hasMeasurement)
+    );
   }
-  
+
   public static isValidWorkOrderId(value: string): boolean {
     if (!value || !value.trim()) return false;
-    
+
     const trimmed = value.trim();
-    
+
     // GEVŞEK ANALİZ: Daha fazla work order formatını yakala
     const patterns = [
       /^\d{7}$/, // 7 digit numbers (2349448, 2350898, 2351253)
-      /^\d{6}$/, // 6 digit numbers  
+      /^\d{6}$/, // 6 digit numbers
       /^\d{5}$/, // 5 digit numbers (daha kısa WO'lar için)
       /^\d{4}$/, // 4 digit numbers (çok kısa WO'lar için)
-      /^[A-Z]{1,3}\d{3,7}$/i,          // Letter prefix + numbers (R3020, R1020, R9005)
-      /^WO-?\d{4,8}$/i,               // WO prefix (WO123456, WO-123456)
-      /^[A-Z]{2,4}-?\d{4,8}$/i,       // Multiple letters + numbers (AB-123456)
-      /^[A-Z]{1,2}\d{4,8}[A-Z]*$/i,   // Mixed alphanumeric (A1234B, AB1234)
-      /^\d{3,8}[A-Z]{1,3}$/i,         // Numbers + letters (123456A, 1234AB)
-      /^[A-Z]{1,4}\/\d{4,8}$/i,       // Letter/number format (WO/123456)
-      /^\d{2,4}[-/]\d{3,6}$/,        // Number-number format (23-456, 2023/1234)
-      /^[A-Z]\d{2,3}[-/]\d{3,6}$/i,   // Letter+num/num format (A23-456)
-      
+      /^[A-Z]{1,3}\d{3,7}$/i, // Letter prefix + numbers (R3020, R1020, R9005)
+      /^WO-?\d{4,8}$/i, // WO prefix (WO123456, WO-123456)
+      /^[A-Z]{2,4}-?\d{4,8}$/i, // Multiple letters + numbers (AB-123456)
+      /^[A-Z]{1,2}\d{4,8}[A-Z]*$/i, // Mixed alphanumeric (A1234B, AB1234)
+      /^\d{3,8}[A-Z]{1,3}$/i, // Numbers + letters (123456A, 1234AB)
+      /^[A-Z]{1,4}\/\d{4,8}$/i, // Letter/number format (WO/123456)
+      /^\d{2,4}[-/]\d{3,6}$/, // Number-number format (23-456, 2023/1234)
+      /^[A-Z]\d{2,3}[-/]\d{3,6}$/i, // Letter+num/num format (A23-456)
+
       // GEVŞEK PATTERN'LER
-      /^[A-Z0-9]{3,12}$/i,            // Any alphanumeric between 3-12 chars
-      /^\d{3,8}$/,                    // Any number between 3-8 digits
+      /^[A-Z0-9]{3,12}$/i, // Any alphanumeric between 3-12 chars
+      /^\d{3,8}$/, // Any number between 3-8 digits
     ];
-    
-    const matchesPattern = patterns.some(pattern => pattern.test(trimmed));
-    
+
+    const matchesPattern = patterns.some((pattern) => pattern.test(trimmed));
+
     // Expanded heuristic for ambiguous cases
     if (!matchesPattern) {
       // More relaxed check - any alphanumeric that's not obviously a header/field name
-      if (/^[A-Z0-9]{3,15}$/i.test(trimmed) && 
-          !/^(profil|ölçü|adet|renk|not|ebat|sip|tarih|versiyon|gövde|kapak|kutu|elips|kanalli|kaynakli|altigen|yedigen|stand|frame|çerçeve|sürgülü|broşür|poster|totem|slide|aboard|convex|ledbox|gönye|menülük|door|sign|premium|rondolu|windpro|slim|leda|magneco|bestbuy|buymax|easy|infoboard|helezon)$/i.test(trimmed)) {
+      if (
+        /^[A-Z0-9]{3,15}$/i.test(trimmed) &&
+        !/^(profil|ölçü|adet|renk|not|ebat|sip|tarih|versiyon|gövde|kapak|kutu|elips|kanalli|kaynakli|altigen|yedigen|stand|frame|çerçeve|sürgülü|broşür|poster|totem|slide|aboard|convex|ledbox|gönye|menülük|door|sign|premium|rondolu|windpro|slim|leda|magneco|bestbuy|buymax|easy|infoboard|helezon)$/i.test(
+          trimmed,
+        )
+      ) {
         return true;
       }
     }
-    
+
     return matchesPattern;
   }
-  
+
   public static looksLikeProfileType(value: string): boolean {
     if (!value || value.length < 3) return false;
-    
+
     // ANALİZ SONUCU: Gerçek Excel'den elde edilen profil tipleri
     const profilePatterns = [
       // Temel profil tipleri (en yaygın)
       /^(kapalı|açık)\s*(alt|üst)$/i, // KAPALI ALT, AÇIK ALT, KAPALI ÜST, AÇIK ÜST
-      
+
       // Kutu profilleri (analiz sonucu)
       /\d+x\d+\s*kutu/i, // 25X25 KUTU, 30X15 KUTU
       /^(gövde|kapak)$/i, // GÖVDE, KAPAK
       /panel\s*kutu/i, // PANEL KUTU
-      
+
       // Özel profil tipleri (Excel'den görülen)
       /\d+x\d+$/i, // 19X25, 21X38, 6X25 gibi boyut profilleri
       /\d+x\d+\s*-\s*kaynakli/i, // 21X38-KAYNAKLI
-      
+
       // Çok kanallı profiller
       /\d+\s*kanalli/i, // çift kanallı, tek kanallı
       /kanalsiz/i, // KANALSIZ
-      
+
       // Geometrik şekiller
       /(elips|yedigen|altigen)/i, // ELİPS, YEDİGEN, ALTIGEN
       /çift\s*kan\.\s*elips/i, // ÇİFT KAN. ELİPS
-      
+
       // Set ve parça tipleri
       /brş\.\s*set/i, // BRŞ. SET (broşür set)
       /\d+x\d+\s*brş\.\s*set/i, // 23X30 BRŞ. SET
-      
+
       // Stand ve destek profilleri
       /\d+'?lik\s*stand/i, // 40'LIK STAND
       /altigen\s*raf/i, // ALTIGEN RAF
       /rondolu/i, // RONDOLU
-      
+
       // Premium ve özel kapaklar
       /premium\s*kapak/i, // PREMIUM KAPAK
-      
+
       // Ray ve hareket profilleri
       /(u\s*profili|ray)/i, // U PROFİLİ, RAY
       /çene/i, // ÇENE
-      
+
       // Diğer yaygın profiller
       /(gövde|kapak|alt\s*kapak|üst\s*kapak|iç\s*gövde)/i,
-      /frame/i, /çerçeve/i, /pervaz/i,
-      /door/i, /kapı/i, /window/i, /pencere/i,
-      /bracket/i, /ayak/i, /destek/i, /köşe/i,
-      
+      /frame/i,
+      /çerçeve/i,
+      /pervaz/i,
+      /door/i,
+      /kapı/i,
+      /window/i,
+      /pencere/i,
+      /bracket/i,
+      /ayak/i,
+      /destek/i,
+      /köşe/i,
+
       // Kaynak profilleri
-      /(kaynakli|kaynak)/i
+      /(kaynakli|kaynak)/i,
     ];
-    
-    return profilePatterns.some(pattern => pattern.test(value));
+
+    return profilePatterns.some((pattern) => pattern.test(value));
   }
 }
 
@@ -969,16 +1094,19 @@ export class DataExtractor {
 
   public extractWorkOrders(
     data: ExcelData,
-    section: ProductSection
+    section: ProductSection,
   ): ReadonlyArray<WorkOrderItem> {
     const workOrders: WorkOrderItem[] = [];
-    const workOrderGroups = new Map<string, {
-      metadata: WorkOrderMetadata;
-      profiles: ProfileItem[];
-      mainRowIndex: number;
-    }>();
+    const workOrderGroups = new Map<
+      string,
+      {
+        metadata: WorkOrderMetadata;
+        profiles: ProfileItem[];
+        mainRowIndex: number;
+      }
+    >();
 
-    let currentWorkOrderId = '';
+    let currentWorkOrderId = "";
     let currentMetadata: WorkOrderMetadata = {};
     let mainRowIndex = 0;
 
@@ -994,33 +1122,48 @@ export class DataExtractor {
         currentWorkOrderId = extractedWorkOrderId;
         currentMetadata = this.extractMetadataFromRow(row);
         mainRowIndex = rowIndex;
-        
+
         if (!workOrderGroups.has(currentWorkOrderId)) {
-          workOrderGroups.set(currentWorkOrderId, { 
-            metadata: currentMetadata, 
+          workOrderGroups.set(currentWorkOrderId, {
+            metadata: currentMetadata,
             profiles: [],
-            mainRowIndex 
+            mainRowIndex,
           });
         }
-        
+
         // Extract profile from work order row too
-        const profileItems = this.extractItemsFromRow(row, rowIndex, currentWorkOrderId, currentMetadata);
+        const profileItems = this.extractItemsFromRow(
+          row,
+          rowIndex,
+          currentWorkOrderId,
+          currentMetadata,
+        );
         workOrderGroups.get(currentWorkOrderId)!.profiles.push(...profileItems);
       } else if (currentWorkOrderId) {
         // Profile row inheriting from work order
-        const profileItems = this.extractItemsFromRow(row, rowIndex, currentWorkOrderId, currentMetadata);
+        const profileItems = this.extractItemsFromRow(
+          row,
+          rowIndex,
+          currentWorkOrderId,
+          currentMetadata,
+        );
         workOrderGroups.get(currentWorkOrderId)!.profiles.push(...profileItems);
       } else {
         // Orphaned row - create fallback work order
-        const fallbackId = `WO_${rowIndex.toString().padStart(6, '0')}`;
+        const fallbackId = `WO_${rowIndex.toString().padStart(6, "0")}`;
         if (!workOrderGroups.has(fallbackId)) {
-          workOrderGroups.set(fallbackId, { 
-            metadata: {}, 
+          workOrderGroups.set(fallbackId, {
+            metadata: {},
             profiles: [],
-            mainRowIndex: rowIndex 
+            mainRowIndex: rowIndex,
           });
         }
-        const profileItems = this.extractItemsFromRow(row, rowIndex, fallbackId, {});
+        const profileItems = this.extractItemsFromRow(
+          row,
+          rowIndex,
+          fallbackId,
+          {},
+        );
         workOrderGroups.get(fallbackId)!.profiles.push(...profileItems);
       }
     }
@@ -1028,9 +1171,14 @@ export class DataExtractor {
     // Create work order items from groups
     for (const [workOrderId, group] of workOrderGroups) {
       if (group.profiles.length > 0) {
-        const totalQuantity = group.profiles.reduce((sum, p) => sum + p.quantity, 0);
-        const avgConfidence = group.profiles.reduce((sum, p) => sum + p.confidence, 0) / group.profiles.length;
-        
+        const totalQuantity = group.profiles.reduce(
+          (sum, p) => sum + p.quantity,
+          0,
+        );
+        const avgConfidence =
+          group.profiles.reduce((sum, p) => sum + p.confidence, 0) /
+          group.profiles.length;
+
         workOrders.push({
           workOrderId,
           profiles: group.profiles,
@@ -1038,10 +1186,10 @@ export class DataExtractor {
           rowIndex: group.mainRowIndex,
           confidence: avgConfidence,
           source: {
-            type: 'direct',
-            originalRowIndex: group.mainRowIndex
+            type: "direct",
+            originalRowIndex: group.mainRowIndex,
           },
-          totalQuantity
+          totalQuantity,
         });
       }
     }
@@ -1052,25 +1200,25 @@ export class DataExtractor {
   private extractWorkOrderIdFromRow(row: ExcelRow): string | null {
     // ENHANCED: Check first 3 columns for work order IDs (analiz sonucu: col 0,1 çoklu WO olabilir)
     const workOrderIds: string[] = [];
-    
+
     // Column 0: Primary work order location
     const col0Value = DataTransformers.toString(row[0]);
     if (PatternDetector.isValidWorkOrderId(col0Value)) {
       workOrderIds.push(col0Value.trim());
     }
-    
+
     // Column 1: Secondary work order location (çoklu WO için)
     const col1Value = DataTransformers.toString(row[1]);
     if (PatternDetector.isValidWorkOrderId(col1Value)) {
       workOrderIds.push(col1Value.trim());
     }
-    
+
     // Column 2: Tertiary (version field, but sometimes contains WO)
     const col2Value = DataTransformers.toString(row[2]);
     if (PatternDetector.isValidWorkOrderId(col2Value)) {
       workOrderIds.push(col2Value.trim());
     }
-    
+
     // FALLBACK: If no work order found yet, check for any 6-8 digit number
     if (workOrderIds.length === 0) {
       for (let i = 0; i < Math.min(row.length, 10); i++) {
@@ -1082,32 +1230,30 @@ export class DataExtractor {
         }
       }
     }
-    
+
     // Return combined work orders if multiple found
     if (workOrderIds.length === 1) {
       return workOrderIds[0] || null;
     } else if (workOrderIds.length > 1) {
       // Multiple work orders in same row - combine them (örn: 2351151+2351599)
-      const combinedId = workOrderIds.join('+');
+      const combinedId = workOrderIds.join("+");
       console.log(`🔗 Combined work orders from row: ${combinedId}`);
       return combinedId;
     }
-    
+
     return null;
   }
 
-
-
   private extractMetadataFromRow(row: ExcelRow): WorkOrderMetadata {
     const metadata: Record<string, string | number> = {};
-    
+
     const columns = {
       date: this.headerPattern?.columns.date ?? 1,
       version: this.headerPattern?.columns.version ?? 2,
       color: this.headerPattern?.columns.color ?? 3,
       note: this.headerPattern?.columns.note ?? 4,
       sipQuantity: this.headerPattern?.columns.sipQuantity ?? 5,
-      size: this.headerPattern?.columns.size ?? 6
+      size: this.headerPattern?.columns.size ?? 6,
     };
 
     const date = DataTransformers.toString(row[columns.date]);
@@ -1117,12 +1263,12 @@ export class DataExtractor {
     const sipQuantity = DataTransformers.toNumber(row[columns.sipQuantity]);
     const size = DataTransformers.toString(row[columns.size]);
 
-    if (date) metadata['date'] = date;
-    if (version) metadata['version'] = version;
-    if (color) metadata['color'] = color;
-    if (note) metadata['note'] = note;
-    if (sipQuantity) metadata['sipQuantity'] = sipQuantity;
-    if (size) metadata['size'] = size;
+    if (date) metadata["date"] = date;
+    if (version) metadata["version"] = version;
+    if (color) metadata["color"] = color;
+    if (note) metadata["note"] = note;
+    if (sipQuantity) metadata["sipQuantity"] = sipQuantity;
+    if (size) metadata["size"] = size;
 
     return metadata as WorkOrderMetadata;
   }
@@ -1131,125 +1277,163 @@ export class DataExtractor {
     row: ExcelRow,
     rowIndex: number,
     _workOrderId: string,
-    _metadata: WorkOrderMetadata
+    _metadata: WorkOrderMetadata,
   ): ReadonlyArray<ProfileItem> {
     const items: ProfileItem[] = [];
-    
+
     // GERÇEK EXCEL YAPISINA GÖRE: Sütun 7=PROFİL, 8=ÖLÇÜ, 9=ADET (analiz sonucu)
     const standardProfile = DataTransformers.toString(row[7]);
     const standardMeasurement = DataTransformers.toString(row[8]);
     const standardQuantity = DataTransformers.toNumber(row[9]);
-    
+
     // Primary extraction from standard columns
-    if (PatternDetector.looksLikeProfileType(standardProfile) && standardQuantity && standardQuantity > 0) {
+    if (
+      PatternDetector.looksLikeProfileType(standardProfile) &&
+      standardQuantity &&
+      standardQuantity > 0
+    ) {
       items.push({
         profileType: standardProfile.trim(),
-        measurement: standardMeasurement?.trim() || 'N/A',
+        measurement: standardMeasurement?.trim() || "N/A",
         quantity: standardQuantity,
         rowIndex,
-        confidence: this.calculateProfileConfidence(standardProfile, standardMeasurement, standardQuantity)
+        confidence: this.calculateProfileConfidence(
+          standardProfile,
+          standardMeasurement,
+          standardQuantity,
+        ),
       });
-      
-      console.log(`📋 Extracted profile from row ${rowIndex}: ${standardProfile} | ${standardMeasurement} | ${standardQuantity} (standard cols 7-8-9)`);
+
+      console.log(
+        `📋 Extracted profile from row ${rowIndex}: ${standardProfile} | ${standardMeasurement} | ${standardQuantity} (standard cols 7-8-9)`,
+      );
       return items; // Return immediately if found in standard columns
     }
-    
+
     // Fallback: Enhanced profile extraction for edge cases
     const profileExtractions = [
       // Alternative: 6, 7, 8 (sometimes shifted left)
       { profile: 6, measure: 7, qty: 8 },
       // Alternative: 8, 9, 10 (sometimes shifted right, though rare)
-      { profile: 8, measure: 9, qty: 10 }
+      { profile: 8, measure: 9, qty: 10 },
     ];
-    
+
     for (const extraction of profileExtractions) {
       const testProfile = DataTransformers.toString(row[extraction.profile]);
-      const testMeasurement = DataTransformers.toString(row[extraction.measure]);
+      const testMeasurement = DataTransformers.toString(
+        row[extraction.measure],
+      );
       const testQuantity = DataTransformers.toNumber(row[extraction.qty]);
-      
-      if (PatternDetector.looksLikeProfileType(testProfile) && 
-          testQuantity && testQuantity > 0) {
-        
+
+      if (
+        PatternDetector.looksLikeProfileType(testProfile) &&
+        testQuantity &&
+        testQuantity > 0
+      ) {
         items.push({
           profileType: testProfile.trim(),
-          measurement: testMeasurement?.trim() || 'N/A',
+          measurement: testMeasurement?.trim() || "N/A",
           quantity: testQuantity,
           rowIndex,
-          confidence: this.calculateProfileConfidence(testProfile, testMeasurement, testQuantity)
+          confidence: this.calculateProfileConfidence(
+            testProfile,
+            testMeasurement,
+            testQuantity,
+          ),
         });
-        
-        console.log(`📋 Extracted profile from row ${rowIndex}: ${testProfile} | ${testMeasurement} | ${testQuantity} (cols ${extraction.profile}-${extraction.measure}-${extraction.qty})`);
+
+        console.log(
+          `📋 Extracted profile from row ${rowIndex}: ${testProfile} | ${testMeasurement} | ${testQuantity} (cols ${extraction.profile}-${extraction.measure}-${extraction.qty})`,
+        );
       }
     }
-    
+
     // If no structured extraction worked, try comprehensive search
     if (items.length === 0) {
       for (let i = 6; i < Math.min(row.length, 12); i++) {
         const cellValue = DataTransformers.toString(row[i]);
-        
+
         if (PatternDetector.looksLikeProfileType(cellValue)) {
           // Found profile type, look for measurement and quantity in next columns
           const nextMeasurement = DataTransformers.toString(row[i + 1]);
           const nextQuantity = DataTransformers.toNumber(row[i + 2]);
-          
+
           if (nextQuantity && nextQuantity > 0) {
             items.push({
               profileType: cellValue.trim(),
-              measurement: nextMeasurement?.trim() || 'N/A',
+              measurement: nextMeasurement?.trim() || "N/A",
               quantity: nextQuantity,
               rowIndex,
-              confidence: this.calculateProfileConfidence(cellValue, nextMeasurement, nextQuantity)
+              confidence: this.calculateProfileConfidence(
+                cellValue,
+                nextMeasurement,
+                nextQuantity,
+              ),
             });
-            
-            console.log(`🔍 Found profile via search at row ${rowIndex}: ${cellValue} | ${nextMeasurement} | ${nextQuantity} (col ${i})`);
+
+            console.log(
+              `🔍 Found profile via search at row ${rowIndex}: ${cellValue} | ${nextMeasurement} | ${nextQuantity} (col ${i})`,
+            );
             break; // Found one, stop searching
           }
         }
       }
     }
-    
+
     return items;
   }
-  
 
-  
-
-  
-
-
-  private calculateProfileConfidence(profileType: string, measurement: string, quantity: number): number {
+  private calculateProfileConfidence(
+    profileType: string,
+    measurement: string,
+    quantity: number,
+  ): number {
     let confidence = 0.5;
-    
+
     // Profil tipi kontrolü
     const knownProfileTypes = [
-      /kapalı\s*alt/i, /açık\s*alt/i, /kapalı\s*üst/i, /açık\s*üst/i,
-      /frame/i, /çerçeve/i, /pervaz/i, /ray/i, /profil/i,
-      /door/i, /kapı/i, /window/i, /pencere/i,
-      /bracket/i, /ayak/i, /destek/i, /köşe/i
+      /kapalı\s*alt/i,
+      /açık\s*alt/i,
+      /kapalı\s*üst/i,
+      /açık\s*üst/i,
+      /frame/i,
+      /çerçeve/i,
+      /pervaz/i,
+      /ray/i,
+      /profil/i,
+      /door/i,
+      /kapı/i,
+      /window/i,
+      /pencere/i,
+      /bracket/i,
+      /ayak/i,
+      /destek/i,
+      /köşe/i,
     ];
-    
-    if (knownProfileTypes.some(pattern => pattern.test(profileType))) {
+
+    if (knownProfileTypes.some((pattern) => pattern.test(profileType))) {
       confidence += 0.3;
     }
-    
+
     // Ölçü kontrolü
-    if (measurement && measurement !== 'N/A') {
-      if (/\d+[\sx]\d+/i.test(measurement) || /\d+\s*(mm|cm|m)/i.test(measurement)) {
+    if (measurement && measurement !== "N/A") {
+      if (
+        /\d+[\sx]\d+/i.test(measurement) ||
+        /\d+\s*(mm|cm|m)/i.test(measurement)
+      ) {
         confidence += 0.2;
       } else if (measurement.length > 3) {
         confidence += 0.1;
       }
     }
-    
+
     // Miktar kontrolü
     if (quantity > 0 && quantity < 10000) {
       confidence += 0.1;
     }
-    
+
     return Math.min(confidence, 1.0);
   }
-
-
 }
 
 // ============================================================================
@@ -1266,7 +1450,7 @@ export class ExcelAnalyzer {
   private cachedResult: ExcelParseResult | null = null;
 
   constructor(filePath?: string, logger?: ILogger) {
-    this.filePath = filePath || path.join(process.cwd(), 'workbook.xlsx');
+    this.filePath = filePath || path.join(process.cwd(), "workbook.xlsx");
     this.logger = logger || new ConsoleLogger();
   }
 
@@ -1281,41 +1465,64 @@ export class ExcelAnalyzer {
     try {
       this.validateFileExists();
       const { data, fileName } = await this.readExcelFile();
-      
+
       const headerPattern = PatternDetector.detectHeaderRow(data);
       if (!headerPattern) {
-        this.logger.warn('No clear header pattern found, using fallback detection');
+        this.logger.warn(
+          "No clear header pattern found, using fallback detection",
+        );
       } else {
         this.logger.info(`Header detected at row ${headerPattern.rowIndex}`, {
           confidence: headerPattern.confidence,
-          fields: headerPattern.detectedFields
+          fields: headerPattern.detectedFields,
         });
       }
 
-      const sections = PatternDetector.detectProductSections(data, headerPattern);
+      const sections = PatternDetector.detectProductSections(
+        data,
+        headerPattern,
+      );
       if (sections.length === 0) {
-        throw this.createError(ErrorCode.NO_PRODUCTS_FOUND, 'No product sections found');
+        throw this.createError(
+          ErrorCode.NO_PRODUCTS_FOUND,
+          "No product sections found",
+        );
       }
 
       this.logger.info(`Found ${sections.length} product sections`);
 
-      const productGroups = this.extractProductGroups(data, sections, headerPattern);
-      const metrics = this.calculateMetrics(productGroups, data.length, startTime, initialMemory);
+      const productGroups = this.extractProductGroups(
+        data,
+        sections,
+        headerPattern,
+      );
+      const metrics = this.calculateMetrics(
+        productGroups,
+        data.length,
+        startTime,
+        initialMemory,
+      );
       const { errors, warnings } = this.collectValidationResults(productGroups);
 
       // Calculate summary
       const allProfileTypes = new Set<string>();
       const totalProfiles = productGroups.reduce((sum, pg) => {
-        pg.profileTypes.forEach(pt => allProfileTypes.add(pt));
+        pg.profileTypes.forEach((pt) => allProfileTypes.add(pt));
         return sum + pg.totalProfiles;
       }, 0);
-      
+
       const summary = {
         totalProducts: productGroups.length,
-        totalWorkOrders: productGroups.reduce((sum, pg) => sum + pg.workOrders.length, 0),
+        totalWorkOrders: productGroups.reduce(
+          (sum, pg) => sum + pg.workOrders.length,
+          0,
+        ),
         totalProfiles,
-        totalQuantity: productGroups.reduce((sum, pg) => sum + pg.totalQuantity, 0),
-        profileTypes: Array.from(allProfileTypes)
+        totalQuantity: productGroups.reduce(
+          (sum, pg) => sum + pg.totalQuantity,
+          0,
+        ),
+        profileTypes: Array.from(allProfileTypes),
       };
 
       const result: ExcelParseResult = {
@@ -1328,16 +1535,18 @@ export class ExcelAnalyzer {
           parseDate: new Date(),
           totalRows: data.length,
           ...(headerPattern ? { headerPattern } : {}),
-          encoding: 'UTF-8'
+          encoding: "UTF-8",
         },
         metrics,
-        summary
+        summary,
       };
 
       this.cachedResult = result;
-      this.logger.info('Analysis completed', metrics as unknown as Record<string, unknown>);
+      this.logger.info(
+        "Analysis completed",
+        metrics as unknown as Record<string, unknown>,
+      );
       return result;
-
     } catch (error) {
       return this.handleError(error, startTime);
     }
@@ -1345,29 +1554,37 @@ export class ExcelAnalyzer {
 
   private validateFileExists(): void {
     if (!fs.existsSync(this.filePath)) {
-      throw this.createError(ErrorCode.FILE_NOT_FOUND, `File not found: ${this.filePath}`);
+      throw this.createError(
+        ErrorCode.FILE_NOT_FOUND,
+        `File not found: ${this.filePath}`,
+      );
     }
 
     const stats = fs.statSync(this.filePath);
     if (stats.size === 0) {
-      throw this.createError(ErrorCode.EMPTY_WORKSHEET, 'File is empty');
+      throw this.createError(ErrorCode.EMPTY_WORKSHEET, "File is empty");
     }
   }
 
-  private async readExcelFile(): Promise<{ data: ExcelData; fileName: string }> {
+  private async readExcelFile(): Promise<{
+    data: ExcelData;
+    fileName: string;
+  }> {
     return new Promise((resolve, reject) => {
       try {
         const workbook = XLSX.readFile(this.filePath, {
-          type: 'buffer',
+          type: "buffer",
           cellDates: true,
           cellNF: false,
           cellText: false,
-          raw: false
+          raw: false,
         });
 
         const sheetName = workbook.SheetNames[0];
         if (!sheetName) {
-          reject(this.createError(ErrorCode.EMPTY_WORKSHEET, 'No sheets found'));
+          reject(
+            this.createError(ErrorCode.EMPTY_WORKSHEET, "No sheets found"),
+          );
           return;
         }
 
@@ -1376,25 +1593,26 @@ export class ExcelAnalyzer {
           reject(new Error(`Worksheet "${sheetName}" not found`));
           return;
         }
-        
+
         const data = XLSX.utils.sheet_to_json(worksheet, {
           header: 1,
           defval: null,
           raw: false,
-          dateNF: 'dd/mm/yyyy'
+          dateNF: "dd/mm/yyyy",
         }) as ExcelRow[];
 
         if (!data || data.length === 0) {
-          reject(this.createError(ErrorCode.EMPTY_WORKSHEET, 'Worksheet is empty'));
+          reject(
+            this.createError(ErrorCode.EMPTY_WORKSHEET, "Worksheet is empty"),
+          );
           return;
         }
 
         this.logger.info(`File loaded: ${data.length} rows`);
         resolve({
           data,
-          fileName: path.basename(this.filePath)
+          fileName: path.basename(this.filePath),
         });
-
       } catch (error) {
         reject(error);
       }
@@ -1404,98 +1622,126 @@ export class ExcelAnalyzer {
   private extractProductGroups(
     data: ExcelData,
     sections: ReadonlyArray<ProductSection>,
-    headerPattern: HeaderPattern | null
+    headerPattern: HeaderPattern | null,
   ): ReadonlyArray<ProductGroup> {
     const extractor = new DataExtractor(headerPattern);
-          const productGroups: ProductGroup[] = [];
+    const productGroups: ProductGroup[] = [];
 
     for (const section of sections) {
       const workOrders = extractor.extractWorkOrders(data, section);
-      
+
       // ENGELLEYİCİ OLMAYAN YAKLAŞIM: Work order olmasa bile profil veri varsa ürünü dahil et
-      const validWorkOrders = workOrders.filter(wo => wo.totalQuantity > 0);
-      
+      const validWorkOrders = workOrders.filter((wo) => wo.totalQuantity > 0);
+
       // Eğer hiç work order yoksa ama section'da data var mı diye kontrol et
       if (validWorkOrders.length === 0) {
         // Fallback: En azından veri satırları var mı?
         if (section.dataRows.length > 0) {
-          this.logger.warn(`Product "${section.productName}" has no work orders but has ${section.dataRows.length} data rows - creating fallback work order`);
-          
+          this.logger.warn(
+            `Product "${section.productName}" has no work orders but has ${section.dataRows.length} data rows - creating fallback work order`,
+          );
+
           // Fallback work order oluştur (mutable sürüm)
           const fallbackWorkOrder = {
-            workOrderId: `FALLBACK_${section.productName.replace(/\s+/g, '_')}`,
+            workOrderId: `FALLBACK_${section.productName.replace(/\s+/g, "_")}`,
             profiles: [] as ProfileItem[],
             metadata: {},
             rowIndex: section.startRow,
             confidence: 0.5,
             source: {
-              type: 'inherited' as const,
-              originalRowIndex: section.startRow
+              type: "inherited" as const,
+              originalRowIndex: section.startRow,
             },
-            totalQuantity: 0
+            totalQuantity: 0,
           };
-          
+
           // Data rows'dan profil bilgilerini çıkarmaya çalış
           const extractor = new DataExtractor(headerPattern);
           for (const rowIndex of section.dataRows) {
             const row = data[rowIndex];
             if (row) {
               // Enhanced extraction - try multiple strategies
-              let profileItems = extractor.extractItemsFromRow(row, rowIndex, fallbackWorkOrder.workOrderId, {});
-              
+              let profileItems = extractor.extractItemsFromRow(
+                row,
+                rowIndex,
+                fallbackWorkOrder.workOrderId,
+                {},
+              );
+
               // If standard extraction failed, try alternative extraction
               if (profileItems.length === 0) {
                 profileItems = this.extractProfilesFromDataRow(row, rowIndex);
               }
-              
+
               if (profileItems.length > 0) {
-                fallbackWorkOrder.profiles = [...fallbackWorkOrder.profiles, ...profileItems];
-                fallbackWorkOrder.totalQuantity += profileItems.reduce((sum, p) => sum + p.quantity, 0);
+                fallbackWorkOrder.profiles = [
+                  ...fallbackWorkOrder.profiles,
+                  ...profileItems,
+                ];
+                fallbackWorkOrder.totalQuantity += profileItems.reduce(
+                  (sum, p) => sum + p.quantity,
+                  0,
+                );
               }
             }
           }
-          
+
           if (fallbackWorkOrder.totalQuantity > 0) {
             validWorkOrders.push(fallbackWorkOrder as WorkOrderItem);
-            this.logger.info(`✅ Created fallback work order for "${section.productName}" with ${fallbackWorkOrder.totalQuantity} pieces`);
+            this.logger.info(
+              `✅ Created fallback work order for "${section.productName}" with ${fallbackWorkOrder.totalQuantity} pieces`,
+            );
           } else {
             // ULTRA AGRESIF: Data row'ları olduğu sürece boş work order ile devam et
             if (section.dataRows.length > 0) {
-              this.logger.warn(`⚠️ Product "${section.productName}" has no extractable profiles but has ${section.dataRows.length} data rows - adding empty work order`);
+              this.logger.warn(
+                `⚠️ Product "${section.productName}" has no extractable profiles but has ${section.dataRows.length} data rows - adding empty work order`,
+              );
               validWorkOrders.push(fallbackWorkOrder as WorkOrderItem);
             } else {
-              this.logger.warn(`Skipping product "${section.productName}" - no data rows at all`);
+              this.logger.warn(
+                `Skipping product "${section.productName}" - no data rows at all`,
+              );
               continue;
             }
           }
         } else {
-          this.logger.warn(`Skipping product "${section.productName}" - no valid work orders or data rows found`);
+          this.logger.warn(
+            `Skipping product "${section.productName}" - no valid work orders or data rows found`,
+          );
           continue;
         }
       }
-      
+
       const validationSummary = this.createValidationSummary(validWorkOrders);
       const metadata = this.createProductMetadata(section, validWorkOrders);
-      
+
       // Calculate totals and profile types
-      const totalProfiles = validWorkOrders.reduce((sum, wo) => sum + wo.profiles.length, 0);
-      const totalQuantity = validWorkOrders.reduce((sum, wo) => sum + wo.totalQuantity, 0);
+      const totalProfiles = validWorkOrders.reduce(
+        (sum, wo) => sum + wo.profiles.length,
+        0,
+      );
+      const totalQuantity = validWorkOrders.reduce(
+        (sum, wo) => sum + wo.totalQuantity,
+        0,
+      );
       const profileTypesSet = new Set<string>();
-      
-      validWorkOrders.forEach(wo => {
-        wo.profiles.forEach(p => {
+
+      validWorkOrders.forEach((wo) => {
+        wo.profiles.forEach((p) => {
           profileTypesSet.add(p.profileType);
         });
       });
-      
+
       const profileTypes = Array.from(profileTypesSet);
 
       // AGRESIF MOD: Daha gevşek validasyon
-      const hasAnyData = validWorkOrders.length > 0 || 
-                        totalQuantity > 0 || 
-                        totalProfiles > 0 ||
-                        section.dataRows.length > 0;
-      
+      const hasAnyData =
+        validWorkOrders.length > 0 ||
+        totalQuantity > 0 ||
+        totalProfiles > 0 ||
+        section.dataRows.length > 0;
+
       if (hasAnyData) {
         productGroups.push({
           productName: section.productName,
@@ -1505,12 +1751,16 @@ export class ExcelAnalyzer {
           validation: validationSummary,
           totalProfiles,
           totalQuantity,
-          profileTypes
+          profileTypes,
         });
-        
-        this.logger.info(`✅ Added product: ${section.productName} (${validWorkOrders.length} work orders, ${totalQuantity} pieces, ${profileTypes.length} profile types)`);
+
+        this.logger.info(
+          `✅ Added product: ${section.productName} (${validWorkOrders.length} work orders, ${totalQuantity} pieces, ${profileTypes.length} profile types)`,
+        );
       } else {
-        this.logger.warn(`❌ Skipping product "${section.productName}" - no data at all`);
+        this.logger.warn(
+          `❌ Skipping product "${section.productName}" - no data at all`,
+        );
       }
 
       // Logger moved above to avoid duplication
@@ -1519,21 +1769,24 @@ export class ExcelAnalyzer {
     return productGroups;
   }
 
-  private extractProfilesFromDataRow(row: ExcelRow, rowIndex: number): ProfileItem[] {
+  private extractProfilesFromDataRow(
+    row: ExcelRow,
+    rowIndex: number,
+  ): ProfileItem[] {
     const profiles: ProfileItem[] = [];
-    
+
     // AGGRESSIVE EXTRACTION: Try multiple column combinations
     const strategies = [
       // Standard: 7, 8, 9 (profile, measurement, quantity)
       { profileCol: 7, measureCol: 8, quantityCol: 9 },
-      // Alternative: 6, 7, 8 
+      // Alternative: 6, 7, 8
       { profileCol: 6, measureCol: 7, quantityCol: 8 },
       // Alternative: 8, 9, 10
       { profileCol: 8, measureCol: 9, quantityCol: 10 },
       // Fallback: Check all columns for data
-      { profileCol: -1, measureCol: -1, quantityCol: -1 }
+      { profileCol: -1, measureCol: -1, quantityCol: -1 },
     ];
-    
+
     for (const strategy of strategies) {
       if (strategy.profileCol === -1) {
         // Comprehensive search across all columns
@@ -1541,17 +1794,22 @@ export class ExcelAnalyzer {
           const cellValue = DataTransformers.toString(row[col]);
           if (cellValue && PatternDetector.looksLikeProfileType(cellValue)) {
             // Found a profile, look for quantity in nearby columns
-            for (let qCol = col + 1; qCol < Math.min(row.length, col + 5); qCol++) {
+            for (
+              let qCol = col + 1;
+              qCol < Math.min(row.length, col + 5);
+              qCol++
+            ) {
               const quantity = DataTransformers.toNumber(row[qCol]);
               if (quantity && quantity > 0) {
-                const measurement = DataTransformers.toString(row[qCol - 1]) || '';
-                
+                const measurement =
+                  DataTransformers.toString(row[qCol - 1]) || "";
+
                 profiles.push({
                   profileType: cellValue,
                   measurement: measurement,
                   quantity: quantity,
                   rowIndex: rowIndex,
-                  confidence: 0.6
+                  confidence: 0.6,
                 });
                 break;
               }
@@ -1563,26 +1821,33 @@ export class ExcelAnalyzer {
         const profileType = DataTransformers.toString(row[strategy.profileCol]);
         const measurement = DataTransformers.toString(row[strategy.measureCol]);
         const quantity = DataTransformers.toNumber(row[strategy.quantityCol]);
-        
-        if (profileType && PatternDetector.looksLikeProfileType(profileType) && quantity && quantity > 0) {
+
+        if (
+          profileType &&
+          PatternDetector.looksLikeProfileType(profileType) &&
+          quantity &&
+          quantity > 0
+        ) {
           profiles.push({
             profileType: profileType,
-            measurement: measurement || '',
+            measurement: measurement || "",
             quantity: quantity,
             rowIndex: rowIndex,
-            confidence: 0.7
+            confidence: 0.7,
           });
         }
       }
-      
+
       // If we found profiles with this strategy, stop
       if (profiles.length > 0) break;
     }
-    
+
     return profiles;
   }
 
-  private createValidationSummary(workOrders: ReadonlyArray<WorkOrderItem>): ValidationSummary {
+  private createValidationSummary(
+    workOrders: ReadonlyArray<WorkOrderItem>,
+  ): ValidationSummary {
     let totalErrors = 0;
     let totalWarnings = 0;
     let criticalErrors = 0;
@@ -1597,26 +1862,31 @@ export class ExcelAnalyzer {
       totalErrors,
       totalWarnings,
       criticalErrors,
-      isValid: criticalErrors === 0
+      isValid: criticalErrors === 0,
     };
   }
 
   private createProductMetadata(
     section: ProductSection,
-    workOrders: ReadonlyArray<WorkOrderItem>
+    workOrders: ReadonlyArray<WorkOrderItem>,
   ): ProductMetadata {
-    const uniqueWorkOrders = new Set(workOrders.map(wo => wo.workOrderId));
-    const totalQuantity = workOrders.reduce((sum, wo) => sum + wo.totalQuantity, 0);
-    const avgConfidence = workOrders.length > 0
-      ? workOrders.reduce((sum, wo) => sum + wo.confidence, 0) / workOrders.length
-      : 0;
+    const uniqueWorkOrders = new Set(workOrders.map((wo) => wo.workOrderId));
+    const totalQuantity = workOrders.reduce(
+      (sum, wo) => sum + wo.totalQuantity,
+      0,
+    );
+    const avgConfidence =
+      workOrders.length > 0
+        ? workOrders.reduce((sum, wo) => sum + wo.confidence, 0) /
+          workOrders.length
+        : 0;
 
     return {
       startRow: section.startRow,
       endRow: section.endRow,
       totalQuantity,
       uniqueWorkOrders: uniqueWorkOrders.size,
-      averageConfidence: avgConfidence
+      averageConfidence: avgConfidence,
     };
   }
 
@@ -1624,29 +1894,38 @@ export class ExcelAnalyzer {
     productGroups: ReadonlyArray<ProductGroup>,
     totalRows: number,
     startTime: number,
-    initialMemory: number
+    initialMemory: number,
   ): ParseMetrics {
     const processedRows = productGroups.reduce(
       (sum, pg) => sum + (pg.metadata.endRow - pg.metadata.startRow + 1),
-      0
+      0,
     );
 
     return {
       totalProducts: productGroups.length,
-      totalWorkOrders: productGroups.reduce((sum, pg) => sum + pg.metadata.uniqueWorkOrders, 0),
-      totalItems: productGroups.reduce((sum, pg) => sum + pg.workOrders.length, 0),
+      totalWorkOrders: productGroups.reduce(
+        (sum, pg) => sum + pg.metadata.uniqueWorkOrders,
+        0,
+      ),
+      totalItems: productGroups.reduce(
+        (sum, pg) => sum + pg.workOrders.length,
+        0,
+      ),
       parseTimeMs: Date.now() - startTime,
-      memoryUsedMb: (process.memoryUsage().heapUsed - initialMemory) / 1024 / 1024,
-      confidence: productGroups.length > 0 
-        ? productGroups.reduce((sum, pg) => sum + pg.confidence, 0) / productGroups.length 
-        : 0,
+      memoryUsedMb:
+        (process.memoryUsage().heapUsed - initialMemory) / 1024 / 1024,
+      confidence:
+        productGroups.length > 0
+          ? productGroups.reduce((sum, pg) => sum + pg.confidence, 0) /
+            productGroups.length
+          : 0,
       skippedRows: totalRows - processedRows,
-      processedRows
+      processedRows,
     };
   }
 
   private collectValidationResults(
-    productGroups: ReadonlyArray<ProductGroup>
+    productGroups: ReadonlyArray<ProductGroup>,
   ): { errors: ValidationError[]; warnings: ValidationError[] } {
     const errors: ValidationError[] = [];
     const warnings: ValidationError[] = [];
@@ -1656,8 +1935,8 @@ export class ExcelAnalyzer {
         warnings.push({
           code: ErrorCode.INVALID_FORMAT,
           message: `Product ${group.productName} has validation warnings`,
-          severity: 'warning',
-          context: { productName: group.productName }
+          severity: "warning",
+          context: { productName: group.productName },
         });
       }
     }
@@ -1666,24 +1945,27 @@ export class ExcelAnalyzer {
   }
 
   private handleError(error: unknown, startTime: number): ExcelParseResult {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    
-    this.logger.error('Analysis failed', { error: errorMessage });
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    this.logger.error("Analysis failed", { error: errorMessage });
 
     return {
       success: false,
       productGroups: [],
-      errors: [{
-        code: ErrorCode.PARSE_FAILED,
-        message: errorMessage,
-        severity: 'critical'
-      }],
+      errors: [
+        {
+          code: ErrorCode.PARSE_FAILED,
+          message: errorMessage,
+          severity: "critical",
+        },
+      ],
       warnings: [],
       context: {
         fileName: path.basename(this.filePath),
         parseDate: new Date(),
         totalRows: 0,
-        encoding: 'UTF-8'
+        encoding: "UTF-8",
       },
       metrics: {
         totalProducts: 0,
@@ -1693,15 +1975,15 @@ export class ExcelAnalyzer {
         memoryUsedMb: 0,
         confidence: 0,
         skippedRows: 0,
-        processedRows: 0
+        processedRows: 0,
       },
       summary: {
         totalProducts: 0,
         totalWorkOrders: 0,
         totalProfiles: 0,
         totalQuantity: 0,
-        profileTypes: []
-      }
+        profileTypes: [],
+      },
     };
   }
 
@@ -1717,12 +1999,16 @@ export class ExcelAnalyzer {
 
   public async getProductList(): Promise<ReadonlyArray<string>> {
     const result = await this.analyzeExcelFile();
-    return result.productGroups.map(pg => pg.productName);
+    return result.productGroups.map((pg) => pg.productName);
   }
 
-  public async getWorkOrdersByProduct(productName: string): Promise<ReadonlyArray<WorkOrderItem>> {
+  public async getWorkOrdersByProduct(
+    productName: string,
+  ): Promise<ReadonlyArray<WorkOrderItem>> {
     const result = await this.analyzeExcelFile();
-    const group = result.productGroups.find(pg => pg.productName === productName);
+    const group = result.productGroups.find(
+      (pg) => pg.productName === productName,
+    );
     return group ? group.workOrders : [];
   }
 
@@ -1738,40 +2024,48 @@ export class ExcelAnalyzer {
 
 class ConsoleLogger implements ILogger {
   public info(message: string, context?: Record<string, unknown>): void {
-    console.log(JSON.stringify({
-      level: 'INFO',
-      message,
-      timestamp: new Date().toISOString(),
-      ...context
-    }));
+    console.log(
+      JSON.stringify({
+        level: "INFO",
+        message,
+        timestamp: new Date().toISOString(),
+        ...context,
+      }),
+    );
   }
 
   public warn(message: string, context?: Record<string, unknown>): void {
-    console.warn(JSON.stringify({
-      level: 'WARN',
-      message,
-      timestamp: new Date().toISOString(),
-      ...context
-    }));
+    console.warn(
+      JSON.stringify({
+        level: "WARN",
+        message,
+        timestamp: new Date().toISOString(),
+        ...context,
+      }),
+    );
   }
 
   public error(message: string, context?: Record<string, unknown>): void {
-    console.error(JSON.stringify({
-      level: 'ERROR',
-      message,
-      timestamp: new Date().toISOString(),
-      ...context
-    }));
+    console.error(
+      JSON.stringify({
+        level: "ERROR",
+        message,
+        timestamp: new Date().toISOString(),
+        ...context,
+      }),
+    );
   }
 
   public debug(message: string, context?: Record<string, unknown>): void {
-    if (process.env['NODE_ENV'] === 'development') {
-      console.debug(JSON.stringify({
-        level: 'DEBUG',
-        message,
-        timestamp: new Date().toISOString(),
-        ...context
-      }));
+    if (process.env["NODE_ENV"] === "development") {
+      console.debug(
+        JSON.stringify({
+          level: "DEBUG",
+          message,
+          timestamp: new Date().toISOString(),
+          ...context,
+        }),
+      );
     }
   }
 }

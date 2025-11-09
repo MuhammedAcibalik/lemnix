@@ -1,6 +1,6 @@
 /**
  * WebGPU Types
- * 
+ *
  * @module shared/lib/webgpu
  * @version 1.0.0
  */
@@ -22,4 +22,3 @@ export interface WebGPUInfo {
   };
   readonly limits?: Record<string, number>;
 }
-

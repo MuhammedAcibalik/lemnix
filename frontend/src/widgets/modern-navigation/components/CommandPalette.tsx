@@ -1,7 +1,7 @@
 /**
  * Command Palette - Design System v2.0
  * Modern Industrial Command Interface
- * 
+ *
  * Features:
  * - Clean, minimal design
  * - Fast keyboard navigation
@@ -10,7 +10,7 @@
  * - Accessibility first
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Dialog,
   DialogProps,
@@ -19,14 +19,14 @@ import {
   useTheme,
   useMediaQuery,
   alpha,
-} from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
-import { useDesignSystem } from '@/shared/hooks';
-import { CommandSearch } from './CommandSearch';
-import { CommandResults } from './CommandResults';
-import { CommandFooter } from './CommandFooter';
-import { buildCommandPaletteItems } from '../constants';
-import type { CommandItem as CommandItemType } from '../types';
+} from "@mui/material";
+import { Close as CloseIcon } from "@mui/icons-material";
+import { useDesignSystem } from "@/shared/hooks";
+import { CommandSearch } from "./CommandSearch";
+import { CommandResults } from "./CommandResults";
+import { CommandFooter } from "./CommandFooter";
+import { buildCommandPaletteItems } from "../constants";
+import type { CommandItem as CommandItemType } from "../types";
 
 export interface CommandPaletteProps {
   open: boolean;
@@ -43,35 +43,40 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 }) => {
   const theme = useTheme();
   const ds = useDesignSystem();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
-  const [searchQuery, setSearchQuery] = useState('');
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
-  
+
   // Build items with navigation handler - Enterprise pattern
   const commandPaletteItems = useMemo(
     () => buildCommandPaletteItems(onPageChange || (() => {})),
-    [onPageChange]
+    [onPageChange],
   );
-  
-  const [filteredItems, setFilteredItems] = useState<CommandItemType[]>(commandPaletteItems);
 
-  const handleCommandSelect = useCallback((command: CommandItemType) => {
-    if (onCommandSelect) {
-      onCommandSelect(command);
-    }
-    onClose();
-  }, [onCommandSelect, onClose]);
+  const [filteredItems, setFilteredItems] =
+    useState<CommandItemType[]>(commandPaletteItems);
+
+  const handleCommandSelect = useCallback(
+    (command: CommandItemType) => {
+      if (onCommandSelect) {
+        onCommandSelect(command);
+      }
+      onClose();
+    },
+    [onCommandSelect, onClose],
+  );
 
   // Filter items based on search query
   useEffect(() => {
     if (!searchQuery.trim()) {
       setFilteredItems(commandPaletteItems);
     } else {
-      const filtered = commandPaletteItems.filter((item: CommandItemType) =>
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchQuery.toLowerCase())
+      const filtered = commandPaletteItems.filter(
+        (item: CommandItemType) =>
+          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          item.category.toLowerCase().includes(searchQuery.toLowerCase()),
       );
       setFilteredItems(filtered);
     }
@@ -79,38 +84,41 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   }, [searchQuery, commandPaletteItems]);
 
   // Keyboard navigation
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (!open) return;
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (!open) return;
 
-    switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault();
-        setSelectedIndex(prev => 
-          prev < filteredItems.length - 1 ? prev + 1 : 0
-        );
-        break;
-      case 'ArrowUp':
-        event.preventDefault();
-        setSelectedIndex(prev => 
-          prev > 0 ? prev - 1 : filteredItems.length - 1
-        );
-        break;
-      case 'Enter':
-        event.preventDefault();
-        if (filteredItems[selectedIndex]) {
-          handleCommandSelect(filteredItems[selectedIndex]);
-        }
-        break;
-      case 'Escape':
-        event.preventDefault();
-        onClose();
-        break;
-    }
-  }, [open, selectedIndex, filteredItems, onClose, handleCommandSelect]);
+      switch (event.key) {
+        case "ArrowDown":
+          event.preventDefault();
+          setSelectedIndex((prev) =>
+            prev < filteredItems.length - 1 ? prev + 1 : 0,
+          );
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          setSelectedIndex((prev) =>
+            prev > 0 ? prev - 1 : filteredItems.length - 1,
+          );
+          break;
+        case "Enter":
+          event.preventDefault();
+          if (filteredItems[selectedIndex]) {
+            handleCommandSelect(filteredItems[selectedIndex]);
+          }
+          break;
+        case "Escape":
+          event.preventDefault();
+          onClose();
+          break;
+      }
+    },
+    [open, selectedIndex, filteredItems, onClose, handleCommandSelect],
+  );
 
   useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
   const handleSearchChange = (query: string) => {
@@ -121,18 +129,18 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   const getDimensions = () => {
     if (isMobile) {
       return {
-        width: '95vw',
-        height: '85vh',
-        maxWidth: '95vw',
-        maxHeight: '85vh',
+        width: "95vw",
+        height: "85vh",
+        maxWidth: "95vw",
+        maxHeight: "85vh",
       };
     }
-    
+
     return {
-      width: 'min(720px, 90vw)',
-      height: 'min(580px, 80vh)',  // 500px → 580px for better content/search ratio
-      maxWidth: '720px',
-      maxHeight: '580px',
+      width: "min(720px, 90vw)",
+      height: "min(580px, 80vh)", // 500px → 580px for better content/search ratio
+      maxWidth: "720px",
+      maxHeight: "580px",
     };
   };
 
@@ -153,26 +161,27 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           margin: 0,
           borderRadius: `${ds.borderRadius.modal}px`,
           boxShadow: ds.shadows.crisp.xl,
-          overflow: 'hidden',
+          overflow: "hidden",
           background: ds.colors.background.paper,
           border: `1px solid ${alpha(ds.colors.neutral[300], 0.2)}`,
-        }
+        },
       }}
       sx={{
-        '& .MuiBackdrop-root': {
+        "& .MuiBackdrop-root": {
           backgroundColor: alpha(ds.colors.neutral[900], 0.4),
-          backdropFilter: 'blur(12px) saturate(180%)',  // Enhanced glassmorphism
-        }
+          backdropFilter: "blur(12px) saturate(180%)", // Enhanced glassmorphism
+        },
       }}
     >
       <Fade in={open} timeout={200}>
-        <Box sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-          background: ds.colors.background.paper,
-        }}>
-
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+            background: ds.colors.background.paper,
+          }}
+        >
           {/* Search Input */}
           <CommandSearch
             value={searchQuery}
@@ -183,16 +192,16 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
           {/* Results */}
           <CommandResults
             items={filteredItems}
-          selectedIndex={selectedIndex}
+            selectedIndex={selectedIndex}
             onItemSelect={handleCommandSelect}
-        />
-        
-        {/* Footer */}
+          />
+
+          {/* Footer */}
           <CommandFooter
             totalItems={filteredItems.length}
             selectedIndex={selectedIndex}
-        />
-      </Box>
+          />
+        </Box>
       </Fade>
     </Dialog>
   );

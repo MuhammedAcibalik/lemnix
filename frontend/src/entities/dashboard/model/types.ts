@@ -1,14 +1,14 @@
 /**
  * LEMNİX Dashboard Entity Types
  * Domain types for dashboard operations
- * 
+ *
  * @module entities/dashboard/model
  * @version 1.0.0 - FSD Compliant
  * @description Types for optimization-first dashboard
  */
 
-import type { ID, Timestamp } from '@/shared';
-import type { AlgorithmType } from '@/entities/optimization';
+import type { ID, Timestamp } from "@/shared";
+import type { AlgorithmType } from "@/entities/optimization";
 
 /**
  * Dashboard hero metrics (top-level KPIs)
@@ -18,7 +18,7 @@ export interface DashboardHeroMetrics {
   readonly cuttingListsThisWeek: number;
   readonly averageEfficiency: number; // 0-100 percentage
   readonly totalWasteSaved: number; // meters
-  
+
   // Trends (for sparklines)
   readonly efficiencyTrend: ReadonlyArray<number>; // Last 7 days
   readonly wasteTrend: ReadonlyArray<number>; // Last 7 days
@@ -65,7 +65,11 @@ export interface OptimizationPerformanceData {
 /**
  * Active operation status
  */
-export type ActiveOperationStatus = 'queued' | 'processing' | 'completed' | 'failed';
+export type ActiveOperationStatus =
+  | "queued"
+  | "processing"
+  | "completed"
+  | "failed";
 
 /**
  * Active optimization operation
@@ -121,7 +125,7 @@ export interface TopProfile {
   readonly count: number;
   readonly percentage: number; // of total usage
   readonly avgQuantity: number;
-  readonly trend: 'up' | 'down' | 'stable';
+  readonly trend: "up" | "down" | "stable";
 }
 
 /**
@@ -151,9 +155,9 @@ export interface SmartInsightsData {
   readonly bestAlgorithm: BestAlgorithm;
   readonly peakHours: ReadonlyArray<PeakHour>; // Top 3
   readonly suggestions: ReadonlyArray<{
-    readonly type: 'performance' | 'cost' | 'usage';
+    readonly type: "performance" | "cost" | "usage";
     readonly message: string;
-    readonly priority: 'low' | 'medium' | 'high';
+    readonly priority: "low" | "medium" | "high";
     readonly actionable: boolean;
   }>;
 }
@@ -161,15 +165,15 @@ export interface SmartInsightsData {
 /**
  * Activity timeline event type
  */
-export type ActivityEventType = 
-  | 'optimization_started'
-  | 'optimization_completed'
-  | 'optimization_failed'
-  | 'cutting_list_created'
-  | 'cutting_list_updated'
-  | 'export_generated'
-  | 'user_login'
-  | 'system_event';
+export type ActivityEventType =
+  | "optimization_started"
+  | "optimization_completed"
+  | "optimization_failed"
+  | "cutting_list_created"
+  | "cutting_list_updated"
+  | "export_generated"
+  | "user_login"
+  | "system_event";
 
 /**
  * Activity timeline event
@@ -221,18 +225,18 @@ export interface DashboardData {
  * Dashboard metrics request options
  */
 export interface DashboardMetricsOptions {
-  readonly timeRange?: '24h' | '7d' | '30d' | '90d';
+  readonly timeRange?: "24h" | "7d" | "30d" | "90d";
   readonly includeInactive?: boolean;
 }
 
 /**
  * Quick action type
  */
-export type QuickActionType = 
-  | 'start_optimization'
-  | 'create_cutting_list'
-  | 'view_history'
-  | 'export_reports';
+export type QuickActionType =
+  | "start_optimization"
+  | "create_cutting_list"
+  | "view_history"
+  | "export_reports";
 
 /**
  * Quick action configuration
@@ -243,7 +247,6 @@ export interface QuickAction {
   readonly description: string;
   readonly icon: string; // Icon component name
   readonly action: () => void;
-  readonly variant: 'primary' | 'secondary';
+  readonly variant: "primary" | "secondary";
   readonly disabled?: boolean;
 }
-

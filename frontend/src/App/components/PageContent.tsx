@@ -4,10 +4,10 @@
  * @version 2.0.0 - Enterprise Grade Modular Design
  */
 
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { Box, Typography } from '@mui/material';
-import { 
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { Box, Typography } from "@mui/material";
+import {
   LazyHomePage,
   LazyDashboardPage,
   LazyCuttingListBuilder,
@@ -17,9 +17,9 @@ import {
   LazyProductionPlanListPage,
   LazyBackorderPage,
   LazyProductionPlanStatisticsPage,
-  LazyProfileManagementPage
-} from '@/shared/ui/LazyComponents';
-import { navigationConfig } from '../constants';
+  LazyProfileManagementPage,
+} from "@/shared/ui/LazyComponents";
+import { navigationConfig } from "../constants";
 
 /**
  * Page Content Component
@@ -29,38 +29,53 @@ export const PageContent: React.FC = () => {
     <Box
       sx={{
         flexGrow: 1,
-        width: '100%',
-        minHeight: '100vh',
-        overflow: 'auto',
-        pt: navigationConfig.useModernNavigation ? '72px' : 0
+        width: "100%",
+        minHeight: "100vh",
+        overflow: "auto",
+        pt: navigationConfig.useModernNavigation ? "72px" : 0,
       }}
     >
       <Routes>
         <Route path="/" element={<LazyHomePage />} />
         <Route path="/dashboard" element={<LazyDashboardPage />} />
         <Route path="/cutting-list" element={<LazyCuttingListBuilder />} />
-        <Route path="/enterprise-optimization" element={<LazyEnterpriseOptimizationWizard />} />
+        <Route
+          path="/enterprise-optimization"
+          element={<LazyEnterpriseOptimizationWizard />}
+        />
         <Route path="/statistics" element={<LazyStatisticsPage />} />
         <Route path="/production-plan" element={<LazyProductionPlanLayout />}>
-          <Route index element={<Navigate to="/production-plan/plans" replace />} />
+          <Route
+            index
+            element={<Navigate to="/production-plan/plans" replace />}
+          />
           <Route path="plans" element={<LazyProductionPlanListPage />} />
           <Route path="backorder" element={<LazyBackorderPage />} />
-          <Route path="statistics" element={<LazyProductionPlanStatisticsPage />} />
+          <Route
+            path="statistics"
+            element={<LazyProductionPlanStatisticsPage />}
+          />
         </Route>
-        <Route 
-          path="/profile-management" 
-          element={<LazyProfileManagementPage />} 
+        <Route
+          path="/profile-management"
+          element={<LazyProfileManagementPage />}
         />
-        <Route path="/settings" element={
-          <Box sx={{ p: { xs: 2, md: 3, lg: 4 } }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1a237e', mb: 2 }}>
-              Ayarlar
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Sistem ayarları burada yapılandırılacak.
-            </Typography>
-          </Box>
-        } />
+        <Route
+          path="/settings"
+          element={
+            <Box sx={{ p: { xs: 2, md: 3, lg: 4 } }}>
+              <Typography
+                variant="h4"
+                sx={{ fontWeight: 700, color: "#1a237e", mb: 2 }}
+              >
+                Ayarlar
+              </Typography>
+              <Typography variant="body1" color="text.secondary">
+                Sistem ayarları burada yapılandırılacak.
+              </Typography>
+            </Box>
+          }
+        />
         <Route path="*" element={<LazyHomePage />} />
       </Routes>
     </Box>

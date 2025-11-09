@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 import {
   Grid,
   Card,
@@ -14,23 +14,23 @@ import {
   Avatar,
   LinearProgress,
   useTheme,
-  alpha
-} from '@mui/material';
+  alpha,
+} from "@mui/material";
 import {
   TrendingUp as TrendingUpIcon,
   Recycling as RecyclingIcon,
   AttachMoney as MoneyIcon,
-  Engineering as EngineeringIcon
-} from '@mui/icons-material';
-import { KPICardsProps } from '../types';
-import { messages, stylingConstants } from '../constants';
+  Engineering as EngineeringIcon,
+} from "@mui/icons-material";
+import { KPICardsProps } from "../types";
+import { messages, stylingConstants } from "../constants";
 
 /**
  * KPI Cards Component
  */
 export const KPICards: React.FC<KPICardsProps> = ({
   result,
-  performanceMetrics
+  performanceMetrics,
 }) => {
   const theme = useTheme();
 
@@ -49,11 +49,7 @@ export const KPICards: React.FC<KPICardsProps> = ({
                 <TrendingUpIcon color="success" />
               </Avatar>
               <Box>
-                <Typography
-                  variant="h4"
-                  fontWeight="bold"
-                  color="success.main"
-                >
+                <Typography variant="h4" fontWeight="bold" color="success.main">
                   {performanceMetrics?.efficiency.toFixed(1)}%
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -84,11 +80,7 @@ export const KPICards: React.FC<KPICardsProps> = ({
                 <RecyclingIcon color="warning" />
               </Avatar>
               <Box>
-                <Typography
-                  variant="h4"
-                  fontWeight="bold"
-                  color="warning.main"
-                >
+                <Typography variant="h4" fontWeight="bold" color="warning.main">
                   {result.optimizationResult.totalWaste} mm
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -116,11 +108,7 @@ export const KPICards: React.FC<KPICardsProps> = ({
                 <MoneyIcon color="primary" />
               </Avatar>
               <Box>
-                <Typography
-                  variant="h4"
-                  fontWeight="bold"
-                  color="primary.main"
-                >
+                <Typography variant="h4" fontWeight="bold" color="primary.main">
                   ₺{result.optimizationResult.totalCost?.toFixed(0)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -139,7 +127,9 @@ export const KPICards: React.FC<KPICardsProps> = ({
         <Card sx={{ height: "100%" }}>
           <CardContent>
             <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-              <Avatar sx={{ bgcolor: alpha(theme.palette.info.main, 0.1), mr: 2 }}>
+              <Avatar
+                sx={{ bgcolor: alpha(theme.palette.info.main, 0.1), mr: 2 }}
+              >
                 <EngineeringIcon color="info" />
               </Avatar>
               <Box>

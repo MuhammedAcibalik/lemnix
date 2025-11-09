@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 import {
   Box,
   Typography,
@@ -17,17 +17,19 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Paper
-} from '@mui/material';
+  Paper,
+} from "@mui/material";
 
 interface OptimizationAnalyticsProps {
   data: Record<string, unknown>;
 }
 
-export const OptimizationAnalytics: React.FC<OptimizationAnalyticsProps> = ({ data }) => {
+export const OptimizationAnalytics: React.FC<OptimizationAnalyticsProps> = ({
+  data,
+}) => {
   if (!data) {
     return (
-      <Box sx={{ textAlign: 'center', py: 8 }}>
+      <Box sx={{ textAlign: "center", py: 8 }}>
         <Typography variant="h6" color="text.secondary">
           No optimization analytics available
         </Typography>
@@ -40,7 +42,7 @@ export const OptimizationAnalytics: React.FC<OptimizationAnalyticsProps> = ({ da
       <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>
         Optimization Analytics
       </Typography>
-      
+
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <Card>
@@ -60,15 +62,38 @@ export const OptimizationAnalytics: React.FC<OptimizationAnalyticsProps> = ({ da
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {Array.isArray(data.algorithmPerformance) ? data.algorithmPerformance.map((algorithm: Record<string, unknown>, index: number) => (
-                      <TableRow key={index}>
-                        <TableCell>{String(algorithm.algorithm || 'N/A')}</TableCell>
-                        <TableCell align="right">{typeof algorithm.averageEfficiency === 'number' ? algorithm.averageEfficiency.toFixed(2) : 'N/A'}%</TableCell>
-                        <TableCell align="right">{typeof algorithm.successRate === 'number' ? algorithm.successRate.toFixed(2) : 'N/A'}%</TableCell>
-                        <TableCell align="right">{String(algorithm.executionTime || 'N/A')}ms</TableCell>
-                        <TableCell align="right">{String(algorithm.usageCount || 'N/A')}</TableCell>
-                      </TableRow>
-                    )) : null}
+                    {Array.isArray(data.algorithmPerformance)
+                      ? data.algorithmPerformance.map(
+                          (
+                            algorithm: Record<string, unknown>,
+                            index: number,
+                          ) => (
+                            <TableRow key={index}>
+                              <TableCell>
+                                {String(algorithm.algorithm || "N/A")}
+                              </TableCell>
+                              <TableCell align="right">
+                                {typeof algorithm.averageEfficiency === "number"
+                                  ? algorithm.averageEfficiency.toFixed(2)
+                                  : "N/A"}
+                                %
+                              </TableCell>
+                              <TableCell align="right">
+                                {typeof algorithm.successRate === "number"
+                                  ? algorithm.successRate.toFixed(2)
+                                  : "N/A"}
+                                %
+                              </TableCell>
+                              <TableCell align="right">
+                                {String(algorithm.executionTime || "N/A")}ms
+                              </TableCell>
+                              <TableCell align="right">
+                                {String(algorithm.usageCount || "N/A")}
+                              </TableCell>
+                            </TableRow>
+                          ),
+                        )
+                      : null}
                   </TableBody>
                 </Table>
               </TableContainer>

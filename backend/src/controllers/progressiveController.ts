@@ -2,7 +2,7 @@
  * @fileoverview Progressive Controller
  * @module controllers/progressiveController
  * @version 1.0.0
- * 
+ *
  * ⚡🔐 CRITICAL: Real-time progress tracking for secure operations
  * - WebSocket-based progress updates
  * - Maintains security throughout the process
@@ -10,11 +10,11 @@
  * - Memory-efficient streaming
  */
 
-import { Request, Response } from 'express';
-import { Server as SocketIOServer } from 'socket.io';
-import { progressiveLoadingService } from '../services/progressiveLoadingService';
-import { logger } from '../services/logger';
-import { UserRole, Permission } from '../middleware/authorization';
+import { Request, Response } from "express";
+import { Server as SocketIOServer } from "socket.io";
+import { progressiveLoadingService } from "../services/progressiveLoadingService";
+import { logger } from "../services/logger";
+import { UserRole, Permission } from "../middleware/authorization";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -32,7 +32,7 @@ interface AuthenticatedRequest extends Request {
 
 interface ProgressUpdate {
   sessionId: string;
-  operation: 'upload' | 'retrieve';
+  operation: "upload" | "retrieve";
   progress: {
     stage: string;
     percentage: number;
@@ -59,87 +59,90 @@ export class ProgressiveController {
    * Upload production plan with real-time progress
    * POST /api/production-plan/upload-progressive
    */
-  async uploadProductionPlanProgressive(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async uploadProductionPlanProgressive(
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> {
     try {
       if (!req.file) {
         res.status(400).json({
           success: false,
-          error: 'Excel dosyası yüklenmedi'
+          error: "Excel dosyası yüklenmedi",
         });
         return;
       }
 
       const userId = req.user?.userId;
-      const sessionId = req.user?.sessionId || 'anonymous';
+      const sessionId = req.user?.sessionId || "anonymous";
 
-      logger.info('Progressive upload started', {
+      logger.info("Progressive upload started", {
         userId,
         sessionId,
         fileName: req.file.originalname,
-        fileSize: req.file.size
+        fileSize: req.file.size,
       });
 
       // Start progressive upload
-      const result = await progressiveLoadingService.uploadProductionPlanProgressive(
-        req.file.buffer,
-        userId,
-        {
-          batchSize: 50,
-          concurrency: 2,
-          onProgress: (progress) => {
-            // Send real-time progress update
-            this.sendProgressUpdate(sessionId, 'upload', progress);
+      const result =
+        await progressiveLoadingService.uploadProductionPlanProgressive(
+          req.file.buffer,
+          userId,
+          {
+            batchSize: 50,
+            concurrency: 2,
+            onProgress: (progress) => {
+              // Send real-time progress update
+              this.sendProgressUpdate(sessionId, "upload", progress);
+            },
+            onStageComplete: (stage, stageResult) => {
+              logger.info("Upload stage completed", {
+                sessionId,
+                stage,
+                result: stageResult,
+              });
+            },
           },
-          onStageComplete: (stage, stageResult) => {
-            logger.info('Upload stage completed', {
-              sessionId,
-              stage,
-              result: stageResult
-            });
-          }
-        }
-      );
+        );
 
       if (result.success) {
-        logger.info('Progressive upload completed successfully', {
+        logger.info("Progressive upload completed successfully", {
           sessionId,
           planId: result.data?.id,
           duration: `${result.duration}ms`,
-          itemCount: result.progress.totalItems
+          itemCount: result.progress.totalItems,
         });
 
         res.json({
           success: true,
           data: result.data,
           progress: result.progress,
-          duration: result.duration
+          duration: result.duration,
         });
       } else {
-        logger.error('Progressive upload failed', {
+        logger.error("Progressive upload failed", {
           sessionId,
           errors: result.errors,
-          duration: result.duration
+          duration: result.duration,
         });
 
         res.status(500).json({
           success: false,
           errors: result.errors,
           progress: result.progress,
-          duration: result.duration
+          duration: result.duration,
         });
       }
-
     } catch (error) {
-      logger.error('Progressive upload error', {
+      logger.error("Progressive upload error", {
         error: (error as Error).message,
         userId: req.user?.userId,
-        sessionId: req.user?.sessionId
+        sessionId: req.user?.sessionId,
       });
 
       res.status(500).json({
         success: false,
-        error: 'Progressive upload sırasında hata oluştu',
-        details: (error as Error).message
+        error: "Progressive upload sırasında hata oluştu",
+        details: (error as Error).message,
       });
     }
   }
@@ -148,84 +151,86 @@ export class ProgressiveController {
    * Get production plans with real-time progress
    * GET /api/production-plan/progressive
    */
-  async getProductionPlansProgressive(req: AuthenticatedRequest, res: Response): Promise<void> {
+  async getProductionPlansProgressive(
+    req: AuthenticatedRequest,
+    res: Response,
+  ): Promise<void> {
     try {
-      const sessionId = req.user?.sessionId || 'anonymous';
+      const sessionId = req.user?.sessionId || "anonymous";
       const filters = {
-        weekNumber: req.query.weekNumber ? Number(req.query.weekNumber) : undefined,
+        weekNumber: req.query.weekNumber
+          ? Number(req.query.weekNumber)
+          : undefined,
         year: req.query.year ? Number(req.query.year) : undefined,
-        status: req.query.status as string || 'active',
+        status: (req.query.status as string) || "active",
         bolum: req.query.bolum as string,
         oncelik: req.query.oncelik as string,
         page: Number(req.query.page) || 1,
-        limit: Number(req.query.limit) || 50
+        limit: Number(req.query.limit) || 50,
       };
 
-      logger.info('Progressive retrieval started', {
+      logger.info("Progressive retrieval started", {
         sessionId,
-        filters
+        filters,
       });
 
       // Start progressive retrieval
-      const result = await progressiveLoadingService.getProductionPlansProgressive(
-        filters,
-        {
+      const result =
+        await progressiveLoadingService.getProductionPlansProgressive(filters, {
           batchSize: 100,
           concurrency: 3,
           onProgress: (progress) => {
             // Send real-time progress update
-            this.sendProgressUpdate(sessionId, 'retrieve', progress);
+            this.sendProgressUpdate(sessionId, "retrieve", progress);
           },
           onStageComplete: (stage, stageResult) => {
-            logger.info('Retrieval stage completed', {
+            logger.info("Retrieval stage completed", {
               sessionId,
               stage,
-              result: stageResult
+              result: stageResult,
             });
-          }
-        }
-      );
+          },
+        });
 
       if (result.success) {
-        logger.info('Progressive retrieval completed successfully', {
+        logger.info("Progressive retrieval completed successfully", {
           sessionId,
           planCount: result.data?.length || 0,
           duration: `${result.duration}ms`,
-          itemCount: result.progress.totalItems
+          itemCount: result.progress.totalItems,
         });
 
         res.json({
           success: true,
           data: result.data,
           progress: result.progress,
-          duration: result.duration
+          duration: result.duration,
         });
       } else {
-        logger.error('Progressive retrieval failed', {
+        logger.error("Progressive retrieval failed", {
           sessionId,
           errors: result.errors,
-          duration: result.duration
+          duration: result.duration,
         });
 
         res.status(500).json({
           success: false,
           errors: result.errors,
           progress: result.progress,
-          duration: result.duration
+          duration: result.duration,
         });
       }
-
     } catch (error) {
-      logger.error('Progressive retrieval error', {
+      logger.error("Progressive retrieval error", {
         error: (error as Error).message,
         userId: req.user?.userId,
-        sessionId: req.user?.sessionId
+        sessionId: req.user?.sessionId,
       });
 
       res.status(500).json({
         success: false,
-        error: 'Progressive retrieval sırasında hata oluştu',
-        details: (error as Error).message
+        error: "Progressive retrieval sırasında hata oluştu",
+        details: (error as Error).message,
       });
     }
   }
@@ -233,7 +238,11 @@ export class ProgressiveController {
   /**
    * Send progress update via WebSocket
    */
-  private sendProgressUpdate(sessionId: string, operation: 'upload' | 'retrieve', progress: any): void {
+  private sendProgressUpdate(
+    sessionId: string,
+    operation: "upload" | "retrieve",
+    progress: any,
+  ): void {
     try {
       const update: ProgressUpdate = {
         sessionId,
@@ -244,29 +253,28 @@ export class ProgressiveController {
           message: progress.message,
           itemsProcessed: progress.itemsProcessed,
           totalItems: progress.totalItems,
-          estimatedTimeRemaining: progress.estimatedTimeRemaining
+          estimatedTimeRemaining: progress.estimatedTimeRemaining,
         },
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       // Send to specific session
-      this.io.to(sessionId).emit('progress-update', update);
+      this.io.to(sessionId).emit("progress-update", update);
 
       // Also send to general room for monitoring
-      this.io.to('admin').emit('progress-update', update);
+      this.io.to("admin").emit("progress-update", update);
 
-      logger.debug('Progress update sent', {
+      logger.debug("Progress update sent", {
         sessionId,
         operation,
         percentage: progress.percentage,
-        stage: progress.stage
+        stage: progress.stage,
       });
-
     } catch (error) {
-      logger.error('Failed to send progress update', {
+      logger.error("Failed to send progress update", {
         error: (error as Error).message,
         sessionId,
-        operation
+        operation,
       });
     }
   }
@@ -278,7 +286,7 @@ export class ProgressiveController {
   async getProgress(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
       const sessionId = req.params.sessionId;
-      
+
       // In a real implementation, you'd store progress in Redis or similar
       // For now, we'll return a placeholder
       res.json({
@@ -286,20 +294,19 @@ export class ProgressiveController {
         data: {
           sessionId,
           isActive: false,
-          progress: null
-        }
+          progress: null,
+        },
       });
-
     } catch (error) {
-      logger.error('Get progress error', {
+      logger.error("Get progress error", {
         error: (error as Error).message,
-        sessionId: req.params.sessionId
+        sessionId: req.params.sessionId,
       });
 
       res.status(500).json({
         success: false,
-        error: 'Progress bilgisi alınamadı',
-        details: (error as Error).message
+        error: "Progress bilgisi alınamadı",
+        details: (error as Error).message,
       });
     }
   }
@@ -310,10 +317,10 @@ export class ProgressiveController {
 // ============================================================================
 
 export function setupProgressiveWebSocket(io: SocketIOServer): void {
-  io.on('connection', (socket) => {
-    logger.info('Client connected to progressive updates', {
+  io.on("connection", (socket) => {
+    logger.info("Client connected to progressive updates", {
       socketId: socket.id,
-      sessionId: socket.handshake.query.sessionId
+      sessionId: socket.handshake.query.sessionId,
     });
 
     // Join session room
@@ -323,20 +330,20 @@ export function setupProgressiveWebSocket(io: SocketIOServer): void {
     }
 
     // Join admin room for monitoring
-    socket.join('admin');
+    socket.join("admin");
 
-    socket.on('disconnect', () => {
-      logger.info('Client disconnected from progressive updates', {
+    socket.on("disconnect", () => {
+      logger.info("Client disconnected from progressive updates", {
         socketId: socket.id,
-        sessionId
+        sessionId,
       });
     });
 
-    socket.on('join-progress', (data: { sessionId: string }) => {
+    socket.on("join-progress", (data: { sessionId: string }) => {
       socket.join(data.sessionId);
-      logger.info('Client joined progress room', {
+      logger.info("Client joined progress room", {
         socketId: socket.id,
-        sessionId: data.sessionId
+        sessionId: data.sessionId,
       });
     });
   });

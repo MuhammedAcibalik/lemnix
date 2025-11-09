@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 import {
   Typography,
   TableContainer,
@@ -17,10 +17,10 @@ import {
   Chip,
   Grid,
   Alert,
-  AlertTitle
-} from '@mui/material';
-import { messages } from '../constants';
-import { MetricsTabProps } from '../types';
+  AlertTitle,
+} from "@mui/material";
+import { messages } from "../constants";
+import { MetricsTabProps } from "../types";
 
 /**
  * Metrics Tab Component
@@ -31,7 +31,7 @@ export const MetricsTab: React.FC<MetricsTabProps> = ({ metrics }) => {
       <Typography variant="h6" gutterBottom>
         {messages.metrics.title}
       </Typography>
-      
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -69,7 +69,10 @@ export const MetricsTab: React.FC<MetricsTabProps> = ({ metrics }) => {
             <AlertTitle>{messages.metrics.goodResults.title}</AlertTitle>
             {messages.metrics.goodResults.criteria.map((criterion, index) => (
               <div key={index}>
-                • {criterion}{index < messages.metrics.goodResults.criteria.length - 1 && <br />}
+                • {criterion}
+                {index < messages.metrics.goodResults.criteria.length - 1 && (
+                  <br />
+                )}
               </div>
             ))}
           </Alert>
@@ -79,7 +82,10 @@ export const MetricsTab: React.FC<MetricsTabProps> = ({ metrics }) => {
             <AlertTitle>{messages.metrics.badResults.title}</AlertTitle>
             {messages.metrics.badResults.criteria.map((criterion, index) => (
               <div key={index}>
-                • {criterion}{index < messages.metrics.badResults.criteria.length - 1 && <br />}
+                • {criterion}
+                {index < messages.metrics.badResults.criteria.length - 1 && (
+                  <br />
+                )}
               </div>
             ))}
           </Alert>

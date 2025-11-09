@@ -2,41 +2,41 @@
  * @fileoverview Shared Button Component
  * @module shared/ui/Button
  * @version 1.0.0
- * 
+ *
  * Unified button component with design system integration.
  * All buttons in the app MUST use this component.
  */
 
-import React, { forwardRef } from 'react';
+import React, { forwardRef } from "react";
 import {
   Button as MuiButton,
   ButtonProps as MuiButtonProps,
   CircularProgress,
-  Box
-} from '@mui/material';
-import { useDesignSystem } from '@/shared/hooks';
+  Box,
+} from "@mui/material";
+import { useDesignSystem } from "@/shared/hooks";
 
-export interface ButtonProps extends Omit<MuiButtonProps, 'size'> {
+export interface ButtonProps extends Omit<MuiButtonProps, "size"> {
   /**
    * Button size from design system
    */
-  size?: 'small' | 'medium' | 'large';
-  
+  size?: "small" | "medium" | "large";
+
   /**
    * Loading state - shows spinner and disables button
    */
   loading?: boolean;
-  
+
   /**
    * Full width button
    */
   fullWidth?: boolean;
-  
+
   /**
    * Icon to show before text
    */
   startIcon?: React.ReactNode;
-  
+
   /**
    * Icon to show after text
    */
@@ -45,9 +45,9 @@ export interface ButtonProps extends Omit<MuiButtonProps, 'size'> {
 
 /**
  * Button Component
- * 
+ *
  * Design system compliant button with loading states.
- * 
+ *
  * @example
  * ```tsx
  * <Button
@@ -63,21 +63,21 @@ export interface ButtonProps extends Omit<MuiButtonProps, 'size'> {
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
-      size = 'medium',
+      size = "medium",
       loading = false,
       disabled,
       children,
       startIcon,
       endIcon,
       fullWidth,
-      variant = 'contained',
+      variant = "contained",
       sx,
       ...props
     },
-    ref
+    ref,
   ) => {
     const { componentSizes, spacing } = useDesignSystem();
-    
+
     const sizeConfig = componentSizes.button[size];
     const isDisabled = disabled || loading;
 
@@ -94,28 +94,30 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           height: sizeConfig.height,
           padding: sizeConfig.padding,
           fontSize: sizeConfig.fontSize,
-          
+
           // Consistent spacing
           gap: spacing.xs,
-          
+
           // Loading state
           ...(loading && {
-            pointerEvents: 'none',
+            pointerEvents: "none",
           }),
-          
+
           // Custom sx props (can override)
-          ...sx
+          ...sx,
         }}
         {...props}
       >
         {loading ? (
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: spacing.xs 
-          }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: spacing.xs,
+            }}
+          >
             <CircularProgress
-              size={size === 'small' ? 16 : size === 'large' ? 24 : 20}
+              size={size === "small" ? 16 : size === "large" ? 24 : 20}
               color="inherit"
             />
             {children && <span>{children}</span>}
@@ -125,10 +127,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         )}
       </MuiButton>
     );
-  }
+  },
 );
 
-Button.displayName = 'Button';
+Button.displayName = "Button";
 
 /**
  * Button variants for convenience
@@ -152,4 +154,3 @@ export const DangerButton: React.FC<ButtonProps> = (props) => (
 export const SuccessButton: React.FC<ButtonProps> = (props) => (
   <Button variant="contained" color="success" {...props} />
 );
-

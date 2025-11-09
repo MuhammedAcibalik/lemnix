@@ -1,12 +1,12 @@
 /**
  * Results Component Types
  * Type definitions for results visualization components
- * 
+ *
  * @module enterprise-optimization-wizard/components/results
  * @version 2.0.0 - Type-safe, no any
  */
 
-import type { OptimizationResult, Cut } from '../../types';
+import type { OptimizationResult, Cut } from "../../types";
 
 /**
  * Props for Results components
@@ -19,7 +19,13 @@ export interface ResultsComponentProps {
 /**
  * Export format
  */
-export type ExportFormat = 'pdf' | 'excel' | 'json' | 'cutting-instructions' | 'work-order-labels' | 'production-schedule';
+export type ExportFormat =
+  | "pdf"
+  | "excel"
+  | "json"
+  | "cutting-instructions"
+  | "work-order-labels"
+  | "production-schedule";
 
 /**
  * Export action
@@ -35,12 +41,16 @@ export interface ExportAction {
 /**
  * Detailed tab type
  */
-export type DetailedTabType = 'cutting-plan' | 'waste-analysis' | 'cost-analysis' | 'quality-metrics';
+export type DetailedTabType =
+  | "cutting-plan"
+  | "waste-analysis"
+  | "cost-analysis"
+  | "quality-metrics";
 
 /**
  * Visualization mode
  */
-export type VisualizationMode = '2d' | '3d';
+export type VisualizationMode = "2d" | "3d";
 
 /**
  * Stock filter
@@ -69,4 +79,3 @@ export interface SegmentTableRow {
   readonly waste: number;
   readonly color?: string;
 }
-

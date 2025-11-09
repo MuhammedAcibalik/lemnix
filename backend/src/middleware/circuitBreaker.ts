@@ -4,26 +4,26 @@
  * @version 1.0.0
  */
 
-import { Request, Response, NextFunction } from 'express';
-import { logger } from '../services/logger';
+import { Request, Response, NextFunction } from "express";
+import { logger } from "../services/logger";
 
 /**
  * Circuit breaker states
  */
 enum CircuitState {
-  CLOSED = 'CLOSED',     // Normal operation
-  OPEN = 'OPEN',         // Failing, reject immediately
-  HALF_OPEN = 'HALF_OPEN' // Testing if service recovered
+  CLOSED = "CLOSED", // Normal operation
+  OPEN = "OPEN", // Failing, reject immediately
+  HALF_OPEN = "HALF_OPEN", // Testing if service recovered
 }
 
 /**
  * Circuit breaker configuration
  */
 interface CircuitBreakerConfig {
-  failureThreshold: number;  // Number of failures before opening
-  successThreshold: number;  // Number of successes to close from half-open
-  timeout: number;           // Time to wait before half-open (ms)
-  monitoringPeriod: number;  // Time window to track failures (ms)
+  failureThreshold: number; // Number of failures before opening
+  successThreshold: number; // Number of successes to close from half-open
+  timeout: number; // Time to wait before half-open (ms)
+  monitoringPeriod: number; // Time window to track failures (ms)
 }
 
 /**
@@ -55,16 +55,19 @@ export class CircuitBreaker {
     // Check circuit state
     if (this.state === CircuitState.OPEN) {
       const now = Date.now();
-      
+
       // Check if timeout elapsed
       if (now < this.nextAttemptTime) {
-        const error = new Error('Circuit breaker is OPEN');
-        logger.warn(`[CircuitBreaker:${this.name}] Request rejected - circuit is OPEN`, {
-          nextAttempt: new Date(this.nextAttemptTime).toISOString(),
-        });
+        const error = new Error("Circuit breaker is OPEN");
+        logger.warn(
+          `[CircuitBreaker:${this.name}] Request rejected - circuit is OPEN`,
+          {
+            nextAttempt: new Date(this.nextAttemptTime).toISOString(),
+          },
+        );
         throw error;
       }
-      
+
       // Move to half-open to test
       this.state = CircuitState.HALF_OPEN;
       this.successCount = 0;
@@ -89,11 +92,13 @@ export class CircuitBreaker {
 
     if (this.state === CircuitState.HALF_OPEN) {
       this.successCount++;
-      
+
       if (this.successCount >= this.config.successThreshold) {
         this.state = CircuitState.CLOSED;
         this.successCount = 0;
-        logger.info(`[CircuitBreaker:${this.name}] State: HALF_OPEN → CLOSED (recovered)`);
+        logger.info(
+          `[CircuitBreaker:${this.name}] State: HALF_OPEN → CLOSED (recovered)`,
+        );
       }
     }
   }
@@ -112,17 +117,22 @@ export class CircuitBreaker {
       this.nextAttemptTime = now + this.config.timeout;
       this.failureCount = 0;
       this.successCount = 0;
-      
-      logger.warn(`[CircuitBreaker:${this.name}] State: HALF_OPEN → OPEN (test failed)`);
+
+      logger.warn(
+        `[CircuitBreaker:${this.name}] State: HALF_OPEN → OPEN (test failed)`,
+      );
     } else if (this.failureCount >= this.config.failureThreshold) {
       // Too many failures - open circuit
       this.state = CircuitState.OPEN;
       this.nextAttemptTime = now + this.config.timeout;
-      
-      logger.error(`[CircuitBreaker:${this.name}] State: CLOSED → OPEN (threshold reached)`, {
-        failures: this.failureCount,
-        threshold: this.config.failureThreshold,
-      });
+
+      logger.error(
+        `[CircuitBreaker:${this.name}] State: CLOSED → OPEN (threshold reached)`,
+        {
+          failures: this.failureCount,
+          threshold: this.config.failureThreshold,
+        },
+      );
     }
 
     // Reset failure count after monitoring period
@@ -144,9 +154,10 @@ export class CircuitBreaker {
       state: this.state,
       failureCount: this.failureCount,
       successCount: this.successCount,
-      nextAttemptTime: this.nextAttemptTime > 0 
-        ? new Date(this.nextAttemptTime).toISOString() 
-        : null,
+      nextAttemptTime:
+        this.nextAttemptTime > 0
+          ? new Date(this.nextAttemptTime).toISOString()
+          : null,
     };
   }
 
@@ -159,7 +170,7 @@ export class CircuitBreaker {
     this.successCount = 0;
     this.lastFailureTime = 0;
     this.nextAttemptTime = 0;
-    
+
     logger.info(`[CircuitBreaker:${this.name}] Circuit manually reset`);
   }
 }
@@ -168,17 +179,17 @@ export class CircuitBreaker {
  * Create circuit breakers for different services
  */
 export const circuitBreakers = {
-  database: new CircuitBreaker('Database', {
+  database: new CircuitBreaker("Database", {
     failureThreshold: 5,
     timeout: 30000, // 30 seconds
   }),
-  
-  optimization: new CircuitBreaker('Optimization', {
+
+  optimization: new CircuitBreaker("Optimization", {
     failureThreshold: 3,
     timeout: 60000, // 1 minute
   }),
-  
-  export: new CircuitBreaker('Export', {
+
+  export: new CircuitBreaker("Export", {
     failureThreshold: 10,
     timeout: 120000, // 2 minutes
   }),
@@ -187,27 +198,32 @@ export const circuitBreakers = {
 /**
  * Circuit breaker middleware for Express
  */
-export function createCircuitBreakerMiddleware(breakerName: keyof typeof circuitBreakers) {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export function createCircuitBreakerMiddleware(
+  breakerName: keyof typeof circuitBreakers,
+) {
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     const breaker = circuitBreakers[breakerName];
-    
+
     try {
       await breaker.execute(async () => {
         // Continue to next middleware
         return Promise.resolve();
       });
-      
+
       next();
     } catch (error) {
       res.status(503).json({
         success: false,
         error: {
-          message: 'Service temporarily unavailable',
-          code: 'CIRCUIT_BREAKER_OPEN',
+          message: "Service temporarily unavailable",
+          code: "CIRCUIT_BREAKER_OPEN",
           details: breaker.getStatus(),
         },
       });
     }
   };
 }
-

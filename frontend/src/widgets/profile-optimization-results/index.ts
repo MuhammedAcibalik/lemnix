@@ -4,6 +4,5 @@
  * @version 1.0.0
  */
 
-export { ProfileOptimizationResults } from './index.tsx';
-export { ProfileOptimizationResults as default } from './index.tsx';
-
+export { ProfileOptimizationResults } from "./index.tsx";
+export { ProfileOptimizationResults as default } from "./index.tsx";

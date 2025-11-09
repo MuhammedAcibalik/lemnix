@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -13,7 +13,7 @@ export interface ProfileSuggestion {
   readonly length: number;
   readonly usageCount: number;
   readonly lastUsed: string;
-  readonly confidence: 'high' | 'medium' | 'low';
+  readonly confidence: "high" | "medium" | "low";
 }
 
 export interface SaveMappingRequest {
@@ -30,18 +30,17 @@ export class MaterialProfileMappingService {
    */
   async getSuggestions(malzemeNo: string): Promise<ProfileSuggestion[]> {
     try {
-      const mappings = await (prisma as unknown as { materialProfileMapping: any }).materialProfileMapping.findMany({
+      const mappings = await (
+        prisma as unknown as { materialProfileMapping: any }
+      ).materialProfileMapping.findMany({
         where: {
           malzemeNo: {
             contains: malzemeNo,
-            mode: 'insensitive'
-          }
+            mode: "insensitive",
+          },
         },
-        orderBy: [
-          { usageCount: 'desc' },
-          { lastUsed: 'desc' }
-        ],
-        take: 10
+        orderBy: [{ usageCount: "desc" }, { lastUsed: "desc" }],
+        take: 10,
       });
 
       return mappings.map((mapping: any) => ({
@@ -49,11 +48,11 @@ export class MaterialProfileMappingService {
         length: mapping.length,
         usageCount: mapping.usageCount,
         lastUsed: mapping.lastUsed.toISOString(),
-        confidence: this.calculateConfidence(mapping.usageCount)
+        confidence: this.calculateConfidence(mapping.usageCount),
       }));
     } catch (error) {
-      console.error('Error getting profile suggestions:', error);
-      throw new Error('Profil önerileri alınamadı');
+      console.error("Error getting profile suggestions:", error);
+      throw new Error("Profil önerileri alınamadı");
     }
   }
 
@@ -62,20 +61,22 @@ export class MaterialProfileMappingService {
    */
   async saveMappingFromUserInput(data: SaveMappingRequest): Promise<void> {
     try {
-      await (prisma as unknown as { materialProfileMapping: any }).materialProfileMapping.upsert({
+      await (
+        prisma as unknown as { materialProfileMapping: any }
+      ).materialProfileMapping.upsert({
         where: {
           malzemeNo_profileType_length: {
             malzemeNo: data.malzemeNo,
             profileType: data.profileType,
-            length: data.length
-          }
+            length: data.length,
+          },
         },
         update: {
           usageCount: {
-            increment: 1
+            increment: 1,
           },
           lastUsed: new Date(),
-          malzemeKisaMetni: data.malzemeKisaMetni
+          malzemeKisaMetni: data.malzemeKisaMetni,
         },
         create: {
           malzemeNo: data.malzemeNo,
@@ -84,35 +85,41 @@ export class MaterialProfileMappingService {
           length: data.length,
           usageCount: 1,
           lastUsed: new Date(),
-          createdBy: data.createdBy
-        }
+          createdBy: data.createdBy,
+        },
       });
     } catch (error) {
-      console.error('Error saving profile mapping:', error);
-      throw new Error('Profil mapping kaydedilemedi');
+      console.error("Error saving profile mapping:", error);
+      throw new Error("Profil mapping kaydedilemedi");
     }
   }
 
   /**
    * Mapping usage count artır
    */
-  async incrementUsageCount(malzemeNo: string, profileType: string, length: number): Promise<void> {
+  async incrementUsageCount(
+    malzemeNo: string,
+    profileType: string,
+    length: number,
+  ): Promise<void> {
     try {
-      await (prisma as unknown as { materialProfileMapping: any }).materialProfileMapping.updateMany({
+      await (
+        prisma as unknown as { materialProfileMapping: any }
+      ).materialProfileMapping.updateMany({
         where: {
           malzemeNo,
           profileType,
-          length
+          length,
         },
         data: {
           usageCount: {
-            increment: 1
+            increment: 1,
           },
-          lastUsed: new Date()
-        }
+          lastUsed: new Date(),
+        },
       });
     } catch (error) {
-      console.error('Error incrementing usage count:', error);
+      console.error("Error incrementing usage count:", error);
       // Non-critical error, don't throw
     }
   }
@@ -120,28 +127,29 @@ export class MaterialProfileMappingService {
   /**
    * Confidence seviyesi hesapla
    */
-  private calculateConfidence(usageCount: number): 'high' | 'medium' | 'low' {
-    if (usageCount >= 5) return 'high';
-    if (usageCount >= 2) return 'medium';
-    return 'low';
+  private calculateConfidence(usageCount: number): "high" | "medium" | "low" {
+    if (usageCount >= 5) return "high";
+    if (usageCount >= 2) return "medium";
+    return "low";
   }
 
   /**
    * Malzeme numarasına göre en popüler mapping'i getir
    */
-  async getMostPopularMapping(malzemeNo: string): Promise<ProfileSuggestion | null> {
+  async getMostPopularMapping(
+    malzemeNo: string,
+  ): Promise<ProfileSuggestion | null> {
     try {
-      const mapping = await (prisma as unknown as { materialProfileMapping: any }).materialProfileMapping.findFirst({
+      const mapping = await (
+        prisma as unknown as { materialProfileMapping: any }
+      ).materialProfileMapping.findFirst({
         where: {
           malzemeNo: {
             contains: malzemeNo,
-            mode: 'insensitive'
-          }
+            mode: "insensitive",
+          },
         },
-        orderBy: [
-          { usageCount: 'desc' },
-          { lastUsed: 'desc' }
-        ]
+        orderBy: [{ usageCount: "desc" }, { lastUsed: "desc" }],
       });
 
       if (!mapping) return null;
@@ -151,10 +159,10 @@ export class MaterialProfileMappingService {
         length: mapping.length,
         usageCount: mapping.usageCount,
         lastUsed: mapping.lastUsed.toISOString(),
-        confidence: this.calculateConfidence(mapping.usageCount)
+        confidence: this.calculateConfidence(mapping.usageCount),
       };
     } catch (error) {
-      console.error('Error getting most popular mapping:', error);
+      console.error("Error getting most popular mapping:", error);
       return null;
     }
   }
@@ -166,19 +174,18 @@ export class MaterialProfileMappingService {
     try {
       // Malzeme numarasının ilk kısmını al (prefix matching)
       const prefix = malzemeNo.substring(0, 6);
-      
-      const mappings = await (prisma as unknown as { materialProfileMapping: any }).materialProfileMapping.findMany({
+
+      const mappings = await (
+        prisma as unknown as { materialProfileMapping: any }
+      ).materialProfileMapping.findMany({
         where: {
           malzemeNo: {
             startsWith: prefix,
-            mode: 'insensitive'
-          }
+            mode: "insensitive",
+          },
         },
-        orderBy: [
-          { usageCount: 'desc' },
-          { lastUsed: 'desc' }
-        ],
-        take: 5
+        orderBy: [{ usageCount: "desc" }, { lastUsed: "desc" }],
+        take: 5,
       });
 
       return mappings.map((mapping: any) => ({
@@ -186,13 +193,14 @@ export class MaterialProfileMappingService {
         length: mapping.length,
         usageCount: mapping.usageCount,
         lastUsed: mapping.lastUsed.toISOString(),
-        confidence: this.calculateConfidence(mapping.usageCount)
+        confidence: this.calculateConfidence(mapping.usageCount),
       }));
     } catch (error) {
-      console.error('Error getting similar suggestions:', error);
+      console.error("Error getting similar suggestions:", error);
       return [];
     }
   }
 }
 
-export const materialProfileMappingService = new MaterialProfileMappingService();
+export const materialProfileMappingService =
+  new MaterialProfileMappingService();

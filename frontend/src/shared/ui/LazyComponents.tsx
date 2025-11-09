@@ -4,9 +4,9 @@
  * @version 1.0.0
  */
 
-import React, { lazy } from 'react';
-import { ErrorBoundary } from './ErrorBoundary';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import React, { lazy } from "react";
+import { ErrorBoundary } from "./ErrorBoundary";
+import { Box, CircularProgress, Typography } from "@mui/material";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -58,7 +58,7 @@ interface OptimizationInfoDialogProps {
 }
 
 interface SmartAutoCompleteProps {
-  type?: 'product' | 'size' | 'profile' | 'color' | 'measurement';
+  type?: "product" | "size" | "profile" | "color" | "measurement";
   value?: string;
   onChange?: (value: string) => void;
   label?: string;
@@ -68,7 +68,7 @@ interface SmartAutoCompleteProps {
   error?: boolean;
   helperText?: string;
   fullWidth?: boolean;
-  size?: 'small' | 'medium';
+  size?: "small" | "medium";
   productName?: string;
   sizeName?: string;
   showConfidence?: boolean;
@@ -79,7 +79,7 @@ interface SmartAutoCompleteProps {
 }
 
 // Union type for all possible component props
-type ComponentProps = 
+type ComponentProps =
   | EnterpriseOptimizationResultsProps
   | ModernCuttingPlanProps
   | ModernCuttingPlanVisualizationProps
@@ -92,12 +92,12 @@ type ComponentProps =
 const LoadingSpinner = () => (
   <Box
     sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '200px',
-      gap: 2
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: "200px",
+      gap: 2,
     }}
   >
     <CircularProgress size={40} />
@@ -108,50 +108,86 @@ const LoadingSpinner = () => (
 );
 
 // Error component
-const ErrorComponent = ({ error, retry }: { error?: Error; retry?: () => void }) => (
+const ErrorComponent = ({
+  error,
+  retry,
+}: {
+  error?: Error;
+  retry?: () => void;
+}) => (
   <Box
     sx={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '200px',
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: "200px",
       gap: 2,
       p: 3,
-      textAlign: 'center'
+      textAlign: "center",
     }}
   >
     <Typography variant="h6" color="error">
       Yükleme Hatası
     </Typography>
     <Typography variant="body2" color="text.secondary">
-      {error?.message || 'Bilinmeyen hata oluştu'}
+      {error?.message || "Bilinmeyen hata oluştu"}
     </Typography>
   </Box>
 );
 
 // Lazy loaded components with proper error handling
-const LazyHomePageComponent = lazy(() => import('../../pages/home-page'));
-const LazyDashboardPageComponent = lazy(() => import('../../pages/DashboardPage'));
-const LazyCuttingListBuilderComponent = lazy(() => import('../../widgets/cutting-list-builder').then(module => ({ default: module.CuttingListBuilder })));
-const LazyEnterpriseOptimizationWizardComponent = lazy(() => import('../../widgets/enterprise-optimization-wizard'));
-const LazyStatisticsPageComponent = lazy(() => import('../../pages/statistics-page'));
-const LazyProductionPlanLayoutComponent = lazy(() => import('../../pages/production-plan-layout'));
-const LazyProductionPlanListPageComponent = lazy(() => import('../../pages/production-plan-list-page'));
-const LazyBackorderPageComponent = lazy(() => import('../../pages/production-plan-backorder-page'));
-const LazyProductionPlanStatisticsPageComponent = lazy(() => import('../../pages/production-plan-statistics-page'));
-const LazyAuditPageComponent = lazy(() => import('../../pages/audit-page'));
-const LazyProfileManagementPageComponent = lazy(() => 
-  import('../../pages/ProfileManagementPage').then(module => ({ 
-    default: module.default 
-  }))
+const LazyHomePageComponent = lazy(() => import("../../pages/home-page"));
+const LazyDashboardPageComponent = lazy(
+  () => import("../../pages/DashboardPage"),
 );
-const LazyEnterpriseOptimizationResultsComponent = lazy(() => import('../../widgets/enterprise-optimization-results'));
-const LazyModernCuttingPlanComponent = lazy(() => import('./ModernCuttingPlan').then(module => ({ default: module.default })));
-const LazyModernCuttingPlanVisualizationComponent = lazy(() => import('../../widgets/modern-cutting-plan-visualization'));
-const LazyProfileOptimizationResultsComponent = lazy(() => import('../../widgets/profile-optimization-results'));
-const LazyOptimizationInfoDialogComponent = lazy(() => import('../../widgets/optimization-info-dialog'));
-const LazySmartAutoCompleteComponent = lazy(() => import('./SmartAutoComplete').then(module => ({ default: module.default })));
+const LazyCuttingListBuilderComponent = lazy(() =>
+  import("../../widgets/cutting-list-builder").then((module) => ({
+    default: module.CuttingListBuilder,
+  })),
+);
+const LazyEnterpriseOptimizationWizardComponent = lazy(
+  () => import("../../widgets/enterprise-optimization-wizard"),
+);
+const LazyStatisticsPageComponent = lazy(
+  () => import("../../pages/statistics-page"),
+);
+const LazyProductionPlanLayoutComponent = lazy(
+  () => import("../../pages/production-plan-layout"),
+);
+const LazyProductionPlanListPageComponent = lazy(
+  () => import("../../pages/production-plan-list-page"),
+);
+const LazyBackorderPageComponent = lazy(
+  () => import("../../pages/production-plan-backorder-page"),
+);
+const LazyProductionPlanStatisticsPageComponent = lazy(
+  () => import("../../pages/production-plan-statistics-page"),
+);
+const LazyAuditPageComponent = lazy(() => import("../../pages/audit-page"));
+const LazyProfileManagementPageComponent = lazy(() =>
+  import("../../pages/ProfileManagementPage").then((module) => ({
+    default: module.default,
+  })),
+);
+const LazyEnterpriseOptimizationResultsComponent = lazy(
+  () => import("../../widgets/enterprise-optimization-results"),
+);
+const LazyModernCuttingPlanComponent = lazy(() =>
+  import("./ModernCuttingPlan").then((module) => ({ default: module.default })),
+);
+const LazyModernCuttingPlanVisualizationComponent = lazy(
+  () => import("../../widgets/modern-cutting-plan-visualization"),
+);
+const LazyProfileOptimizationResultsComponent = lazy(
+  () => import("../../widgets/profile-optimization-results"),
+);
+const LazyOptimizationInfoDialogComponent = lazy(
+  () => import("../../widgets/optimization-info-dialog"),
+);
+const LazySmartAutoCompleteComponent = lazy(() =>
+  import("./SmartAutoComplete").then((module) => ({ default: module.default })),
+);
 
 // Generic wrapper component for lazy loading with error boundary
 interface LazyWrapperProps {
@@ -160,11 +196,14 @@ interface LazyWrapperProps {
 
 const LazyWrapper: React.FC<LazyWrapperProps> = ({ children }) => (
   <ErrorBoundary
-    fallback={<ErrorComponent error={new Error('Component failed to load')} retry={() => window.location.reload()} />}
+    fallback={
+      <ErrorComponent
+        error={new Error("Component failed to load")}
+        retry={() => window.location.reload()}
+      />
+    }
   >
-    <React.Suspense fallback={<LoadingSpinner />}>
-      {children}
-    </React.Suspense>
+    <React.Suspense fallback={<LoadingSpinner />}>{children}</React.Suspense>
   </ErrorBoundary>
 );
 
@@ -185,31 +224,41 @@ export const LazyDashboardPage: React.FC<Record<string, unknown>> = (props) => (
   </LazyWrapper>
 );
 
-export const LazyCuttingListBuilder: React.FC<Record<string, unknown>> = (props) => (
+export const LazyCuttingListBuilder: React.FC<Record<string, unknown>> = (
+  props,
+) => (
   <LazyWrapper>
     <LazyCuttingListBuilderComponent {...props} />
   </LazyWrapper>
 );
 
-export const LazyEnterpriseOptimizationWizard: React.FC<Record<string, unknown>> = (props) => (
+export const LazyEnterpriseOptimizationWizard: React.FC<
+  Record<string, unknown>
+> = (props) => (
   <LazyWrapper>
     <LazyEnterpriseOptimizationWizardComponent {...props} />
   </LazyWrapper>
 );
 
-export const LazyStatisticsPage: React.FC<Record<string, unknown>> = (props) => (
+export const LazyStatisticsPage: React.FC<Record<string, unknown>> = (
+  props,
+) => (
   <LazyWrapper>
     <LazyStatisticsPageComponent {...props} />
   </LazyWrapper>
 );
 
-export const LazyProductionPlanLayout: React.FC<Record<string, unknown>> = (props) => (
+export const LazyProductionPlanLayout: React.FC<Record<string, unknown>> = (
+  props,
+) => (
   <LazyWrapper>
     <LazyProductionPlanLayoutComponent {...props} />
   </LazyWrapper>
 );
 
-export const LazyProductionPlanListPage: React.FC<Record<string, unknown>> = (props) => (
+export const LazyProductionPlanListPage: React.FC<Record<string, unknown>> = (
+  props,
+) => (
   <LazyWrapper>
     <LazyProductionPlanListPageComponent {...props} />
   </LazyWrapper>
@@ -221,7 +270,9 @@ export const LazyBackorderPage: React.FC<Record<string, unknown>> = (props) => (
   </LazyWrapper>
 );
 
-export const LazyProductionPlanStatisticsPage: React.FC<Record<string, unknown>> = (props) => (
+export const LazyProductionPlanStatisticsPage: React.FC<
+  Record<string, unknown>
+> = (props) => (
   <LazyWrapper>
     <LazyProductionPlanStatisticsPageComponent {...props} />
   </LazyWrapper>
@@ -233,45 +284,88 @@ export const LazyAuditPage: React.FC<Record<string, unknown>> = (props) => (
   </LazyWrapper>
 );
 
-export const LazyEnterpriseOptimizationResults: React.FC<Record<string, unknown>> = (props) => (
+export const LazyEnterpriseOptimizationResults: React.FC<
+  Record<string, unknown>
+> = (props) => (
   <LazyWrapper>
-    {React.createElement(LazyEnterpriseOptimizationResultsComponent as unknown as React.ComponentType<Record<string, unknown>>, props)}
+    {React.createElement(
+      LazyEnterpriseOptimizationResultsComponent as unknown as React.ComponentType<
+        Record<string, unknown>
+      >,
+      props,
+    )}
   </LazyWrapper>
 );
 
-export const LazyModernCuttingPlan: React.FC<Record<string, unknown>> = (props) => (
+export const LazyModernCuttingPlan: React.FC<Record<string, unknown>> = (
+  props,
+) => (
   <LazyWrapper>
-    {React.createElement(LazyModernCuttingPlanComponent as unknown as React.ComponentType<Record<string, unknown>>, props)}
+    {React.createElement(
+      LazyModernCuttingPlanComponent as unknown as React.ComponentType<
+        Record<string, unknown>
+      >,
+      props,
+    )}
   </LazyWrapper>
 );
 
-export const LazyModernCuttingPlanVisualization: React.FC<Record<string, unknown>> = (props) => (
+export const LazyModernCuttingPlanVisualization: React.FC<
+  Record<string, unknown>
+> = (props) => (
   <LazyWrapper>
-    {React.createElement(LazyModernCuttingPlanVisualizationComponent as unknown as React.ComponentType<Record<string, unknown>>, props)}
+    {React.createElement(
+      LazyModernCuttingPlanVisualizationComponent as unknown as React.ComponentType<
+        Record<string, unknown>
+      >,
+      props,
+    )}
   </LazyWrapper>
 );
 
-export const LazyProfileOptimizationResults: React.FC<Record<string, unknown>> = (props) => (
+export const LazyProfileOptimizationResults: React.FC<
+  Record<string, unknown>
+> = (props) => (
   <LazyWrapper>
-    {React.createElement(LazyProfileOptimizationResultsComponent as unknown as React.ComponentType<Record<string, unknown>>, props)}
+    {React.createElement(
+      LazyProfileOptimizationResultsComponent as unknown as React.ComponentType<
+        Record<string, unknown>
+      >,
+      props,
+    )}
   </LazyWrapper>
 );
 
-export const LazyOptimizationInfoDialog: React.FC<Record<string, unknown>> = (props) => (
+export const LazyOptimizationInfoDialog: React.FC<Record<string, unknown>> = (
+  props,
+) => (
   <LazyWrapper>
-    {React.createElement(LazyOptimizationInfoDialogComponent as unknown as React.ComponentType<Record<string, unknown>>, props)}
+    {React.createElement(
+      LazyOptimizationInfoDialogComponent as unknown as React.ComponentType<
+        Record<string, unknown>
+      >,
+      props,
+    )}
   </LazyWrapper>
 );
 
-export const LazySmartAutoComplete: React.FC<Record<string, unknown>> = (props) => (
+export const LazySmartAutoComplete: React.FC<Record<string, unknown>> = (
+  props,
+) => (
   <LazyWrapper>
-    {React.createElement(LazySmartAutoCompleteComponent as unknown as React.ComponentType<Record<string, unknown>>, props)}
+    {React.createElement(
+      LazySmartAutoCompleteComponent as unknown as React.ComponentType<
+        Record<string, unknown>
+      >,
+      props,
+    )}
   </LazyWrapper>
 );
 
-export const LazyProfileManagementPage: React.FC<Record<string, unknown>> = (props) => (
+export const LazyProfileManagementPage: React.FC<Record<string, unknown>> = (
+  props,
+) => (
   <LazyWrapper>
     <LazyProfileManagementPageComponent {...props} />
   </LazyWrapper>
 );
-

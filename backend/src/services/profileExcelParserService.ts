@@ -5,30 +5,30 @@
  * @description Parses Excel files for profile management (profile definitions and work order mappings)
  */
 
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 import {
   ProfileManagementParseResult,
   ProfileManagementData,
   ProfileDefinitionInput,
   ProfileStockLengthInput,
   WorkOrderProfileMappingInput,
-  ProfileManagementExcelRow
-} from '../types';
-import { logger } from '../utils/logger';
+  ProfileManagementExcelRow,
+} from "../types";
+import { logger } from "../utils/logger";
 
 export class ProfileExcelParserService {
   private readonly REQUIRED_COLUMNS = [
-    'Profil Kodu',
-    'Profil Adı',
-    'Sipariş No',
-    'Profil Tipi',
-    'Stok Uzunluğu 1'
+    "Profil Kodu",
+    "Profil Adı",
+    "Sipariş No",
+    "Profil Tipi",
+    "Stok Uzunluğu 1",
   ] as const;
 
   private readonly OPTIONAL_COLUMNS = [
-    'Stok Uzunluğu 2',
-    'Stok Uzunluğu 3',
-    'Varsayılan Stok'
+    "Stok Uzunluğu 2",
+    "Stok Uzunluğu 3",
+    "Varsayılan Stok",
   ] as const;
 
   private readonly MAX_PROFILE_CODE_LENGTH = 50;
@@ -40,31 +40,31 @@ export class ProfileExcelParserService {
    * Parse profile management Excel file
    */
   public async parseProfileManagementExcel(
-    fileBuffer: Buffer
+    fileBuffer: Buffer,
   ): Promise<ProfileManagementParseResult> {
     try {
       // Read Excel file
-      const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+      const workbook = XLSX.read(fileBuffer, { type: "buffer" });
       const sheetName = workbook.SheetNames[0];
 
       if (!sheetName) {
         return {
           success: false,
-          errors: ['Excel dosyasında sayfa bulunamadı']
+          errors: ["Excel dosyasında sayfa bulunamadı"],
         };
       }
 
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet, {
         header: 1,
-        defval: '',
-        raw: false
+        defval: "",
+        raw: false,
       });
 
       if (jsonData.length < 2) {
         return {
           success: false,
-          errors: ['Excel dosyası boş veya geçersiz']
+          errors: ["Excel dosyası boş veya geçersiz"],
         };
       }
 
@@ -75,7 +75,7 @@ export class ProfileExcelParserService {
       if (!validationResult.isValid) {
         return {
           success: false,
-          errors: validationResult.errors
+          errors: validationResult.errors,
         };
       }
 
@@ -98,15 +98,19 @@ export class ProfileExcelParserService {
           weekNumber: parseResult.data!.weekNumber,
           year: parseResult.data!.year,
           uniqueProfiles: parseResult.data!.profiles.size,
-          uniqueMappings: parseResult.data!.mappings.length
-        }
+          uniqueMappings: parseResult.data!.mappings.length,
+        },
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
-      logger.error('Profile Excel parse error:', error as Record<string, unknown>);
+      const errorMessage =
+        error instanceof Error ? error.message : "Bilinmeyen hata";
+      logger.error(
+        "Profile Excel parse error:",
+        error as Record<string, unknown>,
+      );
       return {
         success: false,
-        errors: [`Excel dosyası işlenirken hata oluştu: ${errorMessage}`]
+        errors: [`Excel dosyası işlenirken hata oluştu: ${errorMessage}`],
       };
     }
   }
@@ -114,7 +118,10 @@ export class ProfileExcelParserService {
   /**
    * Validate Excel headers
    */
-  private validateHeaders(headers: string[]): { isValid: boolean; errors: string[] } {
+  private validateHeaders(headers: string[]): {
+    isValid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
     const normalizedHeaders = headers.map((h) => this.normalizeColumnName(h));
 
@@ -127,14 +134,14 @@ export class ProfileExcelParserService {
 
     if (errors.length > 0) {
       errors.push(
-        `Bulunan kolonlar: ${headers.join(', ')}`,
-        `Beklenen kolonlar: ${this.REQUIRED_COLUMNS.join(', ')}`
+        `Bulunan kolonlar: ${headers.join(", ")}`,
+        `Beklenen kolonlar: ${this.REQUIRED_COLUMNS.join(", ")}`,
       );
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -143,7 +150,7 @@ export class ProfileExcelParserService {
    */
   private parseDataRows(
     rows: unknown[][],
-    headers: string[]
+    headers: string[],
   ): {
     success: boolean;
     data?: ProfileManagementData;
@@ -183,7 +190,7 @@ export class ProfileExcelParserService {
           profiles.set(parsedRow.profileCode, {
             profileCode: parsedRow.profileCode,
             profileName: parsedRow.profileName,
-            stockLengths: []
+            stockLengths: [],
           });
           stockLengthsMap.set(parsedRow.profileCode, new Set());
         }
@@ -191,8 +198,10 @@ export class ProfileExcelParserService {
         // Add stock lengths to profile
         const stockLengths = stockLengthsMap.get(parsedRow.profileCode)!;
         const newStockLengths: number[] = [parsedRow.stockLength1];
-        if (parsedRow.stockLength2) newStockLengths.push(parsedRow.stockLength2);
-        if (parsedRow.stockLength3) newStockLengths.push(parsedRow.stockLength3);
+        if (parsedRow.stockLength2)
+          newStockLengths.push(parsedRow.stockLength2);
+        if (parsedRow.stockLength3)
+          newStockLengths.push(parsedRow.stockLength3);
 
         newStockLengths.forEach((sl) => stockLengths.add(sl));
 
@@ -202,11 +211,11 @@ export class ProfileExcelParserService {
           profileType: parsedRow.profileType,
           profileCode: parsedRow.profileCode,
           weekNumber,
-          year
+          year,
         });
       } catch (error) {
         warnings.push(
-          `Satır ${rowNumber}: ${error instanceof Error ? error.message : 'Parse hatası'}`
+          `Satır ${rowNumber}: ${error instanceof Error ? error.message : "Parse hatası"}`,
         );
       }
     }
@@ -216,23 +225,25 @@ export class ProfileExcelParserService {
       const profile = profiles.get(profileCode)!;
       const sortedLengths = Array.from(stockLengthsSet).sort((a, b) => b - a); // Descending
 
-      const stockLengths: ProfileStockLengthInput[] = sortedLengths.map((length, index) => ({
-        stockLength: length,
-        isDefault: index === 0, // Longest is default
-        priority: index
-      }));
+      const stockLengths: ProfileStockLengthInput[] = sortedLengths.map(
+        (length, index) => ({
+          stockLength: length,
+          isDefault: index === 0, // Longest is default
+          priority: index,
+        }),
+      );
 
       // Update profile with new array
       profiles.set(profileCode, {
         ...profile,
-        stockLengths
+        stockLengths,
       });
     }
 
     if (mappings.length === 0) {
       return {
         success: false,
-        warnings: ['Hiç geçerli satır bulunamadı', ...warnings]
+        warnings: ["Hiç geçerli satır bulunamadı", ...warnings],
       };
     }
 
@@ -242,9 +253,9 @@ export class ProfileExcelParserService {
         profiles,
         mappings,
         weekNumber,
-        year
+        year,
       },
-      warnings: warnings.length > 0 ? warnings : undefined
+      warnings: warnings.length > 0 ? warnings : undefined,
     };
   }
 
@@ -254,20 +265,20 @@ export class ProfileExcelParserService {
   private parseRow(
     row: unknown[],
     columnMap: Map<string, number>,
-    rowNumber: number
+    rowNumber: number,
   ): ProfileManagementExcelRow | null {
     const getCellValue = (colName: string): string => {
       const index = columnMap.get(this.normalizeColumnName(colName));
-      if (index === undefined) return '';
+      if (index === undefined) return "";
       const value = row[index];
-      return value ? String(value).trim() : '';
+      return value ? String(value).trim() : "";
     };
 
-    const profileCode = getCellValue('Profil Kodu');
-    const profileName = getCellValue('Profil Adı');
-    const workOrderId = getCellValue('Sipariş No');
-    const profileType = getCellValue('Profil Tipi');
-    const stockLength1Str = getCellValue('Stok Uzunluğu 1');
+    const profileCode = getCellValue("Profil Kodu");
+    const profileName = getCellValue("Profil Adı");
+    const workOrderId = getCellValue("Sipariş No");
+    const profileType = getCellValue("Profil Tipi");
+    const stockLength1Str = getCellValue("Stok Uzunluğu 1");
 
     // Skip empty rows
     if (!profileCode && !profileName && !workOrderId) {
@@ -275,10 +286,12 @@ export class ProfileExcelParserService {
     }
 
     const stockLength1 = this.parseStockLength(stockLength1Str);
-    const stockLength2 = this.parseStockLength(getCellValue('Stok Uzunluğu 2'));
-    const stockLength3 = this.parseStockLength(getCellValue('Stok Uzunluğu 3'));
-    const defaultStockStr = getCellValue('Varsayılan Stok');
-    const defaultStock = defaultStockStr ? parseInt(defaultStockStr, 10) : undefined;
+    const stockLength2 = this.parseStockLength(getCellValue("Stok Uzunluğu 2"));
+    const stockLength3 = this.parseStockLength(getCellValue("Stok Uzunluğu 3"));
+    const defaultStockStr = getCellValue("Varsayılan Stok");
+    const defaultStock = defaultStockStr
+      ? parseInt(defaultStockStr, 10)
+      : undefined;
 
     // Ensure stockLength1 is defined
     if (stockLength1 === undefined) {
@@ -293,7 +306,7 @@ export class ProfileExcelParserService {
       stockLength1,
       stockLength2,
       stockLength3,
-      defaultStock
+      defaultStock,
     };
   }
 
@@ -302,7 +315,7 @@ export class ProfileExcelParserService {
    */
   private validateRowData(
     row: ProfileManagementExcelRow,
-    rowNumber: number
+    rowNumber: number,
   ): { errors: string[] } {
     const errors: string[] = [];
 
@@ -311,7 +324,7 @@ export class ProfileExcelParserService {
       errors.push(`Satır ${rowNumber}: Profil kodu boş olamaz`);
     } else if (row.profileCode.length > this.MAX_PROFILE_CODE_LENGTH) {
       errors.push(
-        `Satır ${rowNumber}: Profil kodu çok uzun (max ${this.MAX_PROFILE_CODE_LENGTH} karakter)`
+        `Satır ${rowNumber}: Profil kodu çok uzun (max ${this.MAX_PROFILE_CODE_LENGTH} karakter)`,
       );
     }
 
@@ -320,7 +333,7 @@ export class ProfileExcelParserService {
       errors.push(`Satır ${rowNumber}: Profil adı boş olamaz`);
     } else if (row.profileName.length > this.MAX_PROFILE_NAME_LENGTH) {
       errors.push(
-        `Satır ${rowNumber}: Profil adı çok uzun (max ${this.MAX_PROFILE_NAME_LENGTH} karakter)`
+        `Satır ${rowNumber}: Profil adı çok uzun (max ${this.MAX_PROFILE_NAME_LENGTH} karakter)`,
       );
     }
 
@@ -342,7 +355,7 @@ export class ProfileExcelParserService {
       row.stockLength1 > this.MAX_STOCK_LENGTH_MM
     ) {
       errors.push(
-        `Satır ${rowNumber}: Stok Uzunluğu 1 aralık dışı (${this.MIN_STOCK_LENGTH_MM}-${this.MAX_STOCK_LENGTH_MM}mm)`
+        `Satır ${rowNumber}: Stok Uzunluğu 1 aralık dışı (${this.MIN_STOCK_LENGTH_MM}-${this.MAX_STOCK_LENGTH_MM}mm)`,
       );
     }
 
@@ -353,7 +366,7 @@ export class ProfileExcelParserService {
         row.stockLength2 > this.MAX_STOCK_LENGTH_MM
       ) {
         errors.push(
-          `Satır ${rowNumber}: Stok Uzunluğu 2 aralık dışı (${this.MIN_STOCK_LENGTH_MM}-${this.MAX_STOCK_LENGTH_MM}mm)`
+          `Satır ${rowNumber}: Stok Uzunluğu 2 aralık dışı (${this.MIN_STOCK_LENGTH_MM}-${this.MAX_STOCK_LENGTH_MM}mm)`,
         );
       }
     }
@@ -364,7 +377,7 @@ export class ProfileExcelParserService {
         row.stockLength3 > this.MAX_STOCK_LENGTH_MM
       ) {
         errors.push(
-          `Satır ${rowNumber}: Stok Uzunluğu 3 aralık dışı (${this.MIN_STOCK_LENGTH_MM}-${this.MAX_STOCK_LENGTH_MM}mm)`
+          `Satır ${rowNumber}: Stok Uzunluğu 3 aralık dışı (${this.MIN_STOCK_LENGTH_MM}-${this.MAX_STOCK_LENGTH_MM}mm)`,
         );
       }
     }
@@ -403,7 +416,7 @@ export class ProfileExcelParserService {
    * Normalize column name for comparison
    */
   private normalizeColumnName(name: string): string {
-    return name.trim().toLowerCase().replace(/\s+/g, ' ');
+    return name.trim().toLowerCase().replace(/\s+/g, " ");
   }
 
   /**
@@ -416,7 +429,7 @@ export class ProfileExcelParserService {
     // Calculate ISO week number
     const startOfYear = new Date(year, 0, 1);
     const days = Math.floor(
-      (now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000)
+      (now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000),
     );
     const weekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7);
 
@@ -426,4 +439,3 @@ export class ProfileExcelParserService {
 
 // Singleton instance
 export const profileExcelParserService = new ProfileExcelParserService();
-

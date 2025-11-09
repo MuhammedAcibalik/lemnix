@@ -4,11 +4,26 @@
  * @version 2.0.0 - Enterprise Grade Modular Design
  */
 
-import { createTheme } from '@mui/material';
-import * as DS from './designSystem.v2';
-import { responsive, gridSpacing, gridSizes, containerSizes, container, mediaQuery, layouts, componentVariants, animations } from './responsiveUtils';
+import { createTheme } from "@mui/material";
+import * as DS from "./designSystem.v2";
+import {
+  responsive,
+  gridSpacing,
+  gridSizes,
+  containerSizes,
+  container,
+  mediaQuery,
+  layouts,
+  componentVariants,
+  animations,
+} from "./responsiveUtils";
 
-const getColorScale = (scale: { main: string; light: string; dark: string; contrast: string }) => ({
+const getColorScale = (scale: {
+  main: string;
+  light: string;
+  dark: string;
+  contrast: string;
+}) => ({
   main: scale.main,
   light: scale.light,
   dark: scale.dark,
@@ -18,7 +33,7 @@ const getColorScale = (scale: { main: string; light: string; dark: string; contr
 const getColorWithFallback = (
   colorObject: Record<string, string>,
   key: string,
-  fallback: string
+  fallback: string,
 ): string => {
   return colorObject[key] || fallback;
 };
@@ -26,12 +41,12 @@ const getColorWithFallback = (
 const getPropertyWithFallback = (
   obj: Record<string, unknown>,
   key: string,
-  fallback: string | number
+  fallback: string | number,
 ): string | number => {
   return (obj[key] as string | number) || fallback;
 };
 
-const spacing = (factor: number) => factor * DS.spacing['1'];
+const spacing = (factor: number) => factor * DS.spacing["1"];
 
 const baseShadows: string[] = [
   DS.shadows.none,
@@ -39,7 +54,7 @@ const baseShadows: string[] = [
   DS.shadows.soft.md,
   DS.shadows.soft.lg,
   DS.shadows.soft.xl,
-  DS.shadows.soft['2xl'],
+  DS.shadows.soft["2xl"],
   DS.shadows.crisp.sm,
   DS.shadows.crisp.md,
   DS.shadows.crisp.lg,
@@ -58,8 +73,34 @@ const baseShadows: string[] = [
 // MUI requires exactly 25 shadow values
 const muiShadows = [
   ...baseShadows,
-  ...Array(25 - baseShadows.length).fill(DS.shadows.soft['2xl'])
-] as unknown as ["none", string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string];
+  ...Array(25 - baseShadows.length).fill(DS.shadows.soft["2xl"]),
+] as unknown as [
+  "none",
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+  string,
+];
 
 export const globalStyles = `
   @keyframes lemnixRotate {
@@ -93,7 +134,7 @@ export const theme = createTheme({
       main: DS.colors.error.main,
       light: DS.colors.error[300],
       dark: DS.colors.error[700],
-      contrastText: '#ffffff',
+      contrastText: "#ffffff",
     },
     info: {
       ...getColorScale(DS.colors.primary),
@@ -152,7 +193,7 @@ export const theme = createTheme({
     button: {
       fontSize: DS.typography.label.prominent.fontSize,
       fontWeight: DS.typography.label.prominent.fontWeight,
-      textTransform: 'none',
+      textTransform: "none",
       letterSpacing: DS.typography.label.prominent.letterSpacing,
     },
     caption: {
@@ -178,13 +219,13 @@ export const theme = createTheme({
         root: {
           borderRadius: `${DS.borderRadius.button}px`,
           fontWeight: DS.typography.fontWeight.semibold,
-          textTransform: 'none',
+          textTransform: "none",
           transition: DS.transitions.base,
           boxShadow: DS.shadows.none,
-          '&:hover': {
+          "&:hover": {
             boxShadow: DS.shadows.soft.md,
           },
-          '&:disabled': {
+          "&:disabled": {
             opacity: 0.5,
             boxShadow: DS.shadows.none,
           },
@@ -192,7 +233,7 @@ export const theme = createTheme({
         contained: {
           background: DS.gradients.primary,
           color: DS.colors.primary.contrast,
-          '&:hover': {
+          "&:hover": {
             background: DS.gradients.primaryHover,
             opacity: 0.95,
           },
@@ -200,7 +241,7 @@ export const theme = createTheme({
         outlined: {
           borderWidth: 2,
           borderColor: DS.colors.primary.main,
-          '&:hover': {
+          "&:hover": {
             borderColor: DS.colors.primary.dark,
             backgroundColor: DS.colors.surface.elevated1,
           },
@@ -215,7 +256,7 @@ export const theme = createTheme({
           border: `1px solid ${DS.colors.neutral[200]}`,
           boxShadow: DS.shadows.soft.md,
           transition: DS.transitions.base,
-          '&:hover': {
+          "&:hover": {
             boxShadow: DS.shadows.soft.lg,
           },
         },
@@ -232,16 +273,16 @@ export const theme = createTheme({
     MuiTextField: {
       styleOverrides: {
         root: {
-          '& .MuiOutlinedInput-root': {
+          "& .MuiOutlinedInput-root": {
             borderRadius: `${DS.borderRadius.input}px`,
             transition: DS.transitions.base,
-            '& fieldset': {
+            "& fieldset": {
               borderColor: DS.colors.neutral[200],
             },
-            '&:hover fieldset': {
+            "&:hover fieldset": {
               borderColor: DS.colors.primary.main,
             },
-            '&.Mui-focused fieldset': {
+            "&.Mui-focused fieldset": {
               borderColor: DS.colors.primary.main,
               boxShadow: DS.focus.ring,
             },
@@ -262,7 +303,7 @@ export const theme = createTheme({
     MuiSelect: {
       styleOverrides: {
         root: {
-          '& .MuiSelect-select': {
+          "& .MuiSelect-select": {
             borderRadius: `${DS.borderRadius.input}px`,
           },
         },
@@ -279,5 +320,28 @@ export const theme = createTheme({
   },
 });
 
-export { colors, spacing, typography, componentSizes, shadows, borderRadius, gradients, zIndex, transitions, glass, focus, breakpoints } from './designSystem.v2';
-export { responsive, gridSpacing, gridSizes, containerSizes, container, mediaQuery, layouts, componentVariants, animations };
+export {
+  colors,
+  spacing,
+  typography,
+  componentSizes,
+  shadows,
+  borderRadius,
+  gradients,
+  zIndex,
+  transitions,
+  glass,
+  focus,
+  breakpoints,
+} from "./designSystem.v2";
+export {
+  responsive,
+  gridSpacing,
+  gridSizes,
+  containerSizes,
+  container,
+  mediaQuery,
+  layouts,
+  componentVariants,
+  animations,
+};

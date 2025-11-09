@@ -1,26 +1,32 @@
 /**
  * Badge Component v2.0 - Modern Industrial
- * 
+ *
  * @module shared/ui/Badge
  * @version 2.0.0
  */
 
-import React from 'react';
-import { Chip, ChipProps, alpha } from '@mui/material';
-import { useDesignSystem } from '@/shared/hooks';
+import React from "react";
+import { Chip, ChipProps, alpha } from "@mui/material";
+import { useDesignSystem } from "@/shared/hooks";
 
-export type BadgeVariant = 'solid' | 'soft' | 'outlined' | 'ghost';
-export type BadgeColor = 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'neutral';
+export type BadgeVariant = "solid" | "soft" | "outlined" | "ghost";
+export type BadgeColor =
+  | "primary"
+  | "secondary"
+  | "success"
+  | "warning"
+  | "error"
+  | "neutral";
 
-export interface BadgeV2Props extends Omit<ChipProps, 'variant' | 'color'> {
+export interface BadgeV2Props extends Omit<ChipProps, "variant" | "color"> {
   readonly variant?: BadgeVariant;
   readonly color?: BadgeColor;
   readonly children: React.ReactNode;
 }
 
 export const BadgeV2: React.FC<BadgeV2Props> = ({
-  variant = 'solid',
-  color = 'primary',
+  variant = "solid",
+  color = "primary",
   children,
   sx,
   ...props
@@ -41,24 +47,24 @@ export const BadgeV2: React.FC<BadgeV2Props> = ({
   const variantStyles = {
     solid: {
       background: baseColor,
-      color: '#ffffff',
-      border: 'none',
+      color: "#ffffff",
+      border: "none",
       boxShadow: ds.shadows.soft.sm,
     },
     soft: {
       background: alpha(baseColor, 0.1),
       color: baseColor,
-      border: 'none',
+      border: "none",
     },
     outlined: {
-      background: 'transparent',
+      background: "transparent",
       color: baseColor,
       border: `1.5px solid ${baseColor}`,
     },
     ghost: {
-      background: 'transparent',
+      background: "transparent",
       color: baseColor,
-      border: 'none',
+      border: "none",
     },
   };
 
@@ -70,20 +76,20 @@ export const BadgeV2: React.FC<BadgeV2Props> = ({
         borderRadius: `${ds.borderRadius.chip}px`,
         fontSize: ds.typography.fontSize.xs,
         fontWeight: ds.typography.fontWeight.medium,
-        letterSpacing: '0.02em',
+        letterSpacing: "0.02em",
         height: 24,
-        padding: '0 8px',
+        padding: "0 8px",
         transition: ds.transitions.fast,
-        
-        '&:hover': {
-          transform: 'translateY(-1px)',
-          boxShadow: variant === 'solid' ? ds.shadows.soft.md : ds.shadows.soft.sm,
+
+        "&:hover": {
+          transform: "translateY(-1px)",
+          boxShadow:
+            variant === "solid" ? ds.shadows.soft.md : ds.shadows.soft.sm,
         },
-        
+
         ...sx,
       }}
       {...props}
     />
   );
 };
-

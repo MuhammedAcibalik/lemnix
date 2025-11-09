@@ -1,22 +1,28 @@
 /**
  * LEMNİX Optimization Entity Response Schemas
  * Zod schemas for backend response validation
- * 
+ *
  * @module entities/optimization/model
  * @version 1.0.0 - Response Validation Layer
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Algorithm type schema
  */
-export const algorithmTypeSchema = z.enum(['ffd', 'bfd', 'genetic', 'pooling']);
+export const algorithmTypeSchema = z.enum(["ffd", "bfd", "genetic", "pooling"]);
 
 /**
  * Waste category schema
  */
-export const wasteCategorySchema = z.enum(['minimal', 'small', 'medium', 'large', 'excessive']);
+export const wasteCategorySchema = z.enum([
+  "minimal",
+  "small",
+  "medium",
+  "large",
+  "excessive",
+]);
 
 /**
  * Cutting segment schema
@@ -68,8 +74,8 @@ export const wasteDistributionSchema = z.object({
  * Optimization recommendation schema
  */
 export const optimizationRecommendationSchema = z.object({
-  type: z.enum(['performance', 'cost', 'quality', 'waste']),
-  priority: z.enum(['low', 'medium', 'high']),
+  type: z.enum(["performance", "cost", "quality", "waste"]),
+  priority: z.enum(["low", "medium", "high"]),
   message: z.string(),
   impact: z.number().optional(),
   actionable: z.boolean().optional(),
@@ -78,39 +84,45 @@ export const optimizationRecommendationSchema = z.object({
 /**
  * Algorithm metadata schema (GA telemetry)
  */
-export const algorithmMetadataSchema = z.object({
-  effectiveComplexity: z.string(),
-  actualGenerations: z.number().int().nonnegative(),
-  convergenceReason: z.enum(['early_stop', 'max_generations', 'stagnation']),
-  bestFitness: z.number().min(0).max(1),
-  executionTimeMs: z.number().nonnegative(),
-  deterministicSeed: z.number().optional(),
-  populationSize: z.number().int().positive().optional(),
-  finalGeneration: z.number().int().nonnegative().optional(),
-}).optional();
+export const algorithmMetadataSchema = z
+  .object({
+    effectiveComplexity: z.string(),
+    actualGenerations: z.number().int().nonnegative(),
+    convergenceReason: z.enum(["early_stop", "max_generations", "stagnation"]),
+    bestFitness: z.number().min(0).max(1),
+    executionTimeMs: z.number().nonnegative(),
+    deterministicSeed: z.number().optional(),
+    populationSize: z.number().int().positive().optional(),
+    finalGeneration: z.number().int().nonnegative().optional(),
+  })
+  .optional();
 
 /**
  * Cost breakdown schema
  */
-export const costBreakdownSchema = z.object({
-  materialCost: z.number().nonnegative(),
-  laborCost: z.number().nonnegative(),
-  wasteCost: z.number().nonnegative(),
-  setupCost: z.number().nonnegative(),
-  totalCost: z.number().nonnegative(),
-  cuttingCost: z.number().nonnegative().optional(),
-  timeCost: z.number().nonnegative().optional(),
-}).optional();
+export const costBreakdownSchema = z
+  .object({
+    materialCost: z.number().nonnegative(),
+    laborCost: z.number().nonnegative(),
+    wasteCost: z.number().nonnegative(),
+    setupCost: z.number().nonnegative(),
+    totalCost: z.number().nonnegative(),
+    cuttingCost: z.number().nonnegative().optional(),
+    timeCost: z.number().nonnegative().optional(),
+  })
+  .optional();
 
 /**
  * Pareto frontier schema
  */
-export const paretoFrontierSchema = z.object({
-  waste: z.number().nonnegative(),
-  cost: z.number().nonnegative(),
-  time: z.number().nonnegative(),
-  efficiency: z.number().min(0).max(1),
-}).optional();
+export const paretoFrontierSchema = z
+  .object({
+    waste: z.number().nonnegative(),
+    cost: z.number().nonnegative(),
+    time: z.number().nonnegative(),
+    efficiency: z.number().min(0).max(1),
+  })
+  .optional();
 
 /**
  * Optimization result schema (backend response)
@@ -132,7 +144,7 @@ export const optimizationResultSchema = z.object({
   timestamp: z.string().datetime(),
   wasteDistribution: wasteDistributionSchema,
   recommendations: z.array(optimizationRecommendationSchema).readonly(),
-  
+
   // Optional enhanced fields
   id: z.string().optional(),
   metadata: z.record(z.unknown()).optional(),
@@ -148,18 +160,20 @@ export const optimizationResultSchema = z.object({
 
 /**
  * Validate optimization result from backend
- * 
+ *
  * @param data - Backend response data
  * @returns Validated and typed result, or null if invalid
  */
 export function validateOptimizationResult(data: unknown) {
   const result = optimizationResultSchema.safeParse(data);
-  
+
   if (!result.success) {
-    console.error('Optimization result validation failed:', result.error.issues);
+    console.error(
+      "Optimization result validation failed:",
+      result.error.issues,
+    );
     return null;
   }
-  
+
   return result.data;
 }
-

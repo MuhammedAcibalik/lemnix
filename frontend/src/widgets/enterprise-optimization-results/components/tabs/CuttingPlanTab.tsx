@@ -4,11 +4,17 @@
  * @version 1.0.0
  */
 
-import React from 'react';
-import { Box, Alert, AlertTitle } from '@mui/material';
-import { StockSummarySection } from './StockSummarySection';
-import { CuttingPlanTable } from './CuttingPlanTable';
-import { OptimizationResult, WorkOrder, Pool, Cut, GroupData } from '../../types';
+import React from "react";
+import { Box, Alert, AlertTitle } from "@mui/material";
+import { StockSummarySection } from "./StockSummarySection";
+import { CuttingPlanTable } from "./CuttingPlanTable";
+import {
+  OptimizationResult,
+  WorkOrder,
+  Pool,
+  Cut,
+  GroupData,
+} from "../../types";
 
 interface StockSummaryItem {
   length: number;
@@ -27,9 +33,16 @@ interface CuttingPlanTabProps {
   onWorkOrderClick: (workOrderId: string) => void;
   onCuttingPlanDetails: (stock: StockSummaryItem) => void;
   textExplanationOpen: { [key: string]: boolean };
-  handleTextExplanation: (cardId: string, group: { cuts: Cut[] }, groupData: GroupData) => void;
+  handleTextExplanation: (
+    cardId: string,
+    group: { cuts: Cut[] },
+    groupData: GroupData,
+  ) => void;
   explanationData: { [key: string]: string };
-  getAlgorithmProfile: (algorithm?: string) => { icon: React.ReactNode; label: string };
+  getAlgorithmProfile: (algorithm?: string) => {
+    icon: React.ReactNode;
+    label: string;
+  };
   getProfileTypeIcon: (profileType: string) => React.ReactNode;
 }
 
@@ -46,25 +59,25 @@ export const CuttingPlanTab: React.FC<CuttingPlanTabProps> = ({
   handleTextExplanation,
   explanationData,
   getAlgorithmProfile,
-  getProfileTypeIcon
+  getProfileTypeIcon,
 }) => {
   if (!hasResults) {
     return (
       <Alert severity="info">
         <AlertTitle>Veri Bulunamadı</AlertTitle>
-        Optimizasyon sonuçları henüz mevcut değil.
-        Lütfen önce bir optimizasyon çalıştırın.
+        Optimizasyon sonuçları henüz mevcut değil. Lütfen önce bir optimizasyon
+        çalıştırın.
       </Alert>
     );
   }
 
   return (
     <Box>
-      <StockSummarySection 
-        result={result} 
-        onCuttingPlanDetails={onCuttingPlanDetails} 
+      <StockSummarySection
+        result={result}
+        onCuttingPlanDetails={onCuttingPlanDetails}
       />
-      <CuttingPlanTable 
+      <CuttingPlanTable
         aggregatedWorkOrders={aggregatedWorkOrders}
         expandedWorkOrder={expandedWorkOrder}
         onWorkOrderClick={onWorkOrderClick}

@@ -3,18 +3,18 @@
  * @description Lemnix ana sayfa kompozisyonu - Hero, Features ve CTA bölümlerini içerir
  */
 
-import React from 'react';
-import { Box } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import { Box } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 // Import widget components
-import HeroSection from '../../widgets/home-page/components/HeroSection';
-import FeaturesSection from '../../widgets/home-page/components/FeaturesSection';
-import CTASection from '../../widgets/home-page/components/CTASection';
+import HeroSection from "../../widgets/home-page/components/HeroSection";
+import FeaturesSection from "../../widgets/home-page/components/FeaturesSection";
+import CTASection from "../../widgets/home-page/components/CTASection";
 
 /**
  * HomePage Component - Lemnix Ana Sayfa
- * 
+ *
  * Modern, responsive ana sayfa kompozisyonu
  * Hero, Features ve CTA bölümlerini içerir
  */
@@ -23,25 +23,25 @@ const HomePage: React.FC = () => {
 
   // Event handlers
   const handleDemoStart = () => {
-    navigate('/optimize');
+    navigate("/optimize");
   };
 
   const handleExcelImport = () => {
-    navigate('/optimize');
+    navigate("/optimize");
   };
 
   const handleFreeTrial = () => {
-    navigate('/optimize');
+    navigate("/optimize");
   };
 
   const handleViewDemo = () => {
-    navigate('/cutting-list');
+    navigate("/cutting-list");
   };
 
   return (
-    <Box sx={{ minHeight: '100vh' }}>
+    <Box sx={{ minHeight: "100vh" }}>
       {/* Hero Section */}
-      <HeroSection 
+      <HeroSection
         onDemoStart={handleDemoStart}
         onExcelImport={handleExcelImport}
       />
@@ -50,10 +50,7 @@ const HomePage: React.FC = () => {
       <FeaturesSection />
 
       {/* CTA Section */}
-      <CTASection 
-        onFreeTrial={handleFreeTrial}
-        onViewDemo={handleViewDemo}
-      />
+      <CTASection onFreeTrial={handleFreeTrial} onViewDemo={handleViewDemo} />
     </Box>
   );
 };

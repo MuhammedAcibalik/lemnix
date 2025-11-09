@@ -4,8 +4,8 @@
  * @version 2.0.0 - Enterprise Grade
  */
 
-import { OptimizationItem } from '../../types/legacy';
-import { MeasurementConverter } from '../utils/measurementConverter';
+import { OptimizationItem } from "../../types/legacy";
+import { MeasurementConverter } from "../utils/measurementConverter";
 
 // ============================================================================
 // INTERFACES & TYPES
@@ -56,7 +56,11 @@ export interface ConversionResult {
 }
 
 export interface ConversionError {
-  type: 'INVALID_MEASUREMENT' | 'MISSING_REQUIRED_FIELD' | 'INVALID_QUANTITY' | 'DATA_CORRUPTION';
+  type:
+    | "INVALID_MEASUREMENT"
+    | "MISSING_REQUIRED_FIELD"
+    | "INVALID_QUANTITY"
+    | "DATA_CORRUPTION";
   message: string;
   itemId?: string;
   profileId?: string;
@@ -64,7 +68,7 @@ export interface ConversionError {
 }
 
 export interface ConversionWarning {
-  type: 'ASSUMED_VALUE' | 'DATA_APPROXIMATION' | 'MISSING_OPTIONAL_FIELD';
+  type: "ASSUMED_VALUE" | "DATA_APPROXIMATION" | "MISSING_OPTIONAL_FIELD";
   message: string;
   itemId?: string;
   profileId?: string;
@@ -89,12 +93,13 @@ export interface ConversionStatistics {
 
 export class CuttingListOptimizationService {
   private static instance: CuttingListOptimizationService;
-  
+
   private constructor() {}
 
   public static getInstance(): CuttingListOptimizationService {
     if (!CuttingListOptimizationService.instance) {
-      CuttingListOptimizationService.instance = new CuttingListOptimizationService();
+      CuttingListOptimizationService.instance =
+        new CuttingListOptimizationService();
     }
     return CuttingListOptimizationService.instance;
   }
@@ -105,14 +110,15 @@ export class CuttingListOptimizationService {
    */
   public convertToOptimizationItems(
     cuttingList: CuttingListData,
-    options: ConversionOptions = {}
+    options: ConversionOptions = {},
   ): ConversionResult {
     const startTime = performance.now();
-    
+
     // Performance optimization for large datasets
     const BATCH_SIZE = 100;
-    const shouldUseBatchProcessing = this.estimateDataSize(cuttingList) > BATCH_SIZE;
-    
+    const shouldUseBatchProcessing =
+      this.estimateDataSize(cuttingList) > BATCH_SIZE;
+
     const result: ConversionResult = {
       success: false,
       items: [],
@@ -127,45 +133,46 @@ export class CuttingListOptimizationService {
         totalLength: 0,
         totalQuantity: 0,
         averageLength: 0,
-        processingTime: 0
-      }
+        processingTime: 0,
+      },
     };
 
     try {
       // Input validation
       if (!this.validateCuttingListData(cuttingList)) {
         result.errors.push({
-          type: 'DATA_CORRUPTION',
-          message: 'Kesim listesi verisi geçersiz veya eksik'
+          type: "DATA_CORRUPTION",
+          message: "Kesim listesi verisi geçersiz veya eksik",
         });
         return result;
       }
 
       // Process sections
       result.statistics.totalSections = cuttingList.sections?.length || 0;
-      
+
       cuttingList.sections?.forEach((section) => {
         if (!section.items) return;
-        
+
         result.statistics.totalItems += section.items.length;
-        
+
         section.items.forEach((item) => {
           if (!item.profiles) return;
-          
+
           result.statistics.totalProfiles += item.profiles.length;
-          
+
           item.profiles.forEach((profile) => {
             const conversionResult = this.convertSingleProfile(
               section,
               item,
               profile,
-              options
+              options,
             );
-            
+
             if (conversionResult.success && conversionResult.item) {
               result.items.push(conversionResult.item);
               result.statistics.convertedItems++;
-              result.statistics.totalLength += conversionResult.item.totalLength || 0;
+              result.statistics.totalLength +=
+                conversionResult.item.totalLength || 0;
               result.statistics.totalQuantity += conversionResult.item.quantity;
             } else {
               result.statistics.failedConversions++;
@@ -173,7 +180,7 @@ export class CuttingListOptimizationService {
                 result.errors.push(conversionResult.error);
               }
             }
-            
+
             if (conversionResult.warnings) {
               result.warnings.push(...conversionResult.warnings);
             }
@@ -183,26 +190,27 @@ export class CuttingListOptimizationService {
 
       // Calculate statistics
       if (result.statistics.convertedItems > 0) {
-        result.statistics.averageLength = result.statistics.totalLength / result.statistics.convertedItems;
+        result.statistics.averageLength =
+          result.statistics.totalLength / result.statistics.convertedItems;
       }
-      
+
       result.statistics.processingTime = performance.now() - startTime;
-      result.success = result.errors.length === 0 || result.statistics.convertedItems > 0;
+      result.success =
+        result.errors.length === 0 || result.statistics.convertedItems > 0;
 
       // Log conversion summary
-      console.log('🔄 Kesim Listesi Dönüştürme Tamamlandı:', {
+      console.log("🔄 Kesim Listesi Dönüştürme Tamamlandı:", {
         başarılı: result.statistics.convertedItems,
         başarısız: result.statistics.failedConversions,
         toplam: result.statistics.totalProfiles,
-        süre: `${result.statistics.processingTime.toFixed(2)}ms`
+        süre: `${result.statistics.processingTime.toFixed(2)}ms`,
       });
 
       return result;
-      
     } catch (error) {
       result.errors.push({
-        type: 'DATA_CORRUPTION',
-        message: `Beklenmeyen hata: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`
+        type: "DATA_CORRUPTION",
+        message: `Beklenmeyen hata: ${error instanceof Error ? error.message : "Bilinmeyen hata"}`,
       });
       result.statistics.processingTime = performance.now() - startTime;
       return result;
@@ -216,10 +224,10 @@ export class CuttingListOptimizationService {
     section: CuttingListSection,
     item: CuttingListItem,
     profile: CuttingListProfile,
-    options: ConversionOptions
+    options: ConversionOptions,
   ): SingleConversionResult {
     const warnings: ConversionWarning[] = [];
-    
+
     try {
       // Parse measurement
       const lengthResult = this.parseMeasurement(profile.measurement);
@@ -227,12 +235,12 @@ export class CuttingListOptimizationService {
         return {
           success: false,
           error: {
-            type: 'INVALID_MEASUREMENT',
+            type: "INVALID_MEASUREMENT",
             message: `Geçersiz ölçü değeri: "${profile.measurement}"`,
             itemId: item.id,
             profileId: profile.id,
-            originalValue: profile.measurement
-          }
+            originalValue: profile.measurement,
+          },
         };
       }
 
@@ -241,24 +249,24 @@ export class CuttingListOptimizationService {
         return {
           success: false,
           error: {
-            type: 'INVALID_QUANTITY',
+            type: "INVALID_QUANTITY",
             message: `Geçersiz adet değeri: "${profile.quantity}"`,
             itemId: item.id,
             profileId: profile.id,
-            originalValue: profile.quantity
-          }
+            originalValue: profile.quantity,
+          },
         };
       }
 
       // Handle missing profile type
-      const profileType = profile.profile || 'Genel';
+      const profileType = profile.profile || "Genel";
       if (!profile.profile) {
         warnings.push({
-          type: 'ASSUMED_VALUE',
+          type: "ASSUMED_VALUE",
           message: `Profil tipi belirtilmemiş, "Genel" olarak kabul edildi`,
           itemId: item.id,
           profileId: profile.id,
-          assumedValue: 'Genel'
+          assumedValue: "Genel",
         });
       }
 
@@ -274,36 +282,35 @@ export class CuttingListOptimizationService {
         totalLength: lengthResult.value * profile.quantity,
         size: item.size,
         color: item.color,
-        note: item.note || '',
+        note: item.note || "",
         version: item.version,
         date: item.date,
         // Enhanced metadata
         metadata: {
           color: item.color,
-          note: item.note || '',
+          note: item.note || "",
           size: item.size,
           date: item.date,
           version: item.version,
           sipQuantity: item.orderQuantity,
-          workOrderId: item.workOrderId
-        }
+          workOrderId: item.workOrderId,
+        },
       };
 
       return {
         success: true,
         item: optimizationItem,
-        warnings: warnings.length > 0 ? warnings : undefined
+        warnings: warnings.length > 0 ? warnings : undefined,
       };
-
     } catch (error) {
       return {
         success: false,
         error: {
-          type: 'DATA_CORRUPTION',
-          message: `Profil dönüştürme hatası: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`,
+          type: "DATA_CORRUPTION",
+          message: `Profil dönüştürme hatası: ${error instanceof Error ? error.message : "Bilinmeyen hata"}`,
           itemId: item.id,
-          profileId: profile.id
-        }
+          profileId: profile.id,
+        },
       };
     }
   }
@@ -319,23 +326,25 @@ export class CuttingListOptimizationService {
    * Validate quantity value
    */
   private isValidQuantity(quantity: unknown): quantity is number {
-    if (typeof quantity === 'number') {
+    if (typeof quantity === "number") {
       return Number.isInteger(quantity) && quantity > 0 && quantity <= 1000000;
     }
-    
-    if (typeof quantity === 'string') {
+
+    if (typeof quantity === "string") {
       const parsed = parseInt(quantity, 10);
       return !isNaN(parsed) && parsed > 0 && parsed <= 1000000;
     }
-    
+
     return false;
   }
 
   /**
    * Validate cutting list data structure
    */
-  private validateCuttingListData(cuttingList: unknown): cuttingList is CuttingListData {
-    if (!cuttingList || typeof cuttingList !== 'object') {
+  private validateCuttingListData(
+    cuttingList: unknown,
+  ): cuttingList is CuttingListData {
+    if (!cuttingList || typeof cuttingList !== "object") {
       return false;
     }
 
@@ -352,12 +361,15 @@ export class CuttingListOptimizationService {
    */
   private estimateDataSize(cuttingList: CuttingListData): number {
     if (!cuttingList.sections) return 0;
-    
+
     return cuttingList.sections.reduce((total, section) => {
       if (!section.items) return total;
-      return total + section.items.reduce((itemTotal, item) => {
-        return itemTotal + (item.profiles?.length || 0);
-      }, 0);
+      return (
+        total +
+        section.items.reduce((itemTotal, item) => {
+          return itemTotal + (item.profiles?.length || 0);
+        }, 0)
+      );
     }, 0);
   }
 
@@ -367,23 +379,26 @@ export class CuttingListOptimizationService {
   private processBatch<T, R>(
     items: T[],
     batchSize: number,
-    processor: (item: T) => R
+    processor: (item: T) => R,
   ): R[] {
     const results: R[] = [];
-    
+
     for (let i = 0; i < items.length; i += batchSize) {
       const batch = items.slice(i, i + batchSize);
-      batch.forEach(item => {
+      batch.forEach((item) => {
         const result = processor(item);
         if (result) results.push(result);
       });
-      
+
       // Allow UI to breathe for large datasets
-      if (i % (batchSize * 5) === 0 && typeof requestIdleCallback !== 'undefined') {
+      if (
+        i % (batchSize * 5) === 0 &&
+        typeof requestIdleCallback !== "undefined"
+      ) {
         requestIdleCallback(() => {}, { timeout: 1 });
       }
     }
-    
+
     return results;
   }
 }
@@ -396,7 +411,7 @@ interface ConversionOptions {
   strictValidation?: boolean;
   skipInvalidItems?: boolean;
   defaultProfileType?: string;
-  lengthUnit?: 'mm' | 'cm' | 'm';
+  lengthUnit?: "mm" | "cm" | "m";
 }
 
 interface SingleConversionResult {
@@ -412,4 +427,5 @@ interface ParseResult {
 }
 
 // Export singleton instance
-export const cuttingListOptimizationService = CuttingListOptimizationService.getInstance();
+export const cuttingListOptimizationService =
+  CuttingListOptimizationService.getInstance();

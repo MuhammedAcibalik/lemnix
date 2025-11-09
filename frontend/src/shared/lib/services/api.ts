@@ -4,12 +4,12 @@
  * @version 2.0.0 - Enterprise Grade Modular Design
  */
 
-import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
-import { 
-  ApiResponse, 
+import axios, { AxiosInstance, AxiosResponse, AxiosError } from "axios";
+import {
+  ApiResponse,
   OptimizationItem,
-  MaterialStockLength
-} from '@/shared/types/legacy';
+  MaterialStockLength,
+} from "@/shared/types/legacy";
 
 /**
  * Error types for better type safety
@@ -36,10 +36,10 @@ class ApiService {
    */
   private createAxiosInstance(): AxiosInstance {
     return axios.create({
-      baseURL: '/api',
+      baseURL: "/api",
       timeout: 30000,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
   }
@@ -58,13 +58,15 @@ class ApiService {
   private setupRequestInterceptor(): void {
     this.api.interceptors.request.use(
       (config) => {
-        console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+        console.log(
+          `API Request: ${config.method?.toUpperCase()} ${config.url}`,
+        );
         return config;
       },
       (error) => {
-        console.error('API Request Error:', error);
+        console.error("API Request Error:", error);
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -78,9 +80,9 @@ class ApiService {
         return response;
       },
       (error) => {
-        console.error('API Response Error:', error);
+        console.error("API Response Error:", error);
         return Promise.reject(error);
-      }
+      },
     );
   }
 
@@ -89,7 +91,7 @@ class ApiService {
    */
   async healthCheck(): Promise<ApiResponse<Record<string, unknown>>> {
     try {
-      const response = await this.api.get('/health');
+      const response = await this.api.get("/health");
       return response.data;
     } catch (error) {
       return this.handleError(error);
@@ -100,13 +102,15 @@ class ApiService {
    * Modern error handling with type safety
    */
   private handleError<T>(error: unknown): ApiResponse<T> {
-    const errorHandlers: Array<(error: unknown) => ApiResponse<unknown> | null> = [
+    const errorHandlers: Array<
+      (error: unknown) => ApiResponse<unknown> | null
+    > = [
       this.handleAxiosError.bind(this),
       this.handleGenericError.bind(this),
-      this.handleUnknownError.bind(this)
+      this.handleUnknownError.bind(this),
     ];
 
-    const result = errorHandlers.find(handler => handler(error));
+    const result = errorHandlers.find((handler) => handler(error));
     return (result || this.createDefaultErrorResponse()) as ApiResponse<T>;
   }
 
@@ -117,17 +121,17 @@ class ApiService {
     if (!axios.isAxiosError(error)) return null;
 
     const axiosError = error as AxiosError<{ error?: ApiError }>;
-    
+
     const errorResponse = axiosError.response;
     const errorRequest = axiosError.request;
-    
+
     return {
       success: false,
-      error: errorResponse 
+      error: errorResponse
         ? this.createServerErrorResponse(errorResponse.data?.error)
-        : errorRequest 
+        : errorRequest
           ? this.createNetworkErrorResponse()
-          : this.createRequestErrorResponse(axiosError.message)
+          : this.createRequestErrorResponse(axiosError.message),
     };
   }
 
@@ -141,8 +145,8 @@ class ApiService {
       success: false,
       error: {
         message: error.message,
-        code: 'GENERIC_ERROR'
-      }
+        code: "GENERIC_ERROR",
+      },
     };
   }
 
@@ -153,9 +157,9 @@ class ApiService {
     return {
       success: false,
       error: {
-        message: 'Beklenmeyen hata türü',
-        code: 'UNKNOWN_ERROR_TYPE'
-      }
+        message: "Beklenmeyen hata türü",
+        code: "UNKNOWN_ERROR_TYPE",
+      },
     };
   }
 
@@ -164,9 +168,9 @@ class ApiService {
    */
   private createServerErrorResponse(error?: ApiError): ApiError {
     return {
-      message: error?.message || 'Sunucu hatası',
-      code: error?.code || 'SERVER_ERROR',
-      details: error?.details
+      message: error?.message || "Sunucu hatası",
+      code: error?.code || "SERVER_ERROR",
+      details: error?.details,
     };
   }
 
@@ -175,8 +179,8 @@ class ApiService {
    */
   private createNetworkErrorResponse(): ApiError {
     return {
-      message: 'Ağ bağlantısı hatası',
-      code: 'NETWORK_ERROR'
+      message: "Ağ bağlantısı hatası",
+      code: "NETWORK_ERROR",
     };
   }
 
@@ -185,8 +189,8 @@ class ApiService {
    */
   private createRequestErrorResponse(message?: string): ApiError {
     return {
-      message: message || 'Bilinmeyen hata',
-      code: 'UNKNOWN_ERROR'
+      message: message || "Bilinmeyen hata",
+      code: "UNKNOWN_ERROR",
     };
   }
 
@@ -197,9 +201,9 @@ class ApiService {
     return {
       success: false,
       error: {
-        message: 'Bilinmeyen hata oluştu',
-        code: 'DEFAULT_ERROR'
-      }
+        message: "Bilinmeyen hata oluştu",
+        code: "DEFAULT_ERROR",
+      },
     };
   }
 }

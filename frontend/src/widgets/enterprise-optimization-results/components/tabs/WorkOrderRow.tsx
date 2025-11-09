@@ -4,8 +4,8 @@
  * @version 1.0.0
  */
 
-import React from 'react';
-import { WorkOrder, Cut } from '../../types';
+import React from "react";
+import { WorkOrder, Cut } from "../../types";
 import {
   TableRow,
   TableCell,
@@ -15,22 +15,25 @@ import {
   Chip,
   Button,
   IconButton,
-  Tooltip
-} from '@mui/material';
+  Tooltip,
+} from "@mui/material";
 import {
   Engineering as EngineeringIcon,
   Timeline as TimelineIcon,
   Assessment as AssessmentIcon,
   ShowChart as ShowChartIcon,
-  Info as InfoIcon
-} from '@mui/icons-material';
+  Info as InfoIcon,
+} from "@mui/icons-material";
 
 interface WorkOrderRowProps {
   workOrder: WorkOrder;
   isExpanded: boolean;
   onWorkOrderClick: (workOrderId: string) => void;
   onCuttingPlanDetails: (stock: Cut) => void;
-  getAlgorithmProfile: (algorithm?: string) => { icon: React.ReactNode; label: string };
+  getAlgorithmProfile: (algorithm?: string) => {
+    icon: React.ReactNode;
+    label: string;
+  };
 }
 
 export const WorkOrderRow: React.FC<WorkOrderRowProps> = ({
@@ -38,7 +41,7 @@ export const WorkOrderRow: React.FC<WorkOrderRowProps> = ({
   isExpanded,
   onWorkOrderClick,
   onCuttingPlanDetails,
-  getAlgorithmProfile
+  getAlgorithmProfile,
 }) => {
   return (
     <React.Fragment>
@@ -283,8 +286,9 @@ export const WorkOrderRow: React.FC<WorkOrderRowProps> = ({
               sx={{ fontSize: "0.9rem" }}
             >
               {(workOrder.cuts as Cut[])?.reduce(
-                (sum: number, cut: Cut) => sum + (Number(cut.segmentCount) || 0),
-                0
+                (sum: number, cut: Cut) =>
+                  sum + (Number(cut.segmentCount) || 0),
+                0,
               ) || 0}
             </Typography>
           </Box>
@@ -326,7 +330,6 @@ export const WorkOrderRow: React.FC<WorkOrderRowProps> = ({
           </Button>
         </TableCell>
       </TableRow>
-
     </React.Fragment>
   );
 };

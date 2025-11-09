@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 import {
   VisualizationSettings,
   ComponentState,
@@ -12,45 +12,51 @@ import {
   StockClickHandler,
   ExportHandler,
   ZoomDirection,
-  ViewMode
-} from '../types';
-import { getDefaultSettings, updateZoomLevel } from '../utils';
+  ViewMode,
+} from "../types";
+import { getDefaultSettings, updateZoomLevel } from "../utils";
 
 /**
  * Custom hook for managing visualization state
  */
 export const useVisualizationState = () => {
-  const [settings, setSettings] = useState<VisualizationSettings>(getDefaultSettings());
+  const [settings, setSettings] =
+    useState<VisualizationSettings>(getDefaultSettings());
   const [selectedStock, setSelectedStock] = useState<number | null>(null);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [showStatsDialog, setShowStatsDialog] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [hoveredPiece, setHoveredPiece] = useState<string | null>(null);
-  const [quickMenuAnchor, setQuickMenuAnchor] = useState<HTMLElement | null>(null);
+  const [quickMenuAnchor, setQuickMenuAnchor] = useState<HTMLElement | null>(
+    null,
+  );
   const [stocksPerPage, setStocksPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(0);
 
   // Settings update handler
   const updateSettings: SettingsUpdateHandler = useCallback((updates) => {
-    setSettings(prev => ({ ...prev, ...updates }));
+    setSettings((prev) => ({ ...prev, ...updates }));
   }, []);
 
   // Zoom handler
   const handleZoom = useCallback((direction: ZoomDirection) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
-      zoomLevel: updateZoomLevel(prev.zoomLevel, direction)
+      zoomLevel: updateZoomLevel(prev.zoomLevel, direction),
     }));
   }, []);
 
   // View mode change handler
-  const handleViewModeChange = useCallback((mode: ViewMode) => {
-    updateSettings({ viewMode: mode });
-  }, [updateSettings]);
+  const handleViewModeChange = useCallback(
+    (mode: ViewMode) => {
+      updateSettings({ viewMode: mode });
+    },
+    [updateSettings],
+  );
 
   // Stock click handler
   const handleStockClick: StockClickHandler = useCallback((stockId) => {
-    setSelectedStock(prev => prev === stockId ? null : stockId);
+    setSelectedStock((prev) => (prev === stockId ? null : stockId));
   }, []);
 
   // Piece hover handlers
@@ -81,7 +87,7 @@ export const useVisualizationState = () => {
 
   // Fullscreen handler
   const toggleFullscreen = useCallback(() => {
-    setIsFullscreen(prev => !prev);
+    setIsFullscreen((prev) => !prev);
   }, []);
 
   // Quick menu handlers
@@ -99,11 +105,11 @@ export const useVisualizationState = () => {
   }, []);
 
   const handlePreviousPage = useCallback(() => {
-    setCurrentPage(prev => Math.max(0, prev - 1));
+    setCurrentPage((prev) => Math.max(0, prev - 1));
   }, []);
 
   const handleNextPage = useCallback((totalPages: number) => {
-    setCurrentPage(prev => Math.min(totalPages - 1, prev + 1));
+    setCurrentPage((prev) => Math.min(totalPages - 1, prev + 1));
   }, []);
 
   // Reset handlers
@@ -136,7 +142,7 @@ export const useVisualizationState = () => {
     hoveredPiece,
     quickMenuAnchor,
     stocksPerPage,
-    currentPage
+    currentPage,
   };
 
   return {
@@ -182,6 +188,6 @@ export const useVisualizationState = () => {
     handleNextPage,
     resetSelection,
     resetPagination,
-    resetAll
+    resetAll,
   };
 };

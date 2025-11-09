@@ -1,7 +1,7 @@
 /**
  * LEMNİX Shared Constants
  * Application-wide constants
- * 
+ *
  * @module shared/config
  * @version 1.0.0 - FSD Compliant
  */
@@ -10,7 +10,7 @@
  * API Configuration
  */
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL || '/api',
+  BASE_URL: import.meta.env.VITE_API_URL || "/api",
   TIMEOUT: 30000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,
@@ -25,10 +25,10 @@ export const API_BASE_URL = API_CONFIG.BASE_URL;
  * Storage Keys
  */
 export const STORAGE_KEYS = {
-  AUTH_TOKEN: 'auth_token',
-  THEME: 'theme',
-  LANGUAGE: 'language',
-  USER_PREFERENCES: 'user_preferences',
+  AUTH_TOKEN: "auth_token",
+  THEME: "theme",
+  LANGUAGE: "language",
+  USER_PREFERENCES: "user_preferences",
 } as const;
 
 /**
@@ -71,10 +71,10 @@ export const HTTP_STATUS = {
  * Date Formats
  */
 export const DATE_FORMATS = {
-  DISPLAY: 'dd.MM.yyyy',
-  DISPLAY_WITH_TIME: 'dd.MM.yyyy HH:mm',
+  DISPLAY: "dd.MM.yyyy",
+  DISPLAY_WITH_TIME: "dd.MM.yyyy HH:mm",
   ISO: "yyyy-MM-dd'T'HH:mm:ss.SSSxxx",
-  TIME: 'HH:mm:ss',
+  TIME: "HH:mm:ss",
 } as const;
 
 /**
@@ -86,4 +86,3 @@ export const REGEX = {
   URL: /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/,
   UUID: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
 } as const;
-

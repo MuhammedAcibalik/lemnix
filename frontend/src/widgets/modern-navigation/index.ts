@@ -5,18 +5,18 @@
  */
 
 // Main Components
-export { ModernNavigation } from './index.tsx';
-export { ModernNavigation as default } from './index.tsx';
+export { ModernNavigation } from "./index.tsx";
+export { ModernNavigation as default } from "./index.tsx";
 
 // Command Palette Components
-export { CommandPalette } from './components/CommandPalette';
-export { CommandSearch } from './components/CommandSearch';
-export { CommandResults } from './components/CommandResults';
-export { CommandItem } from './components/CommandItem';
-export { CommandFooter } from './components/CommandFooter';
+export { CommandPalette } from "./components/CommandPalette";
+export { CommandSearch } from "./components/CommandSearch";
+export { CommandResults } from "./components/CommandResults";
+export { CommandItem } from "./components/CommandItem";
+export { CommandFooter } from "./components/CommandFooter";
 
 // Types
-export type { 
+export type {
   CommandPaletteState,
   AppBarProps,
   CategoryHeaderProps,
@@ -25,9 +25,8 @@ export type {
   CommandPaletteItem,
   KeyboardShortcutMap,
   NavigationState,
-  ModernNavigationProps
-} from './types';
+  ModernNavigationProps,
+} from "./types";
 
 // Constants
-export { commandPaletteItems, commandPaletteMessages } from './constants';
-
+export { commandPaletteItems, commandPaletteMessages } from "./constants";

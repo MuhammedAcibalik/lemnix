@@ -3,23 +3,23 @@
  * @module SharedCard
  * @version 1.0.0
  * @deprecated This component is deprecated. Use `@/shared/ui/Card` instead.
- * 
+ *
  * ⚠️ DEPRECATION WARNING ⚠️
  * This file will be removed in v2.0.0
- * 
+ *
  * Migration:
  * ```tsx
  * // ❌ OLD
  * import { SharedCard } from '@components/shared/Card';
- * 
+ *
  * // ✅ NEW
  * import { Card } from '@/shared';
  * ```
- * 
+ *
  * Reusable card component with consistent styling and behavior
  */
 
-import React from 'react';
+import React from "react";
 import {
   Card,
   CardContent,
@@ -28,8 +28,8 @@ import {
   Typography,
   Box,
   useTheme,
-  alpha
-} from '@mui/material';
+  alpha,
+} from "@mui/material";
 
 interface SharedCardProps {
   title?: string;
@@ -37,7 +37,7 @@ interface SharedCardProps {
   children: React.ReactNode;
   actions?: React.ReactNode;
   elevation?: number;
-  variant?: 'elevation' | 'outlined';
+  variant?: "elevation" | "outlined";
   sx?: object;
   headerAction?: React.ReactNode;
 }
@@ -48,30 +48,33 @@ export const SharedCard: React.FC<SharedCardProps> = ({
   children,
   actions,
   elevation = 1,
-  variant = 'elevation',
+  variant = "elevation",
   sx = {},
-  headerAction
+  headerAction,
 }) => {
   const theme = useTheme();
 
   const cardStyles = {
     borderRadius: theme.shape.borderRadius * 2,
-    border: variant === 'outlined' ? `1px solid ${alpha(theme.palette.divider, 0.1)}` : 'none',
+    border:
+      variant === "outlined"
+        ? `1px solid ${alpha(theme.palette.divider, 0.1)}`
+        : "none",
     background: `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.95)} 0%, ${alpha(theme.palette.background.default, 0.95)} 100%)`,
-    backdropFilter: 'blur(10px)',
-    transition: theme.transitions.create(['box-shadow', 'transform'], {
+    backdropFilter: "blur(10px)",
+    transition: theme.transitions.create(["box-shadow", "transform"], {
       duration: theme.transitions.duration.short,
     }),
-    '&:hover': {
-      transform: 'translateY(-2px)',
+    "&:hover": {
+      transform: "translateY(-2px)",
       boxShadow: theme.shadows[8],
     },
-    ...sx
+    ...sx,
   };
 
   return (
     <Card
-      elevation={variant === 'elevation' ? elevation : 0}
+      elevation={variant === "elevation" ? elevation : 0}
       variant={variant}
       sx={cardStyles}
     >
@@ -94,22 +97,18 @@ export const SharedCard: React.FC<SharedCardProps> = ({
           action={headerAction}
           sx={{
             pb: 1,
-            '& .MuiCardHeader-content': {
+            "& .MuiCardHeader-content": {
               minWidth: 0,
-            }
+            },
           }}
         />
       )}
-      
+
       <CardContent sx={{ pt: title || subtitle ? 0 : 2 }}>
         {children}
       </CardContent>
-      
-      {actions && (
-        <CardActions sx={{ pt: 0 }}>
-          {actions}
-        </CardActions>
-      )}
+
+      {actions && <CardActions sx={{ pt: 0 }}>{actions}</CardActions>}
     </Card>
   );
 };

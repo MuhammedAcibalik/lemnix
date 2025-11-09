@@ -1,7 +1,7 @@
 /**
  * Standardized API Response Types (Phase 1, Step 2)
  * Consistent response structure for all Cutting List endpoints
- * 
+ *
  * @module types/apiResponse
  * @version 1.0.0
  */
@@ -14,10 +14,10 @@
  * Standard metadata included in all API responses
  */
 export interface ApiMetadata {
-  readonly timestamp: string;        // ISO 8601 timestamp
-  readonly requestId: string;        // Unique request identifier
-  readonly version: string;          // API version (e.g., "v1")
-  readonly processingTime?: number;  // Processing time in milliseconds
+  readonly timestamp: string; // ISO 8601 timestamp
+  readonly requestId: string; // Unique request identifier
+  readonly version: string; // API version (e.g., "v1")
+  readonly processingTime?: number; // Processing time in milliseconds
 }
 
 /**
@@ -39,8 +39,8 @@ export interface ApiError {
   readonly code: string;
   readonly message: string;
   readonly details?: Record<string, unknown>;
-  readonly field?: string;           // Field that caused the error
-  readonly stack?: string;           // Stack trace (only in development)
+  readonly field?: string; // Field that caused the error
+  readonly stack?: string; // Stack trace (only in development)
 }
 
 // ============================================================================
@@ -78,7 +78,7 @@ export interface PaginatedResponse<T> {
 /**
  * Union type for all possible API responses
  */
-export type ApiResponse<T = unknown> = 
+export type ApiResponse<T = unknown> =
   | ApiSuccessResponse<T>
   | ApiErrorResponse
   | PaginatedResponse<T>;
@@ -87,7 +87,7 @@ export type ApiResponse<T = unknown> =
 // CUTTING LIST SPECIFIC RESPONSE TYPES
 // ============================================================================
 
-import type { CuttingListStatus, ItemPriority } from './index';
+import type { CuttingListStatus, ItemPriority } from "./index";
 
 /**
  * Cutting list data structure
@@ -179,7 +179,8 @@ export type UpdateCuttingListResponse = ApiSuccessResponse<CuttingListData>;
 /**
  * Response for deleting a cutting list
  */
-export interface DeleteCuttingListResponse extends ApiSuccessResponse<{ message: string }> {
+export interface DeleteCuttingListResponse
+  extends ApiSuccessResponse<{ message: string }> {
   readonly data: {
     readonly message: string;
     readonly deletedId: string;
@@ -204,7 +205,8 @@ export type UpdateItemResponse = ApiSuccessResponse<CuttingListItemData>;
 /**
  * Response for deleting an item
  */
-export interface DeleteItemResponse extends ApiSuccessResponse<{ message: string }> {
+export interface DeleteItemResponse
+  extends ApiSuccessResponse<{ message: string }> {
   readonly data: {
     readonly message: string;
     readonly deletedId: string;
@@ -220,30 +222,30 @@ export interface DeleteItemResponse extends ApiSuccessResponse<{ message: string
  */
 export enum CuttingListErrorCode {
   // Validation errors (400)
-  VALIDATION_ERROR = 'CUTTING_LIST_VALIDATION_ERROR',
-  INVALID_INPUT = 'CUTTING_LIST_INVALID_INPUT',
-  INVALID_WEEK_NUMBER = 'CUTTING_LIST_INVALID_WEEK_NUMBER',
-  INVALID_STATUS = 'CUTTING_LIST_INVALID_STATUS',
-  INVALID_PRIORITY = 'CUTTING_LIST_INVALID_PRIORITY',
-  
+  VALIDATION_ERROR = "CUTTING_LIST_VALIDATION_ERROR",
+  INVALID_INPUT = "CUTTING_LIST_INVALID_INPUT",
+  INVALID_WEEK_NUMBER = "CUTTING_LIST_INVALID_WEEK_NUMBER",
+  INVALID_STATUS = "CUTTING_LIST_INVALID_STATUS",
+  INVALID_PRIORITY = "CUTTING_LIST_INVALID_PRIORITY",
+
   // Not found errors (404)
-  NOT_FOUND = 'CUTTING_LIST_NOT_FOUND',
-  SECTION_NOT_FOUND = 'CUTTING_LIST_SECTION_NOT_FOUND',
-  ITEM_NOT_FOUND = 'CUTTING_LIST_ITEM_NOT_FOUND',
-  
+  NOT_FOUND = "CUTTING_LIST_NOT_FOUND",
+  SECTION_NOT_FOUND = "CUTTING_LIST_SECTION_NOT_FOUND",
+  ITEM_NOT_FOUND = "CUTTING_LIST_ITEM_NOT_FOUND",
+
   // Conflict errors (409)
-  DUPLICATE_WEEK_NUMBER = 'CUTTING_LIST_DUPLICATE_WEEK_NUMBER',
-  CONFLICT = 'CUTTING_LIST_CONFLICT',
-  
+  DUPLICATE_WEEK_NUMBER = "CUTTING_LIST_DUPLICATE_WEEK_NUMBER",
+  CONFLICT = "CUTTING_LIST_CONFLICT",
+
   // Authorization errors (403)
-  FORBIDDEN = 'CUTTING_LIST_FORBIDDEN',
-  INSUFFICIENT_PERMISSIONS = 'CUTTING_LIST_INSUFFICIENT_PERMISSIONS',
-  
+  FORBIDDEN = "CUTTING_LIST_FORBIDDEN",
+  INSUFFICIENT_PERMISSIONS = "CUTTING_LIST_INSUFFICIENT_PERMISSIONS",
+
   // Server errors (500)
-  INTERNAL_ERROR = 'CUTTING_LIST_INTERNAL_ERROR',
-  DATABASE_ERROR = 'CUTTING_LIST_DATABASE_ERROR',
-  EXPORT_ERROR = 'CUTTING_LIST_EXPORT_ERROR',
-  OPTIMIZATION_ERROR = 'CUTTING_LIST_OPTIMIZATION_ERROR'
+  INTERNAL_ERROR = "CUTTING_LIST_INTERNAL_ERROR",
+  DATABASE_ERROR = "CUTTING_LIST_DATABASE_ERROR",
+  EXPORT_ERROR = "CUTTING_LIST_EXPORT_ERROR",
+  OPTIMIZATION_ERROR = "CUTTING_LIST_OPTIMIZATION_ERROR",
 }
 
 /**
@@ -255,21 +257,21 @@ export const ERROR_STATUS_MAP: Record<string, number> = {
   [CuttingListErrorCode.INVALID_WEEK_NUMBER]: 400,
   [CuttingListErrorCode.INVALID_STATUS]: 400,
   [CuttingListErrorCode.INVALID_PRIORITY]: 400,
-  
+
   [CuttingListErrorCode.NOT_FOUND]: 404,
   [CuttingListErrorCode.SECTION_NOT_FOUND]: 404,
   [CuttingListErrorCode.ITEM_NOT_FOUND]: 404,
-  
+
   [CuttingListErrorCode.DUPLICATE_WEEK_NUMBER]: 409,
   [CuttingListErrorCode.CONFLICT]: 409,
-  
+
   [CuttingListErrorCode.FORBIDDEN]: 403,
   [CuttingListErrorCode.INSUFFICIENT_PERMISSIONS]: 403,
-  
+
   [CuttingListErrorCode.INTERNAL_ERROR]: 500,
   [CuttingListErrorCode.DATABASE_ERROR]: 500,
   [CuttingListErrorCode.EXPORT_ERROR]: 500,
-  [CuttingListErrorCode.OPTIMIZATION_ERROR]: 500
+  [CuttingListErrorCode.OPTIMIZATION_ERROR]: 500,
 };
 
 // ============================================================================
@@ -286,15 +288,18 @@ export function generateRequestId(): string {
 /**
  * Create standard metadata
  */
-export function createMetadata(requestId?: string, startTime?: number): ApiMetadata {
+export function createMetadata(
+  requestId?: string,
+  startTime?: number,
+): ApiMetadata {
   const timestamp = new Date().toISOString();
   const processingTime = startTime ? Date.now() - startTime : undefined;
-  
+
   return {
     timestamp,
     requestId: requestId || generateRequestId(),
-    version: 'v1',
-    ...(processingTime !== undefined && { processingTime })
+    version: "v1",
+    ...(processingTime !== undefined && { processingTime }),
   };
 }
 
@@ -304,12 +309,12 @@ export function createMetadata(requestId?: string, startTime?: number): ApiMetad
 export function createSuccessResponse<T>(
   data: T,
   requestId?: string,
-  startTime?: number
+  startTime?: number,
 ): ApiSuccessResponse<T> {
   return {
     success: true,
     data,
-    metadata: createMetadata(requestId, startTime)
+    metadata: createMetadata(requestId, startTime),
   };
 }
 
@@ -320,13 +325,13 @@ export function createPaginatedResponse<T>(
   data: T[],
   pagination: PaginationMeta,
   requestId?: string,
-  startTime?: number
+  startTime?: number,
 ): PaginatedResponse<T> {
   return {
     success: true,
     data,
     pagination,
-    metadata: createMetadata(requestId, startTime)
+    metadata: createMetadata(requestId, startTime),
   };
 }
 
@@ -338,16 +343,16 @@ export function createErrorResponse(
   message: string,
   details?: Record<string, unknown>,
   requestId?: string,
-  startTime?: number
+  startTime?: number,
 ): ApiErrorResponse {
   return {
     success: false,
     error: {
       code,
       message,
-      ...(details && { details })
+      ...(details && { details }),
     },
-    metadata: createMetadata(requestId, startTime)
+    metadata: createMetadata(requestId, startTime),
   };
 }
 
@@ -357,14 +362,14 @@ export function createErrorResponse(
 export function createValidationErrorResponse(
   errors: string[],
   requestId?: string,
-  startTime?: number
+  startTime?: number,
 ): ApiErrorResponse {
   return createErrorResponse(
     CuttingListErrorCode.VALIDATION_ERROR,
-    'Validation failed',
+    "Validation failed",
     { errors },
     requestId,
-    startTime
+    startTime,
   );
 }
 
@@ -375,14 +380,14 @@ export function createNotFoundErrorResponse(
   resource: string,
   id: string,
   requestId?: string,
-  startTime?: number
+  startTime?: number,
 ): ApiErrorResponse {
   return createErrorResponse(
     CuttingListErrorCode.NOT_FOUND,
     `${resource} not found`,
     { resource, id },
     requestId,
-    startTime
+    startTime,
   );
 }
 
@@ -392,17 +397,17 @@ export function createNotFoundErrorResponse(
 export function createPaginationMeta(
   page: number,
   pageSize: number,
-  total: number
+  total: number,
 ): PaginationMeta {
   const totalPages = Math.ceil(total / pageSize);
-  
+
   return {
     page,
     pageSize,
     total,
     totalPages,
     hasNext: page < totalPages,
-    hasPrevious: page > 1
+    hasPrevious: page > 1,
   };
 }
 
@@ -433,11 +438,17 @@ export function attachStartTime(req: any): number {
 /**
  * Send standardized success response
  */
-export function sendSuccess<T>(res: any, data: T, statusCode: number = 200): void {
+export function sendSuccess<T>(
+  res: any,
+  data: T,
+  statusCode: number = 200,
+): void {
   const requestId = res.req?.requestId || generateRequestId();
   const startTime = res.req?.startTime;
-  
-  res.status(statusCode).json(createSuccessResponse(data, requestId, startTime));
+
+  res
+    .status(statusCode)
+    .json(createSuccessResponse(data, requestId, startTime));
 }
 
 /**
@@ -448,13 +459,15 @@ export function sendError(
   code: string,
   message: string,
   details?: Record<string, unknown>,
-  statusCode?: number
+  statusCode?: number,
 ): void {
   const requestId = res.req?.requestId || generateRequestId();
   const startTime = res.req?.startTime;
   const status = statusCode || ERROR_STATUS_MAP[code] || 500;
-  
-  res.status(status).json(createErrorResponse(code, message, details, requestId, startTime));
+
+  res
+    .status(status)
+    .json(createErrorResponse(code, message, details, requestId, startTime));
 }
 
 /**
@@ -464,12 +477,14 @@ export function sendPaginated<T>(
   res: any,
   data: T[],
   pagination: PaginationMeta,
-  statusCode: number = 200
+  statusCode: number = 200,
 ): void {
   const requestId = res.req?.requestId || generateRequestId();
   const startTime = res.req?.startTime;
-  
-  res.status(statusCode).json(createPaginatedResponse(data, pagination, requestId, startTime));
+
+  res
+    .status(statusCode)
+    .json(createPaginatedResponse(data, pagination, requestId, startTime));
 }
 
 // ============================================================================
@@ -491,5 +506,5 @@ export default {
   sendError,
   sendPaginated,
   CuttingListErrorCode,
-  ERROR_STATUS_MAP
+  ERROR_STATUS_MAP,
 };

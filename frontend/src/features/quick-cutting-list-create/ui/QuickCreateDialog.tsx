@@ -1,11 +1,11 @@
 /**
  * Quick Create Dialog Component
- * 
+ *
  * @module features/quick-cutting-list-create
  * @version 1.0.0 - Quick Create Dialog
  */
 
-import React from 'react';
+import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -17,9 +17,9 @@ import {
   Typography,
   Stack,
   CircularProgress,
-} from '@mui/material';
-import { useDesignSystem } from '@/shared/hooks';
-import { useQuickCreate } from '../model/useQuickCreate';
+} from "@mui/material";
+import { useDesignSystem } from "@/shared/hooks";
+import { useQuickCreate } from "../model/useQuickCreate";
 
 export interface QuickCreateDialogProps {
   readonly open: boolean;
@@ -35,8 +35,8 @@ export const QuickCreateDialog: React.FC<QuickCreateDialogProps> = ({
   const ds = useDesignSystem();
   const { createList, isLoading, error } = useQuickCreate();
 
-  const [title, setTitle] = React.useState('');
-  const [description, setDescription] = React.useState('');
+  const [title, setTitle] = React.useState("");
+  const [description, setDescription] = React.useState("");
 
   const handleSubmit = async () => {
     if (!title.trim()) return;
@@ -50,19 +50,19 @@ export const QuickCreateDialog: React.FC<QuickCreateDialogProps> = ({
       if (result) {
         onSuccess?.(result.id);
         onClose();
-        setTitle('');
-        setDescription('');
+        setTitle("");
+        setDescription("");
       }
     } catch (err) {
-      console.error('Failed to create cutting list:', err);
+      console.error("Failed to create cutting list:", err);
     }
   };
 
   const handleClose = () => {
     if (!isLoading) {
       onClose();
-      setTitle('');
-      setDescription('');
+      setTitle("");
+      setDescription("");
     }
   };
 
@@ -111,8 +111,8 @@ export const QuickCreateDialog: React.FC<QuickCreateDialogProps> = ({
             placeholder="Örn: Proje A - Kesim Listesi"
             disabled={isLoading}
             sx={{
-              '& .MuiOutlinedInput-root': {
-                '&.Mui-focused fieldset': {
+              "& .MuiOutlinedInput-root": {
+                "&.Mui-focused fieldset": {
                   borderColor: ds.colors.primary.main,
                 },
               },
@@ -129,8 +129,8 @@ export const QuickCreateDialog: React.FC<QuickCreateDialogProps> = ({
             placeholder="Liste hakkında kısa bir açıklama..."
             disabled={isLoading}
             sx={{
-              '& .MuiOutlinedInput-root': {
-                '&.Mui-focused fieldset': {
+              "& .MuiOutlinedInput-root": {
+                "&.Mui-focused fieldset": {
                   borderColor: ds.colors.primary.main,
                 },
               },
@@ -170,21 +170,21 @@ export const QuickCreateDialog: React.FC<QuickCreateDialogProps> = ({
           variant="contained"
           sx={{
             bgcolor: ds.colors.primary.main,
-            '&:hover': {
+            "&:hover": {
               bgcolor: ds.colors.primary[700],
             },
-            '&:disabled': {
+            "&:disabled": {
               bgcolor: ds.colors.text.disabled,
             },
           }}
         >
           {isLoading ? (
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <CircularProgress size={16} color="inherit" />
               Oluşturuluyor...
             </Box>
           ) : (
-            'Oluştur'
+            "Oluştur"
           )}
         </Button>
       </DialogActions>

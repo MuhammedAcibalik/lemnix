@@ -4,12 +4,12 @@
  * @version 2.0.0 - Enterprise Grade Modular Design
  */
 
-import React from 'react';
-import { App as ModularApp } from './App/index';
+import React from "react";
+import { App as ModularApp } from "./App/index";
 
 /**
  * App Wrapper Component
- * 
+ *
  * This is a wrapper that imports and renders the modularized App component.
  * The original 651-line file has been refactored into a modular structure.
  */

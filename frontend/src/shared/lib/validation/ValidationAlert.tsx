@@ -1,14 +1,21 @@
 /**
  * Validation Alert Component
  * Displays validation errors and warnings
- * 
+ *
  * @module shared/lib/validation
  * @version 1.0.0
  */
 
-import React from 'react';
-import { Alert, AlertTitle, List, ListItem, ListItemText, Collapse } from '@mui/material';
-import type { ValidationError } from './types';
+import React from "react";
+import {
+  Alert,
+  AlertTitle,
+  List,
+  ListItem,
+  ListItemText,
+  Collapse,
+} from "@mui/material";
+import type { ValidationError } from "./types";
 
 export interface ValidationAlertProps {
   readonly errors?: ReadonlyArray<ValidationError>;
@@ -37,8 +44,8 @@ export const ValidationAlert: React.FC<ValidationAlertProps> = ({
                   <ListItemText
                     primary={error.message}
                     secondary={error.field}
-                    primaryTypographyProps={{ variant: 'body2' }}
-                    secondaryTypographyProps={{ variant: 'caption' }}
+                    primaryTypographyProps={{ variant: "body2" }}
+                    secondaryTypographyProps={{ variant: "caption" }}
                   />
                 </ListItem>
               ))}
@@ -57,8 +64,8 @@ export const ValidationAlert: React.FC<ValidationAlertProps> = ({
                   <ListItemText
                     primary={warning.message}
                     secondary={warning.field}
-                    primaryTypographyProps={{ variant: 'body2' }}
-                    secondaryTypographyProps={{ variant: 'caption' }}
+                    primaryTypographyProps={{ variant: "body2" }}
+                    secondaryTypographyProps={{ variant: "caption" }}
                   />
                 </ListItem>
               ))}
@@ -69,4 +76,3 @@ export const ValidationAlert: React.FC<ValidationAlertProps> = ({
     </>
   );
 };
-

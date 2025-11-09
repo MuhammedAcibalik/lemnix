@@ -4,9 +4,9 @@
  * @version 1.0.0
  */
 
-import React from 'react';
-import { Box } from '@mui/material';
-import optimizationIcon from '../../../assets/images/optimization-icon.svg';
+import React from "react";
+import { Box } from "@mui/material";
+import optimizationIcon from "../../../assets/images/optimization-icon.svg";
 
 interface OptimizationPNGIconProps {
   size?: number | string;
@@ -14,11 +14,11 @@ interface OptimizationPNGIconProps {
   sx?: Record<string, unknown>;
 }
 
-export const OptimizationPNGIcon: React.FC<OptimizationPNGIconProps> = ({ 
-  size = 24, 
-  alt = 'Optimization Icon',
+export const OptimizationPNGIcon: React.FC<OptimizationPNGIconProps> = ({
+  size = 24,
+  alt = "Optimization Icon",
   sx = {},
-  ...props 
+  ...props
 }) => {
   return (
     <Box
@@ -28,8 +28,8 @@ export const OptimizationPNGIcon: React.FC<OptimizationPNGIconProps> = ({
       sx={{
         width: size,
         height: size,
-        objectFit: 'contain',
-        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+        objectFit: "contain",
+        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
         ...sx,
       }}
       {...props}

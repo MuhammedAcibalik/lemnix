@@ -1,20 +1,20 @@
 /**
  * WebGPU React Hook
- * 
+ *
  * @module shared/lib/webgpu
  * @version 1.0.0
  */
 
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { getWebGPUStatus, initializeWebGPU, getWebGPUInfo } from './api';
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { getWebGPUStatus, initializeWebGPU, getWebGPUInfo } from "./api";
 
 /**
  * Query keys for WebGPU
  */
 export const webgpuKeys = {
-  all: ['webgpu'] as const,
-  status: () => [...webgpuKeys.all, 'status'] as const,
-  info: () => [...webgpuKeys.all, 'info'] as const,
+  all: ["webgpu"] as const,
+  status: () => [...webgpuKeys.all, "status"] as const,
+  info: () => [...webgpuKeys.all, "info"] as const,
 };
 
 /**
@@ -68,4 +68,3 @@ export function useWebGPU() {
     isInitializing: initialize.isPending,
   } as const;
 }
-

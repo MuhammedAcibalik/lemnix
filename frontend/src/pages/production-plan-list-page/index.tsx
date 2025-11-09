@@ -2,18 +2,26 @@
  * @fileoverview Production Plan List Page - Main Plans Tab
  */
 
-import React, { useMemo, useState, useCallback } from 'react';
-import { Box, Typography, Button, useTheme } from '@mui/material';
-import { CloudUpload as CloudUploadIcon } from '@mui/icons-material';
-import { useDesignSystem } from '@/shared/hooks';
-import { Card } from '@/shared/ui/Card';
-import { useProductionPlans, useProductionPlanMetrics, useDeleteProductionPlan, productionPlanApi, type ProductionPlan, type ProductionPlanMetrics, type ProductionPlanItem } from '@/entities/production-plan';
-import { useQueryClient } from '@tanstack/react-query';
-import { UploadDialog } from '@/widgets/production-plan-manager/ui/UploadDialog';
-import { ProductionPlanTable } from '@/widgets/production-plan-manager/ui/ProductionPlanTable';
-import { ProductionPlanFilters } from '@/widgets/production-plan-manager/ui/ProductionPlanFilters';
-import { PlanMetrics } from '@/widgets/production-plan-manager/ui/PlanMetrics';
-import type { ProductionPlanFilters as ProductionPlanFiltersType } from '@/entities/production-plan';
+import React, { useMemo, useState, useCallback } from "react";
+import { Box, Typography, Button, useTheme } from "@mui/material";
+import { CloudUpload as CloudUploadIcon } from "@mui/icons-material";
+import { useDesignSystem } from "@/shared/hooks";
+import { Card } from "@/shared/ui/Card";
+import {
+  useProductionPlans,
+  useProductionPlanMetrics,
+  useDeleteProductionPlan,
+  productionPlanApi,
+  type ProductionPlan,
+  type ProductionPlanMetrics,
+  type ProductionPlanItem,
+} from "@/entities/production-plan";
+import { useQueryClient } from "@tanstack/react-query";
+import { UploadDialog } from "@/widgets/production-plan-manager/ui/UploadDialog";
+import { ProductionPlanTable } from "@/widgets/production-plan-manager/ui/ProductionPlanTable";
+import { ProductionPlanFilters } from "@/widgets/production-plan-manager/ui/ProductionPlanFilters";
+import { PlanMetrics } from "@/widgets/production-plan-manager/ui/PlanMetrics";
+import type { ProductionPlanFilters as ProductionPlanFiltersType } from "@/entities/production-plan";
 
 export const ProductionPlanListPage: React.FC = () => {
   const theme = useTheme();
@@ -23,17 +31,22 @@ export const ProductionPlanListPage: React.FC = () => {
   const deleteMutation = useDeleteProductionPlan();
 
   const [filters, setFilters] = useState<ProductionPlanFiltersType>({
-    status: 'active',
+    status: "active",
     page: 1,
-    limit: 50
+    limit: 50,
   });
 
-  const { data: plansResponse, isLoading: plansLoading, error: plansError } = useProductionPlans(filters);
-  const { data: metricsResponse, isLoading: metricsLoading } = useProductionPlanMetrics({
-    weekNumber: filters.weekNumber,
-    year: filters.year,
-    status: filters.status
-  });
+  const {
+    data: plansResponse,
+    isLoading: plansLoading,
+    error: plansError,
+  } = useProductionPlans(filters);
+  const { data: metricsResponse, isLoading: metricsLoading } =
+    useProductionPlanMetrics({
+      weekNumber: filters.weekNumber,
+      year: filters.year,
+      status: filters.status,
+    });
 
   const plans: ProductionPlan[] = useMemo(() => {
     if (plansResponse?.success && Array.isArray(plansResponse.data)) {
@@ -48,18 +61,24 @@ export const ProductionPlanListPage: React.FC = () => {
   }, [plansResponse]);
 
   const metrics: ProductionPlanMetrics | undefined = metricsResponse;
-  const availableItems: ProductionPlanItem[] = useMemo(() => plans.flatMap(plan => plan.items), [plans]);
+  const availableItems: ProductionPlanItem[] = useMemo(
+    () => plans.flatMap((plan) => plan.items),
+    [plans],
+  );
 
-  const handleFiltersChange = useCallback((newFilters: ProductionPlanFiltersType) => {
-    setFilters(prev => ({ ...prev, ...newFilters, page: 1 }));
-  }, []);
+  const handleFiltersChange = useCallback(
+    (newFilters: ProductionPlanFiltersType) => {
+      setFilters((prev) => ({ ...prev, ...newFilters, page: 1 }));
+    },
+    [],
+  );
 
   const handleUploadSuccess = useCallback(() => {
     setUploadDialogOpen(false);
   }, []);
 
   const handleDeleteAllPlans = useCallback(async () => {
-    if (!confirm('Tüm üretim planlarını silmek istediğinizden emin misiniz?')) {
+    if (!confirm("Tüm üretim planlarını silmek istediğinizden emin misiniz?")) {
       return;
     }
 
@@ -67,29 +86,51 @@ export const ProductionPlanListPage: React.FC = () => {
       const response = await productionPlanApi.deleteAllProductionPlans();
 
       if (response.success) {
-        queryClient.invalidateQueries({ queryKey: ['production-plan'] });
-        queryClient.invalidateQueries({ queryKey: ['production-plan-metrics'] });
-        setFilters(prev => ({ ...prev, page: 1 }));
+        queryClient.invalidateQueries({ queryKey: ["production-plan"] });
+        queryClient.invalidateQueries({
+          queryKey: ["production-plan-metrics"],
+        });
+        setFilters((prev) => ({ ...prev, page: 1 }));
       } else {
-        alert('Planlar silinemedi.');
+        alert("Planlar silinemedi.");
       }
     } catch (error) {
-      alert('Planlar silinirken hata oluştu.');
+      alert("Planlar silinirken hata oluştu.");
     }
   }, [queryClient]);
 
   return (
-    <Box sx={{ width: '100%', p: { xs: 2, md: 3, lg: 4 }, maxWidth: '1600px', mx: 'auto' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3, gap: 2, flexWrap: 'wrap' }}>
+    <Box
+      sx={{
+        width: "100%",
+        p: { xs: 2, md: 3, lg: 4 },
+        maxWidth: "1600px",
+        mx: "auto",
+      }}
+    >
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 3,
+          gap: 2,
+          flexWrap: "wrap",
+        }}
+      >
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: ds.colors.primary.main, mb: 1 }}>
+          <Typography
+            variant="h4"
+            sx={{ fontWeight: 700, color: ds.colors.primary.main, mb: 1 }}
+          >
             Üretim Planları
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Haftalık planlarınızı yönetin, filtreleyin ve detaylara hızlıca erişin.
+            Haftalık planlarınızı yönetin, filtreleyin ve detaylara hızlıca
+            erişin.
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: "flex", gap: 2 }}>
           <Button
             variant="outlined"
             color="error"
@@ -109,7 +150,7 @@ export const ProductionPlanListPage: React.FC = () => {
         </Box>
       </Box>
 
-      <Box sx={{ display: 'grid', gap: 3 }}>
+      <Box sx={{ display: "grid", gap: 3 }}>
         <Card>
           <ProductionPlanFilters
             filters={filters}
@@ -117,12 +158,7 @@ export const ProductionPlanListPage: React.FC = () => {
           />
         </Card>
 
-        {metrics && (
-          <PlanMetrics
-            metrics={metrics}
-            loading={metricsLoading}
-          />
-        )}
+        {metrics && <PlanMetrics metrics={metrics} loading={metricsLoading} />}
 
         <ProductionPlanTable
           plans={plans}
