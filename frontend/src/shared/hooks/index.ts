@@ -3,9 +3,9 @@
  * @module shared/hooks
  */
 
-// Export v2 as default (modern)
-export { useDesignSystem } from "./useDesignSystem.v2";
-export type { DesignSystemV2 as DesignSystem } from "./useDesignSystem.v2";
+// Export v3 as default (modern)
+export { useDesignSystem } from "./useDesignSystem.v3";
+export type { DesignSystemV3 as DesignSystem } from "./useDesignSystem.v3";
 export {
   colors,
   spacing,
@@ -19,6 +19,11 @@ export {
   glass,
   focus,
   breakpoints,
+  fontFamily,
+  fontSize,
+  fontWeight,
+  lineHeight,
+  letterSpacing,
   responsive,
   gridSpacing,
   gridSizes,
