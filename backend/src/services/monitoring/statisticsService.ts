@@ -151,6 +151,12 @@ export class StatisticsService {
         // Get specific cutting list data from the working API endpoint
         logger.info("Fetching cutting list data for ID", { cuttingListId });
 
+        // Validate cuttingListId to prevent injection
+        if (!/^[a-zA-Z0-9_-]+$/.test(cuttingListId)) {
+          logger.error("Invalid cuttingListId format", { cuttingListId });
+          throw new Error("Invalid cuttingListId format");
+        }
+
         try {
           // Use the same endpoint that works for the frontend
           const cuttingListResponse = await fetch(
