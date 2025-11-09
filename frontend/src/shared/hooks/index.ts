@@ -1,14 +1,18 @@
 /**
  * @fileoverview Shared Hooks - Barrel Export
  * @module shared/hooks
+ * @version 3.0.0
  */
 
-// Export v3 as default (modern)
-export { useDesignSystem } from "./useDesignSystem.v3";
-export type { DesignSystemV3 as DesignSystem } from "./useDesignSystem.v3";
+// Export new canonical design system hook (v3.0)
+export { useDesignSystem } from "./useDesignSystem";
+export type { DesignSystem } from "./useDesignSystem";
+
+// Export design system tokens from new location
 export {
   colors,
   spacing,
+  spacingScale,
   typography,
   componentSizes,
   shadows,
@@ -24,6 +28,15 @@ export {
   fontWeight,
   lineHeight,
   letterSpacing,
+  duration,
+  easing,
+  withOpacity,
+  createGradient,
+  createGlow,
+} from "../design-system";
+
+// Export responsive utilities from theme (backward compatibility)
+export {
   responsive,
   gridSpacing,
   gridSizes,
@@ -34,6 +47,8 @@ export {
   componentVariants,
   animations,
 } from "@/App/theme";
+
+// Export permission hooks
 export {
   usePermissions,
   useHasPermission,
