@@ -248,7 +248,7 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
         borderRadius:
           variant === "circular"
             ? "50%"
-            : `${borderRadius[variant === "text" ? "sm" : "base"]}px`,
+            : `${borderRadius[variant === "text" ? "sm" : "md"]}px`,
       }}
     />
   );

@@ -122,7 +122,7 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
             PaperProps: {
               sx: {
                 maxHeight: 400,
-                borderRadius: `${borderRadius.base}px`,
+                borderRadius: `${borderRadius.md}px`,
                 boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
                 mt: 0.5,
               },
