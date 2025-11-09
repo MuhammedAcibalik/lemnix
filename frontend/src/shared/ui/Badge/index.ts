@@ -1,13 +1,9 @@
 /**
- * Badge Component Public API
- *
+ * @fileoverview Badge Component - Barrel Export
  * @module shared/ui/Badge
- * @version 2.0.0
+ * @version 3.0.0
  */
 
-export { BadgeV2 as Badge } from "./Badge.v2";
-export type {
-  BadgeV2Props as BadgeProps,
-  BadgeVariant,
-  BadgeColor,
-} from "./Badge.v2";
+export { Badge, StatusBadge, MetricBadge } from "./Badge";
+export type { BadgeProps } from "./Badge";
+

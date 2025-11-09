@@ -1,40 +1,58 @@
 /**
  * @fileoverview Shared UI Components - Barrel Export
  * @module shared/ui
+ * @version 3.0.0
  *
  * Design system compliant UI primitives.
  * All components use useDesignSystem hook for consistency.
  */
 
 // ============================================================================
-// FORM COMPONENTS
+// VERSION 3.0.0 COMPONENTS
 // ============================================================================
 
-export {
-  Button,
-  PrimaryButton,
-  SecondaryButton,
-  TextButton,
-  DangerButton,
-  SuccessButton,
-} from "./Button";
+// FORM COMPONENTS
+export { Button } from "./Button";
 export type { ButtonProps } from "./Button";
 
-export { TextField } from "./TextField";
+export { TextField, SearchField, PasswordField } from "./TextField";
 export type { TextFieldProps } from "./TextField";
 
 export { Select } from "./Select";
 export type { SelectProps, SelectOption } from "./Select";
 
-// ============================================================================
 // LAYOUT COMPONENTS
-// ============================================================================
-
-export { Card } from "./Card";
+export { Card, MetricCard, DashboardCard, FeatureCard, GlassCard } from "./Card";
 export type { CardProps } from "./Card";
 
-export { CardV2 } from "./Card/Card.v2";
-export type { CardV2Props } from "./Card/Card.v2";
+// FEEDBACK COMPONENTS
+export { Badge, StatusBadge, MetricBadge } from "./Badge";
+export type { BadgeProps } from "./Badge";
+
+export {
+  Skeleton,
+  CardSkeleton,
+  TableSkeleton,
+  ListSkeleton,
+  DashboardSkeleton,
+} from "./Skeleton";
+export type { SkeletonProps } from "./Skeleton";
+
+export {
+  EmptyState,
+  NoDataEmptyState,
+  SearchEmptyState,
+  ErrorEmptyState,
+  OfflineEmptyState,
+} from "./EmptyState";
+export type { EmptyStateProps } from "./EmptyState";
+
+// OVERLAY COMPONENTS
+export { Modal, ConfirmModal, FormModal } from "./Modal";
+export type { ModalProps } from "./Modal";
+
+export { Tooltip, InfoTooltip, HelpTooltip } from "./Tooltip";
+export type { TooltipProps } from "./Tooltip";
 
 // ============================================================================
 // LOADING COMPONENTS
@@ -60,16 +78,9 @@ export type {
 export { ErrorBoundary } from "./ErrorBoundary";
 
 // ============================================================================
-// FEEDBACK COMPONENTS
+// LEGACY COMPONENTS (For backward compatibility)
 // ============================================================================
 
-export { EmptyState } from "./EmptyState";
 export { ConfirmationDialog } from "./ConfirmationDialog";
 export { YearWeekPicker } from "./YearWeekPicker";
 
-// ============================================================================
-// TBD (To Be Migrated)
-// ============================================================================
-
-// Modal - TBD
-// Tabs - TBD
