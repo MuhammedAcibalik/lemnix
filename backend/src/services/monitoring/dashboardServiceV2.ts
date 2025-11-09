@@ -1,13 +1,13 @@
 /**
  * Dashboard Service v2.0
  * Optimization-first dashboard data aggregation
- * 
+ *
  * @module services/monitoring
  * @version 2.0.0 - Complete Reboot
  */
 
-import { PrismaClient } from '@prisma/client';
-import { logger } from '../logger';
+import { PrismaClient } from "@prisma/client";
+import { logger } from "../logger";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -47,7 +47,7 @@ const prisma = new PrismaClient();
  * Dashboard metrics options
  */
 interface DashboardMetricsOptions {
-  readonly timeRange?: '24h' | '7d' | '30d' | '90d';
+  readonly timeRange?: "24h" | "7d" | "30d" | "90d";
   readonly includeInactive?: boolean;
 }
 
@@ -55,76 +55,81 @@ interface DashboardMetricsOptions {
  * Get hero metrics (top-level KPIs)
  */
 export async function getHeroMetrics(options: DashboardMetricsOptions = {}) {
-  const { timeRange = '7d' } = options;
-  
+  const { timeRange = "7d" } = options;
+
   try {
     const now = new Date();
     const startDate = getStartDate(now, timeRange);
-    
+
     // Active optimizations (currently processing)
     const activeOptimizations = await prisma.optimization.count({
       where: {
-        status: 'running',
-        createdAt: { gte: startDate }
-      }
+        status: "running",
+        createdAt: { gte: startDate },
+      },
     });
-    
+
     // Cutting lists this week
     const currentWeek = getISOWeek(now);
     const cuttingListsThisWeek = await prisma.cuttingList.count({
       where: {
         weekNumber: currentWeek,
-        status: { not: 'archived' }
-      }
+        status: { not: "ARCHIVED" },
+      },
     });
-    
+
     // Average efficiency (last N days)
     const completedOptimizations = await prisma.optimization.findMany({
       where: {
-        status: 'completed',
-        createdAt: { gte: startDate }
+        status: "COMPLETED",
+        createdAt: { gte: startDate },
       },
       select: {
-        result: true
-      }
+        result: true,
+      },
     });
-    
+
     const efficiencies = completedOptimizations
-      .map(opt => {
+      .map((opt) => {
         const result = opt.result as OptimizationResult;
         return result?.totalEfficiency || 0;
       })
-      .filter(eff => eff > 0);
-    
-    const averageEfficiency = efficiencies.length > 0
-      ? efficiencies.reduce((sum, eff) => sum + eff, 0) / efficiencies.length
-      : 0;
-    
+      .filter((eff) => eff > 0);
+
+    const averageEfficiency =
+      efficiencies.length > 0
+        ? efficiencies.reduce((sum, eff) => sum + eff, 0) / efficiencies.length
+        : 0;
+
     // Total waste saved (meters)
     const totalWasteSaved = completedOptimizations.reduce((sum, opt) => {
       const result = opt.result as OptimizationResult;
       const wastePercentage = result?.wastePercentage || 0;
-      const totalLength = result?.cuts?.reduce((s: number, c: Cut) => s + (c.stockLength || 0), 0) || 0;
-      const wasteSaved = (totalLength * (1 - wastePercentage / 100));
+      const totalLength =
+        result?.cuts?.reduce(
+          (s: number, c: Cut) => s + (c.stockLength || 0),
+          0,
+        ) || 0;
+      const wasteSaved = totalLength * (1 - wastePercentage / 100);
       return sum + wasteSaved;
     }, 0);
-    
+
     // Efficiency trend (last 7 days)
     const efficiencyTrend = await getEfficiencyTrend(startDate);
-    
+
     // Waste trend (last 7 days)
     const wasteTrend = await getWasteTrend(startDate);
-    
+
     return {
       activeOptimizations,
       cuttingListsThisWeek,
       averageEfficiency,
       totalWasteSaved,
       efficiencyTrend,
-      wasteTrend
+      wasteTrend,
     };
   } catch (error) {
-    logger.error('Failed to fetch hero metrics', error);
+    logger.error("Failed to fetch hero metrics", error);
     throw error;
   }
 }
@@ -132,61 +137,70 @@ export async function getHeroMetrics(options: DashboardMetricsOptions = {}) {
 /**
  * Get optimization performance data
  */
-export async function getOptimizationPerformance(options: DashboardMetricsOptions = {}) {
-  const { timeRange = '7d' } = options;
-  
+export async function getOptimizationPerformance(
+  options: DashboardMetricsOptions = {},
+) {
+  const { timeRange = "7d" } = options;
+
   try {
     const now = new Date();
     const startDate = getStartDate(now, timeRange);
-    
+
     // Algorithm stats
-    const algorithms = ['ffd', 'bfd', 'genetic', 'pooling'];
+    const algorithms = ["ffd", "bfd", "genetic", "pooling"];
     const algorithmStats = await Promise.all(
       algorithms.map(async (algorithm) => {
         const optimizations = await prisma.optimization.findMany({
           where: {
             algorithm,
-            status: 'completed',
-            createdAt: { gte: startDate }
+            status: "completed",
+            createdAt: { gte: startDate },
           },
           select: {
             result: true,
-            executionTime: true
-          }
+            executionTime: true,
+          },
         });
-        
-        const efficiencies = optimizations.map(opt => (opt.result as OptimizationResult)?.totalEfficiency || 0);
-        const wastePercentages = optimizations.map(opt => (opt.result as OptimizationResult)?.wastePercentage || 0);
-        const executionTimes = optimizations.map(opt => opt.executionTime || 0);
-        
+
+        const efficiencies = optimizations.map(
+          (opt) => (opt.result as OptimizationResult)?.totalEfficiency || 0,
+        );
+        const wastePercentages = optimizations.map(
+          (opt) => (opt.result as OptimizationResult)?.wastePercentage || 0,
+        );
+        const executionTimes = optimizations.map(
+          (opt) => opt.executionTime || 0,
+        );
+
         return {
           algorithm,
           count: optimizations.length,
           avgEfficiency: avg(efficiencies),
           avgExecutionTime: avg(executionTimes),
           avgWastePercentage: avg(wastePercentages),
-          successRate: 100 // All completed are successful
+          successRate: 100, // All completed are successful
         };
-      })
+      }),
     );
-    
+
     // Efficiency time series (last 7 days)
-    const efficiencyTimeSeries = await getEfficiencyTimeSeriesByAlgorithm(startDate);
-    
+    const efficiencyTimeSeries =
+      await getEfficiencyTimeSeriesByAlgorithm(startDate);
+
     // Waste time series
     const wasteTimeSeries = await getWasteTimeSeries(startDate);
-    
+
     // Cost savings
     const costSavings = await getCostSavings(startDate);
-    
+
     return {
       algorithmStats,
       efficiencyTimeSeries,
       wasteTimeSeries,
-      costSavings
+      costSavings,
     };
   } catch (error) {
-    logger.error('Failed to fetch optimization performance', error);
+    logger.error("Failed to fetch optimization performance", error);
     throw error;
   }
 }
@@ -199,47 +213,47 @@ export async function getActiveOperations() {
     // Active optimizations
     const activeOptimizations = await prisma.optimization.findMany({
       where: {
-        status: { in: ['pending', 'running'] }
+        status: { in: ["pending", "running"] },
       },
       include: {
         user: {
-          select: { name: true }
-        }
+          select: { name: true },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
+        createdAt: "desc",
       },
-      take: 10
+      take: 10,
     });
-    
+
     // Recent completions
     const recentCompletions = await prisma.optimization.findMany({
       where: {
-        status: 'completed',
-        updatedAt: { gte: new Date(Date.now() - 60 * 60 * 1000) } // Last hour
+        status: "completed",
+        updatedAt: { gte: new Date(Date.now() - 60 * 60 * 1000) }, // Last hour
       },
       include: {
         user: {
-          select: { name: true }
-        }
+          select: { name: true },
+        },
       },
       orderBy: {
-        updatedAt: 'desc'
+        updatedAt: "desc",
       },
-      take: 5
+      take: 5,
     });
-    
-    const activeOps = activeOptimizations.map(opt => ({
+
+    const activeOps = activeOptimizations.map((opt) => ({
       id: opt.id,
-      status: opt.status as 'queued' | 'processing',
+      status: opt.status as "queued" | "processing",
       algorithm: opt.algorithm,
       itemCount: (opt.parameters as OptimizationParameters)?.items?.length || 0,
-      progress: opt.status === 'running' ? 0 : 0, // Real progress from actual data
+      progress: opt.status === "running" ? 0 : 0, // Real progress from actual data
       startedAt: opt.createdAt.toISOString(),
-      userName: opt.user?.name || 'Unknown'
+      userName: opt.user?.name || "Unknown",
     }));
-    
-    const completions = recentCompletions.map(opt => ({
+
+    const completions = recentCompletions.map((opt) => ({
       id: opt.id,
       algorithm: opt.algorithm,
       itemCount: (opt.parameters as OptimizationParameters)?.items?.length || 0,
@@ -247,18 +261,19 @@ export async function getActiveOperations() {
       wastePercentage: (opt.result as OptimizationResult)?.wastePercentage || 0,
       executionTime: opt.executionTime || 0,
       completedAt: opt.updatedAt.toISOString(),
-      userName: opt.user?.name || 'Unknown'
+      userName: opt.user?.name || "Unknown",
     }));
-    
+
     return {
       activeOperations: activeOps,
-      queuedCount: activeOps.filter(op => op.status === 'queued').length,
-      processingCount: activeOps.filter(op => op.status === 'processing').length,
+      queuedCount: activeOps.filter((op) => op.status === "queued").length,
+      processingCount: activeOps.filter((op) => op.status === "processing")
+        .length,
       recentCompletions: completions,
-      failedOperations: []
+      failedOperations: [],
     };
   } catch (error) {
-    logger.error('Failed to fetch active operations', error);
+    logger.error("Failed to fetch active operations", error);
     throw error;
   }
 }
@@ -267,80 +282,85 @@ export async function getActiveOperations() {
  * Get smart insights
  */
 export async function getSmartInsights(options: DashboardMetricsOptions = {}) {
-  const { timeRange = '7d' } = options;
-  
+  const { timeRange = "7d" } = options;
+
   try {
     const now = new Date();
     const startDate = getStartDate(now, timeRange);
-    
+
     // Top profiles
     const profileStats = await prisma.cuttingListItem.groupBy({
-      by: ['profileType'],
+      by: ["profileType"],
       where: {
-        createdAt: { gte: startDate }
+        createdAt: { gte: startDate },
       },
       _count: {
-        id: true
+        id: true,
       },
       _avg: {
-        quantity: true
+        quantity: true,
       },
       orderBy: {
         _count: {
-          id: 'desc'
-        }
+          id: "desc",
+        },
       },
-      take: 3
+      take: 3,
     });
-    
+
     const totalProfileCount = await prisma.cuttingListItem.count({
-      where: { createdAt: { gte: startDate } }
+      where: { createdAt: { gte: startDate } },
     });
-    
-    const topProfiles = profileStats.map(stat => ({
+
+    const topProfiles = profileStats.map((stat) => ({
       profileType: stat.profileType,
       count: stat._count.id,
       percentage: (stat._count.id / (totalProfileCount || 1)) * 100,
       avgQuantity: stat._avg.quantity || 0,
-      trend: 'stable' as const
+      trend: "stable" as const,
     }));
-    
+
     // Best algorithm
     const algorithmPerformance = await prisma.optimization.groupBy({
-      by: ['algorithm'],
+      by: ["algorithm"],
       where: {
-        status: 'completed',
-        createdAt: { gte: startDate }
+        status: "completed",
+        createdAt: { gte: startDate },
       },
       _count: {
-        id: true
+        id: true,
       },
       _avg: {
-        executionTime: true
-      }
+        executionTime: true,
+      },
     });
-    
-    const bestAlgo = algorithmPerformance
-      .sort((a, b) => (b._count.id) - (a._count.id))[0];
-    
-    const bestAlgorithm = bestAlgo ? {
-      algorithm: bestAlgo.algorithm,
-      efficiency: bestAlgo ? (bestAlgo as AlgorithmPerformance)?.avgEfficiency || 0 : 0, // Real efficiency from results
-      runCount: bestAlgo._count.id,
-      reason: 'En sık kullanılan algoritma'
-    } : null;
-    
+
+    const bestAlgo = algorithmPerformance.sort(
+      (a, b) => b._count.id - a._count.id,
+    )[0];
+
+    const bestAlgorithm = bestAlgo
+      ? {
+          algorithm: bestAlgo.algorithm,
+          efficiency: bestAlgo
+            ? (bestAlgo as AlgorithmPerformance)?.avgEfficiency || 0
+            : 0, // Real efficiency from results
+          runCount: bestAlgo._count.id,
+          reason: "En sık kullanılan algoritma",
+        }
+      : null;
+
     // Peak hours - real data from database
     const peakHours: PeakHour[] = [];
-    
+
     return {
       topProfiles,
       bestAlgorithm,
       peakHours,
-      suggestions: []
+      suggestions: [],
     };
   } catch (error) {
-    logger.error('Failed to fetch smart insights', error);
+    logger.error("Failed to fetch smart insights", error);
     throw error;
   }
 }
@@ -350,38 +370,38 @@ export async function getSmartInsights(options: DashboardMetricsOptions = {}) {
  */
 export async function getActivityTimeline(filter: ActivityFilter = {}) {
   const { limit = 20, type } = filter;
-  
+
   try {
     const activities = await prisma.userActivity.findMany({
       where: type ? { activityType: type } : undefined,
       include: {
         user: {
-          select: { name: true }
-        }
+          select: { name: true },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
+        createdAt: "desc",
       },
-      take: limit
+      take: limit,
     });
-    
-    const events = activities.map(activity => ({
+
+    const events = activities.map((activity) => ({
       id: activity.id,
       type: activity.activityType,
       action: formatActivityAction(activity.activityType),
       userId: activity.userId,
-      userName: activity.user?.name || 'Unknown',
+      userName: activity.user?.name || "Unknown",
       timestamp: activity.createdAt.toISOString(),
-      metadata: activity.activityData as Record<string, unknown> || {}
+      metadata: (activity.activityData as Record<string, unknown>) || {},
     }));
-    
+
     return {
       events,
       totalCount: await prisma.userActivity.count(),
-      hasMore: events.length === limit
+      hasMore: events.length === limit,
     };
   } catch (error) {
-    logger.error('Failed to fetch activity timeline', error);
+    logger.error("Failed to fetch activity timeline", error);
     throw error;
   }
 }
@@ -391,13 +411,13 @@ export async function getActivityTimeline(filter: ActivityFilter = {}) {
  */
 function getStartDate(now: Date, timeRange: string): Date {
   const ranges: Record<string, number> = {
-    '24h': 24 * 60 * 60 * 1000,
-    '7d': 7 * 24 * 60 * 60 * 1000,
-    '30d': 30 * 24 * 60 * 60 * 1000,
-    '90d': 90 * 24 * 60 * 60 * 1000
+    "24h": 24 * 60 * 60 * 1000,
+    "7d": 7 * 24 * 60 * 60 * 1000,
+    "30d": 30 * 24 * 60 * 60 * 1000,
+    "90d": 90 * 24 * 60 * 60 * 1000,
   };
-  
-  const ms = ranges[timeRange] || ranges['7d'];
+
+  const ms = ranges[timeRange] || ranges["7d"];
   return new Date(now.getTime() - ms);
 }
 
@@ -409,7 +429,7 @@ function getISOWeek(date: Date): number {
   d.setHours(0, 0, 0, 0);
   d.setDate(d.getDate() + 4 - (d.getDay() || 7));
   const yearStart = new Date(d.getFullYear(), 0, 1);
-  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
 }
 
 /**
@@ -459,7 +479,7 @@ async function getCostSavings(startDate: Date) {
   // Real data from database - no mock data
   return {
     totalSaved: 0,
-    savingsTimeSeries: []
+    savingsTimeSeries: [],
   };
 }
 
@@ -468,16 +488,15 @@ async function getCostSavings(startDate: Date) {
  */
 function formatActivityAction(activityType: string): string {
   const actions: Record<string, string> = {
-    'optimization_started': 'Optimizasyon başlatıldı',
-    'optimization_completed': 'Optimizasyon tamamlandı',
-    'optimization_failed': 'Optimizasyon başarısız oldu',
-    'cutting_list_created': 'Kesim listesi oluşturuldu',
-    'cutting_list_updated': 'Kesim listesi güncellendi',
-    'export_generated': 'Rapor dışa aktarıldı',
-    'user_login': 'Kullanıcı giriş yaptı',
-    'system_event': 'Sistem olayı'
+    optimization_started: "Optimizasyon başlatıldı",
+    optimization_completed: "Optimizasyon tamamlandı",
+    optimization_failed: "Optimizasyon başarısız oldu",
+    cutting_list_created: "Kesim listesi oluşturuldu",
+    cutting_list_updated: "Kesim listesi güncellendi",
+    export_generated: "Rapor dışa aktarıldı",
+    user_login: "Kullanıcı giriş yaptı",
+    system_event: "Sistem olayı",
   };
-  
+
   return actions[activityType] || activityType;
 }
-

@@ -104,7 +104,7 @@ async function migrateJsonData(): Promise<void> {
             weekNumber: cuttingList.weekNumber,
             sections: cuttingList.sections as Prisma.InputJsonValue,
             userId: defaultUser.id,
-            status: "active",
+            status: "DRAFT",
             createdAt: cuttingList.createdAt
               ? new Date(cuttingList.createdAt)
               : undefined,

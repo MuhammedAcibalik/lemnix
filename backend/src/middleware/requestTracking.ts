@@ -31,7 +31,7 @@ export function requestTrackingMiddleware(
 
   // Log response when finished (optional)
   res.on("finish", () => {
-    const duration = Date.now() - req.startTime;
+    const duration = req.startTime ? Date.now() - req.startTime : 0;
     if (process.env.LOG_REQUESTS !== "false") {
       console.log(
         `[${req.requestId}] ${req.method} ${req.path} - ${res.statusCode} - ${duration}ms`,

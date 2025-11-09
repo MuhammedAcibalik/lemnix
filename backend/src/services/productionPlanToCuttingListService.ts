@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, ItemPriority } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -53,7 +53,7 @@ export class ProductionPlanToCuttingListService {
         data: {
           name: request.cuttingListMetadata.name,
           description: request.cuttingListMetadata.description || "",
-          status: "draft",
+          status: "DRAFT",
           userId: request.userId,
           metadata: {
             source: "production-plan",
@@ -153,7 +153,7 @@ export class ProductionPlanToCuttingListService {
         version: "1.0", // Default version
         size: "Standard", // Default size
         priority: this.mapPriority(validatedItem.oncelik),
-        status: "draft",
+        status: "DRAFT" as const,
       };
     });
 
@@ -185,18 +185,18 @@ export class ProductionPlanToCuttingListService {
   /**
    * Öncelik mapping'i
    */
-  private mapPriority(oncelik: string): string {
+  private mapPriority(oncelik: string): ItemPriority {
     switch (oncelik.toLowerCase()) {
       case "yuksek":
       case "yüksek":
-        return "high";
+        return "HIGH" as ItemPriority;
       case "orta":
-        return "medium";
+        return "MEDIUM" as ItemPriority;
       case "dusuk":
       case "düşük":
-        return "low";
+        return "LOW" as ItemPriority;
       default:
-        return "medium";
+        return "MEDIUM" as ItemPriority;
     }
   }
 

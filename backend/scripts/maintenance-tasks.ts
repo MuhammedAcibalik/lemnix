@@ -91,22 +91,22 @@ class MaintenanceTasks {
       // Archive old cutting lists
       const archivedLists = await prisma.cuttingList.updateMany({
         where: {
-          status: 'completed',
+          status: 'COMPLETED',
           updatedAt: { lt: oneYearAgo },
         },
         data: {
-          status: 'archived',
+          status: 'ARCHIVED',
         },
       });
 
       // Archive old optimizations
       const archivedOpts = await prisma.optimization.updateMany({
         where: {
-          status: 'completed',
+          status: 'COMPLETED',
           updatedAt: { lt: oneYearAgo },
         },
         data: {
-          status: 'archived',
+          status: 'ARCHIVED',
         },
       });
 
@@ -133,7 +133,7 @@ class MaintenanceTasks {
       // Delete old archived cutting lists
       const deletedLists = await prisma.cuttingList.deleteMany({
         where: {
-          status: 'archived',
+          status: 'ARCHIVED',
           updatedAt: { lt: twoYearsAgo },
         },
       });
@@ -141,7 +141,7 @@ class MaintenanceTasks {
       // Delete old archived optimizations
       const deletedOpts = await prisma.optimization.deleteMany({
         where: {
-          status: 'archived',
+          status: 'ARCHIVED',
           updatedAt: { lt: twoYearsAgo },
         },
       });

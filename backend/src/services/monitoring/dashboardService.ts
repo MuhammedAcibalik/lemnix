@@ -4,8 +4,8 @@
  * @version 1.0.0 - Real Database Queries
  */
 
-import { PrismaClient } from '@prisma/client';
-import { logger } from '../logger';
+import { PrismaClient } from "@prisma/client";
+import { logger } from "../logger";
 
 const prisma = new PrismaClient();
 
@@ -42,10 +42,10 @@ export interface WasteReductionTrend {
 
 export interface RecentActivity {
   readonly id: string;
-  readonly type: 'cutting_list' | 'optimization' | 'work_order';
+  readonly type: "cutting_list" | "optimization" | "work_order";
   readonly title: string;
   readonly date: string;
-  readonly status: 'completed' | 'pending' | 'failed';
+  readonly status: "completed" | "pending" | "failed";
   readonly metadata?: {
     readonly itemCount?: number;
     readonly algorithm?: string;
@@ -61,7 +61,7 @@ export interface ProfileUsageStats {
 }
 
 export interface SystemHealth {
-  readonly status: 'healthy' | 'degraded' | 'unhealthy';
+  readonly status: "healthy" | "degraded" | "unhealthy";
   readonly uptime: number;
   readonly cpu: {
     readonly usage: number;
@@ -103,23 +103,30 @@ export class DashboardService {
         number,
         Array<{ status: string; _count: number }>,
         Array<{ profileType: string }>,
-        { _avg: { averageEfficiency: number | null; wasteReductionPercent: number | null; successRate: number | null }; _count: number },
-        number
+        {
+          _avg: {
+            averageEfficiency: number | null;
+            wasteReductionPercent: number | null;
+            successRate: number | null;
+          };
+          _count: number;
+        },
+        number,
       ] = await Promise.all([
         // Total cutting lists (not archived)
         prisma.cuttingList.count({
-          where: { status: { not: 'archived' } },
+          where: { status: { not: "ARCHIVED" } },
         }),
 
         // Work orders by status
         (prisma as any).workOrder?.groupBy({
-          by: ['status'],
+          by: ["status"],
           _count: true,
         }) ?? [],
 
         // Distinct profile types
         prisma.cuttingListItem.findMany({
-          distinct: ['profileType'],
+          distinct: ["profileType"],
           select: { profileType: true },
         }),
 
@@ -144,11 +151,15 @@ export class DashboardService {
       ]);
 
       // Calculate work order counts
-      const completedWorkOrders = workOrderStats.find(s => s.status === 'completed')?._count ?? 0;
-      const pendingWorkOrders = workOrderStats.filter(s => 
-        s.status === 'pending' || s.status === 'in_progress'
-      ).reduce((sum, s) => sum + s._count, 0);
-      const totalWorkOrders = workOrderStats.reduce((sum, s) => sum + s._count, 0);
+      const completedWorkOrders =
+        workOrderStats.find((s) => s.status === "completed")?._count ?? 0;
+      const pendingWorkOrders = workOrderStats
+        .filter((s) => s.status === "pending" || s.status === "in_progress")
+        .reduce((sum, s) => sum + s._count, 0);
+      const totalWorkOrders = workOrderStats.reduce(
+        (sum, s) => sum + s._count,
+        0,
+      );
 
       // Calculate system uptime (process uptime in seconds)
       const systemUptime = Math.floor(process.uptime());
@@ -166,7 +177,9 @@ export class DashboardService {
         systemUptime,
       };
     } catch (error) {
-      logger.error('[DashboardService] Failed to get dashboard metrics', { error });
+      logger.error("[DashboardService] Failed to get dashboard metrics", {
+        error,
+      });
       throw error;
     }
   }
@@ -175,14 +188,16 @@ export class DashboardService {
    * Get algorithm performance from OptimizationStatistics
    * Fallback to Optimization.result JSON parsing if needed
    */
-  public async getAlgorithmPerformance(): Promise<ReadonlyArray<AlgorithmPerformance>> {
+  public async getAlgorithmPerformance(): Promise<
+    ReadonlyArray<AlgorithmPerformance>
+  > {
     try {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       // Try OptimizationStatistics first (preferred)
       const statsFromTable = await prisma.optimizationStatistics.groupBy({
-        by: ['algorithm'],
+        by: ["algorithm"],
         _count: true,
         _avg: {
           averageEfficiency: true,
@@ -193,7 +208,7 @@ export class DashboardService {
       });
 
       if (statsFromTable.length > 0) {
-        return statsFromTable.map(stat => ({
+        return statsFromTable.map((stat) => ({
           algorithm: stat.algorithm,
           count: stat._count,
           averageEfficiency: stat._avg.averageEfficiency ?? 0,
@@ -203,12 +218,14 @@ export class DashboardService {
       }
 
       // Fallback: Parse from Optimization.result JSON
-      logger.warn('[DashboardService] No OptimizationStatistics found, falling back to Optimization.result');
-      
+      logger.warn(
+        "[DashboardService] No OptimizationStatistics found, falling back to Optimization.result",
+      );
+
       // Filter optimizations with non-null results at query level
       const optimizations = await prisma.optimization.findMany({
         where: {
-          status: 'completed',
+          status: "completed",
           createdAt: { gte: thirtyDaysAgo },
         },
         select: {
@@ -219,21 +236,31 @@ export class DashboardService {
       });
 
       // Group by algorithm and calculate averages
-      const algorithmMap = new Map<string, {
-        count: number;
-        totalEfficiency: number;
-        totalWaste: number;
-        totalTime: number;
-      }>();
+      const algorithmMap = new Map<
+        string,
+        {
+          count: number;
+          totalEfficiency: number;
+          totalWaste: number;
+          totalTime: number;
+        }
+      >();
 
       for (const opt of optimizations) {
         // Type guard: result should be object with known structure
-        if (!opt.result || typeof opt.result !== 'object') continue;
-        
+        if (!opt.result || typeof opt.result !== "object") continue;
+
         const result = opt.result as Record<string, unknown>;
-        const efficiency = typeof result.efficiency === 'number' ? result.efficiency : 
-                          typeof result.utilizationRate === 'number' ? result.utilizationRate : 0;
-        const waste = typeof result.wastePercentage === 'number' ? result.wastePercentage : (100 - efficiency);
+        const efficiency =
+          typeof result.efficiency === "number"
+            ? result.efficiency
+            : typeof result.utilizationRate === "number"
+              ? result.utilizationRate
+              : 0;
+        const waste =
+          typeof result.wastePercentage === "number"
+            ? result.wastePercentage
+            : 100 - efficiency;
         const time = opt.executionTime ?? 0;
 
         const current = algorithmMap.get(opt.algorithm) ?? {
@@ -264,7 +291,9 @@ export class DashboardService {
 
       return results;
     } catch (error) {
-      logger.error('[DashboardService] Failed to get algorithm performance', { error });
+      logger.error("[DashboardService] Failed to get algorithm performance", {
+        error,
+      });
       return [];
     }
   }
@@ -272,14 +301,18 @@ export class DashboardService {
   /**
    * Get waste reduction trend (daily aggregation for last N days)
    */
-  public async getWasteReductionTrend(days: number = 30): Promise<ReadonlyArray<WasteReductionTrend>> {
+  public async getWasteReductionTrend(
+    days: number = 30,
+  ): Promise<ReadonlyArray<WasteReductionTrend>> {
     try {
       // Use raw SQL for daily aggregation
-      const results = await prisma.$queryRaw<Array<{
-        date: Date;
-        waste_reduction: number;
-        optimization_count: number;
-      }>>`
+      const results = await prisma.$queryRaw<
+        Array<{
+          date: Date;
+          waste_reduction: number;
+          optimization_count: number;
+        }>
+      >`
         SELECT 
           DATE(created_at) as date,
           AVG(waste_reduction_percent) as waste_reduction,
@@ -290,13 +323,16 @@ export class DashboardService {
         ORDER BY date ASC
       `;
 
-      return results.map(row => ({
-        date: row.date.toISOString().split('T')[0],
+      return results.map((row) => ({
+        date: row.date.toISOString().split("T")[0],
         wasteReduction: Number(row.waste_reduction),
-        costSavings: Number(row.waste_reduction) * Number(row.optimization_count) * 10, // Estimated
+        costSavings:
+          Number(row.waste_reduction) * Number(row.optimization_count) * 10, // Estimated
       }));
     } catch (error) {
-      logger.error('[DashboardService] Failed to get waste reduction trend', { error });
+      logger.error("[DashboardService] Failed to get waste reduction trend", {
+        error,
+      });
       return [];
     }
   }
@@ -304,15 +340,22 @@ export class DashboardService {
   /**
    * Get recent activities from UserActivity table
    */
-  public async getRecentActivities(limit: number = 10): Promise<ReadonlyArray<RecentActivity>> {
+  public async getRecentActivities(
+    limit: number = 10,
+  ): Promise<ReadonlyArray<RecentActivity>> {
     try {
       const activities = await prisma.userActivity.findMany({
         where: {
           activityType: {
-            in: ['cutting_list_created', 'optimization_run', 'cutting_list_updated', 'work_order_completed'],
+            in: [
+              "cutting_list_created",
+              "optimization_run",
+              "cutting_list_updated",
+              "work_order_completed",
+            ],
           },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: limit,
         include: {
           user: {
@@ -324,9 +367,11 @@ export class DashboardService {
         },
       });
 
-      return activities.map(activity => this.transformActivity(activity));
+      return activities.map((activity) => this.transformActivity(activity));
     } catch (error) {
-      logger.error('[DashboardService] Failed to get recent activities', { error });
+      logger.error("[DashboardService] Failed to get recent activities", {
+        error,
+      });
       return [];
     }
   }
@@ -343,20 +388,28 @@ export class DashboardService {
     efficiency?: number;
     utilizationRate?: number;
   } {
-    if (!data || typeof data !== 'object') {
+    if (!data || typeof data !== "object") {
       return {};
     }
 
     const record = data as Record<string, unknown>;
-    
+
     return {
-      status: typeof record.status === 'string' ? record.status : undefined,
+      status: typeof record.status === "string" ? record.status : undefined,
       error: record.error,
-      itemCount: typeof record.itemCount === 'number' ? record.itemCount : undefined,
-      itemsLength: Array.isArray(record.items) ? record.items.length : undefined,
-      algorithm: typeof record.algorithm === 'string' ? record.algorithm : undefined,
-      efficiency: typeof record.efficiency === 'number' ? record.efficiency : undefined,
-      utilizationRate: typeof record.utilizationRate === 'number' ? record.utilizationRate : undefined,
+      itemCount:
+        typeof record.itemCount === "number" ? record.itemCount : undefined,
+      itemsLength: Array.isArray(record.items)
+        ? record.items.length
+        : undefined,
+      algorithm:
+        typeof record.algorithm === "string" ? record.algorithm : undefined,
+      efficiency:
+        typeof record.efficiency === "number" ? record.efficiency : undefined,
+      utilizationRate:
+        typeof record.utilizationRate === "number"
+          ? record.utilizationRate
+          : undefined,
     };
   }
 
@@ -372,42 +425,42 @@ export class DashboardService {
   }): RecentActivity {
     // Type guard for activity data
     const data = this.parseActivityData(activity.activityData);
-    
+
     // Determine type
-    let type: 'cutting_list' | 'optimization' | 'work_order' = 'cutting_list';
-    if (activity.activityType.includes('optimization')) {
-      type = 'optimization';
-    } else if (activity.activityType.includes('work_order')) {
-      type = 'work_order';
+    let type: "cutting_list" | "optimization" | "work_order" = "cutting_list";
+    if (activity.activityType.includes("optimization")) {
+      type = "optimization";
+    } else if (activity.activityType.includes("work_order")) {
+      type = "work_order";
     }
 
     // Generate title
-    let title = 'Aktivite';
+    let title = "Aktivite";
     switch (activity.activityType) {
-      case 'cutting_list_created':
-        title = `${activity.user?.name ?? 'Kullanıcı'} yeni kesim listesi oluşturdu`;
+      case "cutting_list_created":
+        title = `${activity.user?.name ?? "Kullanıcı"} yeni kesim listesi oluşturdu`;
         break;
-      case 'cutting_list_updated':
-        title = `${activity.user?.name ?? 'Kullanıcı'} kesim listesini güncelledi`;
+      case "cutting_list_updated":
+        title = `${activity.user?.name ?? "Kullanıcı"} kesim listesini güncelledi`;
         break;
-      case 'optimization_run':
-        title = `${activity.user?.name ?? 'Kullanıcı'} optimizasyon çalıştırdı`;
+      case "optimization_run":
+        title = `${activity.user?.name ?? "Kullanıcı"} optimizasyon çalıştırdı`;
         break;
-      case 'work_order_completed':
+      case "work_order_completed":
         title = `İş emri tamamlandı`;
         break;
     }
 
     // Determine status
-    let status: 'completed' | 'pending' | 'failed' = 'completed';
-    if (data.status === 'pending' || data.status === 'running') {
-      status = 'pending';
-    } else if (data.status === 'failed' || data.error) {
-      status = 'failed';
+    let status: "completed" | "pending" | "failed" = "completed";
+    if (data.status === "pending" || data.status === "running") {
+      status = "pending";
+    } else if (data.status === "failed" || data.error) {
+      status = "failed";
     }
 
     // Extract metadata
-    const metadata: RecentActivity['metadata'] = {
+    const metadata: RecentActivity["metadata"] = {
       itemCount: data.itemCount ?? data.itemsLength,
       algorithm: data.algorithm,
       efficiency: data.efficiency ?? data.utilizationRate,
@@ -427,20 +480,22 @@ export class DashboardService {
    * Get profile usage statistics (hybrid approach)
    * Combines ProfileUsageStatistics with recent CuttingListItem delta
    */
-  public async getProfileUsageStats(limit: number = 10): Promise<ReadonlyArray<ProfileUsageStats>> {
+  public async getProfileUsageStats(
+    limit: number = 10,
+  ): Promise<ReadonlyArray<ProfileUsageStats>> {
     try {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
       // Get base stats from ProfileUsageStatistics
       const profileStats = await prisma.profileUsageStatistics.findMany({
-        orderBy: { totalUsageCount: 'desc' },
+        orderBy: { totalUsageCount: "desc" },
         take: limit * 2, // Get more to account for recent changes
       });
 
       // Get recent usage delta
       const recentUsage = await prisma.cuttingListItem.groupBy({
-        by: ['profileType'],
+        by: ["profileType"],
         _sum: {
           quantity: true,
           length: true,
@@ -451,18 +506,18 @@ export class DashboardService {
 
       // Create map of recent usage
       const recentMap = new Map(
-        recentUsage.map(item => [
+        recentUsage.map((item) => [
           item.profileType,
           {
             count: item._count,
             totalQuantity: item._sum.quantity ?? 0,
             totalLength: (item._sum.quantity ?? 0) * (item._sum.length ?? 0),
           },
-        ])
+        ]),
       );
 
       // Merge and recalculate
-      const mergedStats = profileStats.map(stat => {
+      const mergedStats = profileStats.map((stat) => {
         const recent = recentMap.get(stat.profileType);
         const usageCount = stat.totalUsageCount + (recent?.count ?? 0);
         const totalQuantity = stat.totalQuantity + (recent?.totalQuantity ?? 0);
@@ -481,7 +536,9 @@ export class DashboardService {
         .sort((a, b) => b.usageCount - a.usageCount)
         .slice(0, limit);
     } catch (error) {
-      logger.error('[DashboardService] Failed to get profile usage stats', { error });
+      logger.error("[DashboardService] Failed to get profile usage stats", {
+        error,
+      });
       return [];
     }
   }
@@ -492,7 +549,7 @@ export class DashboardService {
   public async getSystemHealth(): Promise<SystemHealth> {
     try {
       const startTime = Date.now();
-      
+
       // Test database connection with simple query
       await prisma.$queryRaw`SELECT 1`;
       const dbResponseTime = Date.now() - startTime;
@@ -508,12 +565,12 @@ export class DashboardService {
       const cpuUsage = (loadAverage.user + loadAverage.system) / 1000000; // Convert to seconds
 
       // Determine overall status
-      let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
+      let status: "healthy" | "degraded" | "unhealthy" = "healthy";
       if (dbResponseTime > 1000 || memPercentage > 90) {
-        status = 'degraded';
+        status = "degraded";
       }
       if (dbResponseTime > 5000 || memPercentage > 95) {
-        status = 'unhealthy';
+        status = "unhealthy";
       }
 
       return {
@@ -521,7 +578,11 @@ export class DashboardService {
         uptime: Math.floor(process.uptime()),
         cpu: {
           usage: cpuUsage,
-          loadAverage: [cpuUsage, cpuUsage, cpuUsage] as [number, number, number],
+          loadAverage: [cpuUsage, cpuUsage, cpuUsage] as [
+            number,
+            number,
+            number,
+          ],
         },
         memory: {
           used: usedMemory,
@@ -535,10 +596,10 @@ export class DashboardService {
         lastCheck: new Date().toISOString(),
       };
     } catch (error) {
-      logger.error('[DashboardService] Failed to get system health', { error });
-      
+      logger.error("[DashboardService] Failed to get system health", { error });
+
       return {
-        status: 'unhealthy',
+        status: "unhealthy",
         uptime: Math.floor(process.uptime()),
         cpu: { usage: 0, loadAverage: [0, 0, 0] },
         memory: { used: 0, total: 0, percentage: 0 },
@@ -551,4 +612,3 @@ export class DashboardService {
 
 // Export singleton instance
 export const dashboardService = new DashboardService();
-
