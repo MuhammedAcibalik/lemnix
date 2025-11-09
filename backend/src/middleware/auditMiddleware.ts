@@ -26,7 +26,10 @@ import { auditQueue } from "../services/auditQueue";
 interface AuthenticatedRequest extends Request {
   user?: {
     userId: string;
+    role?: string;
     sessionId?: string;
+    permissions?: unknown[];
+    tokenId?: string;
   };
 }
 
