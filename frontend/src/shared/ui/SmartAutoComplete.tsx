@@ -32,7 +32,6 @@ import {
   Refresh as RefreshIcon,
   Info as InfoIcon,
 } from "@mui/icons-material";
-import { useSmartSuggestions } from "@/widgets/cutting-list-builder/hooks/useSmartSuggestions";
 
 /**
  * Local type definition to avoid conflicts
@@ -265,16 +264,10 @@ export const SmartAutoComplete: React.FC<SmartAutoCompleteProps> = ({
   minConfidence = 0,
   maxSuggestions = 8,
 }) => {
-  const {
-    suggestions,
-    loading,
-    error: suggestionError,
-    getProductSuggestions,
-    getSizeSuggestions,
-    getProfileSuggestions,
-    getColorSuggestions,
-    getMeasurementSuggestions,
-  } = useSmartSuggestions();
+  // Local state instead of incompatible hook
+  const [suggestions, setSuggestions] = useState<LocalAutoCompleteSuggestion[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [suggestionError, setError] = useState<string | null>(null);
 
   const [inputValue, setInputValue] = useState(value);
   const [open, setOpen] = useState(false);

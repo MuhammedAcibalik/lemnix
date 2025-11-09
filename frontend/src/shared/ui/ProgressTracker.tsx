@@ -23,6 +23,7 @@ import {
   Collapse,
   Alert,
   Stack,
+  useTheme,
 } from "@mui/material";
 import {
   CheckCircle as CheckCircleIcon,
@@ -33,7 +34,6 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
 } from "@mui/icons-material";
-import { useDesignSystem } from "@/shared/hooks/useDesignSystem.v2";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -70,7 +70,7 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({
   onToggleDetails,
   variant = "processing",
 }) => {
-  const ds = useDesignSystem();
+  const theme = useTheme();
   const [expanded, setExpanded] = React.useState(showDetails);
 
   const handleToggleDetails = () => {
@@ -145,7 +145,7 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({
       sx={{
         width: "100%",
         mb: 2,
-        border: `1px solid ${ds.palette[getVariantColor()].main}`,
+        border: `1px solid ${theme.palette[getVariantColor()].main}`,
         borderRadius: 2,
       }}
     >
@@ -187,13 +187,13 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({
             sx={{
               height: 8,
               borderRadius: 4,
-              backgroundColor: ds.palette.grey[200],
+              backgroundColor: theme.palette.grey[200],
               "& .MuiLinearProgress-bar": {
                 backgroundColor: hasError
-                  ? ds.palette.error.main
+                  ? theme.palette.error.main
                   : isComplete
-                    ? ds.palette.success.main
-                    : ds.palette[getVariantColor()].main,
+                    ? theme.palette.success.main
+                    : theme.palette[getVariantColor()].main,
                 borderRadius: 4,
               },
             }}
@@ -283,11 +283,8 @@ export const CompactProgressTracker: React.FC<{
   progress: ProgressData;
   variant?: "upload" | "retrieve" | "processing";
 }> = ({ progress, variant = "processing" }) => {
-  const ds = useDesignSystem();
-  const stageInfo = getStageInfo(progress.stage);
-  const isComplete = progress.stage === "complete";
-  const hasError = progress.stage === "error";
-
+  const theme = useTheme();
+  
   const getStageInfo = (stage: string) => {
     const stageMap: Record<
       string,
@@ -314,6 +311,10 @@ export const CompactProgressTracker: React.FC<{
       stageMap[stage] || { label: stage, color: "default", icon: <SpeedIcon /> }
     );
   };
+  
+  const stageInfo = getStageInfo(progress.stage);
+  const isComplete = progress.stage === "complete";
+  const hasError = progress.stage === "error";
 
   return (
     <Box
