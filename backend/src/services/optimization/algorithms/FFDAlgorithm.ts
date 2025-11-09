@@ -856,10 +856,10 @@ export class FFDAlgorithm extends BaseAlgorithm {
     const sortedStockLengths = [...stockLengths].sort((a, b) => b - a);
 
     for (const stockLength of sortedStockLengths) {
-      // ✅ CRITICAL FIX: Only subtract startSafety for pattern generation
+      // ✅ CRITICAL FIX: Only subtract safetyMargin for pattern generation
       // endSafety is only applied when actual cutting position reaches near stock end
       // This is handled in convertSolutionToCuts when creating final segments
-      const usableLength = stockLength - constraints.startSafety;
+      const usableLength = stockLength - (constraints.safetyMargin || 0);
 
       // Generate all possible combinations of items that fit in this stock
       this.generatePatternsForStock(
@@ -1167,7 +1167,7 @@ export class FFDAlgorithm extends BaseAlgorithm {
       for (let i = 0; i < count; i++) {
         const segments: CuttingSegment[] = [];
         let segmentIndex = 0;
-        let usedLength = constraints.startSafety;
+        let usedLength = constraints.safetyMargin || 0;
 
         // ✅ FIX: Create segments with kerf between them
         for (const [length, itemCount] of pattern.pattern.entries()) {

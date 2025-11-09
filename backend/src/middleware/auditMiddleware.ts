@@ -23,7 +23,7 @@ import { auditQueue } from "../services/auditQueue";
 // TYPE EXTENSIONS
 // ============================================================================
 
-interface AuthenticatedRequest extends Request {
+type AuthenticatedRequest = Request & {
   user?: {
     userId: string;
     role?: string;
@@ -31,7 +31,7 @@ interface AuthenticatedRequest extends Request {
     permissions?: unknown[];
     tokenId?: string;
   };
-}
+};
 
 // ============================================================================
 // AUDIT CONFIGURATION

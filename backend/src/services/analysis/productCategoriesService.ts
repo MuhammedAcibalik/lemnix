@@ -134,6 +134,7 @@ export class ProductCategoriesService {
             name,
             itemCount: stats.items,
             totalQuantity: stats.totalQuantity,
+            listCount: 0, // Will be populated later if needed
             percentage: ((stats.items / totalItems) * 100).toFixed(1)
           }));
           
@@ -205,7 +206,12 @@ export class ProductCategoriesService {
         }
       }
       
-      logger.info('Fetched product categories analysis:', categoryStats);
+      logger.info('Fetched product categories analysis:', {
+        totalCategories: categoryStats.totalCategories,
+        categoriesCount: categoryStats.categories.length,
+        averageItems: categoryStats.averageItemsPerCategory,
+        mostActive: categoryStats.mostActiveCategory,
+      });
       return categoryStats;
     } catch (error) {
       logger.error('Failed to get product categories analysis:', error);
