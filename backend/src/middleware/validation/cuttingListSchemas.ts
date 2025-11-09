@@ -202,10 +202,6 @@ export function validateInput<T>(
   }
 }
 
-import { Request, Response, NextFunction } from 'express';
-
-// ... rest of imports and code ...
-
 /**
  * Create validation middleware for Express routes
  */

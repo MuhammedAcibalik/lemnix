@@ -141,7 +141,7 @@ function enqueueAuditEvent(
           method: req.method,
           statusCode: res.statusCode,
           duration,
-          error: responseData?.error || responseData?.message,
+          error: (responseData as { error?: string; message?: string })?.error || (responseData as { error?: string; message?: string })?.message,
         },
       );
     }
@@ -483,7 +483,7 @@ async function logSecurityEvent(
         method: req.method,
         statusCode,
         success: statusCode < 400,
-        responseData: responseData?.success || false,
+        responseData: (responseData as { success?: boolean })?.success || false,
       },
     );
   } catch (error) {
