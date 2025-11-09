@@ -4,45 +4,16 @@
  * @version 1.0.0
  */
 
+import type {
+  ProfileItem,
+  CuttingListItem,
+  ProductSection,
+  CuttingList,
+} from "./types/commonTypes";
+
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
-
-interface ProfileItem {
-  readonly id: string;
-  readonly profile?: string;
-  readonly measurement: string;
-  readonly quantity: number;
-}
-
-interface CuttingListItem {
-  readonly id: string;
-  readonly workOrderId: string;
-  readonly date: string;
-  readonly version: string;
-  readonly color: string;
-  readonly note?: string;
-  readonly orderQuantity: number;
-  readonly size: string;
-  readonly profiles: ReadonlyArray<ProfileItem>;
-}
-
-interface ProductSection {
-  readonly id: string;
-  readonly productName: string;
-  readonly items: ReadonlyArray<CuttingListItem>;
-  readonly createdAt: string;
-  readonly updatedAt: string;
-}
-
-interface CuttingList {
-  readonly id: string;
-  readonly title: string;
-  readonly weekNumber: number;
-  readonly sections: ReadonlyArray<ProductSection>;
-  readonly createdAt: string;
-  readonly updatedAt: string;
-}
 
 interface ProfileSuggestion {
   readonly profile: string;
@@ -79,7 +50,8 @@ interface ProductSizeSuggestion {
 // ============================================================================
 
 export class ProfileSuggestionService {
-  private profileDatabase: Map<string, Map<string, Map<string, number>>> = new Map();
+  private profileDatabase: Map<string, Map<string, Map<string, number>>> =
+    new Map();
   private productSizeDatabase: Map<string, number> = new Map();
   private analyzedData: ReadonlyArray<CuttingList> = [];
 
@@ -87,8 +59,8 @@ export class ProfileSuggestionService {
    * Analyze cutting lists and build suggestion database
    */
   public analyzeCuttingLists(cuttingLists: ReadonlyArray<CuttingList>): void {
-    console.log('[PROFILE-SUGGESTION] Starting analysis of cutting lists...');
-    
+    console.log("[PROFILE-SUGGESTION] Starting analysis of cutting lists...");
+
     // Reset databases and store data for variations
     this.profileDatabase.clear();
     this.productSizeDatabase.clear();
@@ -102,35 +74,39 @@ export class ProfileSuggestionService {
       for (const section of cuttingList.sections) {
         for (const item of section.items) {
           totalItems++;
-          
+
           // Create product-size key
-          const productSizeKey = this.createProductSizeKey(section.productName, item.size);
-          
+          const productSizeKey = this.createProductSizeKey(
+            section.productName,
+            item.size,
+          );
+
           // Update product-size frequency
-          const currentFrequency = this.productSizeDatabase.get(productSizeKey) || 0;
+          const currentFrequency =
+            this.productSizeDatabase.get(productSizeKey) || 0;
           this.productSizeDatabase.set(productSizeKey, currentFrequency + 1);
 
           // Process each profile
           for (const profile of item.profiles) {
             totalProfiles++;
-            
+
             // Create profile key
-            const profileKey = profile.profile || 'GENEL';
-            
+            const profileKey = profile.profile || "GENEL";
+
             // Get or create product-size profile map
             if (!this.profileDatabase.has(productSizeKey)) {
               this.profileDatabase.set(productSizeKey, new Map());
             }
-            
+
             const profileMap = this.profileDatabase.get(productSizeKey)!;
-            
+
             // Get or create measurement map
             if (!profileMap.has(profileKey)) {
               profileMap.set(profileKey, new Map());
             }
-            
+
             const measurementMap = profileMap.get(profileKey)!;
-            
+
             // Update measurement frequency
             const currentCount = measurementMap.get(profile.measurement) || 0;
             measurementMap.set(profile.measurement, currentCount + 1);
@@ -139,29 +115,39 @@ export class ProfileSuggestionService {
       }
     }
 
-    console.log(`[PROFILE-SUGGESTION] Analysis completed: ${totalItems} items, ${totalProfiles} profiles analyzed`);
-    console.log(`[PROFILE-SUGGESTION] Database contains ${this.profileDatabase.size} product-size combinations`);
+    console.log(
+      `[PROFILE-SUGGESTION] Analysis completed: ${totalItems} items, ${totalProfiles} profiles analyzed`,
+    );
+    console.log(
+      `[PROFILE-SUGGESTION] Database contains ${this.profileDatabase.size} product-size combinations`,
+    );
   }
 
   /**
    * Get profile variations for a product and size (grouped by work order patterns)
    */
-  public getProfileVariations(productName: string, size: string): ReadonlyArray<ProfileVariation> {
+  public getProfileVariations(
+    productName: string,
+    size: string,
+  ): ReadonlyArray<ProfileVariation> {
     // Get all items for this product-size combination from cutting lists
     const workOrderPatterns = new Map<string, ProfileVariation>();
 
     for (const cuttingList of this.analyzedData) {
       for (const section of cuttingList.sections) {
-        if (section.productName.toUpperCase() !== productName.toUpperCase()) continue;
+        if (section.productName.toUpperCase() !== productName.toUpperCase())
+          continue;
 
         for (const item of section.items) {
           if (item.size.toUpperCase() !== size.toUpperCase()) continue;
 
           // Create a signature for this profile combination
           const profileSignature = item.profiles
-            .map(p => `${p.profile || 'GENEL'}:${p.measurement}:${p.quantity}`)
+            .map(
+              (p) => `${p.profile || "GENEL"}:${p.measurement}:${p.quantity}`,
+            )
             .sort()
-            .join('|');
+            .join("|");
 
           if (!workOrderPatterns.has(profileSignature)) {
             // Calculate frequency and confidence
@@ -171,17 +157,17 @@ export class ProfileSuggestionService {
             workOrderPatterns.set(profileSignature, {
               id: `var-${workOrderPatterns.size + 1}`,
               name: `Varyasyon ${workOrderPatterns.size + 1}`,
-              profiles: item.profiles.map(p => ({
-                profile: p.profile || 'GENEL',
+              profiles: item.profiles.map((p) => ({
+                profile: p.profile || "GENEL",
                 measurement: p.measurement,
                 quantity: p.quantity,
                 frequency: frequency,
-                confidence: confidence
+                confidence: confidence,
               })),
               totalFrequency: frequency,
               confidence: confidence,
               description: `${item.profiles.length} profilli kombinasyon - İş Emri: ${item.workOrderId}`,
-              workOrderIds: [item.workOrderId]
+              workOrderIds: [item.workOrderId],
             });
           } else {
             // Increase frequency for existing pattern
@@ -206,7 +192,11 @@ export class ProfileSuggestionService {
   /**
    * Get profile suggestions for a product and size
    */
-  public getProfileSuggestions(productName: string, size: string, limit: number = 15): ReadonlyArray<ProfileSuggestion> {
+  public getProfileSuggestions(
+    productName: string,
+    size: string,
+    limit: number = 15,
+  ): ReadonlyArray<ProfileSuggestion> {
     const productSizeKey = this.createProductSizeKey(productName, size);
     const suggestions: ProfileSuggestion[] = [];
 
@@ -224,13 +214,14 @@ export class ProfileSuggestionService {
     for (const [profileName, measurementMap] of profileMap.entries()) {
       for (const [measurement, frequency] of measurementMap.entries()) {
         // Calculate confidence based on frequency and total occurrences
-        const confidence = totalOccurrences > 0 ? (frequency / totalOccurrences) * 100 : 0;
-        
+        const confidence =
+          totalOccurrences > 0 ? (frequency / totalOccurrences) * 100 : 0;
+
         suggestions.push({
-          profile: profileName === 'GENEL' ? '' : profileName,
+          profile: profileName === "GENEL" ? "" : profileName,
           measurement,
           frequency,
-          confidence: Math.round(confidence * 100) / 100
+          confidence: Math.round(confidence * 100) / 100,
         });
       }
     }
@@ -253,15 +244,22 @@ export class ProfileSuggestionService {
   public getAllProductSizeSuggestions(): ReadonlyArray<ProductSizeSuggestion> {
     const suggestions: ProductSizeSuggestion[] = [];
 
-    for (const [productSizeKey, totalOccurrences] of this.productSizeDatabase.entries()) {
+    for (const [
+      productSizeKey,
+      totalOccurrences,
+    ] of this.productSizeDatabase.entries()) {
       const [productName, size] = this.parseProductSizeKey(productSizeKey);
-      const profileSuggestions = this.getProfileSuggestions(productName, size, 10);
+      const profileSuggestions = this.getProfileSuggestions(
+        productName,
+        size,
+        10,
+      );
 
       suggestions.push({
         productName,
         size,
         suggestions: profileSuggestions,
-        totalOccurrences
+        totalOccurrences,
       });
     }
 
@@ -281,7 +279,7 @@ export class ProfileSuggestionService {
     for (const productSizeKey of this.productSizeDatabase.keys()) {
       if (!productSizeKey) continue;
       const [productName] = this.parseProductSizeKey(productSizeKey);
-      
+
       // Check if product name contains search term
       if (productName.toLowerCase().includes(searchLower)) {
         similarProducts.add(productName);
@@ -300,7 +298,7 @@ export class ProfileSuggestionService {
     for (const productSizeKey of this.productSizeDatabase.keys()) {
       if (!productSizeKey) continue;
       const [keyProductName, size] = this.parseProductSizeKey(productSizeKey);
-      
+
       if (keyProductName.toLowerCase() === productName.toLowerCase()) {
         sizes.add(size);
       }
@@ -322,13 +320,16 @@ export class ProfileSuggestionService {
     const productCounts = new Map<string, number>();
     const sizeCounts = new Map<string, number>();
 
-    for (const [productSizeKey, frequency] of this.productSizeDatabase.entries()) {
+    for (const [
+      productSizeKey,
+      frequency,
+    ] of this.productSizeDatabase.entries()) {
       const [productName, size] = this.parseProductSizeKey(productSizeKey);
-      
+
       // Count products
       const currentProductCount = productCounts.get(productName) || 0;
       productCounts.set(productName, currentProductCount + frequency);
-      
+
       // Count sizes
       const currentSizeCount = sizeCounts.get(size) || 0;
       sizeCounts.set(size, currentSizeCount + frequency);
@@ -345,7 +346,7 @@ export class ProfileSuggestionService {
     }
 
     // Find most common product and size
-    let mostCommonProduct = '';
+    let mostCommonProduct = "";
     let maxProductCount = 0;
     for (const [product, count] of productCounts.entries()) {
       if (count > maxProductCount) {
@@ -354,7 +355,7 @@ export class ProfileSuggestionService {
       }
     }
 
-    let mostCommonSize = '';
+    let mostCommonSize = "";
     let maxSizeCount = 0;
     for (const [size, count] of sizeCounts.entries()) {
       if (count > maxSizeCount) {
@@ -367,7 +368,7 @@ export class ProfileSuggestionService {
       totalProductSizeCombinations: this.productSizeDatabase.size,
       totalProfiles,
       mostCommonProduct,
-      mostCommonSize
+      mostCommonSize,
     };
   }
 
@@ -382,11 +383,11 @@ export class ProfileSuggestionService {
    * Parse product-size key back to product name and size
    */
   private parseProductSizeKey(key: string): [string, string] {
-    const parts = key.split('|');
+    const parts = key.split("|");
     if (parts.length === 2) {
-      return [parts[0] || '', parts[1] || ''];
+      return [parts[0] || "", parts[1] || ""];
     }
-    return ['', ''];
+    return ["", ""];
   }
 
   /**
@@ -395,6 +396,6 @@ export class ProfileSuggestionService {
   public clearDatabase(): void {
     this.profileDatabase.clear();
     this.productSizeDatabase.clear();
-    console.log('[PROFILE-SUGGESTION] Database cleared');
+    console.log("[PROFILE-SUGGESTION] Database cleared");
   }
 }
