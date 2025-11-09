@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, MaterialProfileMapping } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -30,9 +30,7 @@ export class MaterialProfileMappingService {
    */
   async getSuggestions(malzemeNo: string): Promise<ProfileSuggestion[]> {
     try {
-      const mappings = await (
-        prisma as unknown as { materialProfileMapping: any }
-      ).materialProfileMapping.findMany({
+      const mappings = await prisma.materialProfileMapping.findMany({
         where: {
           malzemeNo: {
             contains: malzemeNo,
@@ -43,7 +41,7 @@ export class MaterialProfileMappingService {
         take: 10,
       });
 
-      return mappings.map((mapping: any) => ({
+      return mappings.map((mapping: MaterialProfileMapping) => ({
         profileType: mapping.profileType,
         length: mapping.length,
         usageCount: mapping.usageCount,
@@ -61,9 +59,7 @@ export class MaterialProfileMappingService {
    */
   async saveMappingFromUserInput(data: SaveMappingRequest): Promise<void> {
     try {
-      await (
-        prisma as unknown as { materialProfileMapping: any }
-      ).materialProfileMapping.upsert({
+      await prisma.materialProfileMapping.upsert({
         where: {
           malzemeNo_profileType_length: {
             malzemeNo: data.malzemeNo,
@@ -103,9 +99,7 @@ export class MaterialProfileMappingService {
     length: number,
   ): Promise<void> {
     try {
-      await (
-        prisma as unknown as { materialProfileMapping: any }
-      ).materialProfileMapping.updateMany({
+      await prisma.materialProfileMapping.updateMany({
         where: {
           malzemeNo,
           profileType,
@@ -140,9 +134,7 @@ export class MaterialProfileMappingService {
     malzemeNo: string,
   ): Promise<ProfileSuggestion | null> {
     try {
-      const mapping = await (
-        prisma as unknown as { materialProfileMapping: any }
-      ).materialProfileMapping.findFirst({
+      const mapping = await prisma.materialProfileMapping.findFirst({
         where: {
           malzemeNo: {
             contains: malzemeNo,
@@ -175,9 +167,7 @@ export class MaterialProfileMappingService {
       // Malzeme numarasının ilk kısmını al (prefix matching)
       const prefix = malzemeNo.substring(0, 6);
 
-      const mappings = await (
-        prisma as unknown as { materialProfileMapping: any }
-      ).materialProfileMapping.findMany({
+      const mappings = await prisma.materialProfileMapping.findMany({
         where: {
           malzemeNo: {
             startsWith: prefix,
@@ -188,7 +178,7 @@ export class MaterialProfileMappingService {
         take: 5,
       });
 
-      return mappings.map((mapping: any) => ({
+      return mappings.map((mapping: MaterialProfileMapping) => ({
         profileType: mapping.profileType,
         length: mapping.length,
         usageCount: mapping.usageCount,

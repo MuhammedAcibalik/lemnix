@@ -304,7 +304,7 @@ export const createAuditEvent = (
   eventType: AuditEventType,
   req: Request,
   result: "success" | "failure" | "blocked",
-  details?: Record<string, any>,
+  details?: Record<string, unknown>,
   correlationId?: string,
 ): AuditEvent => {
   return {
@@ -457,7 +457,7 @@ export const auditOptimization = (
 export const logSecurityAlert = (
   req: Request,
   alertType: string,
-  details: Record<string, any>,
+  details: Record<string, unknown>,
 ): void => {
   const event = createAuditEvent(
     AuditEventType.SECURITY_ALERT,

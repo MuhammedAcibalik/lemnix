@@ -11,10 +11,11 @@
  */
 
 import { EventEmitter } from "events";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, ProductionPlanItem, Prisma } from "@prisma/client";
 import {
   asyncEncryptionService,
   EncryptionProgress,
+  ProductionPlanItemWithEncryption,
 } from "./asyncEncryptionService";
 import { logger } from "./logger";
 
@@ -40,11 +41,17 @@ export interface ProgressiveLoadResult<T> {
   duration: number;
 }
 
+export interface StageResult {
+  success: boolean;
+  data?: unknown;
+  errors?: string[];
+}
+
 export interface ProgressiveLoadOptions {
   batchSize?: number;
   concurrency?: number;
   onProgress?: (progress: LoadingProgress) => void;
-  onStageComplete?: (stage: string, result: any) => void;
+  onStageComplete?: (stage: string, result: StageResult) => void;
 }
 
 // ============================================================================
@@ -68,7 +75,7 @@ export class ProgressiveLoadingService extends EventEmitter {
     fileBuffer: Buffer,
     uploadedBy?: string,
     options: ProgressiveLoadOptions = {},
-  ): Promise<ProgressiveLoadResult<any>> {
+  ): Promise<ProgressiveLoadResult<unknown>> {
     const startTime = Date.now();
     const progress: LoadingProgress = {
       stage: "parsing",
@@ -234,9 +241,9 @@ export class ProgressiveLoadingService extends EventEmitter {
    * Progressive data retrieval with streaming
    */
   async getProductionPlansProgressive(
-    filters: any = {},
+    filters: Prisma.ProductionPlanWhereInput = {},
     options: ProgressiveLoadOptions = {},
-  ): Promise<ProgressiveLoadResult<any[]>> {
+  ): Promise<ProgressiveLoadResult<unknown[]>> {
     const startTime = Date.now();
     const progress: LoadingProgress = {
       stage: "parsing",
@@ -254,14 +261,7 @@ export class ProgressiveLoadingService extends EventEmitter {
       options.onProgress?.(progress);
 
       const plans = await this.prisma.productionPlan.findMany({
-        where: {
-          ...filters,
-          ...(Object.keys(filters).length > 0 && {
-            items: {
-              some: filters,
-            },
-          }),
-        },
+        where: filters,
         include: {
           items: {
             orderBy: [{ oncelik: "asc" }, { planlananBitisTarihi: "asc" }],
@@ -271,7 +271,7 @@ export class ProgressiveLoadingService extends EventEmitter {
       });
 
       const totalItems = plans.reduce(
-        (sum, plan) => sum + plan.items.length,
+        (sum, plan) => sum + (plan.items?.length || 0),
         0,
       );
       progress.totalItems = totalItems;
@@ -282,7 +282,7 @@ export class ProgressiveLoadingService extends EventEmitter {
 
       // Stage 2: Progressive decryption
       progress.stage = "encrypting"; // Reuse for decryption
-      const allItems = plans.flatMap((plan) => plan.items);
+      const allItems = plans.flatMap((plan) => plan.items || []);
 
       const decryptionResult =
         await asyncEncryptionService.decryptProductionPlanItems(allItems, {
@@ -363,7 +363,7 @@ export class ProgressiveLoadingService extends EventEmitter {
    * Save items progressively to database
    */
   private async saveItemsProgressive(
-    items: any[],
+    items: Prisma.ProductionPlanItemCreateManyInput[],
     planId: string,
     options: {
       onProgress?: (progress: {
@@ -372,9 +372,9 @@ export class ProgressiveLoadingService extends EventEmitter {
         percentage: number;
       }) => void;
     } = {},
-  ): Promise<any[]> {
+  ): Promise<Prisma.ProductionPlanItemCreateManyInput[]> {
     const batchSize = 100;
-    const savedItems: any[] = [];
+    const savedItems: Prisma.ProductionPlanItemCreateManyInput[] = [];
 
     for (let i = 0; i < items.length; i += batchSize) {
       const batch = items.slice(i, i + batchSize);

@@ -101,7 +101,7 @@ router.get(
       // const { data, total } = await repository.findPaginated(query);
 
       // Mock data for example
-      const data: any[] = [];
+      const data: unknown[] = [];
       const total = 0;
 
       const pagination = createPaginationMeta(
@@ -188,7 +188,7 @@ router.post(
 
       sendSuccess(res, list, 201);
     } catch (error) {
-      const err = error as any;
+      const err = error as Error & { code?: string };
 
       // Handle duplicate week number
       if (err.code === "P2002") {
@@ -365,7 +365,7 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const { listId, sectionId } = req.params;
-      const data = getValidatedData<any>(req);
+      const data = getValidatedData<Record<string, unknown>>(req);
 
       // Example: Add item
       const item = {
@@ -402,7 +402,7 @@ router.put(
   async (req: Request, res: Response) => {
     try {
       const { itemId } = req.params;
-      const updates = getValidatedData<any>(req);
+      const updates = getValidatedData<Record<string, unknown>>(req);
 
       // Example: Update item
       const item = { id: itemId, ...updates };

@@ -44,7 +44,7 @@ export class ProductionPlanController {
         return;
       }
 
-      const uploadedBy = (req as any).user?.id;
+      const uploadedBy = (req as { user?: { id?: string } }).user?.id;
       const result = await productionPlanService.uploadProductionPlan(
         req.file.buffer,
         uploadedBy,
@@ -392,7 +392,7 @@ export class ProductionPlanController {
   async createCuttingListFromPlan(req: Request, res: Response): Promise<void> {
     try {
       const { productionPlanItems, cuttingListMetadata } = req.body;
-      const userId = (req as any).user?.userId || "dev-user-123"; // Development fallback
+      const userId = (req as { user?: { userId?: string } }).user?.userId || "dev-user-123"; // Development fallback
 
       // Validation
       if (

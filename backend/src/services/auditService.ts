@@ -259,7 +259,16 @@ export class AuditService {
   /**
    * Get audit statistics
    */
-  public async getAuditStatistics(days: number = 30): Promise<any> {
+  public async getAuditStatistics(days: number = 30): Promise<{
+    period: string;
+    totalLogs: number;
+    operations: Array<{
+      operation: string;
+      tableName: string;
+      _count: { id: number };
+    }>;
+    generatedAt: string;
+  } | null> {
     try {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);

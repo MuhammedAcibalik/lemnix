@@ -20,6 +20,20 @@ import { logger } from "../services/logger";
 import { auditQueue } from "../services/auditQueue";
 
 // ============================================================================
+// TYPE EXTENSIONS
+// ============================================================================
+
+interface AuthenticatedRequest extends Request {
+  user?: {
+    userId: string;
+    role?: string;
+    sessionId?: string;
+    permissions?: unknown[];
+    tokenId?: string;
+  };
+}
+
+// ============================================================================
 // AUDIT CONFIGURATION
 // ============================================================================
 
@@ -73,8 +87,9 @@ export const auditMiddleware = (
   }
 
   const startTime = Date.now();
-  const userId = (req as any).user?.userId || "anonymous";
-  const sessionId = (req as any).user?.sessionId || null;
+  const authReq = req as AuthenticatedRequest;
+  const userId = authReq.user?.userId || "anonymous";
+  const sessionId = authReq.user?.sessionId || null;
 
   // Store original response methods
   const originalSend = res.send;
@@ -129,8 +144,10 @@ function enqueueAuditEvent(
 
     // Log security events for sensitive operations
     if (isSensitive && res.statusCode >= 400) {
+      const authReq = req as AuthenticatedRequest;
+      const responseObj = responseData as { error?: string; message?: string } | undefined;
       await auditService.logSecurityEvent(
-        (req as any).user?.userId || "anonymous",
+        authReq.user?.userId || "anonymous",
         operation,
         `Sensitive operation failed: ${req.method} ${req.path} - ${res.statusCode}`,
         severity,
@@ -141,7 +158,7 @@ function enqueueAuditEvent(
           method: req.method,
           statusCode: res.statusCode,
           duration,
-          error: (responseData as { error?: string; message?: string })?.error || (responseData as { error?: string; message?: string })?.message,
+          error: responseObj?.error || responseObj?.message,
         },
       );
     }
@@ -160,7 +177,7 @@ function enqueueAuditEvent(
     }
 
     logger.debug("Audit event logged", {
-      userId: (req as any).user?.userId || "anonymous",
+      userId: (req as AuthenticatedRequest).user?.userId || "anonymous",
       operation,
       tableName,
       path: req.path,

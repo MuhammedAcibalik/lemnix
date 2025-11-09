@@ -536,7 +536,7 @@ export class CuttingListRepository {
         readonly quantity: number;
       }>;
     },
-  ): Promise<any> {
+  ): Promise<PrismaCuttingListItem> {
     try {
       // Fetch cutting list from PostgreSQL
       const cuttingList = await prisma.cuttingList.findUnique({
@@ -763,7 +763,7 @@ export class CuttingListRepository {
         readonly quantity: number;
       }>;
     }>,
-  ): Promise<any> {
+  ): Promise<PrismaCuttingListItem[]> {
     try {
       // Fetch cutting list from PostgreSQL
       const cuttingList = await prisma.cuttingList.findUnique({
@@ -923,19 +923,19 @@ export class CuttingListRepository {
 
       // Update item with new data
       const now = new Date();
-      const currentItem = targetSection.items[itemIndex] as any; // JSON data, not typed
+      const currentItem = targetSection.items[itemIndex] as Record<string, unknown>; // JSON data, not typed
 
       // Safe property access with fallbacks
       const safeCurrentItem = {
-        workOrderId: currentItem?.workOrderId || "",
-        date: currentItem?.date || "",
-        version: currentItem?.version || "",
-        color: currentItem?.color || "",
-        notes: currentItem?.notes || null,
-        orderQuantity: currentItem?.orderQuantity || 0,
-        size: currentItem?.size || "",
-        priority: currentItem?.priority || "MEDIUM",
-        status: currentItem?.status || "DRAFT",
+        workOrderId: (currentItem?.workOrderId as string) || "",
+        date: (currentItem?.date as string) || "",
+        version: (currentItem?.version as string) || "",
+        color: (currentItem?.color as string) || "",
+        notes: (currentItem?.notes as string | null) || null,
+        orderQuantity: (currentItem?.orderQuantity as number) || 0,
+        size: (currentItem?.size as string) || "",
+        priority: (currentItem?.priority as string) || "MEDIUM",
+        status: (currentItem?.status as string) || "DRAFT",
       };
 
       const updatedItem = {
