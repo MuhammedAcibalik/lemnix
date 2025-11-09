@@ -138,12 +138,17 @@ export class ProductionPlanToCuttingListService {
       miktar: number;
       malzemeNo: string;
       malzemeKisaMetni: string;
+      oncelik?: string | null;
     }>,
   ) {
     const itemsToCreate = planItems.map((planItem) => {
       const validatedItem = validatedItems.find(
         (item) => item.id === planItem.planItemId,
       );
+
+      if (!validatedItem) {
+        throw new Error(`Plan item not found: ${planItem.planItemId}`);
+      }
 
       return {
         cuttingListId,
@@ -158,7 +163,7 @@ export class ProductionPlanToCuttingListService {
         color: "Beyaz", // Default color
         version: "1.0", // Default version
         size: "Standard", // Default size
-        priority: this.mapPriority(validatedItem.oncelik),
+        priority: this.mapPriority(validatedItem.oncelik as string),
         status: "DRAFT" as const,
       };
     });
@@ -184,7 +189,7 @@ export class ProductionPlanToCuttingListService {
       },
       data: {
         linkedCuttingListId: cuttingListId,
-      } as unknown as any,
+      },
     });
   }
 
@@ -216,7 +221,7 @@ export class ProductionPlanToCuttingListService {
     try {
       await prisma.productionPlanItem.update({
         where: { id: planItemId },
-        data: { linkedCuttingListId: cuttingListId } as unknown as any,
+        data: { linkedCuttingListId: cuttingListId },
       });
     } catch (error) {
       console.error("Error linking plan item to cutting list:", error);
@@ -237,7 +242,7 @@ export class ProductionPlanToCuttingListService {
               items: true,
             },
           },
-        } as unknown as any,
+        },
       });
 
       return planItem?.linkedCuttingList || null;
@@ -254,7 +259,7 @@ export class ProductionPlanToCuttingListService {
     try {
       await prisma.productionPlanItem.update({
         where: { id: planItemId },
-        data: { linkedCuttingListId: null } as unknown as any,
+        data: { linkedCuttingListId: null },
       });
     } catch (error) {
       console.error("Error unlinking plan item from cutting list:", error);
@@ -268,7 +273,7 @@ export class ProductionPlanToCuttingListService {
   async getLinkedPlanItems(cuttingListId: string) {
     try {
       return await prisma.productionPlanItem.findMany({
-        where: { linkedCuttingListId: cuttingListId } as unknown as any,
+        where: { linkedCuttingListId: cuttingListId },
         include: {
           plan: true,
         },

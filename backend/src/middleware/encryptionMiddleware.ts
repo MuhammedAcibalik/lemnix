@@ -87,7 +87,7 @@ export const decryptDataMiddleware = (
           tableName: context.table,
           path: req.path,
         });
-        return originalJson(data as any);
+        return originalJson(data as unknown);
       }
     };
 

@@ -98,7 +98,7 @@ export class AsyncEncryptionService extends EventEmitter {
 
         // Collect results
         for (const result of batchResults) {
-          if (result.success) {
+          if (result.success && result.data) {
             encryptedItems.push(result.data);
           } else {
             errors.push(result.error || "Unknown encryption error");
@@ -204,7 +204,7 @@ export class AsyncEncryptionService extends EventEmitter {
 
         // Collect results
         for (const result of batchResults) {
-          if (result.success) {
+          if (result.success && result.data) {
             decryptedItems.push(result.data);
           } else {
             errors.push(result.error || "Unknown decryption error");

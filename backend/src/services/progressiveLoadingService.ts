@@ -75,7 +75,7 @@ export class ProgressiveLoadingService extends EventEmitter {
     fileBuffer: Buffer,
     uploadedBy?: string,
     options: ProgressiveLoadOptions = {},
-  ): Promise<ProgressiveLoadResult<any>> {
+  ): Promise<ProgressiveLoadResult<unknown>> {
     const startTime = Date.now();
     const progress: LoadingProgress = {
       stage: "parsing",
@@ -243,7 +243,7 @@ export class ProgressiveLoadingService extends EventEmitter {
   async getProductionPlansProgressive(
     filters: Prisma.ProductionPlanWhereInput = {},
     options: ProgressiveLoadOptions = {},
-  ): Promise<ProgressiveLoadResult<ProductionPlanItem[]>> {
+  ): Promise<ProgressiveLoadResult<unknown[]>> {
     const startTime = Date.now();
     const progress: LoadingProgress = {
       stage: "parsing",
@@ -261,14 +261,7 @@ export class ProgressiveLoadingService extends EventEmitter {
       options.onProgress?.(progress);
 
       const plans = await this.prisma.productionPlan.findMany({
-        where: {
-          ...filters,
-          ...(Object.keys(filters).length > 0 && {
-            items: {
-              some: filters,
-            },
-          }),
-        },
+        where: filters,
         include: {
           items: {
             orderBy: [{ oncelik: "asc" }, { planlananBitisTarihi: "asc" }],
@@ -278,7 +271,7 @@ export class ProgressiveLoadingService extends EventEmitter {
       });
 
       const totalItems = plans.reduce(
-        (sum, plan) => sum + plan.items.length,
+        (sum, plan) => sum + (plan.items?.length || 0),
         0,
       );
       progress.totalItems = totalItems;
@@ -289,7 +282,7 @@ export class ProgressiveLoadingService extends EventEmitter {
 
       // Stage 2: Progressive decryption
       progress.stage = "encrypting"; // Reuse for decryption
-      const allItems = plans.flatMap((plan) => plan.items);
+      const allItems = plans.flatMap((plan) => plan.items || []);
 
       const decryptionResult =
         await asyncEncryptionService.decryptProductionPlanItems(allItems, {

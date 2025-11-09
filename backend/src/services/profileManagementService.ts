@@ -243,7 +243,13 @@ export class ProfileManagementService {
   async getMappingsByWeek(
     weekNumber: number,
     year: number,
-  ): Promise<WorkOrderProfileMapping[]> {
+  ): Promise<Prisma.WorkOrderProfileMappingGetPayload<{
+    include: {
+      profile: {
+        include: { stockLengths: true };
+      };
+    };
+  }>[]> {
     return await this.workOrderProfileMapping.findMany({
       where: { weekNumber, year },
       include: {
@@ -262,7 +268,13 @@ export class ProfileManagementService {
     workOrderId: string,
     weekNumber: number,
     year: number,
-  ): Promise<WorkOrderProfileMapping[]> {
+  ): Promise<Prisma.WorkOrderProfileMappingGetPayload<{
+    include: {
+      profile: {
+        include: { stockLengths: true };
+      };
+    };
+  }>[]> {
     return await this.workOrderProfileMapping.findMany({
       where: { workOrderId, weekNumber, year },
       include: {
