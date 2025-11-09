@@ -113,6 +113,10 @@ export class BFDAlgorithm extends BaseAlgorithm {
   private itemPatternCache: Map<number, number> = new Map(); // length -> count
   private stockUsageCache: Map<number, StockLengthUsage> = new Map(); // memoization
   private readonly paretoFilter: ParetoFilter;
+  
+  // NEW: Memoization cache for pattern fit calculations
+  private readonly patternFitCache: Map<string, boolean> = new Map();
+  private readonly patternDemandCache: Map<string, number> = new Map();
 
   constructor(logger: ILogger) {
     super(logger);
@@ -131,6 +135,9 @@ export class BFDAlgorithm extends BaseAlgorithm {
       totalPieces: context.getTotalItemCount(),
     });
 
+    // Clear caches for fresh optimization
+    this.clearOptimizationCaches();
+
     this.validateContext(context);
     const sortedItems = this.prepareSortedItems(context);
     this.analyzeItemPatterns(sortedItems); // NEW
@@ -148,7 +155,24 @@ export class BFDAlgorithm extends BaseAlgorithm {
       executionTime: this.getExecutionTime(context),
     });
 
+    // Clear caches after optimization to free memory
+    this.clearOptimizationCaches();
+
     return result;
+  }
+
+  /**
+   * Clear all optimization caches
+   * NEW: Memory management for repeated optimizations
+   */
+  private clearOptimizationCaches(): void {
+    this.itemPatternCache.clear();
+    this.stockUsageCache.clear();
+    this.patternFitCache.clear();
+    this.patternDemandCache.clear();
+    this.upcomingItems = [];
+    
+    this.logger.debug("[BFD] Optimization caches cleared");
   }
 
   /**
@@ -249,6 +273,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
   /**
    * Execute BFD algorithm with multi-stock length support
    * Uses DP optimization when kerf=0 for better results
+   * Enhanced with adaptive strategy selection based on problem characteristics
    */
   private executeBFDAlgorithm(
     sortedItems: ReadonlyArray<OptimizationItem>,
@@ -278,6 +303,35 @@ export class BFDAlgorithm extends BaseAlgorithm {
       },
     );
 
+    // ✅ ADAPTIVE STRATEGY SELECTION
+    // Analyze problem characteristics to select optimal approach
+    const problemCharacteristics = this.analyzeProblemCharacteristics(
+      sortedItems,
+      context,
+    );
+
+    this.logger.info("[BFD] Problem characteristics analyzed:", {
+      uniqueLengths: problemCharacteristics.uniqueLengths,
+      totalDemand: problemCharacteristics.totalDemand,
+      avgQuantityPerLength: problemCharacteristics.avgQuantityPerLength,
+      maxQuantity: problemCharacteristics.maxQuantity,
+      complexity: problemCharacteristics.complexity,
+      recommendedStrategy: problemCharacteristics.recommendedStrategy,
+    });
+
+    // Select strategy based on problem characteristics
+    if (problemCharacteristics.recommendedStrategy === "traditional") {
+      this.logger.info(
+        "[BFD] Using traditional BFD (problem too complex for pattern-based)",
+        {
+          reason: "High complexity or large scale",
+          uniqueLengths: problemCharacteristics.uniqueLengths,
+          totalDemand: problemCharacteristics.totalDemand,
+        },
+      );
+      return this.executeTraditionalBFD(sortedItems, context);
+    }
+
     // ✅ FIX: Always use DP optimization for exact demand fulfillment
     // DP with kerf support now handles both kerf=0 and kerf>0 cases
     this.logger.debug("[BFD] Calling executeDPOptimization");
@@ -285,6 +339,76 @@ export class BFDAlgorithm extends BaseAlgorithm {
       `[BFD] Using DP optimization (kerf=${context.constraints.kerfWidth})`,
     );
     return this.executeDPOptimization(sortedItems, context, theoreticalMin);
+  }
+
+  /**
+   * Analyze problem characteristics to determine optimal strategy
+   * NEW: Adaptive strategy selection based on problem size and complexity
+   */
+  private analyzeProblemCharacteristics(
+    items: ReadonlyArray<OptimizationItem>,
+    context: OptimizationContext,
+  ): {
+    uniqueLengths: number;
+    totalDemand: number;
+    avgQuantityPerLength: number;
+    maxQuantity: number;
+    complexity: "low" | "medium" | "high" | "extreme";
+    recommendedStrategy: "dp" | "traditional";
+  } {
+    // Group items by length
+    const lengthGroups = new Map<number, number>();
+    items.forEach((item) => {
+      const current = lengthGroups.get(item.length) || 0;
+      lengthGroups.set(item.length, current + item.quantity);
+    });
+
+    const uniqueLengths = lengthGroups.size;
+    const totalDemand = Array.from(lengthGroups.values()).reduce(
+      (sum, q) => sum + q,
+      0,
+    );
+    const avgQuantityPerLength = totalDemand / uniqueLengths;
+    const maxQuantity = Math.max(...lengthGroups.values());
+
+    // Calculate complexity score
+    // Factors: unique lengths, total demand, quantity variance
+    let complexity: "low" | "medium" | "high" | "extreme";
+    let recommendedStrategy: "dp" | "traditional";
+
+    // Pattern generation complexity grows as O(2^n) where n = unique lengths
+    // Combined with total demand for memory estimation
+    const patternComplexity = Math.pow(2, uniqueLengths) * totalDemand;
+
+    if (uniqueLengths <= 10 && totalDemand <= 500) {
+      complexity = "low";
+      recommendedStrategy = "dp";
+    } else if (uniqueLengths <= 15 && totalDemand <= 1000) {
+      complexity = "medium";
+      recommendedStrategy = "dp";
+    } else if (uniqueLengths <= 20 && totalDemand <= 2000) {
+      complexity = "high";
+      recommendedStrategy = "dp"; // Still worth trying
+    } else {
+      complexity = "extreme";
+      recommendedStrategy = "traditional"; // Too complex for pattern-based
+    }
+
+    // Additional check: If pattern complexity is prohibitive, use traditional
+    if (patternComplexity > 1000000) {
+      // 1M threshold
+      complexity = "extreme";
+      recommendedStrategy = "traditional";
+    }
+
+    return {
+      uniqueLengths,
+      totalDemand,
+      avgQuantityPerLength,
+      maxQuantity,
+      complexity,
+      recommendedStrategy,
+    };
   }
 
   /**
@@ -1417,6 +1541,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
   /**
    * Execute DP optimization for kerf=0 cases
    * Based on the reference implementation for optimal cutting patterns
+   * Enhanced with adaptive complexity management
    */
   private executeDPOptimization(
     sortedItems: ReadonlyArray<OptimizationItem>,
@@ -1451,9 +1576,26 @@ export class BFDAlgorithm extends BaseAlgorithm {
     // Medium problems (11-15 lengths): Limited patterns (good balance)
     // Large problems (>15 lengths): Traditional BFD (fast, guaranteed, acceptable waste)
 
-    if (uniqueLengths > 15 || totalDemand > 1000) {
+    // ✅ ENHANCED: More sophisticated complexity check
+    const maxLengthThreshold = 15;
+    const maxDemandThreshold = 1000;
+    const estimatedPatternCount = Math.pow(2, uniqueLengths); // Rough estimate
+
+    if (
+      uniqueLengths > maxLengthThreshold ||
+      totalDemand > maxDemandThreshold ||
+      estimatedPatternCount > 50000
+    ) {
       this.logger.info(
-        `[BFD] Using traditional BFD for large problem (${uniqueLengths} lengths, ${totalDemand} items)`,
+        `[BFD] Using traditional BFD for complex problem`,
+        {
+          reason: "Complexity threshold exceeded",
+          uniqueLengths,
+          maxLengthThreshold,
+          totalDemand,
+          maxDemandThreshold,
+          estimatedPatterns: estimatedPatternCount,
+        },
       );
 
       // CRITICAL: Traditional BFD with Best Fit Decreasing gives very good results
@@ -1463,12 +1605,20 @@ export class BFDAlgorithm extends BaseAlgorithm {
 
     this.logger.info(
       "[BFD] Using pattern-based optimization for optimal results",
+      {
+        uniqueLengths,
+        totalDemand,
+        estimatedPatterns: estimatedPatternCount,
+      },
     );
 
+    // Determine pattern limit based on problem size
     const usePatternLimit = uniqueLengths > 10;
+    const maxPatterns = usePatternLimit ? 50000 : undefined;
+
     if (usePatternLimit) {
       this.logger.info(
-        `[BFD] Medium problem (${uniqueLengths} lengths) - using limited pattern generation`,
+        `[BFD] Medium problem (${uniqueLengths} lengths) - using limited pattern generation (max: ${maxPatterns})`,
       );
     }
 
@@ -1478,6 +1628,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
       stockLengths: stockLengths.length,
       stockLengthsDetails: stockLengths,
       kerfWidth: context.constraints.kerfWidth,
+      maxPatterns: maxPatterns || "unlimited",
     });
 
     // Generate all possible cutting patterns for each stock length
@@ -1486,7 +1637,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
       itemGroups,
       [...stockLengths],
       context.constraints,
-      usePatternLimit ? 50000 : undefined, // Limit: max 50k patterns for large problems
+      maxPatterns,
     );
 
     this.logger.info("[BFD] Generated patterns:", {
@@ -1533,6 +1684,10 @@ export class BFDAlgorithm extends BaseAlgorithm {
                 100
               ).toFixed(2)
             : 0,
+        comparedToTheoretical:
+          cuts.length - theoreticalMin.minStockCount > 0
+            ? `+${cuts.length - theoreticalMin.minStockCount} stocks`
+            : "at theoretical minimum",
       });
 
       return cuts;
@@ -1545,6 +1700,8 @@ export class BFDAlgorithm extends BaseAlgorithm {
           error: error instanceof Error ? error.message : String(error),
           patternsGenerated: patterns.length,
           uniqueLengths: itemGroups.length,
+          fallbackReason:
+            "Pattern-based optimization could not find exact solution",
         },
       );
 
@@ -2610,27 +2767,55 @@ export class BFDAlgorithm extends BaseAlgorithm {
 
   /**
    * Check if a pattern fits within remaining demand
+   * Enhanced with memoization for performance
    */
   private patternFitsDemand(
     pattern: Map<number, number>,
     remainingDemand: Map<number, number>,
   ): boolean {
+    // Create cache key from pattern and demand
+    const cacheKey = this.createPatternDemandCacheKey(pattern, remainingDemand);
+
+    // Check cache first
+    const cached = this.patternFitCache.get(cacheKey);
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    // Calculate fit
+    let fits = true;
     for (const [length, count] of pattern.entries()) {
       const remaining = remainingDemand.get(length) || 0;
       if (count > remaining) {
-        return false; // Pattern exceeds remaining demand
+        fits = false;
+        break;
       }
     }
-    return true;
+
+    // Cache result
+    this.patternFitCache.set(cacheKey, fits);
+
+    return fits;
   }
 
   /**
    * Calculate how much of remaining demand this pattern uses
+   * Enhanced with memoization for performance
    */
   private calculateDemandUsage(
     pattern: Map<number, number>,
     remainingDemand: Map<number, number>,
   ): number {
+    // Create cache key
+    const cacheKey = this.createPatternDemandCacheKey(pattern, remainingDemand);
+
+    // Check cache first
+    const cached = this.patternDemandCache.get(cacheKey);
+    if (cached !== undefined) {
+      return cached;
+    }
+
+    // Calculate demand usage
     let totalUsed = 0;
     let totalRemaining = 0;
 
@@ -2640,7 +2825,34 @@ export class BFDAlgorithm extends BaseAlgorithm {
       totalRemaining += remaining;
     }
 
-    return totalRemaining > 0 ? totalUsed / totalRemaining : 0;
+    const usage = totalRemaining > 0 ? totalUsed / totalRemaining : 0;
+
+    // Cache result
+    this.patternDemandCache.set(cacheKey, usage);
+
+    return usage;
+  }
+
+  /**
+   * Create cache key for pattern-demand combination
+   * NEW: Helper for memoization
+   */
+  private createPatternDemandCacheKey(
+    pattern: Map<number, number>,
+    demand: Map<number, number>,
+  ): string {
+    // Sort keys for consistent cache keys
+    const patternParts = Array.from(pattern.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([len, cnt]) => `${len}:${cnt}`)
+      .join(",");
+
+    const demandParts = Array.from(demand.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([len, cnt]) => `${len}:${cnt}`)
+      .join(",");
+
+    return `p[${patternParts}]_d[${demandParts}]`;
   }
 
   /**
