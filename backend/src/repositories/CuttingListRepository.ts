@@ -397,13 +397,7 @@ export class CuttingListRepository {
   public async addProductSection(
     cuttingListId: string,
     data: { productName: string },
-  ): Promise<{
-    id: string;
-    productName: string;
-    items: any[];
-    createdAt: string;
-    updatedAt: string;
-  }> {
+  ): Promise<CuttingListSection> {
     try {
       // Check if cutting list exists
       const cuttingList = await prisma.cuttingList.findUnique({
@@ -1122,7 +1116,7 @@ export class CuttingListRepository {
       // Filter out the item - try by ID first, then by workOrderId if itemId starts with "workorder-"
       const originalLength = targetSection.items?.length || 0;
       let filteredItems = (targetSection.items || []).filter(
-        (item: any) => item.id !== itemId,
+        (item: PrismaCuttingListItem) => item.id !== itemId,
       );
 
       // If no items were filtered and itemId starts with "workorder-", try by workOrderId
@@ -1136,7 +1130,7 @@ export class CuttingListRepository {
           workOrderId,
         });
         filteredItems = (targetSection.items || []).filter(
-          (item: any) => item.workOrderId !== workOrderId,
+          (item: PrismaCuttingListItem) => item.workOrderId !== workOrderId,
         );
       }
 

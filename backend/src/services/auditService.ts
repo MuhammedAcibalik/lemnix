@@ -11,6 +11,7 @@
  */
 
 import { prisma } from "../config/database";
+import { Prisma } from "@prisma/client";
 import { logger } from "./logger";
 import { Request } from "express";
 
@@ -48,14 +49,14 @@ export interface AuditLogData {
   operation: AuditOperation;
   tableName: string;
   recordId?: string;
-  oldData?: any;
-  newData?: any;
+  oldData?: Record<string, unknown> | null;
+  newData?: Record<string, unknown> | null;
   ipAddress?: string;
   userAgent?: string;
   sessionId?: string;
   severity?: AuditSeverity;
   description?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export interface AuditQuery {
@@ -150,12 +151,12 @@ export class AuditService {
     operation: AuditOperation,
     tableName: string,
     recordId?: string,
-    oldData?: any,
-    newData?: any,
+    oldData?: Record<string, unknown> | null,
+    newData?: Record<string, unknown> | null,
     description?: string,
   ): Promise<void> {
-    const userId = (req as any).user?.userId || "anonymous";
-    const sessionId = (req as any).user?.sessionId || null;
+    const userId = (req as Request & { user?: { userId?: string; sessionId?: string } }).user?.userId || "anonymous";
+    const sessionId = (req as Request & { user?: { userId?: string; sessionId?: string } }).user?.sessionId || null;
     const ipAddress = req.ip || req.connection.remoteAddress || "unknown";
     const userAgent = req.headers["user-agent"] || "unknown";
 
@@ -180,7 +181,7 @@ export class AuditService {
     operation: AuditOperation,
     description: string,
     severity: AuditSeverity = AuditSeverity.MEDIUM,
-    metadata?: any,
+    metadata?: Record<string, unknown>,
   ): Promise<void> {
     await this.log({
       userId: "system",
@@ -202,7 +203,7 @@ export class AuditService {
     severity: AuditSeverity = AuditSeverity.HIGH,
     ipAddress?: string,
     userAgent?: string,
-    metadata?: any,
+    metadata?: Record<string, unknown>,
   ): Promise<void> {
     await this.log({
       userId,
@@ -219,9 +220,9 @@ export class AuditService {
   /**
    * Query audit logs
    */
-  public async queryAuditLogs(query: AuditQuery): Promise<any[]> {
+  public async queryAuditLogs(query: AuditQuery): Promise<Prisma.AuditLogGetPayload<Record<string, never>>[]> {
     try {
-      const where: any = {};
+      const where: Prisma.AuditLogWhereInput = {};
 
       if (query.userId) where.userId = query.userId;
       if (query.operation) where.operation = query.operation;
@@ -333,7 +334,7 @@ export class AuditService {
   /**
    * Sanitize data to remove sensitive information
    */
-  private sanitizeData(data: any): any {
+  private sanitizeData(data: unknown): unknown {
     if (!data || typeof data !== "object") {
       return data;
     }
@@ -351,7 +352,7 @@ export class AuditService {
       "bankAccount",
     ];
 
-    const sanitized = { ...data };
+    const sanitized = { ...(data as Record<string, unknown>) };
 
     for (const field of sensitiveFields) {
       if (sanitized[field]) {
@@ -388,8 +389,8 @@ export async function auditDataChange(
   operation: AuditOperation,
   tableName: string,
   recordId: string,
-  oldData?: any,
-  newData?: any,
+  oldData?: Record<string, unknown> | null,
+  newData?: Record<string, unknown> | null,
   description?: string,
 ): Promise<void> {
   await auditService.logUserAction(
@@ -410,7 +411,7 @@ export async function auditUserAction(
   req: Request,
   operation: AuditOperation,
   description: string,
-  metadata?: any,
+  metadata?: Record<string, unknown>,
 ): Promise<void> {
   await auditService.logUserAction(
     req,
@@ -433,7 +434,7 @@ export async function auditSecurityEvent(
   severity: AuditSeverity = AuditSeverity.HIGH,
   ipAddress?: string,
   userAgent?: string,
-  metadata?: any,
+  metadata?: Record<string, unknown>,
 ): Promise<void> {
   await auditService.logSecurityEvent(
     userId,

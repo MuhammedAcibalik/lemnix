@@ -108,25 +108,25 @@ export const logger = new ConsoleLogger(configuredLevel);
 configureConsoleProxy(logger);
 
 function configureConsoleProxy(activeLogger: ILogger): void {
-  console.debug = (message?: any, ...optionalParams: any[]) => {
+  console.debug = (message?: unknown, ...optionalParams: unknown[]) => {
     activeLogger.debug(
       String(message),
       optionalParams.length ? { params: optionalParams } : undefined,
     );
   };
-  console.info = (message?: any, ...optionalParams: any[]) => {
+  console.info = (message?: unknown, ...optionalParams: unknown[]) => {
     activeLogger.info(
       String(message),
       optionalParams.length ? { params: optionalParams } : undefined,
     );
   };
-  console.warn = (message?: any, ...optionalParams: any[]) => {
+  console.warn = (message?: unknown, ...optionalParams: unknown[]) => {
     activeLogger.warn(
       String(message),
       optionalParams.length ? { params: optionalParams } : undefined,
     );
   };
-  console.error = (message?: any, ...optionalParams: any[]) => {
+  console.error = (message?: unknown, ...optionalParams: unknown[]) => {
     const error =
       optionalParams.find((param) => param instanceof Error) ??
       optionalParams[0];
