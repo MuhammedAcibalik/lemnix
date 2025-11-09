@@ -10,6 +10,8 @@ import { prisma } from "../config/database";
 import {
   CuttingList,
   CuttingListItem as PrismaCuttingListItem,
+  CuttingListStatus,
+  ItemPriority,
   Prisma,
 } from "@prisma/client";
 import { logger } from "../services/logger";
@@ -142,7 +144,7 @@ export class CuttingListRepository {
    */
   public async findByUserId(
     userId: string,
-    filters?: { status?: string; weekNumber?: number },
+    filters?: { status?: CuttingListStatus; weekNumber?: number },
   ): Promise<CuttingList[]> {
     try {
       return await prisma.cuttingList.findMany({
@@ -324,7 +326,7 @@ export class CuttingListRepository {
     cursor?: string;
     take?: number;
     userId?: string;
-    status?: string;
+    status?: CuttingListStatus;
     includeItems?: boolean;
     includeStats?: boolean;
   }): Promise<{ data: CuttingList[]; nextCursor?: string }> {
@@ -656,8 +658,10 @@ export class CuttingListRepository {
           notes: itemData.note || null,
           orderQuantity: itemData.orderQuantity,
           size: itemData.size,
-          priority: itemData.priority,
-          status: itemData.status,
+          priority: (itemData.priority?.toUpperCase() ||
+            "MEDIUM") as ItemPriority,
+          status: (itemData.status?.toUpperCase() ||
+            "DRAFT") as CuttingListStatus,
           profileType: profile.profile, // Profil tipi (örn: "HELEZON", "DİREK")
           quantity: profile.quantity, // Profil adedi
           length:
@@ -925,9 +929,7 @@ export class CuttingListRepository {
 
       // Update item with new data
       const now = new Date();
-      const currentItem = targetSection.items[
-        itemIndex
-      ] as PrismaCuttingListItem;
+      const currentItem = targetSection.items[itemIndex] as any; // JSON data, not typed
 
       // Safe property access with fallbacks
       const safeCurrentItem = {
@@ -938,8 +940,8 @@ export class CuttingListRepository {
         notes: currentItem?.notes || null,
         orderQuantity: currentItem?.orderQuantity || 0,
         size: currentItem?.size || "",
-        priority: currentItem?.priority || "1",
-        status: currentItem?.status || "pending",
+        priority: currentItem?.priority || "MEDIUM",
+        status: currentItem?.status || "DRAFT",
       };
 
       const updatedItem = {
@@ -977,8 +979,12 @@ export class CuttingListRepository {
                 orderQuantity:
                   itemData.orderQuantity || safeCurrentItem.orderQuantity,
                 size: itemData.size || safeCurrentItem.size,
-                priority: itemData.priority || safeCurrentItem.priority,
-                status: itemData.status || safeCurrentItem.status,
+                priority: ((itemData.priority || safeCurrentItem.priority)
+                  ?.toString()
+                  .toUpperCase() || "MEDIUM") as ItemPriority,
+                status: ((itemData.status || safeCurrentItem.status)
+                  ?.toString()
+                  .toUpperCase() || "DRAFT") as CuttingListStatus,
                 profileType: profile.profile || "Unknown",
                 quantity: profile.quantity || 0,
                 length:
@@ -1229,8 +1235,10 @@ export class CuttingListRepository {
           notes: itemData.notes || "", // ✅ DÜZELTME: note -> notes
           orderQuantity: itemData.orderQuantity,
           size: itemData.size,
-          priority: itemData.priority,
-          status: itemData.status,
+          priority: (itemData.priority?.toString().toUpperCase() ||
+            "MEDIUM") as ItemPriority,
+          status: (itemData.status?.toString().toUpperCase() ||
+            "DRAFT") as CuttingListStatus,
           profileType: itemData.profileType,
           length: itemData.length, // ✅ DÜZELTME: measurement yerine length
           quantity: itemData.quantity,

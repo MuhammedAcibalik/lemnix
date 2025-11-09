@@ -12,7 +12,7 @@
  * - Type-safe error handling
  */
 
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, type RequestHandler } from "express";
 import { z } from "zod";
 
 // Import validation schemas
@@ -50,7 +50,7 @@ import {
 // Import repository (example)
 // import { CuttingListRepository } from '../repositories/CuttingListRepository';
 
-const router = Router();
+const router: Router = Router();
 
 // Apply request tracking to all routes
 router.use(requestTrackingMiddleware);
@@ -101,7 +101,7 @@ router.get(
       // const { data, total } = await repository.findPaginated(query);
 
       // Mock data for example
-      const data = [];
+      const data: any[] = [];
       const total = 0;
 
       const pagination = createPaginationMeta(
