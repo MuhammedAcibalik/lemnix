@@ -69,11 +69,6 @@ export class NSGAIIAlgorithm extends GeneticAlgorithm {
   public override readonly scalability = 7; // High scalability for multi-objective problems
 
   /**
-   * GPU Evolution Service for accelerated optimization (optional)
-   */
-  private gpuEvolutionService?: GPUEvolutionService;
-
-  /**
    * Epsilon threshold for normalization to avoid division by zero
    * Used consistently across all normalization operations
    */
@@ -251,7 +246,7 @@ export class NSGAIIAlgorithm extends GeneticAlgorithm {
     } finally {
       // Cleanup GPU resources
     this.gpuEvolutionService?.dispose();
-    this.gpuEvolutionService = undefined;
+    this.gpuEvolutionService = null;
     }
   }
 

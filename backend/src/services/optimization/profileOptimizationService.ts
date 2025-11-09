@@ -137,7 +137,12 @@ export class ProfileOptimizationService {
         cuts: (poolingResult.cuts as Cut[]).map((cut: Cut, index: number) => ({
           id: cut.id || `cut_${index}`,
           stockLength: cut.stockLength || 6100,
-          segments: cut.segments || [],
+          segments: (cut.segments || []).map(segment => ({
+            length: segment.length,
+            quantity: segment.quantity,
+            workOrderId: segment.workOrderId || '',
+            workOrderItemId: segment.workOrderItemId,
+          } as ProfileSegment)),
           usedLength: cut.usedLength || 0,
           remainingLength: cut.remainingLength || 0,
           planLabel: cut.planLabel || 'No plan',

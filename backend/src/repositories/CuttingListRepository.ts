@@ -944,7 +944,7 @@ export class CuttingListRepository {
         updatedAt: now,
       };
 
-      targetSection.items[itemIndex] = updatedItem;
+      (targetSection.items as unknown[])[itemIndex] = updatedItem;
       targetSection.updatedAt = now.toISOString();
 
       // ✅ CRITICAL FIX: Update CuttingListItem records in database
@@ -1027,7 +1027,18 @@ export class CuttingListRepository {
         itemId,
       });
 
-      return updatedItem;
+      // Fetch and return the updated items from database
+      const updatedItems = await prisma.cuttingListItem.findMany({
+        where: {
+          cuttingListId: cuttingListId,
+          workOrderId: itemData.workOrderId || safeCurrentItem.workOrderId,
+        },
+        orderBy: {
+          createdAt: 'asc',
+        },
+      });
+
+      return updatedItems;
     } catch (error) {
       logger.error("Failed to update item", {
         cuttingListId,

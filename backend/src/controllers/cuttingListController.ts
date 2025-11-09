@@ -550,11 +550,13 @@ export class CuttingListController {
               });
 
               // Group items by workOrderId
-              const itemsByWorkOrder = typedList.items.reduce(
+              // First group items by workOrderId with mutable arrays
+              const mutableItemsByWorkOrder = typedList.items.reduce(
                 (acc, item) => {
                   const workOrderId = item.workOrderId;
                   if (!acc[workOrderId]) {
                     acc[workOrderId] = {
+                      id: workOrderId,
                       workOrderId: item.workOrderId,
                       date: item.date || new Date().toISOString().split("T")[0],
                       version: item.version,
@@ -572,13 +574,13 @@ export class CuttingListController {
                         | "ready"
                         | "processing"
                         | "completed",
-                      profiles: [],
+                      profiles: [] as ProfileItem[],
                       createdAt: item.createdAt.toISOString(),
                       updatedAt: item.updatedAt.toISOString(),
                     };
                   }
 
-                  acc[workOrderId].profiles.push({
+                  (acc[workOrderId].profiles as ProfileItem[]).push({
                     id: `${item.id}-profile`,
                     profile: item.profileType,
                     measurement: `${item.length}mm`,
@@ -587,8 +589,16 @@ export class CuttingListController {
 
                   return acc;
                 },
-                {} as Record<string, CuttingListItem>,
+                {} as Record<string, Omit<CuttingListItem, 'profiles'> & { profiles: ProfileItem[] }>,
               );
+
+              // Convert to readonly structure
+              const itemsByWorkOrder = Object.fromEntries(
+                Object.entries(mutableItemsByWorkOrder).map(([key, value]) => [
+                  key,
+                  { ...value, profiles: value.profiles as ReadonlyArray<ProfileItem> } as CuttingListItem,
+                ])
+              ) as Record<string, CuttingListItem>;
 
               // Add items to existing sections
               const workOrdersByProfileType = Object.values(
@@ -659,12 +669,13 @@ export class CuttingListController {
 
           // If we have items but NO DB sections, group them by workOrderId to create sections
           if (typedList.items.length > 0) {
-            // Group items by workOrderId to create sections (preserve item IDs)
-            const itemsByWorkOrder = typedList.items.reduce(
+            // First group items by workOrderId with mutable arrays
+            const mutableItemsByWorkOrder = typedList.items.reduce(
               (acc, item) => {
                 const workOrderId = item.workOrderId;
                 if (!acc[workOrderId]) {
                   acc[workOrderId] = {
+                    id: workOrderId,
                     workOrderId: item.workOrderId,
                     date: item.date || new Date().toISOString().split("T")[0],
                     version: item.version,
@@ -682,14 +693,14 @@ export class CuttingListController {
                       | "ready"
                       | "processing"
                       | "completed",
-                    profiles: [],
+                    profiles: [] as ProfileItem[],
                     createdAt: item.createdAt.toISOString(),
                     updatedAt: item.updatedAt.toISOString(),
                   };
                 }
 
                 // Add profile to existing work order
-                acc[workOrderId].profiles.push({
+                (acc[workOrderId].profiles as ProfileItem[]).push({
                   id: `${item.id}-profile`,
                   profile: item.profileType,
                   measurement: `${item.length}mm`,
@@ -698,8 +709,16 @@ export class CuttingListController {
 
                 return acc;
               },
-              {} as Record<string, CuttingListItem>,
+              {} as Record<string, Omit<CuttingListItem, 'profiles'> & { profiles: ProfileItem[] }>,
             );
+
+            // Convert to readonly structure
+            const itemsByWorkOrder = Object.fromEntries(
+              Object.entries(mutableItemsByWorkOrder).map(([key, value]) => [
+                key,
+                { ...value, profiles: value.profiles as ReadonlyArray<ProfileItem> } as CuttingListItem,
+              ])
+            ) as Record<string, CuttingListItem>;
 
             // Convert grouped items to sections by profileType
             const itemsByProfile = Object.values(itemsByWorkOrder).reduce(
@@ -844,12 +863,13 @@ export class CuttingListController {
 
         const typedList = dbList as unknown as CuttingListWithFields;
 
-        // Group items by workOrderId to create sections (preserve item IDs)
-        const itemsByWorkOrder = typedList.items.reduce(
+        // First group items by workOrderId with mutable arrays
+        const mutableItemsByWorkOrder = typedList.items.reduce(
           (acc, item) => {
             const workOrderId = item.workOrderId;
             if (!acc[workOrderId]) {
               acc[workOrderId] = {
+                id: workOrderId,
                 workOrderId: item.workOrderId,
                 date: item.date || new Date().toISOString().split("T")[0],
                 version: item.version,
@@ -863,14 +883,14 @@ export class CuttingListController {
                   | "ready"
                   | "processing"
                   | "completed",
-                profiles: [],
+                profiles: [] as ProfileItem[],
                 createdAt: item.createdAt.toISOString(),
                 updatedAt: item.updatedAt.toISOString(),
               };
             }
 
             // Add profile to existing work order
-            acc[workOrderId].profiles.push({
+            (acc[workOrderId].profiles as ProfileItem[]).push({
               id: `${item.id}-profile`,
               profile: item.profileType,
               measurement: `${item.length}mm`,
@@ -879,8 +899,16 @@ export class CuttingListController {
 
             return acc;
           },
-          {} as Record<string, CuttingListItem>,
+          {} as Record<string, Omit<CuttingListItem, 'profiles'> & { profiles: ProfileItem[] }>,
         );
+
+        // Convert to readonly structure
+        const itemsByWorkOrder = Object.fromEntries(
+          Object.entries(mutableItemsByWorkOrder).map(([key, value]) => [
+            key,
+            { ...value, profiles: value.profiles as ReadonlyArray<ProfileItem> } as CuttingListItem,
+          ])
+        ) as Record<string, CuttingListItem>;
 
         // Convert grouped items to sections by profileType
         const itemsByProfile = Object.values(itemsByWorkOrder).reduce(
@@ -1274,11 +1302,15 @@ export class CuttingListController {
           logger.info(`[${requestId}] Starting smart learning`, {
             hasCuttingListId: !!newItem.cuttingListId,
             cuttingListId: newItem.cuttingListId,
-            sectionId: newItem.sectionId,
+            sectionId: sectionId,
             itemId: newItem.id,
           });
 
-          await this.learnFromNewItem(itemData, newItem);
+          await this.learnFromNewItem(itemData, {
+            id: newItem.id,
+            sectionId: sectionId,
+            cuttingListId: newItem.cuttingListId,
+          });
 
           logger.info(`[${requestId}] Smart suggestion learning completed`, {
             productName: itemData.size, // This should be productName from section

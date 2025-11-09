@@ -32,9 +32,9 @@ import type { ILogger } from '../logger';
 /**
  * WebGPU Navigator interface for type safety
  */
-interface NavigatorWithGPU extends Navigator {
+type NavigatorWithGPU = Navigator & {
   gpu?: GPU;
-}
+};
 
 // WebGPU type definitions
 declare global {
@@ -278,10 +278,11 @@ export class GPUEvolutionService {
       // Check WebGPU support
       if (typeof globalThis !== 'undefined' && (globalThis.navigator as NavigatorWithGPU)?.gpu) {
         // Browser environment
-        this.adapter = await (globalThis.navigator as NavigatorWithGPU).gpu!.requestAdapter({
+        const adapter = await (globalThis.navigator as NavigatorWithGPU).gpu!.requestAdapter({
           powerPreference: 'high-performance',
           forceFallbackAdapter: false
         });
+        this.adapter = adapter as GPUAdapter | null;
       } else {
         this.logger.warn('WebGPU not supported in this environment');
         return false;
