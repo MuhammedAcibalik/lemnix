@@ -7,18 +7,21 @@
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
-/**
- * Extended jsPDF type with internal API access
- */
-interface ExtendedJsPDF extends jsPDF {
-  internal: {
-    getNumberOfPages: () => number;
-    [key: string]: unknown;
-  };
-}
-
 // Type definitions (inline for now)
 export interface ModernStatisticsData {
+  overview?: {
+    totalItems?: number;
+    totalCategories?: number;
+    [key: string]: unknown;
+  };
+  profileAnalysis?: unknown;
+  productCategories?: unknown;
+  colorSizeAnalysis?: {
+    colors?: unknown;
+    sizes?: unknown;
+    combinations?: unknown;
+  };
+  workOrders?: unknown;
   [key: string]: unknown;
 }
 
@@ -92,6 +95,7 @@ export interface ModernExportResult {
     type: string;
   }>;
   message?: string;
+  error?: string;
   metadata?: {
     processingTime?: number;
     dataPoints?: number;
@@ -216,17 +220,17 @@ export const createModernPDFExport = async (
       },
       {
         title: "🎨 Renk Analizi",
-        data: data.colorSizeAnalysis.colors,
+        data: data.colorSizeAnalysis?.colors,
         type: "color",
       },
       {
         title: "📏 Ebat Analizi",
-        data: data.colorSizeAnalysis.sizes,
+        data: data.colorSizeAnalysis?.sizes,
         type: "size",
       },
       {
         title: "🔗 Kombinasyonlar",
-        data: data.colorSizeAnalysis.combinations,
+        data: data.colorSizeAnalysis?.combinations,
         type: "combination",
       },
       { title: "📋 İş Emirleri", data: data.workOrders, type: "workorder" },
@@ -257,8 +261,7 @@ export const createModernPDFExport = async (
         {
           name: filename,
           type: "pdf",
-          size: doc.output("blob").size,
-          url: URL.createObjectURL(doc.output("blob")),
+          data: doc.output("blob"),
         },
       ],
       message: "Modern PDF raporu başarıyla oluşturuldu!",
@@ -266,9 +269,7 @@ export const createModernPDFExport = async (
         processingTime,
         dataPoints: calculateDataPoints(data),
         chartsGenerated: 6,
-        pagesGenerated: (doc as ExtendedJsPDF).internal.getNumberOfPages
-          ? (doc as ExtendedJsPDF).internal.getNumberOfPages()
-          : 1,
+        pagesGenerated: doc.internal.pages?.length || 1,
       },
     };
   } catch (error) {
@@ -293,7 +294,7 @@ export const createModernPDFExport = async (
 const addModernTitlePage = async (
   doc: jsPDF,
   data: ModernStatisticsData,
-  template: Record<string, unknown>,
+  template: PDFTemplate,
   options: ModernExportOptions,
 ) => {
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -379,7 +380,7 @@ const addGradientBackground = (
  */
 const addGlassmorphismHeader = (
   doc: jsPDF,
-  template: Record<string, unknown>,
+  template: PDFTemplate,
   pageWidth: number,
 ) => {
   // Ana header
@@ -401,7 +402,7 @@ const addGlassmorphismHeader = (
  */
 const addStandardHeader = (
   doc: jsPDF,
-  template: Record<string, unknown>,
+  template: PDFTemplate,
   pageWidth: number,
 ) => {
   doc.setFillColor(template.colors.primary);
@@ -414,7 +415,7 @@ const addStandardHeader = (
 const addInfoCards = (
   doc: jsPDF,
   data: ModernStatisticsData,
-  template: Record<string, unknown>,
+  template: PDFTemplate,
   pageWidth: number,
   pageHeight: number,
 ) => {
@@ -425,21 +426,21 @@ const addInfoCards = (
   const cards = [
     {
       title: "Toplam Ürün",
-      value: data.overview.totalItems,
+      value: data.overview?.totalItems,
       unit: "adet",
       icon: "📦",
       color: template.colors.secondary,
     },
     {
       title: "Verimlilik",
-      value: data.overview.efficiencyScore,
+      value: data.overview?.efficiencyScore,
       unit: "%",
       icon: "⚡",
       color: template.colors.accent,
     },
     {
       title: "Tamamlanma",
-      value: data.overview.completionRate,
+      value: data.overview?.completionRate,
       unit: "%",
       icon: "✅",
       color: "#10B981",
@@ -483,7 +484,7 @@ const addInfoCards = (
 const addModernTableOfContents = (
   doc: jsPDF,
   data: ModernStatisticsData,
-  template: Record<string, unknown>,
+  template: PDFTemplate,
 ) => {
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 25;
@@ -584,7 +585,7 @@ const addModernTableOfContents = (
 const addSummaryBox = (
   doc: jsPDF,
   data: ModernStatisticsData,
-  template: Record<string, unknown>,
+  template: PDFTemplate,
   x: number,
   y: number,
   width: number,
@@ -609,9 +610,9 @@ const addSummaryBox = (
   // Özet veriler
   const summaryItems = [
     `Toplam Veri Noktası: ${calculateDataPoints(data)}`,
-    `Analiz Edilen Kategori: ${data.productCategories.length}`,
-    `İş Emri Durumu: ${data.workOrders.completed}/${data.workOrders.total} tamamlandı`,
-    `Genel Verimlilik: ${data.overview.efficiencyScore}%`,
+    `Analiz Edilen Kategori: ${data.productCategories?.length}`,
+    `İş Emri Durumu: ${data.workOrders?.completed}/${data.workOrders?.total} tamamlandı`,
+    `Genel Verimlilik: ${data.overview?.efficiencyScore}%`,
   ];
 
   doc.setFontSize(template.fonts.sizes.small);
@@ -629,7 +630,7 @@ const addSummaryBox = (
 const addModernDashboard = async (
   doc: jsPDF,
   data: ModernStatisticsData,
-  template: Record<string, unknown>,
+  template: PDFTemplate,
   contentWidth: number,
   margin: number,
 ) => {
@@ -656,7 +657,7 @@ const addModernDashboard = async (
 const addMetricCards = (
   doc: jsPDF,
   data: ModernStatisticsData,
-  template: Record<string, unknown>,
+  template: PDFTemplate,
   x: number,
   y: number,
   width: number,
@@ -667,28 +668,28 @@ const addMetricCards = (
   const metrics = [
     {
       title: "Toplam Ürün",
-      value: data.overview.totalItems,
+      value: data.overview?.totalItems,
       unit: "adet",
       trend: "+12%",
       color: template.colors.secondary,
     },
     {
       title: "Verimlilik Skoru",
-      value: data.overview.efficiencyScore,
+      value: data.overview?.efficiencyScore,
       unit: "%",
       trend: "+8%",
       color: template.colors.accent,
     },
     {
       title: "Tamamlanma Oranı",
-      value: data.overview.completionRate,
+      value: data.overview?.completionRate,
       unit: "%",
       trend: "+5%",
       color: "#10B981",
     },
     {
       title: "Ortalama Süre",
-      value: data.workOrders.averageProcessingTime,
+      value: data.workOrders?.averageProcessingTime,
       unit: "gün",
       trend: "-2 gün",
       color: "#EF4444",
@@ -734,7 +735,7 @@ const addMetricCards = (
 const addTrendCharts = async (
   doc: jsPDF,
   data: ModernStatisticsData,
-  template: Record<string, unknown>,
+  template: PDFTemplate,
   x: number,
   y: number,
   width: number,
@@ -753,7 +754,7 @@ const addTrendCharts = async (
   doc.text("📈 İş Emri Trendi", x + 10, y + 15);
 
   // Basit çizgi grafik çizer
-  const chartData = data.workOrders.trends.slice(-7);
+  const chartData = data.workOrders?.trends.slice(-7);
   const maxValue = Math.max(...chartData.map((d) => d.completed));
   const stepX = (chartWidth - 40) / (chartData.length - 1);
   const stepY = (chartHeight - 40) / maxValue;
@@ -795,7 +796,7 @@ const addTrendCharts = async (
 const addModernSection = (
   doc: jsPDF,
   section: Record<string, unknown>,
-  template: Record<string, unknown>,
+  template: PDFTemplate,
   contentWidth: number,
   margin: number,
 ) => {
@@ -805,7 +806,7 @@ const addModernSection = (
 const addTrendAnalysisPage = async (
   doc: jsPDF,
   data: ModernStatisticsData,
-  template: Record<string, unknown>,
+  template: PDFTemplate,
   contentWidth: number,
   margin: number,
 ) => {
@@ -815,7 +816,7 @@ const addTrendAnalysisPage = async (
 const addSummaryAndRecommendations = (
   doc: jsPDF,
   data: ModernStatisticsData,
-  template: Record<string, unknown>,
+  template: PDFTemplate,
   contentWidth: number,
   margin: number,
 ) => {
@@ -832,12 +833,12 @@ const generateModernFilename = (format: string): string => {
 
 const calculateDataPoints = (data: ModernStatisticsData): number => {
   return (
-    data.profileAnalysis.length +
-    data.productCategories.length +
-    data.colorSizeAnalysis.colors.length +
-    data.colorSizeAnalysis.sizes.length +
-    data.colorSizeAnalysis.combinations.length +
-    data.workOrders.trends.length
+    data.profileAnalysis?.length +
+    data.productCategories?.length +
+    data.colorSizeAnalysis?.colors.length +
+    data.colorSizeAnalysis?.sizes.length +
+    data.colorSizeAnalysis?.combinations.length +
+    data.workOrders?.trends.length
   );
 };
 

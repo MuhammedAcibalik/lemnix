@@ -15,6 +15,8 @@ import {
   Skeleton,
   useTheme,
   alpha,
+  type SxProps,
+  type Theme,
 } from "@mui/material";
 
 interface LoadingSpinnerProps {
@@ -30,9 +32,9 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 }) => {
   const theme = useTheme();
 
-  const containerStyles = fullScreen
+  const containerStyles: SxProps<Theme> = fullScreen
     ? {
-        position: "fixed" as const,
+        position: "fixed",
         top: 0,
         left: 0,
         right: 0,

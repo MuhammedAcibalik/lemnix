@@ -32,7 +32,7 @@ import {
   Refresh as RefreshIcon,
   Info as InfoIcon,
 } from "@mui/icons-material";
-import { useSmartSuggestions } from "../hooks/useSmartSuggestions";
+import { useSmartSuggestions } from "@/widgets/cutting-list-builder/hooks/useSmartSuggestions";
 
 /**
  * Local type definition to avoid conflicts
