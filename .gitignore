@@ -23,7 +23,6 @@ backend/.env.production
 # IDE and editor files
 .vscode/
 .idea/
-.cursor/
 *.swp
 *.swo
 *~
