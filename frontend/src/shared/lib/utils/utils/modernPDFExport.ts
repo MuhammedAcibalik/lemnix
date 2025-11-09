@@ -849,7 +849,6 @@ const calculateDataPoints = (data: ModernStatisticsData): number => {
   
   return profileLength + categoriesLength + colorsLength + sizesLength + combinationsLength + trendsLength;
 };
-};
 
 const interpolateColor = (
   color1: string,
