@@ -4,11 +4,14 @@
  * @version 1.0.0
  */
 
-import { Router, Request, Response, NextFunction } from 'express';
-import multer from 'multer';
-import { profileManagementController } from '../controllers/profileManagementController';
-import { authenticateToken, validateSession } from '../middleware/authentication';
-import { logger } from '../services/logger';
+import { Router, Request, Response, NextFunction } from "express";
+import multer from "multer";
+import { profileManagementController } from "../controllers/profileManagementController";
+import {
+  authenticateToken,
+  validateSession,
+} from "../middleware/authentication";
+import { logger } from "../services/logger";
 
 const router: Router = Router();
 
@@ -16,41 +19,49 @@ const router: Router = Router();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
+    fileSize: 10 * 1024 * 1024, // 10MB limit
   },
   fileFilter: (req, file, cb) => {
     // Only allow Excel files
     const allowedMimes = [
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-      'application/vnd.ms-excel', // .xls
-      'application/vnd.ms-excel.sheet.macroEnabled.12' // .xlsm
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+      "application/vnd.ms-excel", // .xls
+      "application/vnd.ms-excel.sheet.macroEnabled.12", // .xlsm
     ];
 
     if (allowedMimes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Sadece Excel dosyaları (.xlsx, .xls) yüklenebilir'));
+      cb(new Error("Sadece Excel dosyaları (.xlsx, .xls) yüklenebilir"));
     }
-  }
+  },
 });
 
 // Logging middleware BEFORE multer
-const logRequestDetails = (req: Request, res: Response, next: NextFunction): void => {
-  logger.info('[ProfileMgmt] Upload request received (before multer)', {
-    contentType: req.headers['content-type'],
-    contentLength: req.headers['content-length'],
+const logRequestDetails = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
+  logger.info("[ProfileMgmt] Upload request received (before multer)", {
+    contentType: req.headers["content-type"],
+    contentLength: req.headers["content-length"],
     hasBody: !!req.body,
-    bodyKeys: Object.keys(req.body || {})
+    bodyKeys: Object.keys(req.body || {}),
   });
   next();
 };
 
 // Logging middleware AFTER multer
-const logAfterMulter = (req: Request, res: Response, next: NextFunction): void => {
-  logger.info('[ProfileMgmt] After multer', {
+const logAfterMulter = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
+  logger.info("[ProfileMgmt] After multer", {
     hasFile: !!req.file,
     fileSize: req.file?.size,
-    fileName: req.file?.originalname
+    fileName: req.file?.originalname,
   });
   next();
 };
@@ -64,12 +75,13 @@ const logAfterMulter = (req: Request, res: Response, next: NextFunction): void =
  * POST /api/profile-management/upload
  */
 router.post(
-  '/upload',
+  "/upload",
   authenticateToken,
   logRequestDetails,
-  upload.single('profileFile'),
+  upload.single("profileFile"),
   logAfterMulter,
-  (req: Request, res: Response) => profileManagementController.uploadProfileManagement(req, res)
+  (req: Request, res: Response) =>
+    profileManagementController.uploadProfileManagement(req, res),
 );
 
 /**
@@ -77,20 +89,16 @@ router.post(
  * GET /api/profile-management/definitions
  * Query params: ?activeOnly=true&includeStockLengths=true
  */
-router.get(
-  '/definitions',
-  authenticateToken,
-  (req: Request, res: Response) => profileManagementController.getProfileDefinitions(req, res)
+router.get("/definitions", authenticateToken, (req: Request, res: Response) =>
+  profileManagementController.getProfileDefinitions(req, res),
 );
 
 /**
  * Get profile definition by code
  * GET /api/profile-management/profile/:code
  */
-router.get(
-  '/profile/:code',
-  authenticateToken,
-  (req: Request, res: Response) => profileManagementController.getProfileByCode(req, res)
+router.get("/profile/:code", authenticateToken, (req: Request, res: Response) =>
+  profileManagementController.getProfileByCode(req, res),
 );
 
 /**
@@ -98,20 +106,18 @@ router.get(
  * GET /api/profile-management/profile/:code/stock-lengths
  */
 router.get(
-  '/profile/:code/stock-lengths',
+  "/profile/:code/stock-lengths",
   authenticateToken,
   (req: Request, res: Response) =>
-    profileManagementController.getStockLengthsByProfileCode(req, res)
+    profileManagementController.getStockLengthsByProfileCode(req, res),
 );
 
 /**
  * Get work order profile mappings by week/year
  * GET /api/profile-management/mappings?week={n}&year={y}
  */
-router.get(
-  '/mappings',
-  authenticateToken,
-  (req: Request, res: Response) => profileManagementController.getMappingsByWeek(req, res)
+router.get("/mappings", authenticateToken, (req: Request, res: Response) =>
+  profileManagementController.getMappingsByWeek(req, res),
 );
 
 /**
@@ -119,10 +125,10 @@ router.get(
  * GET /api/profile-management/mappings/work-order/:workOrderId?week={n}&year={y}
  */
 router.get(
-  '/mappings/work-order/:workOrderId',
+  "/mappings/work-order/:workOrderId",
   authenticateToken,
   (req: Request, res: Response) =>
-    profileManagementController.getMappingsForWorkOrder(req, res)
+    profileManagementController.getMappingsForWorkOrder(req, res),
 );
 
 /**
@@ -130,10 +136,8 @@ router.get(
  * PUT /api/profile-management/mappings/:id
  * Body: { profileCode: string }
  */
-router.put(
-  '/mappings/:id',
-  authenticateToken,
-  (req: Request, res: Response) => profileManagementController.updateMapping(req, res)
+router.put("/mappings/:id", authenticateToken, (req: Request, res: Response) =>
+  profileManagementController.updateMapping(req, res),
 );
 
 /**
@@ -141,20 +145,18 @@ router.put(
  * DELETE /api/profile-management/definitions/:id
  */
 router.delete(
-  '/definitions/:id',
+  "/definitions/:id",
   authenticateToken,
-  (req: Request, res: Response) => profileManagementController.deleteProfile(req, res)
+  (req: Request, res: Response) =>
+    profileManagementController.deleteProfile(req, res),
 );
 
 /**
  * Get statistics
  * GET /api/profile-management/statistics
  */
-router.get(
-  '/statistics',
-  authenticateToken,
-  (req: Request, res: Response) => profileManagementController.getStatistics(req, res)
+router.get("/statistics", authenticateToken, (req: Request, res: Response) =>
+  profileManagementController.getStatistics(req, res),
 );
 
 export default router;
-

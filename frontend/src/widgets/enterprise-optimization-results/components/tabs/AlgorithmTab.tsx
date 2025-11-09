@@ -4,17 +4,17 @@
  * @version 1.0.0
  */
 
-import React from 'react';
-import { OptimizationResult } from '../../types';
-import { 
-  Box, 
-  Typography, 
-  Alert, 
-  AlertTitle, 
-  Grid, 
-  Paper, 
-  Switch 
-} from '@mui/material';
+import React from "react";
+import { OptimizationResult } from "../../types";
+import {
+  Box,
+  Typography,
+  Alert,
+  AlertTitle,
+  Grid,
+  Paper,
+  Switch,
+} from "@mui/material";
 
 interface AlgorithmTabProps {
   result: OptimizationResult;
@@ -27,7 +27,7 @@ export const AlgorithmTab: React.FC<AlgorithmTabProps> = ({
   result,
   useProfileOptimization,
   onProfileOptimizationToggle,
-  profileOptimizationResult
+  profileOptimizationResult,
 }) => {
   if (!result) {
     return (
@@ -53,7 +53,8 @@ export const AlgorithmTab: React.FC<AlgorithmTabProps> = ({
                 border: "2px solid #f59e0b", // Efficiency Orange - debug border
                 p: 2,
                 borderRadius: 2,
-                background: "linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%)",
+                background:
+                  "linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%)",
               }}
             >
               <Typography variant="h6">
@@ -70,16 +71,11 @@ export const AlgorithmTab: React.FC<AlgorithmTabProps> = ({
               />
             </Box>
 
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ mb: 2 }}
-            >
-              Aynı profil tiplerindeki parçaları gruplandırarak daha
-              verimli kesim planları oluşturur. Bu özellik
-              açıldığında, sistem aynı profil tipindeki parçaları bir
-              araya getirerek stok kullanımını optimize eder ve atık
-              miktarını azaltır.
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Aynı profil tiplerindeki parçaları gruplandırarak daha verimli
+              kesim planları oluşturur. Bu özellik açıldığında, sistem aynı
+              profil tipindeki parçaları bir araya getirerek stok kullanımını
+              optimize eder ve atık miktarını azaltır.
             </Typography>
 
             {useProfileOptimization && profileOptimizationResult && (

@@ -2,28 +2,53 @@
  * @fileoverview Suggestion Pattern Repository
  * @module repositories/SuggestionPatternRepository
  * @version 1.0.0
- * 
+ *
  * Data access layer for SuggestionPattern operations
  * Follows SOLID principles with single responsibility
  */
 
-import { prisma } from '../config/database';
-import { Prisma } from '@prisma/client';
-import { logger } from '../services/logger';
-import { normalizeString, createContextKey, createPatternKey } from '../utils/stringNormalizer';
+import { prisma } from "../config/database";
+import { Prisma } from "@prisma/client";
+import { logger } from "../services/logger";
+import {
+  normalizeString,
+  createContextKey,
+  createPatternKey,
+} from "../utils/stringNormalizer";
 
 // Type-safe Prisma client wrapper
 const suggestionPatternClient = prisma as unknown as {
   suggestionPattern: {
-    create: (args: { data: Record<string, unknown> }) => Promise<Record<string, unknown>>;
-    findMany: (args?: { where?: Record<string, unknown>; orderBy?: Record<string, unknown> | Record<string, unknown>[]; take?: number; distinct?: string[]; select?: Record<string, unknown> }) => Promise<Record<string, unknown>[]>;
-    findUnique: (args: { where: Record<string, unknown> }) => Promise<Record<string, unknown> | null>;
-    update: (args: { where: Record<string, unknown>; data: Record<string, unknown> }) => Promise<Record<string, unknown>>;
-    upsert: (args: { where: Record<string, unknown>; create: Record<string, unknown>; update: Record<string, unknown> }) => Promise<Record<string, unknown>>;
+    create: (args: {
+      data: Record<string, unknown>;
+    }) => Promise<Record<string, unknown>>;
+    findMany: (args?: {
+      where?: Record<string, unknown>;
+      orderBy?: Record<string, unknown> | Record<string, unknown>[];
+      take?: number;
+      distinct?: string[];
+      select?: Record<string, unknown>;
+    }) => Promise<Record<string, unknown>[]>;
+    findUnique: (args: {
+      where: Record<string, unknown>;
+    }) => Promise<Record<string, unknown> | null>;
+    update: (args: {
+      where: Record<string, unknown>;
+      data: Record<string, unknown>;
+    }) => Promise<Record<string, unknown>>;
+    upsert: (args: {
+      where: Record<string, unknown>;
+      create: Record<string, unknown>;
+      update: Record<string, unknown>;
+    }) => Promise<Record<string, unknown>>;
     count: (args?: { where?: Record<string, unknown> }) => Promise<number>;
-    aggregate: (args: { _avg: Record<string, unknown> }) => Promise<{ _avg: Record<string, unknown> }>;
+    aggregate: (args: {
+      _avg: Record<string, unknown>;
+    }) => Promise<{ _avg: Record<string, unknown> }>;
     groupBy: (args: { by: string[] }) => Promise<Record<string, unknown>[]>;
-    deleteMany: (args: { where: Record<string, unknown> }) => Promise<{ count: number }>;
+    deleteMany: (args: {
+      where: Record<string, unknown>;
+    }) => Promise<{ count: number }>;
   };
 };
 
@@ -107,11 +132,11 @@ export class SuggestionPatternRepository {
           averageQuantity: data.averageQuantity,
           contexts: data.contexts as Prisma.InputJsonValue,
           variations: data.variations as Prisma.InputJsonValue,
-          metadata: data.metadata as Prisma.InputJsonValue
-        }
+          metadata: data.metadata as Prisma.InputJsonValue,
+        },
       });
     } catch (error) {
-      logger.error('Failed to create suggestion pattern', { error, data });
+      logger.error("Failed to create suggestion pattern", { error, data });
       throw error;
     }
   }
@@ -122,19 +147,28 @@ export class SuggestionPatternRepository {
   async findByContextKey(contextKey: string): Promise<SuggestionPattern[]> {
     try {
       // Get all patterns for this context
-      const patterns = await suggestionPatternClient.suggestionPattern.findMany({
-        where: { contextKey },
-        orderBy: { createdAt: 'asc' }
-      });
-      
+      const patterns = await suggestionPatternClient.suggestionPattern.findMany(
+        {
+          where: { contextKey },
+          orderBy: { createdAt: "asc" },
+        },
+      );
+
       // ✅ FIXED: Sort by metadata.originalIndex if available
       return patterns.sort((a, b) => {
-        const aIndex = (a.metadata as Record<string, unknown>)?.originalIndex as number ?? 999;
-        const bIndex = (b.metadata as Record<string, unknown>)?.originalIndex as number ?? 999;
+        const aIndex =
+          ((a.metadata as Record<string, unknown>)?.originalIndex as number) ??
+          999;
+        const bIndex =
+          ((b.metadata as Record<string, unknown>)?.originalIndex as number) ??
+          999;
         return aIndex - bIndex;
       });
     } catch (error) {
-      logger.error('Failed to find patterns by context key', { error, contextKey });
+      logger.error("Failed to find patterns by context key", {
+        error,
+        contextKey,
+      });
       throw error;
     }
   }
@@ -144,22 +178,22 @@ export class SuggestionPatternRepository {
    */
   async findByProductAndSize(
     productName: string,
-    size: string
+    size: string,
   ): Promise<SuggestionPattern[]> {
     try {
       // ✅ USE NORMALIZER: Handles quotes, case, whitespace
       const contextKey = createContextKey(productName, size);
-      logger.info('Finding patterns by product and size', {
+      logger.info("Finding patterns by product and size", {
         productName,
         size,
-        normalizedContextKey: contextKey
+        normalizedContextKey: contextKey,
       });
       return await this.findByContextKey(contextKey);
     } catch (error) {
-      logger.error('Failed to find patterns by product and size', { 
-        error, 
-        productName, 
-        size 
+      logger.error("Failed to find patterns by product and size", {
+        error,
+        productName,
+        size,
       });
       throw error;
     }
@@ -168,13 +202,15 @@ export class SuggestionPatternRepository {
   /**
    * Find pattern by unique pattern key
    */
-  async findByPatternKey(patternKey: string): Promise<SuggestionPattern | null> {
+  async findByPatternKey(
+    patternKey: string,
+  ): Promise<SuggestionPattern | null> {
     try {
       return await suggestionPatternClient.suggestionPattern.findUnique({
-        where: { patternKey }
+        where: { patternKey },
       });
     } catch (error) {
-      logger.error('Failed to find pattern by key', { error, patternKey });
+      logger.error("Failed to find pattern by key", { error, patternKey });
       throw error;
     }
   }
@@ -183,7 +219,7 @@ export class SuggestionPatternRepository {
    * Update existing pattern
    */
   async update(
-    id: string, 
+    id: string,
     data: Partial<{
       frequency: number;
       lastUsed: Date;
@@ -195,7 +231,7 @@ export class SuggestionPatternRepository {
       }>;
       orderQuantity: number;
       ratio: number;
-    }>
+    }>,
   ): Promise<SuggestionPattern> {
     try {
       return await suggestionPatternClient.suggestionPattern.update({
@@ -207,11 +243,11 @@ export class SuggestionPatternRepository {
           ratioHistory: data.ratioHistory as unknown as Prisma.InputJsonValue,
           orderQuantity: data.orderQuantity,
           ratio: data.ratio,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
     } catch (error) {
-      logger.error('Failed to update pattern', { error, id, data });
+      logger.error("Failed to update pattern", { error, id, data });
       throw error;
     }
   }
@@ -225,11 +261,15 @@ export class SuggestionPatternRepository {
         where: { id },
         data: {
           frequency: { increment },
-          lastUsed: new Date()
-        }
+          lastUsed: new Date(),
+        },
       });
     } catch (error) {
-      logger.error('Failed to update pattern frequency', { error, id, increment });
+      logger.error("Failed to update pattern frequency", {
+        error,
+        id,
+        increment,
+      });
       throw error;
     }
   }
@@ -241,10 +281,14 @@ export class SuggestionPatternRepository {
     try {
       await suggestionPatternClient.suggestionPattern.update({
         where: { id },
-        data: { confidence }
+        data: { confidence },
       });
     } catch (error) {
-      logger.error('Failed to update pattern confidence', { error, id, confidence });
+      logger.error("Failed to update pattern confidence", {
+        error,
+        id,
+        confidence,
+      });
       throw error;
     }
   }
@@ -258,8 +302,12 @@ export class SuggestionPatternRepository {
    */
   async bulkUpsert(patterns: readonly PatternCreateInput[]): Promise<void> {
     try {
-      await (prisma as unknown as { $transaction: (queries: Promise<unknown>[]) => Promise<unknown[]> }).$transaction(
-        patterns.map(pattern =>
+      await (
+        prisma as unknown as {
+          $transaction: (queries: Promise<unknown>[]) => Promise<unknown[]>;
+        }
+      ).$transaction(
+        patterns.map((pattern) =>
           suggestionPatternClient.suggestionPattern.upsert({
             where: { patternKey: pattern.patternKey },
             create: {
@@ -276,21 +324,24 @@ export class SuggestionPatternRepository {
               averageQuantity: pattern.averageQuantity,
               contexts: pattern.contexts as Prisma.InputJsonValue,
               variations: pattern.variations as Prisma.InputJsonValue,
-              metadata: pattern.metadata as Prisma.InputJsonValue
+              metadata: pattern.metadata as Prisma.InputJsonValue,
             },
             update: {
               frequency: { increment: 1 },
               lastUsed: pattern.lastUsed,
               contexts: pattern.contexts as Prisma.InputJsonValue,
-              variations: pattern.variations as Prisma.InputJsonValue
-            }
-          })
-        )
+              variations: pattern.variations as Prisma.InputJsonValue,
+            },
+          }),
+        ),
       );
 
-      logger.info('Bulk upserted patterns', { count: patterns.length });
+      logger.info("Bulk upserted patterns", { count: patterns.length });
     } catch (error) {
-      logger.error('Failed to bulk upsert patterns', { error, count: patterns.length });
+      logger.error("Failed to bulk upsert patterns", {
+        error,
+        count: patterns.length,
+      });
       throw error;
     }
   }
@@ -299,21 +350,28 @@ export class SuggestionPatternRepository {
    * Bulk update confidence scores
    */
   async bulkUpdateConfidence(
-    updates: readonly { id: string; confidence: number }[]
+    updates: readonly { id: string; confidence: number }[],
   ): Promise<void> {
     try {
-      await (prisma as unknown as { $transaction: (queries: Promise<unknown>[]) => Promise<unknown[]> }).$transaction(
-        updates.map(update =>
+      await (
+        prisma as unknown as {
+          $transaction: (queries: Promise<unknown>[]) => Promise<unknown[]>;
+        }
+      ).$transaction(
+        updates.map((update) =>
           suggestionPatternClient.suggestionPattern.update({
             where: { id: update.id },
-            data: { confidence: update.confidence }
-          })
-        )
+            data: { confidence: update.confidence },
+          }),
+        ),
       );
 
-      logger.info('Bulk updated confidence scores', { count: updates.length });
+      logger.info("Bulk updated confidence scores", { count: updates.length });
     } catch (error) {
-      logger.error('Failed to bulk update confidence', { error, count: updates.length });
+      logger.error("Failed to bulk update confidence", {
+        error,
+        count: updates.length,
+      });
       throw error;
     }
   }
@@ -325,14 +383,16 @@ export class SuggestionPatternRepository {
   /**
    * Get most frequent patterns
    */
-  async getMostFrequentPatterns(limit: number = 10): Promise<SuggestionPattern[]> {
+  async getMostFrequentPatterns(
+    limit: number = 10,
+  ): Promise<SuggestionPattern[]> {
     try {
       return await suggestionPatternClient.suggestionPattern.findMany({
-        orderBy: { frequency: 'desc' },
-        take: limit
+        orderBy: { frequency: "desc" },
+        take: limit,
       });
     } catch (error) {
-      logger.error('Failed to get most frequent patterns', { error, limit });
+      logger.error("Failed to get most frequent patterns", { error, limit });
       throw error;
     }
   }
@@ -347,12 +407,12 @@ export class SuggestionPatternRepository {
 
       return await suggestionPatternClient.suggestionPattern.findMany({
         where: {
-          lastUsed: { gte: cutoffDate }
+          lastUsed: { gte: cutoffDate },
         },
-        orderBy: { lastUsed: 'desc' }
+        orderBy: { lastUsed: "desc" },
       });
     } catch (error) {
-      logger.error('Failed to get recent patterns', { error, days });
+      logger.error("Failed to get recent patterns", { error, days });
       throw error;
     }
   }
@@ -360,25 +420,32 @@ export class SuggestionPatternRepository {
   /**
    * Search patterns by product name (fuzzy)
    */
-  async searchByProduct(query: string, limit: number = 20): Promise<SuggestionPattern[]> {
+  async searchByProduct(
+    query: string,
+    limit: number = 20,
+  ): Promise<SuggestionPattern[]> {
     try {
       const queryUpper = query.toUpperCase().trim();
-      
+
       return await suggestionPatternClient.suggestionPattern.findMany({
         where: {
           productName: {
             contains: queryUpper,
-            mode: 'insensitive'
-          }
+            mode: "insensitive",
+          },
         },
         orderBy: [
-          { confidence: 'desc' } as Record<string, unknown>,
-          { frequency: 'desc' } as Record<string, unknown>
+          { confidence: "desc" } as Record<string, unknown>,
+          { frequency: "desc" } as Record<string, unknown>,
         ],
-        take: limit
+        take: limit,
       });
     } catch (error) {
-      logger.error('Failed to search patterns by product', { error, query, limit });
+      logger.error("Failed to search patterns by product", {
+        error,
+        query,
+        limit,
+      });
       throw error;
     }
   }
@@ -398,20 +465,24 @@ export class SuggestionPatternRepository {
         mediumConfidence,
         lowConfidence,
         avgResult,
-        mostFrequent
+        mostFrequent,
       ] = await Promise.all([
         suggestionPatternClient.suggestionPattern.count(),
-        suggestionPatternClient.suggestionPattern.count({ where: { confidence: { gte: 70 } } }),
-        suggestionPatternClient.suggestionPattern.count({ 
-          where: { 
-            confidence: { gte: 40, lt: 70 } 
-          } 
+        suggestionPatternClient.suggestionPattern.count({
+          where: { confidence: { gte: 70 } },
         }),
-        suggestionPatternClient.suggestionPattern.count({ where: { confidence: { lt: 40 } } }),
+        suggestionPatternClient.suggestionPattern.count({
+          where: {
+            confidence: { gte: 40, lt: 70 },
+          },
+        }),
+        suggestionPatternClient.suggestionPattern.count({
+          where: { confidence: { lt: 40 } },
+        }),
         suggestionPatternClient.suggestionPattern.aggregate({
-          _avg: { confidence: true }
+          _avg: { confidence: true },
         }),
-        this.getMostFrequentPatterns(10)
+        this.getMostFrequentPatterns(10),
       ]);
 
       return {
@@ -420,10 +491,10 @@ export class SuggestionPatternRepository {
         mediumConfidence,
         lowConfidence,
         averageConfidence: (avgResult._avg.confidence as number) ?? 0,
-        mostFrequent
+        mostFrequent,
       };
     } catch (error) {
-      logger.error('Failed to get pattern statistics', { error });
+      logger.error("Failed to get pattern statistics", { error });
       throw error;
     }
   }
@@ -434,11 +505,11 @@ export class SuggestionPatternRepository {
   async getUniqueProductsCount(): Promise<number> {
     try {
       const result = await suggestionPatternClient.suggestionPattern.groupBy({
-        by: ['productName']
+        by: ["productName"],
       });
       return (result as unknown[]).length;
     } catch (error) {
-      logger.error('Failed to get unique products count', { error });
+      logger.error("Failed to get unique products count", { error });
       throw error;
     }
   }
@@ -448,17 +519,22 @@ export class SuggestionPatternRepository {
    */
   async getUniqueSizesForProduct(productName: string): Promise<string[]> {
     try {
-      const patterns = await suggestionPatternClient.suggestionPattern.findMany({
-        where: {
-          productName: productName.toUpperCase().trim()
+      const patterns = await suggestionPatternClient.suggestionPattern.findMany(
+        {
+          where: {
+            productName: productName.toUpperCase().trim(),
+          },
+          distinct: ["size"],
+          select: { size: true },
         },
-        distinct: ['size'],
-        select: { size: true }
-      });
+      );
 
       return patterns.map((p: Record<string, unknown>) => p.size as string);
     } catch (error) {
-      logger.error('Failed to get unique sizes for product', { error, productName });
+      logger.error("Failed to get unique sizes for product", {
+        error,
+        productName,
+      });
       throw error;
     }
   }
@@ -475,19 +551,20 @@ export class SuggestionPatternRepository {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - days);
 
-      const result = await suggestionPatternClient.suggestionPattern.deleteMany({
-        where: {
-          lastUsed: { lt: cutoffDate },
-          frequency: { lt: 5 } // Keep frequently used patterns even if old
-        }
-      });
+      const result = await suggestionPatternClient.suggestionPattern.deleteMany(
+        {
+          where: {
+            lastUsed: { lt: cutoffDate },
+            frequency: { lt: 5 }, // Keep frequently used patterns even if old
+          },
+        },
+      );
 
-      logger.info('Deleted old patterns', { count: result.count, days });
+      logger.info("Deleted old patterns", { count: result.count, days });
       return result.count;
     } catch (error) {
-      logger.error('Failed to delete old patterns', { error, days });
+      logger.error("Failed to delete old patterns", { error, days });
       throw error;
     }
   }
 }
-

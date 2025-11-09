@@ -4,14 +4,14 @@
  * @version 1.0.0
  */
 
-import React from 'react';
-import { 
-  CuttingListData, 
-  CuttingListSection, 
+import React from "react";
+import {
+  CuttingListData,
+  CuttingListSection,
   CuttingListItem,
-  ConversionResult as ServiceConversionResult
-} from '@/shared/lib/services/cuttingListOptimizationService';
-import { OptimizationItem } from '@/types';
+  ConversionResult as ServiceConversionResult,
+} from "@/shared/lib/services/cuttingListOptimizationService";
+import { OptimizationItem } from "@/types";
 
 // ============================================================================
 // MAIN COMPONENT PROPS
@@ -77,8 +77,17 @@ export interface ProductGroupSectionProps {
   isExpanded: boolean;
   onToggleExpansion: (productId: string) => void;
   onProductSelectionChange: (productId: string, selected: boolean) => void;
-  onWorkOrderSelectionChange: (productId: string, workOrderId: string, selected: boolean) => void;
-  onProfileSelectionChange: (productId: string, workOrderId: string, profileId: string, selected: boolean) => void;
+  onWorkOrderSelectionChange: (
+    productId: string,
+    workOrderId: string,
+    selected: boolean,
+  ) => void;
+  onProfileSelectionChange: (
+    productId: string,
+    workOrderId: string,
+    profileId: string,
+    selected: boolean,
+  ) => void;
 }
 
 export interface WorkOrderSectionProps {
@@ -94,8 +103,17 @@ export interface WorkOrderSectionProps {
   productId: string;
   selectionState: SelectionState;
   searchTerm: string;
-  onWorkOrderSelectionChange: (productId: string, workOrderId: string, selected: boolean) => void;
-  onProfileSelectionChange: (productId: string, workOrderId: string, profileId: string, selected: boolean) => void;
+  onWorkOrderSelectionChange: (
+    productId: string,
+    workOrderId: string,
+    selected: boolean,
+  ) => void;
+  onProfileSelectionChange: (
+    productId: string,
+    workOrderId: string,
+    profileId: string,
+    selected: boolean,
+  ) => void;
 }
 
 export interface ProfileGroupProps {
@@ -108,7 +126,12 @@ export interface ProfileGroupProps {
   workOrderId: string;
   selectionState: SelectionState;
   searchTerm: string;
-  onProfileSelectionChange: (productId: string, workOrderId: string, profileId: string, selected: boolean) => void;
+  onProfileSelectionChange: (
+    productId: string,
+    workOrderId: string,
+    profileId: string,
+    selected: boolean,
+  ) => void;
 }
 
 export interface FilterControlsProps {
@@ -117,7 +140,7 @@ export interface FilterControlsProps {
     showWorkOrdersOnly: boolean;
     profileType: string;
   };
-  onFilterChange: (filters: FilterControlsProps['filters']) => void;
+  onFilterChange: (filters: FilterControlsProps["filters"]) => void;
   availableProfileTypes: string[];
 }
 
@@ -150,9 +173,21 @@ export interface ExpandedState {
 // EVENT HANDLER TYPES
 // ============================================================================
 
-export type SelectionChangeHandler = (productId: string, selected: boolean) => void;
-export type WorkOrderSelectionHandler = (productId: string, workOrderId: string, selected: boolean) => void;
-export type ProfileSelectionHandler = (productId: string, workOrderId: string, profileId: string, selected: boolean) => void;
+export type SelectionChangeHandler = (
+  productId: string,
+  selected: boolean,
+) => void;
+export type WorkOrderSelectionHandler = (
+  productId: string,
+  workOrderId: string,
+  selected: boolean,
+) => void;
+export type ProfileSelectionHandler = (
+  productId: string,
+  workOrderId: string,
+  profileId: string,
+  selected: boolean,
+) => void;
 export type ExpansionToggleHandler = (id: string) => void;
 export type SearchChangeHandler = (term: string) => void;
 export type FilterChangeHandler = (filters: FilterState) => void;
@@ -225,7 +260,7 @@ export interface AccessibilityConfig {
 // ============================================================================
 
 export interface ExportOptions {
-  format: 'json' | 'csv' | 'excel';
+  format: "json" | "csv" | "excel";
   includeMetadata: boolean;
   includeStats: boolean;
   includeValidation: boolean;
@@ -317,7 +352,7 @@ export interface UseFilterStateReturn {
 
 export interface UseExpansionStateReturn {
   expandedState: ExpandedState;
-  toggleExpansion: (type: 'products' | 'workOrders', id: string) => void;
+  toggleExpansion: (type: "products" | "workOrders", id: string) => void;
   expandAll: () => void;
   collapseAll: () => void;
 }

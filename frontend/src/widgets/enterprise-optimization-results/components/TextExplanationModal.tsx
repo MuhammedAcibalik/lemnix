@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -13,12 +13,12 @@ import {
   Button,
   Box,
   Typography,
-  IconButton
-} from '@mui/material';
+  IconButton,
+} from "@mui/material";
 import {
   Description as DescriptionIcon,
-  Close as CloseIcon
-} from '@mui/icons-material';
+  Close as CloseIcon,
+} from "@mui/icons-material";
 
 interface TextExplanationModalProps {
   explanationData: { [key: string]: string };
@@ -29,7 +29,7 @@ interface TextExplanationModalProps {
 export const TextExplanationModal: React.FC<TextExplanationModalProps> = ({
   explanationData,
   textExplanationOpen,
-  onClose
+  onClose,
 }) => {
   return (
     <>
@@ -172,17 +172,19 @@ export const TextExplanationModal: React.FC<TextExplanationModalProps> = ({
                   onClick={() => onClose(cardId)}
                   variant="contained"
                   sx={{
-                    background: 'linear-gradient(135deg, #1e40af 0%, #7c3aed 100%)', // Industrial Harmony
-                    color: 'white',
-                    fontWeight: 'bold',
+                    background:
+                      "linear-gradient(135deg, #1e40af 0%, #7c3aed 100%)", // Industrial Harmony
+                    color: "white",
+                    fontWeight: "bold",
                     px: 3,
                     py: 1,
                     borderRadius: 2,
-                    boxShadow: '0 4px 12px rgba(30,64,175,0.3)', // Industrial Harmony
-                    '&:hover': {
-                      background: 'linear-gradient(135deg, #7c3aed 0%, #1e40af 100%)', // Industrial Harmony
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 6px 16px rgba(30,64,175,0.4)', // Industrial Harmony
+                    boxShadow: "0 4px 12px rgba(30,64,175,0.3)", // Industrial Harmony
+                    "&:hover": {
+                      background:
+                        "linear-gradient(135deg, #7c3aed 0%, #1e40af 100%)", // Industrial Harmony
+                      transform: "translateY(-2px)",
+                      boxShadow: "0 6px 16px rgba(30,64,175,0.4)", // Industrial Harmony
                     },
                   }}
                 >
@@ -190,7 +192,7 @@ export const TextExplanationModal: React.FC<TextExplanationModalProps> = ({
                 </Button>
               </DialogActions>
             </Dialog>
-          )
+          ),
       )}
     </>
   );

@@ -4,29 +4,27 @@
  * @version 1.0.0
  */
 
-import React from 'react';
-import { OptimizationResult, Cut } from '../../types';
-import { 
-  Box, 
-  Typography, 
-  Alert, 
-  AlertTitle, 
-  Grid, 
-  Paper, 
-  List, 
-  ListItem, 
-  ListItemText, 
-  LinearProgress, 
-  Stack 
-} from '@mui/material';
+import React from "react";
+import { OptimizationResult, Cut } from "../../types";
+import {
+  Box,
+  Typography,
+  Alert,
+  AlertTitle,
+  Grid,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  LinearProgress,
+  Stack,
+} from "@mui/material";
 
 interface CostAnalysisTabProps {
   result: OptimizationResult;
 }
 
-export const CostAnalysisTab: React.FC<CostAnalysisTabProps> = ({
-  result
-}) => {
+export const CostAnalysisTab: React.FC<CostAnalysisTabProps> = ({ result }) => {
   if (!result) {
     return (
       <Alert severity="info">
@@ -47,27 +45,23 @@ export const CostAnalysisTab: React.FC<CostAnalysisTabProps> = ({
             </Typography>
             <List>
               {result.costBreakdown &&
-                Object.entries(result.costBreakdown).map(
-                  ([key, value]) => (
-                    <ListItem key={key}>
-                      <ListItemText
-                        primary={key
-                          .replace(/([A-Z])/g, " $1")
-                          .trim()}
-                        secondary={`₺${typeof value === "number" ? value.toFixed(2) : "0.00"}`}
-                      />
-                      <LinearProgress
-                        variant="determinate"
-                        value={
-                          typeof value === "number"
-                            ? (value / result.totalCost) * 100
-                            : 0
-                        }
-                        sx={{ width: 100, ml: 2 }}
-                      />
-                    </ListItem>
-                  )
-                )}
+                Object.entries(result.costBreakdown).map(([key, value]) => (
+                  <ListItem key={key}>
+                    <ListItemText
+                      primary={key.replace(/([A-Z])/g, " $1").trim()}
+                      secondary={`₺${typeof value === "number" ? value.toFixed(2) : "0.00"}`}
+                    />
+                    <LinearProgress
+                      variant="determinate"
+                      value={
+                        typeof value === "number"
+                          ? (value / result.totalCost) * 100
+                          : 0
+                      }
+                      sx={{ width: 100, ml: 2 }}
+                    />
+                  </ListItem>
+                ))}
             </List>
           </Paper>
         </Grid>
@@ -102,9 +96,8 @@ export const CostAnalysisTab: React.FC<CostAnalysisTabProps> = ({
                   {(
                     (result.totalCost || 0) /
                     ((result.cuts as Cut[])?.reduce(
-                      (sum: number, c: Cut) =>
-                        sum + (c.segments?.length || 0),
-                      0
+                      (sum: number, c: Cut) => sum + (c.segments?.length || 0),
+                      0,
                     ) || 1)
                   ).toFixed(2)}
                 </Typography>

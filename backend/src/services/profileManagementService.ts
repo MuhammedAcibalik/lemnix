@@ -5,16 +5,16 @@
  * @description CRUD and query operations for profile management
  */
 
-import { PrismaClient } from '@prisma/client';
-import { profileExcelParserService } from './profileExcelParserService';
+import { PrismaClient } from "@prisma/client";
+import { profileExcelParserService } from "./profileExcelParserService";
 import {
   ProfileDefinition,
   ProfileStockLength,
   WorkOrderProfileMapping,
   ProfileManagementParseResult,
-  ProfileMapping
-} from '../types';
-import { logger } from '../utils/logger';
+  ProfileMapping,
+} from "../types";
+import { logger } from "../utils/logger";
 
 export class ProfileManagementService {
   constructor(private readonly prisma: PrismaClient) {}
@@ -37,7 +37,7 @@ export class ProfileManagementService {
    */
   async uploadProfileManagement(
     fileBuffer: Buffer,
-    uploadedBy?: string
+    uploadedBy?: string,
   ): Promise<{
     success: boolean;
     data?: {
@@ -57,7 +57,7 @@ export class ProfileManagementService {
       if (!parseResult.success || !parseResult.data) {
         return {
           success: false,
-          errors: parseResult.errors || ['Excel dosyası işlenemedi']
+          errors: parseResult.errors || ["Excel dosyası işlenemedi"],
         };
       }
 
@@ -78,7 +78,7 @@ export class ProfileManagementService {
         for (const [profileCode, profileInput] of profiles.entries()) {
           // Check if profile exists
           const existingProfile = await txProfileDef.findUnique({
-            where: { profileCode }
+            where: { profileCode },
           });
 
           if (existingProfile) {
@@ -86,13 +86,13 @@ export class ProfileManagementService {
             if (existingProfile.profileName !== profileInput.profileName) {
               await txProfileDef.update({
                 where: { id: existingProfile.id },
-                data: { profileName: profileInput.profileName }
+                data: { profileName: profileInput.profileName },
               });
             }
 
             // Delete existing stock lengths
             await txStockLength.deleteMany({
-              where: { profileId: existingProfile.id }
+              where: { profileId: existingProfile.id },
             });
 
             // Create new stock lengths
@@ -101,8 +101,8 @@ export class ProfileManagementService {
                 profileId: existingProfile.id,
                 stockLength: sl.stockLength,
                 isDefault: sl.isDefault,
-                priority: sl.priority
-              }))
+                priority: sl.priority,
+              })),
             });
 
             profileIdMap.set(profileCode, existingProfile.id);
@@ -117,10 +117,10 @@ export class ProfileManagementService {
                   create: profileInput.stockLengths.map((sl) => ({
                     stockLength: sl.stockLength,
                     isDefault: sl.isDefault,
-                    priority: sl.priority
-                  }))
-                }
-              }
+                    priority: sl.priority,
+                  })),
+                },
+              },
             });
 
             profileIdMap.set(profileCode, newProfile.id);
@@ -132,11 +132,13 @@ export class ProfileManagementService {
         const deletedCount = await txMapping.deleteMany({
           where: {
             weekNumber,
-            year
-          }
+            year,
+          },
         });
-        
-        logger.info(`[ProfileManagement] Deleted ${deletedCount.count} existing mappings for week ${weekNumber}/${year}`);
+
+        logger.info(
+          `[ProfileManagement] Deleted ${deletedCount.count} existing mappings for week ${weekNumber}/${year}`,
+        );
 
         // Create new mappings
         const mappingsToCreate = mappings.map((mapping) => {
@@ -151,27 +153,27 @@ export class ProfileManagementService {
             profileId,
             weekNumber,
             year,
-            uploadedBy
+            uploadedBy,
           };
         });
 
         // Use skipDuplicates to handle identical rows
         await txMapping.createMany({
           data: mappingsToCreate,
-          skipDuplicates: true
+          skipDuplicates: true,
         });
 
         return {
           profilesCreated,
           profilesUpdated,
-          mappingsCreated: mappingsToCreate.length
+          mappingsCreated: mappingsToCreate.length,
         };
       });
 
-      logger.info('[ProfileManagement] Upload successful', {
+      logger.info("[ProfileManagement] Upload successful", {
         ...result,
         weekNumber,
-        year
+        year,
       });
 
       return {
@@ -179,16 +181,20 @@ export class ProfileManagementService {
         data: {
           ...result,
           weekNumber,
-          year
+          year,
         },
-        errors: parseResult.errors // Warnings
+        errors: parseResult.errors, // Warnings
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen hata';
-      logger.error('[ProfileManagement] Upload failed:', error as Record<string, unknown>);
+      const errorMessage =
+        error instanceof Error ? error.message : "Bilinmeyen hata";
+      logger.error(
+        "[ProfileManagement] Upload failed:",
+        error as Record<string, unknown>,
+      );
       return {
         success: false,
-        errors: [`Profil yükleme hatası: ${errorMessage}`]
+        errors: [`Profil yükleme hatası: ${errorMessage}`],
       };
     }
   }
@@ -205,9 +211,9 @@ export class ProfileManagementService {
     const profiles = await this.profileDefinition.findMany({
       where,
       include: {
-        stockLengths: options?.includeStockLengths !== false
+        stockLengths: options?.includeStockLengths !== false,
       },
-      orderBy: { profileCode: 'asc' }
+      orderBy: { profileCode: "asc" },
     });
 
     return profiles;
@@ -216,10 +222,12 @@ export class ProfileManagementService {
   /**
    * Get profile definition by code
    */
-  async getProfileByCode(profileCode: string): Promise<ProfileDefinition | null> {
+  async getProfileByCode(
+    profileCode: string,
+  ): Promise<ProfileDefinition | null> {
     return await this.profileDefinition.findUnique({
       where: { profileCode },
-      include: { stockLengths: true }
+      include: { stockLengths: true },
     });
   }
 
@@ -229,7 +237,7 @@ export class ProfileManagementService {
   async getProfileById(id: string): Promise<ProfileDefinition | null> {
     return await this.profileDefinition.findUnique({
       where: { id },
-      include: { stockLengths: true }
+      include: { stockLengths: true },
     });
   }
 
@@ -238,16 +246,16 @@ export class ProfileManagementService {
    */
   async getMappingsByWeek(
     weekNumber: number,
-    year: number
+    year: number,
   ): Promise<WorkOrderProfileMapping[]> {
     return await this.workOrderProfileMapping.findMany({
       where: { weekNumber, year },
       include: {
         profile: {
-          include: { stockLengths: true }
-        }
+          include: { stockLengths: true },
+        },
       },
-      orderBy: [{ workOrderId: 'asc' }, { profileType: 'asc' }]
+      orderBy: [{ workOrderId: "asc" }, { profileType: "asc" }],
     });
   }
 
@@ -257,15 +265,15 @@ export class ProfileManagementService {
   async getMappingsForWorkOrder(
     workOrderId: string,
     weekNumber: number,
-    year: number
+    year: number,
   ): Promise<WorkOrderProfileMapping[]> {
     return await this.workOrderProfileMapping.findMany({
       where: { workOrderId, weekNumber, year },
       include: {
         profile: {
-          include: { stockLengths: true }
-        }
-      }
+          include: { stockLengths: true },
+        },
+      },
     });
   }
 
@@ -276,19 +284,19 @@ export class ProfileManagementService {
   async getProfileMappingsForOptimization(
     workOrderIds: string[],
     weekNumber: number,
-    year: number
+    year: number,
   ): Promise<Map<string, ProfileMapping>> {
     const mappings = await this.workOrderProfileMapping.findMany({
       where: {
         workOrderId: { in: workOrderIds },
         weekNumber,
-        year
+        year,
       },
       include: {
         profile: {
-          include: { stockLengths: true }
-        }
-      }
+          include: { stockLengths: true },
+        },
+      },
     });
 
     // Build map: profileType → ProfileMapping
@@ -297,12 +305,16 @@ export class ProfileManagementService {
     for (const mapping of mappings) {
       if (!profileMappingMap.has(mapping.profileType)) {
         const sortedStockLengths = mapping.profile.stockLengths
-          .sort((a: { priority: number }, b: { priority: number }) => a.priority - b.priority)
+          .sort(
+            (a: { priority: number }, b: { priority: number }) =>
+              a.priority - b.priority,
+          )
           .map((sl: { stockLength: number }) => sl.stockLength);
 
         const defaultStockLength =
-          mapping.profile.stockLengths.find((sl: { isDefault: boolean }) => sl.isDefault)
-            ?.stockLength ||
+          mapping.profile.stockLengths.find(
+            (sl: { isDefault: boolean }) => sl.isDefault,
+          )?.stockLength ||
           sortedStockLengths[0] ||
           6100; // Fallback
 
@@ -310,7 +322,7 @@ export class ProfileManagementService {
           profileCode: mapping.profile.profileCode,
           profileName: mapping.profile.profileName,
           stockLengths: sortedStockLengths,
-          defaultStockLength
+          defaultStockLength,
         });
       }
     }
@@ -323,34 +335,38 @@ export class ProfileManagementService {
    */
   async updateMapping(
     id: string,
-    profileCode: string
+    profileCode: string,
   ): Promise<{ success: boolean; error?: string }> {
     try {
       // Find the new profile
       const profile = await this.profileDefinition.findUnique({
-        where: { profileCode }
+        where: { profileCode },
       });
 
       if (!profile) {
         return {
           success: false,
-          error: `Profil bulunamadı: ${profileCode}`
+          error: `Profil bulunamadı: ${profileCode}`,
         };
       }
 
       // Update mapping
       await this.workOrderProfileMapping.update({
         where: { id },
-        data: { profileId: profile.id }
+        data: { profileId: profile.id },
       });
 
       return { success: true };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Güncelleme hatası';
-      logger.error('[ProfileManagement] Update mapping failed:', error as Record<string, unknown>);
+      const errorMessage =
+        error instanceof Error ? error.message : "Güncelleme hatası";
+      logger.error(
+        "[ProfileManagement] Update mapping failed:",
+        error as Record<string, unknown>,
+      );
       return {
         success: false,
-        error: errorMessage
+        error: errorMessage,
       };
     }
   }
@@ -358,32 +374,38 @@ export class ProfileManagementService {
   /**
    * Delete profile definition (with cascade)
    */
-  async deleteProfile(id: string): Promise<{ success: boolean; error?: string }> {
+  async deleteProfile(
+    id: string,
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       // Check if profile has mappings
       const mappingCount = await this.workOrderProfileMapping.count({
-        where: { profileId: id }
+        where: { profileId: id },
       });
 
       if (mappingCount > 0) {
         return {
           success: false,
-          error: `Bu profil ${mappingCount} adet eşleştirmede kullanılıyor. Önce eşleştirmeleri silin.`
+          error: `Bu profil ${mappingCount} adet eşleştirmede kullanılıyor. Önce eşleştirmeleri silin.`,
         };
       }
 
       // Delete profile (stock lengths will be cascade deleted)
       await this.profileDefinition.delete({
-        where: { id }
+        where: { id },
       });
 
       return { success: true };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Silme hatası';
-      logger.error('[ProfileManagement] Delete profile failed:', error as Record<string, unknown>);
+      const errorMessage =
+        error instanceof Error ? error.message : "Silme hatası";
+      logger.error(
+        "[ProfileManagement] Delete profile failed:",
+        error as Record<string, unknown>,
+      );
       return {
         success: false,
-        error: errorMessage
+        error: errorMessage,
       };
     }
   }
@@ -392,11 +414,11 @@ export class ProfileManagementService {
    * Get stock lengths for a profile
    */
   async getStockLengthsByProfileCode(
-    profileCode: string
+    profileCode: string,
   ): Promise<ProfileStockLength[]> {
     const profile = await this.profileDefinition.findUnique({
       where: { profileCode },
-      include: { stockLengths: true }
+      include: { stockLengths: true },
     });
 
     if (!profile) {
@@ -404,7 +426,8 @@ export class ProfileManagementService {
     }
 
     return profile.stockLengths.sort(
-      (a: { priority: number }, b: { priority: number }) => a.priority - b.priority
+      (a: { priority: number }, b: { priority: number }) =>
+        a.priority - b.priority,
     );
   }
 
@@ -424,17 +447,17 @@ export class ProfileManagementService {
         this.workOrderProfileMapping.count(),
         this.workOrderProfileMapping
           .findMany({
-            distinct: ['weekNumber', 'year'],
-            select: { weekNumber: true, year: true }
+            distinct: ["weekNumber", "year"],
+            select: { weekNumber: true, year: true },
           })
-          .then((results: unknown[]) => results.length)
+          .then((results: unknown[]) => results.length),
       ]);
 
     return {
       totalProfiles,
       activeProfiles,
       totalMappings,
-      uniqueWeeks
+      uniqueWeeks,
     };
   }
 
@@ -453,7 +476,7 @@ export class ProfileManagementService {
       profileType: string;
       profileCode: string;
     }>,
-    uploadedBy?: string
+    uploadedBy?: string,
   ): Promise<{
     success: boolean;
     created: number;
@@ -469,29 +492,32 @@ export class ProfileManagementService {
         let updated = 0;
 
         // Get profile IDs for profile codes
-        const profileCodes = [...new Set(mappings.map(m => m.profileCode))];
+        const profileCodes = [...new Set(mappings.map((m) => m.profileCode))];
         const profiles = await txProfileDef.findMany({
           where: {
-            profileCode: { in: profileCodes }
+            profileCode: { in: profileCodes },
           },
           select: {
             id: true,
-            profileCode: true
-          }
+            profileCode: true,
+          },
         });
 
         const profileCodeToId = new Map(
-          profiles.map((p: { id: string; profileCode: string }) => [p.profileCode, p.id])
+          profiles.map((p: { id: string; profileCode: string }) => [
+            p.profileCode,
+            p.id,
+          ]),
         );
 
         // Upsert each mapping
         for (const mapping of mappings) {
           const profileId = profileCodeToId.get(mapping.profileCode);
-          
+
           if (!profileId) {
-            logger.warn('[ProfileMgmt] Profile code not found', {
+            logger.warn("[ProfileMgmt] Profile code not found", {
               profileCode: mapping.profileCode,
-              workOrderId: mapping.workOrderId
+              workOrderId: mapping.workOrderId,
             });
             continue;
           }
@@ -502,20 +528,20 @@ export class ProfileManagementService {
                 workOrderId: mapping.workOrderId,
                 profileType: mapping.profileType,
                 weekNumber,
-                year
-              }
-            }
+                year,
+              },
+            },
           });
 
           if (existing) {
             await txMapping.update({
               where: {
-                id: existing.id
+                id: existing.id,
               },
               data: {
                 profileId,
-                uploadedBy
-              }
+                uploadedBy,
+              },
             });
             updated++;
           } else {
@@ -526,8 +552,8 @@ export class ProfileManagementService {
                 profileId,
                 weekNumber,
                 year,
-                uploadedBy
-              }
+                uploadedBy,
+              },
             });
             created++;
           }
@@ -535,14 +561,14 @@ export class ProfileManagementService {
 
         // Delete mappings not in the new list for this week
         const workOrderProfileKeys = mappings.map(
-          m => `${m.workOrderId}_${m.profileType}`
+          (m) => `${m.workOrderId}_${m.profileType}`,
         );
 
         const existingMappings = await txMapping.findMany({
           where: {
             weekNumber,
-            year
-          }
+            year,
+          },
         });
 
         let deleted = 0;
@@ -550,29 +576,29 @@ export class ProfileManagementService {
           const key = `${existing.workOrderId}_${existing.profileType}`;
           if (!workOrderProfileKeys.includes(key)) {
             await txMapping.delete({
-              where: { id: existing.id }
+              where: { id: existing.id },
             });
             deleted++;
           }
         }
 
-        logger.info('[ProfileMgmt] Bulk update completed', {
+        logger.info("[ProfileMgmt] Bulk update completed", {
           weekNumber,
           year,
           created,
           updated,
-          deleted
+          deleted,
         });
 
         return {
           success: true,
           created,
           updated,
-          deleted
+          deleted,
         };
       });
     } catch (error) {
-      logger.error('[ProfileMgmt] Bulk update failed', { error });
+      logger.error("[ProfileMgmt] Bulk update failed", { error });
       throw error;
     }
   }
@@ -581,13 +607,13 @@ export class ProfileManagementService {
    * Sync profile mappings with production plan
    * Automatically creates mappings for work orders that exist in both
    * production plan and profile management Excel
-   * 
+   *
    * @param weekNumber - Week number
    * @param year - Year
    */
   async syncWithProductionPlan(
     weekNumber: number,
-    year: number
+    year: number,
   ): Promise<{
     success: boolean;
     syncedCount: number;
@@ -598,22 +624,22 @@ export class ProfileManagementService {
       const mappings = await this.workOrderProfileMapping.findMany({
         where: {
           weekNumber,
-          year
+          year,
         },
         include: {
-          profile: true
-        }
+          profile: true,
+        },
       });
 
       if (mappings.length === 0) {
-        logger.info('[ProfileMgmt] No mappings found for sync', {
+        logger.info("[ProfileMgmt] No mappings found for sync", {
           weekNumber,
-          year
+          year,
         });
         return {
           success: true,
           syncedCount: 0,
-          skippedCount: 0
+          skippedCount: 0,
         };
       }
 
@@ -621,20 +647,20 @@ export class ProfileManagementService {
       // Note: This requires production plan to have week/year fields
       // For now, we'll just log and return success
       // Real implementation would query production plan items
-      
-      logger.info('[ProfileMgmt] Sync with production plan', {
+
+      logger.info("[ProfileMgmt] Sync with production plan", {
         weekNumber,
         year,
-        mappingsFound: mappings.length
+        mappingsFound: mappings.length,
       });
 
       return {
         success: true,
         syncedCount: mappings.length,
-        skippedCount: 0
+        skippedCount: 0,
       };
     } catch (error) {
-      logger.error('[ProfileMgmt] Sync failed', { error });
+      logger.error("[ProfileMgmt] Sync failed", { error });
       throw error;
     }
   }
@@ -642,6 +668,5 @@ export class ProfileManagementService {
 
 // Singleton instance
 export const profileManagementService = new ProfileManagementService(
-  new PrismaClient()
+  new PrismaClient(),
 );
-

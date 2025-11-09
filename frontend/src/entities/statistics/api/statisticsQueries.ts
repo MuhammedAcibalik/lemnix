@@ -1,12 +1,12 @@
 /**
  * Statistics Entity React Query Hooks
  * Type-safe React Query hooks for statistics operations
- * 
+ *
  * @module entities/statistics/api
  * @version 2.0.0 - Complete Statistics Integration (P2-2)
  */
 
-import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
+import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import {
   getStatisticsOverview,
   getAlgorithmPerformance,
@@ -20,7 +20,7 @@ import {
   getPerformanceMetrics,
   type StatisticsType,
   type BatchStatisticsResponse,
-} from './statisticsApi';
+} from "./statisticsApi";
 import type {
   StatisticsOverview,
   AlgorithmPerformance,
@@ -31,25 +31,28 @@ import type {
   WasteReductionTrends,
   SystemHealthMetrics,
   PerformanceMetrics,
-} from '../model/types';
+} from "../model/types";
 
 /**
  * Query keys for React Query - Complete coverage
  */
 export const statisticsKeys = {
-  all: ['statistics'] as const,
-  overview: () => [...statisticsKeys.all, 'overview'] as const,
-  algorithms: () => [...statisticsKeys.all, 'algorithms'] as const,
-  batch: (types: ReadonlyArray<StatisticsType>) => 
-    [...statisticsKeys.all, 'batch', ...types] as const,
+  all: ["statistics"] as const,
+  overview: () => [...statisticsKeys.all, "overview"] as const,
+  algorithms: () => [...statisticsKeys.all, "algorithms"] as const,
+  batch: (types: ReadonlyArray<StatisticsType>) =>
+    [...statisticsKeys.all, "batch", ...types] as const,
   // NEW: P2-2 keys
-  usage: (days?: number) => [...statisticsKeys.all, 'usage', days] as const,
-  profileUsage: (limit?: number) => [...statisticsKeys.all, 'profileUsage', limit] as const,
-  cuttingListTrends: (days?: number) => [...statisticsKeys.all, 'cuttingListTrends', days] as const,
-  optimizationAnalytics: () => [...statisticsKeys.all, 'optimizationAnalytics'] as const,
-  wasteReduction: () => [...statisticsKeys.all, 'wasteReduction'] as const,
-  systemHealth: () => [...statisticsKeys.all, 'systemHealth'] as const,
-  performance: () => [...statisticsKeys.all, 'performance'] as const,
+  usage: (days?: number) => [...statisticsKeys.all, "usage", days] as const,
+  profileUsage: (limit?: number) =>
+    [...statisticsKeys.all, "profileUsage", limit] as const,
+  cuttingListTrends: (days?: number) =>
+    [...statisticsKeys.all, "cuttingListTrends", days] as const,
+  optimizationAnalytics: () =>
+    [...statisticsKeys.all, "optimizationAnalytics"] as const,
+  wasteReduction: () => [...statisticsKeys.all, "wasteReduction"] as const,
+  systemHealth: () => [...statisticsKeys.all, "systemHealth"] as const,
+  performance: () => [...statisticsKeys.all, "performance"] as const,
 } as const;
 
 /**
@@ -72,7 +75,7 @@ const statisticsRetryFn = (failureCount: number, error: unknown) => {
  * Hook: Get statistics overview
  */
 export function useStatisticsOverview(
-  options?: UseQueryOptions<StatisticsOverview, Error>
+  options?: UseQueryOptions<StatisticsOverview, Error>,
 ) {
   return useQuery({
     queryKey: statisticsKeys.overview(),
@@ -87,7 +90,7 @@ export function useStatisticsOverview(
  * Hook: Get algorithm performance
  */
 export function useAlgorithmPerformance(
-  options?: UseQueryOptions<ReadonlyArray<AlgorithmPerformance>, Error>
+  options?: UseQueryOptions<ReadonlyArray<AlgorithmPerformance>, Error>,
 ) {
   return useQuery({
     queryKey: statisticsKeys.algorithms(),
@@ -103,7 +106,7 @@ export function useAlgorithmPerformance(
  */
 export function useBatchStatistics(
   types: ReadonlyArray<StatisticsType>,
-  options?: UseQueryOptions<BatchStatisticsResponse, Error>
+  options?: UseQueryOptions<BatchStatisticsResponse, Error>,
 ) {
   return useQuery({
     queryKey: statisticsKeys.batch(types),
@@ -125,7 +128,7 @@ export function useBatchStatistics(
  */
 export function useUsageAnalytics(
   days: number = 30,
-  options?: UseQueryOptions<UsageAnalytics, Error>
+  options?: UseQueryOptions<UsageAnalytics, Error>,
 ) {
   return useQuery({
     queryKey: statisticsKeys.usage(days),
@@ -142,7 +145,7 @@ export function useUsageAnalytics(
  */
 export function useProfileUsageStats(
   limit: number = 50,
-  options?: UseQueryOptions<ReadonlyArray<ProfileUsageStats>, Error>
+  options?: UseQueryOptions<ReadonlyArray<ProfileUsageStats>, Error>,
 ) {
   return useQuery({
     queryKey: statisticsKeys.profileUsage(limit),
@@ -159,7 +162,7 @@ export function useProfileUsageStats(
  */
 export function useCuttingListTrends(
   days: number = 30,
-  options?: UseQueryOptions<CuttingListTrends, Error>
+  options?: UseQueryOptions<CuttingListTrends, Error>,
 ) {
   return useQuery({
     queryKey: statisticsKeys.cuttingListTrends(days),
@@ -175,7 +178,7 @@ export function useCuttingListTrends(
  * ✅ P2-2: Optimization analytics
  */
 export function useOptimizationAnalytics(
-  options?: UseQueryOptions<OptimizationAnalytics, Error>
+  options?: UseQueryOptions<OptimizationAnalytics, Error>,
 ) {
   return useQuery({
     queryKey: statisticsKeys.optimizationAnalytics(),
@@ -191,7 +194,7 @@ export function useOptimizationAnalytics(
  * ✅ P2-2: Waste reduction trends
  */
 export function useWasteReductionTrends(
-  options?: UseQueryOptions<WasteReductionTrends, Error>
+  options?: UseQueryOptions<WasteReductionTrends, Error>,
 ) {
   return useQuery({
     queryKey: statisticsKeys.wasteReduction(),
@@ -207,7 +210,7 @@ export function useWasteReductionTrends(
  * ✅ P2-2: System health
  */
 export function useSystemHealthMetrics(
-  options?: UseQueryOptions<SystemHealthMetrics, Error>
+  options?: UseQueryOptions<SystemHealthMetrics, Error>,
 ) {
   return useQuery({
     queryKey: statisticsKeys.systemHealth(),
@@ -224,7 +227,7 @@ export function useSystemHealthMetrics(
  * ✅ P2-2: Performance metrics
  */
 export function usePerformanceMetrics(
-  options?: UseQueryOptions<PerformanceMetrics, Error>
+  options?: UseQueryOptions<PerformanceMetrics, Error>,
 ) {
   return useQuery({
     queryKey: statisticsKeys.performance(),

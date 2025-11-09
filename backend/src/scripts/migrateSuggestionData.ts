@@ -2,7 +2,7 @@
  * @fileoverview Smart Suggestion Data Migration Script
  * @module scripts/migrateSuggestionData
  * @version 1.0.0
- * 
+ *
  * Migrates cutting-lists.json data to PostgreSQL:
  * 1. Analyzes existing data
  * 2. Builds suggestion patterns
@@ -10,10 +10,10 @@
  * 4. Populates SuggestionPattern table
  */
 
-import fs from 'fs';
-import path from 'path';
-import { prisma } from '../config/database';
-import { logger } from '../services/logger';
+import fs from "fs";
+import path from "path";
+import { prisma } from "../config/database";
+import { logger } from "../services/logger";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -68,7 +68,7 @@ interface PatternData {
   variations: string[];
   totalQuantity: number;
   totalOrderQuantity: number;
-  ratioHistory: Array<{orderQty: number; profileQty: number; ratio: number}>;
+  ratioHistory: Array<{ orderQty: number; profileQty: number; ratio: number }>;
   lastUsed: Date;
 }
 
@@ -81,14 +81,14 @@ class SuggestionDataMigration {
   private patterns: Map<string, PatternData> = new Map();
 
   constructor() {
-    this.dataPath = path.join(__dirname, '../../data/cutting-lists.json');
+    this.dataPath = path.join(__dirname, "../../data/cutting-lists.json");
   }
 
   /**
    * Main migration method
    */
   async migrate(): Promise<void> {
-    logger.info('🚀 Starting Smart Suggestion Data Migration');
+    logger.info("🚀 Starting Smart Suggestion Data Migration");
 
     try {
       // Step 1: Load data
@@ -101,19 +101,19 @@ class SuggestionDataMigration {
 
       // Step 3: Calculate confidence scores
       this.calculateConfidence();
-      logger.info('✅ Calculated confidence scores');
+      logger.info("✅ Calculated confidence scores");
 
       // Step 4: Populate database
       await this.populateDatabase();
-      logger.info('✅ Database populated');
+      logger.info("✅ Database populated");
 
       // Step 5: Verify migration
       await this.verifyMigration();
-      logger.info('✅ Migration verified');
+      logger.info("✅ Migration verified");
 
-      logger.info('🎉 Migration completed successfully!');
+      logger.info("🎉 Migration completed successfully!");
     } catch (error) {
-      logger.error('❌ Migration failed', { error });
+      logger.error("❌ Migration failed", { error });
       throw error;
     }
   }
@@ -126,7 +126,7 @@ class SuggestionDataMigration {
       throw new Error(`Data file not found: ${this.dataPath}`);
     }
 
-    const raw = fs.readFileSync(this.dataPath, 'utf-8');
+    const raw = fs.readFileSync(this.dataPath, "utf-8");
     const data = JSON.parse(raw);
 
     // Handle Map format: [[key, value], ...]
@@ -153,7 +153,9 @@ class SuggestionDataMigration {
           const contextKey = `${productName}|${size}`;
 
           for (const profile of item.profiles) {
-            const profileName = (profile.profile || 'UNKNOWN').toUpperCase().trim();
+            const profileName = (profile.profile || "UNKNOWN")
+              .toUpperCase()
+              .trim();
             const measurement = profile.measurement.trim();
             const quantity = profile.quantity;
 
@@ -178,7 +180,7 @@ class SuggestionDataMigration {
                 totalQuantity: 0,
                 totalOrderQuantity: 0,
                 ratioHistory: [],
-                lastUsed: listDate
+                lastUsed: listDate,
               };
               this.patterns.set(patternKey, pattern);
             }
@@ -187,12 +189,12 @@ class SuggestionDataMigration {
             pattern.frequency++;
             pattern.totalQuantity += quantity;
             pattern.totalOrderQuantity += orderQty;
-            
+
             // Add to ratio history
             pattern.ratioHistory.push({
               orderQty,
               profileQty: quantity,
-              ratio
+              ratio,
             });
             if (listDate > pattern.lastUsed) {
               pattern.lastUsed = listDate;
@@ -219,7 +221,7 @@ class SuggestionDataMigration {
    */
   private calculateConfidence(): void {
     const allPatterns = Array.from(this.patterns.values());
-    const maxFrequency = Math.max(...allPatterns.map(p => p.frequency), 1);
+    const maxFrequency = Math.max(...allPatterns.map((p) => p.frequency), 1);
     const now = Date.now();
 
     for (const pattern of allPatterns) {
@@ -227,7 +229,8 @@ class SuggestionDataMigration {
       const frequencyScore = (pattern.frequency / maxFrequency) * 40;
 
       // 2. Recency Score (0-30 points) - Exponential decay
-      const daysSinceLastUse = (now - pattern.lastUsed.getTime()) / (1000 * 60 * 60 * 24);
+      const daysSinceLastUse =
+        (now - pattern.lastUsed.getTime()) / (1000 * 60 * 60 * 24);
       const recencyScore = 30 * Math.exp(-daysSinceLastUse / 90); // 90-day half-life
 
       // 3. Context Score (0-30 points) - Based on context diversity
@@ -235,9 +238,10 @@ class SuggestionDataMigration {
 
       // Total confidence (0-100)
       const confidence = frequencyScore + recencyScore + contextScore;
-      
+
       // Store back to pattern (will use in database insertion)
-      (pattern as unknown as Record<string, unknown>).confidence = Math.round(confidence * 100) / 100;
+      (pattern as unknown as Record<string, unknown>).confidence =
+        Math.round(confidence * 100) / 100;
     }
   }
 
@@ -245,11 +249,11 @@ class SuggestionDataMigration {
    * Populate database with patterns
    */
   private async populateDatabase(): Promise<void> {
-    logger.info('📝 Populating database...');
+    logger.info("📝 Populating database...");
 
     // Clear existing patterns
     await prisma.suggestionPattern.deleteMany({});
-    logger.info('🗑️  Cleared existing patterns');
+    logger.info("🗑️  Cleared existing patterns");
 
     // Insert patterns in batches
     const patterns = Array.from(this.patterns.entries());
@@ -257,13 +261,17 @@ class SuggestionDataMigration {
 
     for (let i = 0; i < patterns.length; i += BATCH_SIZE) {
       const batch = patterns.slice(i, i + BATCH_SIZE);
-      
+
       await prisma.$transaction(
         batch.map(([patternKey, pattern]) => {
           const contextKey = `${pattern.productName}|${pattern.size}`;
           const averageQuantity = pattern.totalQuantity / pattern.frequency;
-          const averageOrderQuantity = pattern.totalOrderQuantity / pattern.frequency;
-          const averageRatio = averageOrderQuantity > 0 ? averageQuantity / averageOrderQuantity : 1;
+          const averageOrderQuantity =
+            pattern.totalOrderQuantity / pattern.frequency;
+          const averageRatio =
+            averageOrderQuantity > 0
+              ? averageQuantity / averageOrderQuantity
+              : 1;
 
           return prisma.suggestionPattern.create({
             data: {
@@ -277,7 +285,9 @@ class SuggestionDataMigration {
               orderQuantity: pattern.orderQuantity,
               ratio: pattern.ratio,
               frequency: pattern.frequency,
-              confidence: (pattern as unknown as Record<string, unknown>).confidence as number || 0,
+              confidence:
+                ((pattern as unknown as Record<string, unknown>)
+                  .confidence as number) || 0,
               lastUsed: pattern.lastUsed,
               averageQuantity,
               averageRatio,
@@ -288,14 +298,16 @@ class SuggestionDataMigration {
                 totalQuantity: pattern.totalQuantity,
                 totalOrderQuantity: pattern.totalOrderQuantity,
                 averageOrderQuantity,
-                variationCount: pattern.variations.length
-              }
-            }
+                variationCount: pattern.variations.length,
+              },
+            },
           });
-        })
+        }),
       );
 
-      logger.info(`✅ Inserted batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(patterns.length / BATCH_SIZE)}`);
+      logger.info(
+        `✅ Inserted batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(patterns.length / BATCH_SIZE)}`,
+      );
     }
   }
 
@@ -305,22 +317,24 @@ class SuggestionDataMigration {
   private async verifyMigration(): Promise<void> {
     const count = await prisma.suggestionPattern.count();
     const avgConfidence = await prisma.suggestionPattern.aggregate({
-      _avg: { confidence: true }
+      _avg: { confidence: true },
     });
 
-    logger.info('📊 Migration Statistics:', {
+    logger.info("📊 Migration Statistics:", {
       totalPatterns: count,
       averageConfidence: avgConfidence._avg.confidence?.toFixed(2),
-      expectedPatterns: this.patterns.size
+      expectedPatterns: this.patterns.size,
     });
 
     if (count !== this.patterns.size) {
-      throw new Error(`Pattern count mismatch: expected ${this.patterns.size}, got ${count}`);
+      throw new Error(
+        `Pattern count mismatch: expected ${this.patterns.size}, got ${count}`,
+      );
     }
 
     // Check high confidence patterns
     const highConfidence = await prisma.suggestionPattern.count({
-      where: { confidence: { gte: 70 } }
+      where: { confidence: { gte: 70 } },
     });
 
     logger.info(`✅ High confidence patterns (>=70): ${highConfidence}`);
@@ -333,12 +347,12 @@ class SuggestionDataMigration {
 
 async function main() {
   const migration = new SuggestionDataMigration();
-  
+
   try {
     await migration.migrate();
     process.exit(0);
   } catch (error) {
-    logger.error('Migration failed', { error });
+    logger.error("Migration failed", { error });
     process.exit(1);
   } finally {
     await prisma.$disconnect();
@@ -351,4 +365,3 @@ if (require.main === module) {
 }
 
 export { SuggestionDataMigration };
-

@@ -4,8 +4,8 @@
  * @version 1.0.0
  */
 
-import { useMemo } from 'react';
-import { OptimizationResult } from '../types';
+import { useMemo } from "react";
+import { OptimizationResult } from "../types";
 
 export const useOptimizationMetrics = (result: OptimizationResult | null) => {
   // Performance metrics calculation
@@ -61,6 +61,6 @@ export const useOptimizationMetrics = (result: OptimizationResult | null) => {
 
   return {
     performanceMetrics,
-    wasteAnalysis
+    wasteAnalysis,
   };
 };

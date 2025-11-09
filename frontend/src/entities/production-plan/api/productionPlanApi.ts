@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import { apiClient } from '@/shared/api/client';
+import { apiClient } from "@/shared/api/client";
 import type {
   ProductionPlan,
   ProductionPlanItem,
@@ -14,29 +14,31 @@ import type {
   ProductionPlanListResponse,
   ProductionPlanMetricsResponse,
   BackorderItem,
-  ProductionPlanStatistics
-} from '../model/types';
+  ProductionPlanStatistics,
+} from "../model/types";
 
 export class ProductionPlanApi {
-  private readonly baseUrl = '/production-plan';
+  private readonly baseUrl = "/production-plan";
 
   /**
    * Upload Excel file and create production plan
    */
-  async uploadProductionPlan(file: File): Promise<UploadProductionPlanResponse> {
+  async uploadProductionPlan(
+    file: File,
+  ): Promise<UploadProductionPlanResponse> {
     const formData = new FormData();
-    formData.append('file', file);  // Field name MUST be 'file'
-    
+    formData.append("file", file); // Field name MUST be 'file'
+
     // Log for debugging
-    console.log('[API] Uploading file:', {
+    console.log("[API] Uploading file:", {
       name: file.name,
       size: file.size,
-      type: file.type
+      type: file.type,
     });
 
     const response = await apiClient.post<UploadProductionPlanResponse>(
       `${this.baseUrl}/upload`,
-      formData
+      formData,
     );
 
     return response.data;
@@ -45,33 +47,36 @@ export class ProductionPlanApi {
   /**
    * Get production plans with filters - ALWAYS from database only
    */
-  async getProductionPlans(filters: ProductionPlanFilters = {}): Promise<ProductionPlanListResponse> {
+  async getProductionPlans(
+    filters: ProductionPlanFilters = {},
+  ): Promise<ProductionPlanListResponse> {
     const params = new URLSearchParams();
-    
-    if (filters.weekNumber) params.append('weekNumber', filters.weekNumber.toString());
-    if (filters.year) params.append('year', filters.year.toString());
-    if (filters.status) params.append('status', filters.status);
-    if (filters.bolum) params.append('bolum', filters.bolum);
-    if (filters.oncelik) params.append('oncelik', filters.oncelik);
-    if (filters.page) params.append('page', filters.page.toString());
-    if (filters.limit) params.append('limit', filters.limit.toString());
+
+    if (filters.weekNumber)
+      params.append("weekNumber", filters.weekNumber.toString());
+    if (filters.year) params.append("year", filters.year.toString());
+    if (filters.status) params.append("status", filters.status);
+    if (filters.bolum) params.append("bolum", filters.bolum);
+    if (filters.oncelik) params.append("oncelik", filters.oncelik);
+    if (filters.page) params.append("page", filters.page.toString());
+    if (filters.limit) params.append("limit", filters.limit.toString());
 
     // Force fresh data from database - bypass all cache
     const response = await apiClient.get<ProductionPlanListResponse>(
       `${this.baseUrl}?${params.toString()}`,
       {
         headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      }
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      },
     );
 
-    console.log('📊 [API] Data fetched from database:', {
+    console.log("📊 [API] Data fetched from database:", {
       success: response.data.success,
       dataLength: response.data.data?.length || 0,
-      source: 'database-only'
+      source: "database-only",
     });
 
     return response.data;
@@ -81,12 +86,13 @@ export class ProductionPlanApi {
    * Get single production plan by ID
    */
   async getProductionPlanById(id: string): Promise<ProductionPlan> {
-    const response = await apiClient.get<{ success: boolean; data: ProductionPlan }>(
-      `${this.baseUrl}/${id}`
-    );
+    const response = await apiClient.get<{
+      success: boolean;
+      data: ProductionPlan;
+    }>(`${this.baseUrl}/${id}`);
 
     if (!response.data.success || !response.data.data) {
-      throw new Error('Production plan not found');
+      throw new Error("Production plan not found");
     }
 
     return response.data.data;
@@ -95,13 +101,17 @@ export class ProductionPlanApi {
   /**
    * Get production plan by week and year
    */
-  async getProductionPlanByWeek(weekNumber: number, year: number): Promise<ProductionPlan> {
-    const response = await apiClient.get<{ success: boolean; data: ProductionPlan }>(
-      `${this.baseUrl}/week/${weekNumber}/${year}`
-    );
+  async getProductionPlanByWeek(
+    weekNumber: number,
+    year: number,
+  ): Promise<ProductionPlan> {
+    const response = await apiClient.get<{
+      success: boolean;
+      data: ProductionPlan;
+    }>(`${this.baseUrl}/week/${weekNumber}/${year}`);
 
     if (!response.data.success || !response.data.data) {
-      throw new Error('Production plan not found');
+      throw new Error("Production plan not found");
     }
 
     return response.data.data;
@@ -110,18 +120,27 @@ export class ProductionPlanApi {
   /**
    * Delete production plan (soft delete)
    */
-  async deleteProductionPlan(id: string): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.delete<{ success: boolean; message: string }>(
-      `${this.baseUrl}/${id}`
-    );
+  async deleteProductionPlan(
+    id: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const response = await apiClient.delete<{
+      success: boolean;
+      message: string;
+    }>(`${this.baseUrl}/${id}`);
 
     return response.data;
   }
 
-  async deleteAllProductionPlans(): Promise<{ success: boolean; message: string; count: number }> {
-    const response = await apiClient.delete<{ success: boolean; message: string; count: number }>(
-      this.baseUrl
-    );
+  async deleteAllProductionPlans(): Promise<{
+    success: boolean;
+    message: string;
+    count: number;
+  }> {
+    const response = await apiClient.delete<{
+      success: boolean;
+      message: string;
+      count: number;
+    }>(this.baseUrl);
 
     return response.data;
   }
@@ -129,19 +148,22 @@ export class ProductionPlanApi {
   /**
    * Get production plan metrics
    */
-  async getProductionPlanMetrics(filters: Pick<ProductionPlanFilters, 'weekNumber' | 'year' | 'status'> = {}): Promise<ProductionPlanMetrics> {
+  async getProductionPlanMetrics(
+    filters: Pick<ProductionPlanFilters, "weekNumber" | "year" | "status"> = {},
+  ): Promise<ProductionPlanMetrics> {
     const params = new URLSearchParams();
-    
-    if (filters.weekNumber) params.append('weekNumber', filters.weekNumber.toString());
-    if (filters.year) params.append('year', filters.year.toString());
-    if (filters.status) params.append('status', filters.status);
+
+    if (filters.weekNumber)
+      params.append("weekNumber", filters.weekNumber.toString());
+    if (filters.year) params.append("year", filters.year.toString());
+    if (filters.status) params.append("status", filters.status);
 
     const response = await apiClient.get<ProductionPlanMetricsResponse>(
-      `${this.baseUrl}/metrics?${params.toString()}`
+      `${this.baseUrl}/metrics?${params.toString()}`,
     );
 
     if (!response.data.success || !response.data.data) {
-      throw new Error('Failed to fetch metrics');
+      throw new Error("Failed to fetch metrics");
     }
 
     return response.data.data;
@@ -150,13 +172,16 @@ export class ProductionPlanApi {
   /**
    * Get production plan items by work order ID
    */
-  async getProductionPlanItemsByWorkOrder(workOrderId: string): Promise<ProductionPlan['items']> {
-    const response = await apiClient.get<{ success: boolean; data: ProductionPlan['items'] }>(
-      `${this.baseUrl}/items/work-order/${workOrderId}`
-    );
+  async getProductionPlanItemsByWorkOrder(
+    workOrderId: string,
+  ): Promise<ProductionPlan["items"]> {
+    const response = await apiClient.get<{
+      success: boolean;
+      data: ProductionPlan["items"];
+    }>(`${this.baseUrl}/items/work-order/${workOrderId}`);
 
     if (!response.data.success || !response.data.data) {
-      throw new Error('Production plan items not found');
+      throw new Error("Production plan items not found");
     }
 
     return response.data.data;
@@ -188,7 +213,7 @@ export class ProductionPlanApi {
   }> {
     const response = await apiClient.post(
       `${this.baseUrl}/create-cutting-list`,
-      request
+      request,
     );
 
     return response.data;
@@ -197,7 +222,9 @@ export class ProductionPlanApi {
   /**
    * Kesim listesi ile bağlantılı plan itemlarını getir
    */
-  async getLinkedPlanItems(cuttingListId: string): Promise<ProductionPlanItem[]> {
+  async getLinkedPlanItems(
+    cuttingListId: string,
+  ): Promise<ProductionPlanItem[]> {
     const response = await apiClient.get<{
       success: boolean;
       data: ProductionPlanItem[];
@@ -205,7 +232,7 @@ export class ProductionPlanApi {
     }>(`${this.baseUrl}/cutting-list/${cuttingListId}/plan-items`);
 
     if (!response.data.success || !response.data.data) {
-      throw new Error(response.data.error || 'Linked plan items not found');
+      throw new Error(response.data.error || "Linked plan items not found");
     }
 
     return response.data.data;
@@ -222,25 +249,28 @@ export class ProductionPlanApi {
     }>(`${this.baseUrl}/plan-item/${planItemId}/unlink`);
 
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to unlink plan item');
+      throw new Error(response.data.error || "Failed to unlink plan item");
     }
   }
 
   /**
    * Get backorder items
    */
-  async getBackorderItems(filters: ProductionPlanFilters = {}): Promise<BackorderItem[]> {
+  async getBackorderItems(
+    filters: ProductionPlanFilters = {},
+  ): Promise<BackorderItem[]> {
     const params = new URLSearchParams();
-    if (filters.bolum) params.append('bolum', filters.bolum);
-    if (filters.oncelik) params.append('oncelik', filters.oncelik);
-    if (filters.status) params.append('status', filters.status);
+    if (filters.bolum) params.append("bolum", filters.bolum);
+    if (filters.oncelik) params.append("oncelik", filters.oncelik);
+    if (filters.status) params.append("status", filters.status);
 
-    const response = await apiClient.get<{ success: boolean; data: BackorderItem[] }>(
-      `${this.baseUrl}/backorder?${params.toString()}`
-    );
+    const response = await apiClient.get<{
+      success: boolean;
+      data: BackorderItem[];
+    }>(`${this.baseUrl}/backorder?${params.toString()}`);
 
     if (!response.data.success || !response.data.data) {
-      throw new Error('Failed to fetch backorder items');
+      throw new Error("Failed to fetch backorder items");
     }
 
     return response.data.data;
@@ -249,18 +279,21 @@ export class ProductionPlanApi {
   /**
    * Get production plan statistics
    */
-  async getStatistics(filters: ProductionPlanFilters = {}): Promise<ProductionPlanStatistics> {
+  async getStatistics(
+    filters: ProductionPlanFilters = {},
+  ): Promise<ProductionPlanStatistics> {
     const params = new URLSearchParams();
-    if (filters.bolum) params.append('bolum', filters.bolum);
-    if (filters.oncelik) params.append('oncelik', filters.oncelik);
-    if (filters.status) params.append('status', filters.status);
+    if (filters.bolum) params.append("bolum", filters.bolum);
+    if (filters.oncelik) params.append("oncelik", filters.oncelik);
+    if (filters.status) params.append("status", filters.status);
 
-    const response = await apiClient.get<{ success: boolean; data: ProductionPlanStatistics }>(
-      `${this.baseUrl}/statistics?${params.toString()}`
-    );
+    const response = await apiClient.get<{
+      success: boolean;
+      data: ProductionPlanStatistics;
+    }>(`${this.baseUrl}/statistics?${params.toString()}`);
 
     if (!response.data.success || !response.data.data) {
-      throw new Error('Failed to fetch statistics');
+      throw new Error("Failed to fetch statistics");
     }
 
     return response.data.data;

@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 
 // ============================================================================
 // MAIN COMPONENT PROPS
@@ -24,7 +24,7 @@ export interface TrainingModule {
   title: string;
   description: string;
   duration: number;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  difficulty: "beginner" | "intermediate" | "advanced";
   steps: TrainingStep[];
   points: number;
   prerequisites?: string[];
@@ -36,7 +36,7 @@ export interface TrainingStep {
   id: string;
   title: string;
   description: string;
-  type: 'instruction' | 'interactive' | 'assessment';
+  type: "instruction" | "interactive" | "assessment";
   interactive?: boolean;
   validation?: string;
   points: number;
@@ -89,9 +89,14 @@ export interface Metric {
 // TRAINING SIMULATION TYPES
 // ============================================================================
 
-export type TrainingMode = 'beginner' | 'intermediate' | 'advanced';
+export type TrainingMode = "beginner" | "intermediate" | "advanced";
 
-export type TrainingTab = 'overview' | 'safety' | 'machine' | 'cutting' | 'assessment';
+export type TrainingTab =
+  | "overview"
+  | "safety"
+  | "machine"
+  | "cutting"
+  | "assessment";
 
 export interface OperatorProfile {
   name: string;
@@ -251,7 +256,10 @@ export interface DialogHandlers {
   onResetTraining: () => void;
   onStartModule: (module: TrainingModule) => void;
   onStartStep: (step: TrainingStep) => void;
-  onValidateStep: (step: TrainingStep, userAction: Record<string, unknown>) => void;
+  onValidateStep: (
+    step: TrainingStep,
+    userAction: Record<string, unknown>,
+  ) => void;
   onCompleteModule: (module: TrainingModule) => void;
   onWorkshopStateChange: (state: Partial<WorkshopState>) => void;
   onActiveTabChange: (tab: TrainingTab) => void;
@@ -316,7 +324,7 @@ export interface TrainingLevelInfoMap {
 // ============================================================================
 
 export interface DialogConfig {
-  maxWidth: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  maxWidth: "xs" | "sm" | "md" | "lg" | "xl";
   fullWidth: boolean;
   zIndex: number;
   minHeight: string;
@@ -340,7 +348,10 @@ export interface DialogStyles {
 // EVENT HANDLER TYPES
 // ============================================================================
 
-export type TabChangeHandler = (event: React.SyntheticEvent, newValue: number) => void;
+export type TabChangeHandler = (
+  event: React.SyntheticEvent,
+  newValue: number,
+) => void;
 
 export type AlgorithmExpandHandler = (algorithm: string | false) => void;
 
@@ -352,11 +363,16 @@ export type ModuleStartHandler = (module: TrainingModule) => void;
 
 export type StepStartHandler = (step: TrainingStep) => void;
 
-export type StepValidateHandler = (step: TrainingStep, userAction: UserAction) => ValidationResult;
+export type StepValidateHandler = (
+  step: TrainingStep,
+  userAction: UserAction,
+) => ValidationResult;
 
 export type ModuleCompleteHandler = (module: TrainingModule) => void;
 
-export type WorkshopStateChangeHandler = (state: Partial<WorkshopState>) => void;
+export type WorkshopStateChangeHandler = (
+  state: Partial<WorkshopState>,
+) => void;
 
 export type ActiveTabChangeHandler = (tab: TrainingTab) => void;
 

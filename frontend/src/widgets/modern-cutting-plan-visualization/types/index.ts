@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import { OptimizationResult } from '@/shared/types/legacy';
+import { OptimizationResult } from "@/shared/types/legacy";
 
 // ============================================================================
 // MAIN COMPONENT PROPS
@@ -43,7 +43,7 @@ export interface CuttingPiece {
   color?: string;
   workOrderId?: string;
   productName?: string;
-  priority?: 'high' | 'medium' | 'low';
+  priority?: "high" | "medium" | "low";
   totalLength: number; // Toplam uzunluk (length × quantity)
   size?: string;
   note?: string;
@@ -59,13 +59,13 @@ export interface CuttingPiece {
 // ============================================================================
 
 export interface VisualizationSettings {
-  viewMode: 'detailed' | 'compact' | 'timeline';
+  viewMode: "detailed" | "compact" | "timeline";
   showLabels: boolean;
   showMeasurements: boolean;
   showColors: boolean;
   showWaste: boolean;
   zoomLevel: number;
-  colorScheme: 'material' | 'rainbow' | 'monochrome' | 'productivity';
+  colorScheme: "material" | "rainbow" | "monochrome" | "productivity";
 }
 
 // ============================================================================
@@ -98,13 +98,17 @@ export interface PaginatedData {
 // UTILITY TYPES
 // ============================================================================
 
-export type ExportFormat = 'pdf' | 'excel' | 'image' | 'json';
+export type ExportFormat = "pdf" | "excel" | "image" | "json";
 
-export type ViewMode = 'detailed' | 'compact' | 'timeline';
+export type ViewMode = "detailed" | "compact" | "timeline";
 
-export type ColorScheme = 'material' | 'rainbow' | 'monochrome' | 'productivity';
+export type ColorScheme =
+  | "material"
+  | "rainbow"
+  | "monochrome"
+  | "productivity";
 
-export type Priority = 'high' | 'medium' | 'low';
+export type Priority = "high" | "medium" | "low";
 
 // ============================================================================
 // COMPONENT STATE TYPES
@@ -126,9 +130,11 @@ export interface ComponentState {
 // EVENT HANDLER TYPES
 // ============================================================================
 
-export type ZoomDirection = 'in' | 'out';
+export type ZoomDirection = "in" | "out";
 
-export type SettingsUpdateHandler = (updates: Partial<VisualizationSettings>) => void;
+export type SettingsUpdateHandler = (
+  updates: Partial<VisualizationSettings>,
+) => void;
 
 export type StockClickHandler = (stockId: number) => void;
 

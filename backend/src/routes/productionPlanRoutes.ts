@@ -4,11 +4,14 @@
  * @version 1.0.0
  */
 
-import { Router, Request, Response, NextFunction } from 'express';
-import multer from 'multer';
-import { productionPlanController } from '../controllers/productionPlanController';
-import { authenticateToken, validateSession } from '../middleware/authentication';
-import { logger } from '../services/logger';
+import { Router, Request, Response, NextFunction } from "express";
+import multer from "multer";
+import { productionPlanController } from "../controllers/productionPlanController";
+import {
+  authenticateToken,
+  validateSession,
+} from "../middleware/authentication";
+import { logger } from "../services/logger";
 
 const router: Router = Router();
 
@@ -21,69 +24,77 @@ const upload = multer({
   fileFilter: (req, file, cb) => {
     // Only allow Excel files
     const allowedMimes = [
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-      'application/vnd.ms-excel', // .xls
-      'application/vnd.ms-excel.sheet.macroEnabled.12' // .xlsm
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+      "application/vnd.ms-excel", // .xls
+      "application/vnd.ms-excel.sheet.macroEnabled.12", // .xlsm
     ];
 
     if (allowedMimes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Sadece Excel dosyaları (.xlsx, .xls) yüklenebilir'));
+      cb(new Error("Sadece Excel dosyaları (.xlsx, .xls) yüklenebilir"));
     }
-  }
+  },
 });
 
 // Logging middleware BEFORE multer
 const logRequestDetails = (req: Request, res: Response, next: NextFunction) => {
-  logger.info('Upload request received (before multer)', {
-    contentType: req.headers['content-type'],
-    contentLength: req.headers['content-length'],
+  logger.info("Upload request received (before multer)", {
+    contentType: req.headers["content-type"],
+    contentLength: req.headers["content-length"],
     hasBody: !!req.body,
-    bodyKeys: Object.keys(req.body || {})
+    bodyKeys: Object.keys(req.body || {}),
   });
   next();
 };
 
 // Logging middleware AFTER multer
 const logAfterMulter = (req: Request, res: Response, next: NextFunction) => {
-  logger.info('After multer processing', {
+  logger.info("After multer processing", {
     hasFile: !!req.file,
     fileName: req.file?.originalname,
     fileSize: req.file?.size,
-    fieldname: req.file?.fieldname
+    fieldname: req.file?.fieldname,
   });
   next();
 };
 
 // Error handling middleware for multer
-const handleMulterError = (error: Error, req: Request, res: Response, next: NextFunction): void => {
-  logger.error('Multer error handler', {
+const handleMulterError = (
+  error: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
+  logger.error("Multer error handler", {
     error: error.message,
     errorType: error.constructor.name,
-    hasFile: !!req.file
+    hasFile: !!req.file,
   });
-  
+
   if (error instanceof multer.MulterError) {
-    if (error.code === 'LIMIT_FILE_SIZE') {
+    if (error.code === "LIMIT_FILE_SIZE") {
       res.status(400).json({
         success: false,
-        error: 'Dosya boyutu 10MB\'dan büyük olamaz'
+        error: "Dosya boyutu 10MB'dan büyük olamaz",
       });
       return;
     }
     // Add other MulterError cases
-    logger.error('MulterError details', { code: error.code, field: error.field });
+    logger.error("MulterError details", {
+      code: error.code,
+      field: error.field,
+    });
   }
-  
-  if (error.message.includes('Sadece Excel dosyaları')) {
+
+  if (error.message.includes("Sadece Excel dosyaları")) {
     res.status(400).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
     return;
   }
-  
+
   next(error);
 };
 
@@ -93,14 +104,15 @@ const handleMulterError = (error: Error, req: Request, res: Response, next: Next
  * @access Private (requires authentication)
  */
 router.post(
-  '/upload',
+  "/upload",
   authenticateToken,
   validateSession,
-  logRequestDetails,  // ADD THIS
-  upload.single('file'),
-  logAfterMulter,  // ADD THIS
+  logRequestDetails, // ADD THIS
+  upload.single("file"),
+  logAfterMulter, // ADD THIS
   handleMulterError,
-  (req: Request, res: Response) => productionPlanController.uploadProductionPlan(req, res)
+  (req: Request, res: Response) =>
+    productionPlanController.uploadProductionPlan(req, res),
 );
 
 /**
@@ -109,10 +121,11 @@ router.post(
  * @access Private (requires authentication)
  */
 router.get(
-  '/',
+  "/",
   authenticateToken,
   validateSession,
-  (req: Request, res: Response) => productionPlanController.getProductionPlans(req, res)
+  (req: Request, res: Response) =>
+    productionPlanController.getProductionPlans(req, res),
 );
 
 /**
@@ -121,10 +134,11 @@ router.get(
  * @access Private (requires authentication)
  */
 router.get(
-  '/metrics',
+  "/metrics",
   authenticateToken,
   validateSession,
-  (req: Request, res: Response) => productionPlanController.getProductionPlanMetrics(req, res)
+  (req: Request, res: Response) =>
+    productionPlanController.getProductionPlanMetrics(req, res),
 );
 
 /**
@@ -133,10 +147,11 @@ router.get(
  * @access Private (requires authentication)
  */
 router.get(
-  '/backorder',
+  "/backorder",
   authenticateToken,
   validateSession,
-  (req: Request, res: Response) => productionPlanController.getBackorderItems(req, res)
+  (req: Request, res: Response) =>
+    productionPlanController.getBackorderItems(req, res),
 );
 
 /**
@@ -145,10 +160,11 @@ router.get(
  * @access Private (requires authentication)
  */
 router.get(
-  '/statistics',
+  "/statistics",
   authenticateToken,
   validateSession,
-  (req: Request, res: Response) => productionPlanController.getStatistics(req, res)
+  (req: Request, res: Response) =>
+    productionPlanController.getStatistics(req, res),
 );
 
 /**
@@ -157,10 +173,11 @@ router.get(
  * @access Private (requires authentication)
  */
 router.get(
-  '/week/:weekNumber/:year',
+  "/week/:weekNumber/:year",
   authenticateToken,
   validateSession,
-  (req: Request, res: Response) => productionPlanController.getProductionPlanByWeek(req, res)
+  (req: Request, res: Response) =>
+    productionPlanController.getProductionPlanByWeek(req, res),
 );
 
 /**
@@ -169,10 +186,11 @@ router.get(
  * @access Private (requires authentication)
  */
 router.get(
-  '/items/work-order/:workOrderId',
+  "/items/work-order/:workOrderId",
   authenticateToken,
   validateSession,
-  (req: Request, res: Response) => productionPlanController.getProductionPlanItemsByWorkOrder(req, res)
+  (req: Request, res: Response) =>
+    productionPlanController.getProductionPlanItemsByWorkOrder(req, res),
 );
 
 /**
@@ -181,10 +199,11 @@ router.get(
  * @access Private (requires authentication)
  */
 router.get(
-  '/:id',
+  "/:id",
   authenticateToken,
   validateSession,
-  (req: Request, res: Response) => productionPlanController.getProductionPlanById(req, res)
+  (req: Request, res: Response) =>
+    productionPlanController.getProductionPlanById(req, res),
 );
 
 /**
@@ -193,10 +212,11 @@ router.get(
  * @access Private (requires authentication)
  */
 router.delete(
-  '/',
+  "/",
   authenticateToken,
   validateSession,
-  (req: Request, res: Response) => productionPlanController.deleteAllProductionPlans(req, res)
+  (req: Request, res: Response) =>
+    productionPlanController.deleteAllProductionPlans(req, res),
 );
 
 /**
@@ -205,10 +225,11 @@ router.delete(
  * @access Private (requires authentication)
  */
 router.delete(
-  '/:id',
+  "/:id",
   authenticateToken,
   validateSession,
-  (req: Request, res: Response) => productionPlanController.deleteProductionPlan(req, res)
+  (req: Request, res: Response) =>
+    productionPlanController.deleteProductionPlan(req, res),
 );
 
 /**
@@ -217,10 +238,11 @@ router.delete(
  * @access Private (requires authentication)
  */
 router.post(
-  '/create-cutting-list',
+  "/create-cutting-list",
   authenticateToken,
   validateSession,
-  (req: Request, res: Response) => productionPlanController.createCuttingListFromPlan(req, res)
+  (req: Request, res: Response) =>
+    productionPlanController.createCuttingListFromPlan(req, res),
 );
 
 /**
@@ -229,10 +251,11 @@ router.post(
  * @access Private (requires authentication)
  */
 router.get(
-  '/cutting-list/:cuttingListId/plan-items',
+  "/cutting-list/:cuttingListId/plan-items",
   authenticateToken,
   validateSession,
-  (req: Request, res: Response) => productionPlanController.getLinkedPlanItems(req, res)
+  (req: Request, res: Response) =>
+    productionPlanController.getLinkedPlanItems(req, res),
 );
 
 /**
@@ -241,24 +264,25 @@ router.get(
  * @access Private (requires authentication)
  */
 router.delete(
-  '/plan-item/:planItemId/unlink',
+  "/plan-item/:planItemId/unlink",
   authenticateToken,
   validateSession,
-  (req: Request, res: Response) => productionPlanController.unlinkPlanItemFromCuttingList(req, res)
+  (req: Request, res: Response) =>
+    productionPlanController.unlinkPlanItemFromCuttingList(req, res),
 );
 
 // Error handling middleware
 router.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-  logger.error('Production plan route error', {
+  logger.error("Production plan route error", {
     error: error.message,
     stack: error.stack,
     url: req.url,
-    method: req.method
+    method: req.method,
   });
 
   res.status(500).json({
     success: false,
-    error: 'Sunucu hatası'
+    error: "Sunucu hatası",
   });
 });
 

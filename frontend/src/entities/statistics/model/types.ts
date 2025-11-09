@@ -1,6 +1,6 @@
 /**
  * Statistics Entity Types
- * 
+ *
  * @module entities/statistics/model
  * @version 2.0.0 - Comprehensive Statistics Integration
  */
@@ -68,7 +68,7 @@ export interface CuttingListTrends {
   }>;
   readonly totalLists: number;
   readonly averageItemsPerList: number;
-  readonly trend: 'increasing' | 'stable' | 'decreasing';
+  readonly trend: "increasing" | "stable" | "decreasing";
 }
 
 /**
@@ -89,7 +89,7 @@ export interface WasteReductionTrends {
  * System health metrics (NEW - P2-2)
  */
 export interface SystemHealthMetrics {
-  readonly status: 'healthy' | 'degraded' | 'unhealthy';
+  readonly status: "healthy" | "degraded" | "unhealthy";
   readonly uptime: number; // seconds
   readonly cpu: {
     readonly usage: number; // percentage
@@ -129,4 +129,3 @@ export interface OptimizationAnalytics {
   readonly averageCost: number;
   readonly successRate: number;
 }
-

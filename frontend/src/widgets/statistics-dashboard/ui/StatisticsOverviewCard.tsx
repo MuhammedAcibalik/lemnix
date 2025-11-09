@@ -1,12 +1,12 @@
 /**
  * Statistics Overview Card Component v2.0
  * Displays overview statistics with modern design
- * 
+ *
  * @module widgets/statistics-dashboard
  * @version 2.0.0 - Design System v2 Compliant
  */
 
-import React from 'react';
+import React from "react";
 import {
   Grid,
   Box,
@@ -15,17 +15,17 @@ import {
   Alert,
   Stack,
   alpha,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Assessment as AssessmentIcon,
   TrendingUp as TrendingUpIcon,
   Delete as WasteIcon,
   AttachMoney as MoneyIcon,
   Speed as SpeedIcon,
-} from '@mui/icons-material';
-import { useStatisticsOverview } from '@/entities/statistics';
-import { useDesignSystem } from '@/shared/hooks';
-import { CardV2 } from '@/shared';
+} from "@mui/icons-material";
+import { useStatisticsOverview } from "@/entities/statistics";
+import { useDesignSystem } from "@/shared/hooks";
+import { CardV2 } from "@/shared";
 
 interface StatItemProps {
   readonly icon: React.ReactElement;
@@ -36,31 +36,43 @@ interface StatItemProps {
 
 const StatItem: React.FC<StatItemProps> = ({ icon, label, value, color }) => {
   const ds = useDesignSystem();
-  
+
   return (
-    <Stack spacing={ds.spacing['2']}>
+    <Stack spacing={ds.spacing["2"]}>
       <Box
         sx={{
           width: 40,
           height: 40,
           borderRadius: `${ds.borderRadius.md}px`,
           background: alpha(color, 0.1),
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           transition: ds.transitions.spring,
-          '&:hover': {
-            transform: 'scale(1.1) rotate(5deg)',
+          "&:hover": {
+            transform: "scale(1.1) rotate(5deg)",
           },
         }}
       >
         <Box sx={{ color, fontSize: 20 }}>{icon}</Box>
       </Box>
       <Box>
-        <Typography sx={{ fontSize: '0.75rem', color: ds.colors.text.secondary, mb: ds.spacing['1'] }}>
+        <Typography
+          sx={{
+            fontSize: "0.75rem",
+            color: ds.colors.text.secondary,
+            mb: ds.spacing["1"],
+          }}
+        >
           {label}
         </Typography>
-        <Typography sx={{ fontSize: '1.5rem', fontWeight: 800, color: ds.colors.text.primary }}>
+        <Typography
+          sx={{
+            fontSize: "1.5rem",
+            fontWeight: 800,
+            color: ds.colors.text.primary,
+          }}
+        >
           {value}
         </Typography>
       </Box>
@@ -80,19 +92,22 @@ export const StatisticsOverviewCard: React.FC = () => {
       headerAction={<AssessmentIcon sx={{ color: ds.colors.primary.main }} />}
     >
       {isLoading && (
-        <Box display="flex" justifyContent="center" py={ds.spacing['6']}>
+        <Box display="flex" justifyContent="center" py={ds.spacing["6"]}>
           <CircularProgress size={40} />
         </Box>
       )}
 
       {error && (
-        <Alert severity="error" sx={{ borderRadius: `${ds.borderRadius.md}px` }}>
+        <Alert
+          severity="error"
+          sx={{ borderRadius: `${ds.borderRadius.md}px` }}
+        >
           İstatistikler yüklenemedi
         </Alert>
       )}
 
       {!isLoading && !error && data && (
-        <Grid container spacing={ds.spacing['4']}>
+        <Grid container spacing={ds.spacing["4"]}>
           <Grid item xs={12} sm={6} md={3}>
             <StatItem
               icon={<SpeedIcon />}
@@ -130,4 +145,3 @@ export const StatisticsOverviewCard: React.FC = () => {
     </CardV2>
   );
 };
-

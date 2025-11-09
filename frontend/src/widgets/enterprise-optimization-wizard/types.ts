@@ -2,7 +2,7 @@
  * @fileoverview TypeScript Interfaces for Enterprise Optimization Wizard
  * @module EnterpriseOptimizationTypes
  * @version 1.0.0
- * 
+ *
  * Tüm any type'ları kaldırmak için detaylı interface'ler
  */
 
@@ -12,9 +12,9 @@
 
 export interface ProfileItem {
   id: string;
-  profile: string;            // Profil Adı
-  measurement: string;        // Ölçü (mm)
-  quantity: number;           // Adet
+  profile: string; // Profil Adı
+  measurement: string; // Ölçü (mm)
+  quantity: number; // Adet
 }
 
 export interface OptimizationItem {
@@ -32,16 +32,16 @@ export interface OptimizationItem {
 
 export interface CuttingListItem {
   id: string;
-  workOrderId: string;        // İş Emri
-  date: string;               // Tarih
-  version: string;            // Versiyon
-  color: string;              // Renk
-  orderQuantity: number;      // Sipariş Miktarı
-  size: string;               // Ebat
-  profiles: ProfileItem[];    // Profil Listesi
-  notes?: string;             // Notlar
-  priority?: 'low' | 'medium' | 'high'; // Öncelik
-  status?: 'pending' | 'in-progress' | 'completed'; // Durum
+  workOrderId: string; // İş Emri
+  date: string; // Tarih
+  version: string; // Versiyon
+  color: string; // Renk
+  orderQuantity: number; // Sipariş Miktarı
+  size: string; // Ebat
+  profiles: ProfileItem[]; // Profil Listesi
+  notes?: string; // Notlar
+  priority?: "low" | "medium" | "high"; // Öncelik
+  status?: "pending" | "in-progress" | "completed"; // Durum
   // Additional fields for compatibility
   profileType: string;
   length: number;
@@ -103,7 +103,7 @@ export interface OptimizationParams {
   objectives: OptimizationObjective[];
   constraints: OptimizationConstraints;
   stockLengths: number[];
-  unit: 'mm' | 'cm' | 'm';
+  unit: "mm" | "cm" | "m";
   maxIterations?: number;
   populationSize?: number;
   mutationRate?: number;
@@ -113,15 +113,15 @@ export interface OptimizationParams {
     // Common required fields
     workOrderId: string;
     quantity: number;
-    
+
     // From DetailedSelectionDialog (optional)
     productId?: string;
     productName?: string;
     workOrderItem?: WorkOrderItem;
     profileId?: string;
-    profile?: string;       // Profil tipi (DetailedSelectionDialog'dan)
-    measurement?: string;   // Ölçü (DetailedSelectionDialog'dan)
-    
+    profile?: string; // Profil tipi (DetailedSelectionDialog'dan)
+    measurement?: string; // Ölçü (DetailedSelectionDialog'dan)
+
     // Backward compatibility (optional)
     profileType?: string;
     length?: number;
@@ -134,7 +134,7 @@ export interface OptimizationRequest {
   algorithm: AlgorithmType;
   objectives: OptimizationObjective[];
   constraints: OptimizationConstraints;
-  unit: 'mm' | 'cm' | 'm';
+  unit: "mm" | "cm" | "m";
   maxIterations?: number;
   populationSize?: number;
   mutationRate?: number;
@@ -143,22 +143,27 @@ export interface OptimizationRequest {
 }
 
 export interface OptimizationObjective {
-  type: 'minimize-waste' | 'maximize-efficiency' | 'minimize-cost' | 'minimize-time' | 'maximize-quality';
-  weight: number;             // 0-1 arası ağırlık
-  priority: 'low' | 'medium' | 'high';
-  target?: number;            // Hedef değer
-  tolerance?: number;         // Tolerans
+  type:
+    | "minimize-waste"
+    | "maximize-efficiency"
+    | "minimize-cost"
+    | "minimize-time"
+    | "maximize-quality";
+  weight: number; // 0-1 arası ağırlık
+  priority: "low" | "medium" | "high";
+  target?: number; // Hedef değer
+  tolerance?: number; // Tolerans
 }
 
 export interface OptimizationConstraints {
-  kerfWidth: number;          // Kesim genişliği
-  startSafety: number;        // Başlangıç güvenlik mesafesi
-  endSafety: number;          // Bitiş güvenlik mesafesi
-  minScrapLength: number;     // Minimum artık uzunluk
+  kerfWidth: number; // Kesim genişliği
+  startSafety: number; // Başlangıç güvenlik mesafesi
+  endSafety: number; // Bitiş güvenlik mesafesi
+  minScrapLength: number; // Minimum artık uzunluk
   maxWastePercentage: number; // Maksimum fire yüzdesi
-  maxCutsPerStock: number;    // Stok başına maksimum kesim sayısı
+  maxCutsPerStock: number; // Stok başına maksimum kesim sayısı
   maxProcessingTime?: number; // Maksimum işlem süresi (dakika)
-  minQualityScore?: number;   // Minimum kalite skoru
+  minQualityScore?: number; // Minimum kalite skoru
 }
 
 export interface OptimizationResult {
@@ -235,7 +240,7 @@ export interface OptimizationResult {
       profileId: string;
       profileCode: string;
       profileName: string;
-      source: 'mapping' | 'fallback';
+      source: "mapping" | "fallback";
       stockLengths: number[];
     };
     [key: string]: unknown;
@@ -307,11 +312,11 @@ export interface OptimizationStatistics {
 }
 
 export interface OptimizationRecommendation {
-  type: 'efficiency' | 'cost' | 'quality' | 'waste' | 'time';
+  type: "efficiency" | "cost" | "quality" | "waste" | "time";
   title: string;
   description: string;
-  impact: 'low' | 'medium' | 'high';
-  priority: 'low' | 'medium' | 'high';
+  impact: "low" | "medium" | "high";
+  priority: "low" | "medium" | "high";
   suggestions: string[];
   estimatedSavings?: {
     cost?: number;
@@ -388,7 +393,7 @@ export interface CuttingListStepProps {
 }
 
 // Import from algorithm entity
-import type { AlgorithmMode } from '@/entities/algorithm';
+import type { AlgorithmMode } from "@/entities/algorithm";
 
 export interface ParametersStepProps {
   params: OptimizationParams;
@@ -415,7 +420,7 @@ export interface PreviewStepProps {
 export interface ResultsStepProps {
   result: OptimizationResult | null;
   onNewOptimization: () => void;
-  onExport: (format: 'excel' | 'pdf' | 'json') => void;
+  onExport: (format: "excel" | "pdf" | "json") => void;
   loading?: boolean;
 }
 
@@ -443,25 +448,25 @@ export interface CuttingListData {
   id: string;
   title: string;
   subtitle: string;
-  name?: string;              // Backward compatibility
+  name?: string; // Backward compatibility
   itemCount: number;
-  items?: CuttingListItem[];  // Cutting list items
+  items?: CuttingListItem[]; // Cutting list items
   workOrderCount: number;
   totalLength: number;
   createdAt: string;
   updatedAt: string;
-  status: 'active' | 'completed' | 'archived';
+  status: "active" | "completed" | "archived";
   description?: string;
   tags?: string[];
-  priority?: 'low' | 'medium' | 'high';
-  weekNumber?: number;        // Week number for cutting lists
+  priority?: "low" | "medium" | "high";
+  weekNumber?: number; // Week number for cutting lists
   sections?: CuttingListSection[]; // Sections within the cutting list
 }
 
 export interface CuttingListSection {
   id: string;
   name: string;
-  productName?: string;      // Backward compatibility
+  productName?: string; // Backward compatibility
   items: CuttingListItem[];
   totalLength: number;
   itemCount: number;
@@ -477,7 +482,7 @@ export interface PreviewMetrics {
   estimatedWaste: number;
   estimatedTime: number;
   estimatedCost: number;
-  algorithmComplexity: 'low' | 'medium' | 'high';
+  algorithmComplexity: "low" | "medium" | "high";
   expectedEfficiency: number;
 }
 
@@ -501,7 +506,7 @@ export interface InfoDialogProps {
   onClose: () => void;
   title: string;
   content: React.ReactNode;
-  variant?: 'info' | 'warning' | 'error' | 'success';
+  variant?: "info" | "warning" | "error" | "success";
   actions?: React.ReactNode;
 }
 
@@ -523,7 +528,7 @@ export interface PreviewDialogProps {
   onClose: () => void;
   data: OptimizationResult | null;
   title: string;
-  onExport?: (format: 'excel' | 'pdf') => void;
+  onExport?: (format: "excel" | "pdf") => void;
   onOptimize?: () => void;
   loading?: boolean;
 }
@@ -533,7 +538,7 @@ export interface ResultsDialogProps {
   onClose: () => void;
   result: OptimizationResult;
   title: string;
-  onExport: (format: 'excel' | 'pdf' | 'json') => void;
+  onExport: (format: "excel" | "pdf" | "json") => void;
   onNewOptimization: () => void;
   onShare?: () => void;
 }
@@ -556,8 +561,8 @@ export interface SelectionFilters {
     min: number;
     max: number;
   };
-  priority: ('low' | 'medium' | 'high')[];
-  status: ('pending' | 'in-progress' | 'completed')[];
+  priority: ("low" | "medium" | "high")[];
+  status: ("pending" | "in-progress" | "completed")[];
 }
 
 // ============================================================================
@@ -576,7 +581,7 @@ export interface CuttingItemFormData {
   material?: string;
   finish?: string;
   notes?: string;
-  priority: 'low' | 'medium' | 'high';
+  priority: "low" | "medium" | "high";
 }
 
 export interface ParameterFormData {
@@ -584,7 +589,7 @@ export interface ParameterFormData {
   objectives: OptimizationObjective[];
   constraints: OptimizationConstraints;
   stockLengths: number[];
-  unit: 'mm' | 'cm' | 'm';
+  unit: "mm" | "cm" | "m";
   maxIterations: number;
   populationSize: number;
   mutationRate: number;
@@ -597,12 +602,16 @@ export interface ParameterFormData {
 // ============================================================================
 
 export type CuttingListSelectHandler = (list: CuttingListData) => void;
-export type CuttingItemUpdateHandler = (id: string, field: string, value: string | number) => void;
+export type CuttingItemUpdateHandler = (
+  id: string,
+  field: string,
+  value: string | number,
+) => void;
 export type CuttingItemDeleteHandler = (id: string) => void;
 export type ParameterChangeHandler = (params: OptimizationParams) => void;
 export type OptimizationStartHandler = () => void;
 export type OptimizationCompleteHandler = (result: OptimizationResult) => void;
-export type ExportHandler = (format: 'excel' | 'pdf' | 'json') => void;
+export type ExportHandler = (format: "excel" | "pdf" | "json") => void;
 export type StepChangeHandler = (step: number) => void;
 export type DialogCloseHandler = () => void;
 export type DialogConfirmHandler = (data?: unknown) => void;
@@ -611,17 +620,27 @@ export type DialogConfirmHandler = (data?: unknown) => void;
 // UTILITY TYPES
 // ============================================================================
 
-export type LengthUnit = 'mm' | 'cm' | 'm';
+export type LengthUnit = "mm" | "cm" | "m";
 // ALIGNED WITH BACKEND: 5 algorithms available
-export type AlgorithmType = 'ffd' | 'bfd' | 'genetic' | 'pooling' | 'pattern-exact';
-export type ObjectiveType = 'minimize-waste' | 'maximize-efficiency' | 'minimize-cost' | 'minimize-time' | 'maximize-quality';
-export type PriorityLevel = 'low' | 'medium' | 'high';
-export type ItemStatus = 'pending' | 'in-progress' | 'completed';
-export type ListStatus = 'active' | 'completed' | 'archived';
-export type DialogVariant = 'info' | 'warning' | 'error' | 'success';
-export type ExportFormat = 'excel' | 'pdf' | 'json';
-export type ComplexityLevel = 'low' | 'medium' | 'high';
-export type ImpactLevel = 'low' | 'medium' | 'high';
+export type AlgorithmType =
+  | "ffd"
+  | "bfd"
+  | "genetic"
+  | "pooling"
+  | "pattern-exact";
+export type ObjectiveType =
+  | "minimize-waste"
+  | "maximize-efficiency"
+  | "minimize-cost"
+  | "minimize-time"
+  | "maximize-quality";
+export type PriorityLevel = "low" | "medium" | "high";
+export type ItemStatus = "pending" | "in-progress" | "completed";
+export type ListStatus = "active" | "completed" | "archived";
+export type DialogVariant = "info" | "warning" | "error" | "success";
+export type ExportFormat = "excel" | "pdf" | "json";
+export type ComplexityLevel = "low" | "medium" | "high";
+export type ImpactLevel = "low" | "medium" | "high";
 
 export interface AlgorithmInfo {
   readonly value: AlgorithmType;
@@ -650,9 +669,12 @@ export interface ApiResponse<T = unknown> {
   requestId?: string;
 }
 
-export interface CuttingListApiResponse extends ApiResponse<CuttingListData[]> {}
-export interface OptimizationApiResponse extends ApiResponse<OptimizationResult> {}
-export interface ExportApiResponse extends ApiResponse<{ downloadUrl: string; filename: string }> {}
+export interface CuttingListApiResponse
+  extends ApiResponse<CuttingListData[]> {}
+export interface OptimizationApiResponse
+  extends ApiResponse<OptimizationResult> {}
+export interface ExportApiResponse
+  extends ApiResponse<{ downloadUrl: string; filename: string }> {}
 
 // ============================================================================
 // VALIDATION TYPES

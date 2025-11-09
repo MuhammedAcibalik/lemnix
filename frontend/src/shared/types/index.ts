@@ -1,6 +1,6 @@
 /**
  * LEMNİX Shared Types Barrel Export
- * 
+ *
  * @module shared/types
  * @version 1.0.0 - FSD Compliant
  */
@@ -18,7 +18,7 @@ export type {
   FilterOperator,
   FilterCriteria,
   ListQueryParams,
-} from './api';
+} from "./api";
 
 // Common types
 export type {
@@ -37,5 +37,4 @@ export type {
   Range,
   Color,
   Percentage,
-} from './common';
-
+} from "./common";

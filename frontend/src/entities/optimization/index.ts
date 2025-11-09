@@ -1,9 +1,9 @@
 /**
  * LEMNİX Optimization Entity Public API
- * 
+ *
  * @module entities/optimization
  * @version 1.0.0 - FSD Compliant
- * 
+ *
  * @description
  * Optimization domain entity - represents the core optimization business logic.
  * Provides types, API calls, React Query hooks, and UI state management.
@@ -43,11 +43,11 @@ export type {
   ExportFormat,
   ExportOptimizationRequest,
   ExportOptimizationResponse,
-} from './model';
+} from "./model";
 
-export { ALGORITHM_CATALOG } from './model';
+export { ALGORITHM_CATALOG } from "./model";
 
-export { useOptimizationUI } from './model';
+export { useOptimizationUI } from "./model";
 
 // ============================================================================
 // API (React Query Hooks - Recommended)
@@ -62,7 +62,7 @@ export {
   // NEW: P0-3 hooks
   useExportOptimization,
   // ⚠️ Removed unused hooks: useAvailableAlgorithms, useValidateOptimization, useOptimizationEstimate
-} from './api';
+} from "./api";
 
 // ============================================================================
 // API (Raw Functions - For Advanced Use)
@@ -79,7 +79,7 @@ export {
   getAvailableAlgorithms,
   // NEW: P0-3 functions
   exportOptimizationResult,
-} from './api';
+} from "./api";
 
 // ============================================================================
 // UI (будет добавлено позже в Phase 3)

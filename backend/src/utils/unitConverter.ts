@@ -5,9 +5,9 @@
  */
 
 export enum LengthUnit {
-  MILLIMETER = 'mm',
-  CENTIMETER = 'cm',
-  METER = 'm'
+  MILLIMETER = "mm",
+  CENTIMETER = "cm",
+  METER = "m",
 }
 
 export class UnitConverter {
@@ -17,7 +17,7 @@ export class UnitConverter {
   static convert(value: number, from: LengthUnit, to: LengthUnit): number {
     // First convert to mm (base unit)
     let mmValue: number;
-    
+
     switch (from) {
       case LengthUnit.MILLIMETER:
         mmValue = value;
@@ -31,7 +31,7 @@ export class UnitConverter {
       default:
         throw new Error(`Unknown unit: ${from}`);
     }
-    
+
     // Then convert from mm to target unit
     switch (to) {
       case LengthUnit.MILLIMETER:
@@ -44,21 +44,21 @@ export class UnitConverter {
         throw new Error(`Unknown unit: ${to}`);
     }
   }
-  
+
   /**
    * Convert to millimeters (base unit)
    */
   static toMillimeters(value: number, from: LengthUnit): number {
     return this.convert(value, from, LengthUnit.MILLIMETER);
   }
-  
+
   /**
    * Convert from millimeters to target unit
    */
   static fromMillimeters(value: number, to: LengthUnit): number {
     return this.convert(value, LengthUnit.MILLIMETER, to);
   }
-  
+
   /**
    * Format value with unit
    */
@@ -66,7 +66,7 @@ export class UnitConverter {
     const formatted = value.toFixed(decimals);
     return `${formatted} ${unit}`;
   }
-  
+
   /**
    * Parse string with unit to value
    */
@@ -75,24 +75,24 @@ export class UnitConverter {
     if (!match) {
       throw new Error(`Invalid format: ${input}`);
     }
-    
+
     const value = parseFloat(match[1]!);
     const unit = match[2]!.toLowerCase() as LengthUnit;
-    
+
     return { value, unit };
   }
-  
+
   /**
    * Convert array of items with length property
    */
   static convertItems<T extends { length: number }>(
     items: T[],
     from: LengthUnit,
-    to: LengthUnit
+    to: LengthUnit,
   ): T[] {
-    return items.map(item => ({
+    return items.map((item) => ({
       ...item,
-      length: this.convert(item.length, from, to)
+      length: this.convert(item.length, from, to),
     }));
   }
 }

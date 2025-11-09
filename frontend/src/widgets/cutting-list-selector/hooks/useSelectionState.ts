@@ -4,16 +4,16 @@
  * @version 1.0.0
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from "react";
 import {
   SelectionState,
   ProductSelectionState,
   WorkOrderSelectionState,
   SelectionStats,
   ValidationResult,
-  CuttingListData
-} from '../types';
-import { validationConstants, performanceConstants } from '../constants';
+  CuttingListData,
+} from "../types";
+import { validationConstants, performanceConstants } from "../constants";
 
 /**
  * Custom hook for managing selection state
@@ -23,48 +23,48 @@ export const useSelectionState = (cuttingList: CuttingListData) => {
     products: {},
     totalSelectedItems: 0,
     totalSelectedProfiles: 0,
-    estimatedTotalLength: 0
+    estimatedTotalLength: 0,
   });
 
   // Initialize selection state for products
   const initializeSelectionState = useCallback(() => {
     const products: { [productId: string]: ProductSelectionState } = {};
-    
-    cuttingList.products.forEach(product => {
+
+    cuttingList.products.forEach((product) => {
       const workOrders: { [workOrderId: string]: WorkOrderSelectionState } = {};
-      
-      product.sections.forEach(section => {
+
+      product.sections.forEach((section) => {
         const profiles: { [profileId: string]: boolean } = {};
-        
-        section.items.forEach(item => {
+
+        section.items.forEach((item) => {
           profiles[item.id] = false;
         });
-        
+
         workOrders[section.id] = {
           selected: false,
           indeterminate: false,
-          profiles
+          profiles,
         };
       });
-      
+
       products[product.id] = {
         selected: false,
         indeterminate: false,
-        workOrders
+        workOrders,
       };
     });
-    
+
     setSelectionState({
       products,
       totalSelectedItems: 0,
       totalSelectedProfiles: 0,
-      estimatedTotalLength: 0
+      estimatedTotalLength: 0,
     });
   }, [cuttingList]);
 
   // Update selection state
   const updateSelection = useCallback((updates: Partial<SelectionState>) => {
-    setSelectionState(prev => ({ ...prev, ...updates }));
+    setSelectionState((prev) => ({ ...prev, ...updates }));
   }, []);
 
   // Reset selection state
@@ -81,18 +81,22 @@ export const useSelectionState = (cuttingList: CuttingListData) => {
     let estimatedLength = 0;
     let selectedLength = 0;
 
-    cuttingList.products.forEach(product => {
-      product.sections.forEach(section => {
+    cuttingList.products.forEach((product) => {
+      product.sections.forEach((section) => {
         totalProfiles++;
-        if (selectionState.products[product.id]?.workOrders[section.id]?.selected) {
+        if (
+          selectionState.products[product.id]?.workOrders[section.id]?.selected
+        ) {
           selectedProfiles++;
         }
 
-        section.items.forEach(item => {
+        section.items.forEach((item) => {
           totalItems++;
           estimatedLength += item.length * item.quantity;
-          
-          const isSelected = selectionState.products[product.id]?.workOrders[section.id]?.profiles[item.id];
+
+          const isSelected =
+            selectionState.products[product.id]?.workOrders[section.id]
+              ?.profiles[item.id];
           if (isSelected) {
             selectedItems++;
             selectedLength += item.length * item.quantity;
@@ -107,7 +111,7 @@ export const useSelectionState = (cuttingList: CuttingListData) => {
       totalProfiles,
       selectedProfiles,
       estimatedLength,
-      selectedLength
+      selectedLength,
     };
   }, [cuttingList, selectionState]);
 
@@ -115,33 +119,43 @@ export const useSelectionState = (cuttingList: CuttingListData) => {
   const validateSelection = useCallback((): ValidationResult => {
     const errors: string[] = [];
     const warnings: string[] = [];
-    
+
     const stats = getSelectionStats();
-    
+
     if (stats.selectedItems < validationConstants.selection.minItems) {
-      errors.push(`En az ${validationConstants.selection.minItems} parça seçmelisiniz`);
+      errors.push(
+        `En az ${validationConstants.selection.minItems} parça seçmelisiniz`,
+      );
     }
-    
+
     if (stats.selectedItems > validationConstants.selection.maxItems) {
-      errors.push(`En fazla ${validationConstants.selection.maxItems} parça seçebilirsiniz`);
+      errors.push(
+        `En fazla ${validationConstants.selection.maxItems} parça seçebilirsiniz`,
+      );
     }
-    
+
     if (stats.selectedProfiles === 0) {
-      warnings.push('Hiç profil seçmediniz');
+      warnings.push("Hiç profil seçmediniz");
     }
-    
+
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }, [getSelectionStats]);
 
   // Memoized selection statistics
-  const selectionStats = useMemo(() => getSelectionStats(), [getSelectionStats]);
+  const selectionStats = useMemo(
+    () => getSelectionStats(),
+    [getSelectionStats],
+  );
 
   // Memoized validation result
-  const validationResult = useMemo(() => validateSelection(), [validateSelection]);
+  const validationResult = useMemo(
+    () => validateSelection(),
+    [validateSelection],
+  );
 
   return {
     selectionState,
@@ -151,6 +165,6 @@ export const useSelectionState = (cuttingList: CuttingListData) => {
     getSelectionStats,
     selectionStats,
     validationResult,
-    initializeSelectionState
+    initializeSelectionState,
   };
 };

@@ -2,11 +2,11 @@
  * @fileoverview Shared Loading Components
  * @module shared/ui/Loading
  * @version 2.0.0 - Design System Compliant
- * 
+ *
  * Unified loading components with design system integration.
  */
 
-import React from 'react';
+import React from "react";
 import {
   Box,
   CircularProgress,
@@ -14,8 +14,8 @@ import {
   Skeleton,
   Typography,
   Stack,
-} from '@mui/material';
-import { useDesignSystem } from '@/shared/hooks';
+} from "@mui/material";
+import { useDesignSystem } from "@/shared/hooks";
 
 // ============================================================================
 // LOADING SPINNER
@@ -25,18 +25,18 @@ export interface LoadingSpinnerProps {
   /**
    * Size of spinner
    */
-  size?: 'small' | 'medium' | 'large';
-  
+  size?: "small" | "medium" | "large";
+
   /**
    * Loading message
    */
   message?: string;
-  
+
   /**
    * Center in container
    */
   centered?: boolean;
-  
+
   /**
    * Fullscreen overlay
    */
@@ -45,14 +45,14 @@ export interface LoadingSpinnerProps {
 
 /**
  * Loading Spinner Component
- * 
+ *
  * @example
  * ```tsx
  * <LoadingSpinner size="medium" message="Yükleniyor..." />
  * ```
  */
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  size = 'medium',
+  size = "medium",
   message,
   centered = false,
   fullscreen = false,
@@ -72,16 +72,16 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       spacing={spacing.sm}
       sx={{
         ...(centered && {
-          minHeight: '200px',
+          minHeight: "200px",
         }),
         ...(fullscreen && {
-          position: 'fixed',
+          position: "fixed",
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-          backdropFilter: 'blur(4px)',
+          backgroundColor: "rgba(255, 255, 255, 0.9)",
+          backdropFilter: "blur(4px)",
           zIndex: 9999,
         }),
       }}
@@ -118,12 +118,12 @@ export interface LoadingBarProps {
    * Show loading bar
    */
   loading?: boolean;
-  
+
   /**
    * Progress value (0-100)
    */
   value?: number;
-  
+
   /**
    * Loading message
    */
@@ -132,7 +132,7 @@ export interface LoadingBarProps {
 
 /**
  * Loading Bar Component
- * 
+ *
  * @example
  * ```tsx
  * <LoadingBar loading={isLoading} value={progress} />
@@ -148,15 +148,15 @@ export const LoadingBar: React.FC<LoadingBarProps> = ({
   if (!loading) return null;
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: "100%" }}>
       <LinearProgress
-        variant={value !== undefined ? 'determinate' : 'indeterminate'}
+        variant={value !== undefined ? "determinate" : "indeterminate"}
         value={value}
         sx={{
           height: 4,
           borderRadius: 2,
           backgroundColor: colors.neutral[100],
-          '& .MuiLinearProgress-bar': {
+          "& .MuiLinearProgress-bar": {
             backgroundColor: colors.primary[600],
             borderRadius: 2,
           },
@@ -166,10 +166,10 @@ export const LoadingBar: React.FC<LoadingBarProps> = ({
         <Typography
           variant="caption"
           sx={{
-            display: 'block',
+            display: "block",
             mt: spacing.xs,
             color: colors.text.secondary,
-            textAlign: 'center',
+            textAlign: "center",
           }}
         >
           {message}
@@ -188,18 +188,18 @@ export interface LoadingSkeletonProps {
   /**
    * Skeleton variant
    */
-  variant?: 'text' | 'rectangular' | 'circular';
-  
+  variant?: "text" | "rectangular" | "circular";
+
   /**
    * Width
    */
   width?: number | string;
-  
+
   /**
    * Height
    */
   height?: number | string;
-  
+
   /**
    * Number of lines (for text variant)
    */
@@ -208,28 +208,28 @@ export interface LoadingSkeletonProps {
 
 /**
  * Loading Skeleton Component
- * 
+ *
  * @example
  * ```tsx
  * <LoadingSkeleton variant="text" lines={3} />
  * ```
  */
 export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
-  variant = 'text',
+  variant = "text",
   width,
   height,
   lines = 1,
 }) => {
   const { borderRadius, spacing } = useDesignSystem();
 
-  if (variant === 'text' && lines > 1) {
+  if (variant === "text" && lines > 1) {
     return (
       <Stack spacing={spacing.xs}>
         {Array.from({ length: lines }).map((_, index) => (
           <Skeleton
             key={index}
             variant="text"
-            width={index === lines - 1 ? '60%' : '100%'}
+            width={index === lines - 1 ? "60%" : "100%"}
             sx={{
               borderRadius: `${borderRadius.sm}px`,
             }}
@@ -246,9 +246,9 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
       height={height}
       sx={{
         borderRadius:
-          variant === 'circular'
-            ? '50%'
-            : `${borderRadius[variant === 'text' ? 'sm' : 'base']}px`,
+          variant === "circular"
+            ? "50%"
+            : `${borderRadius[variant === "text" ? "sm" : "base"]}px`,
       }}
     />
   );
@@ -263,17 +263,17 @@ export interface LoadingContainerProps {
    * Loading state
    */
   loading: boolean;
-  
+
   /**
    * Content to show when loaded
    */
   children: React.ReactNode;
-  
+
   /**
    * Loading component
    */
   loader?: React.ReactNode;
-  
+
   /**
    * Minimum loading time (ms) to prevent flicker
    */
@@ -282,9 +282,9 @@ export interface LoadingContainerProps {
 
 /**
  * Loading Container Component
- * 
+ *
  * Wraps content and shows loading state.
- * 
+ *
  * @example
  * ```tsx
  * <LoadingContainer loading={isLoading}>
@@ -319,4 +319,3 @@ export const LoadingContainer: React.FC<LoadingContainerProps> = ({
 
   return <>{children}</>;
 };
-

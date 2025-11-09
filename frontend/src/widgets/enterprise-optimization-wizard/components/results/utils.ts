@@ -1,12 +1,12 @@
 /**
  * Results Data Transformation Utilities
  * Transform backend optimization results for UI display
- * 
+ *
  * @module enterprise-optimization-wizard/components/results
  * @version 2.0.0 - Type-safe, no any
  */
 
-import type { OptimizationResult } from '../../types';
+import type { OptimizationResult } from "../../types";
 
 // Backend Cut type (aligned with backend/src/types/index.ts)
 export interface BackendCut {
@@ -108,13 +108,15 @@ export interface CostBreakdownData {
 /**
  * Transform cuts to stock breakdown data
  */
-export function transformCutsToStockBreakdown(cuts: ReadonlyArray<Cut>): ReadonlyArray<StockBreakdownData> {
+export function transformCutsToStockBreakdown(
+  cuts: ReadonlyArray<Cut>,
+): ReadonlyArray<StockBreakdownData> {
   return cuts.map((cut: Cut, index: number) => {
     const segments = cut.segments.map((segment, segIndex: number) => {
       const startPosition = segment.position || 0;
-      const endPosition = segment.endPosition || (startPosition + segment.length);
-      const profileType = segment.profileType || 'Unknown';
-      
+      const endPosition = segment.endPosition || startPosition + segment.length;
+      const profileType = segment.profileType || "Unknown";
+
       return {
         id: segment.id || `seg-${index}-${segIndex}`,
         profileType,
@@ -122,18 +124,19 @@ export function transformCutsToStockBreakdown(cuts: ReadonlyArray<Cut>): Readonl
         quantity: segment.quantity || 1,
         startPosition,
         endPosition,
-        workOrderId: segment.workOrderId || 'N/A',
-        color: getWorkOrderColor(segment.workOrderId || ''),
+        workOrderId: segment.workOrderId || "N/A",
+        color: getWorkOrderColor(segment.workOrderId || ""),
         tooltipText: `${profileType} - ${segment.length}mm × ${segment.quantity || 1} adet`,
       };
     });
 
-    const usedLength = cut.usedLength || segments.reduce((sum: number, s) => sum + s.length, 0);
-    const wasteLength = cut.remainingLength || (cut.stockLength - usedLength);
+    const usedLength =
+      cut.usedLength || segments.reduce((sum: number, s) => sum + s.length, 0);
+    const wasteLength = cut.remainingLength || cut.stockLength - usedLength;
     const usedPercentage = (usedLength / cut.stockLength) * 100;
-    
+
     const workOrderIds = Array.from(
-      new Set(segments.map(s => s.workOrderId).filter(id => id !== 'N/A'))
+      new Set(segments.map((s) => s.workOrderId).filter((id) => id !== "N/A")),
     );
 
     return {
@@ -142,7 +145,7 @@ export function transformCutsToStockBreakdown(cuts: ReadonlyArray<Cut>): Readonl
       segments,
       usedLength,
       wasteLength,
-      wasteCategory: cut.wasteCategory || 'unknown',
+      wasteCategory: cut.wasteCategory || "unknown",
       usedPercentage,
       segmentCount: segments.length,
       workOrderIds,
@@ -153,23 +156,35 @@ export function transformCutsToStockBreakdown(cuts: ReadonlyArray<Cut>): Readonl
 /**
  * Calculate aggregated metrics from cuts
  */
-export function calculateStockMetrics(cuts: ReadonlyArray<Cut>): AggregatedMetrics {
-  const totalSegments = cuts.reduce((sum: number, cut: Cut) => sum + (cut.segments?.length || 0), 0);
+export function calculateStockMetrics(
+  cuts: ReadonlyArray<Cut>,
+): AggregatedMetrics {
+  const totalSegments = cuts.reduce(
+    (sum: number, cut: Cut) => sum + (cut.segments?.length || 0),
+    0,
+  );
   const totalStocks = cuts.length;
-  const averageSegmentsPerStock = totalStocks > 0 ? totalSegments / totalStocks : 0;
-  
-  const totalUsedLength = cuts.reduce((sum: number, cut: Cut) => sum + (cut.usedLength || 0), 0);
-  const totalWasteLength = cuts.reduce((sum: number, cut: Cut) => sum + (cut.remainingLength || 0), 0);
-  
+  const averageSegmentsPerStock =
+    totalStocks > 0 ? totalSegments / totalStocks : 0;
+
+  const totalUsedLength = cuts.reduce(
+    (sum: number, cut: Cut) => sum + (cut.usedLength || 0),
+    0,
+  );
+  const totalWasteLength = cuts.reduce(
+    (sum: number, cut: Cut) => sum + (cut.remainingLength || 0),
+    0,
+  );
+
   const reclaimableStocks = cuts.filter((cut: Cut) => cut.isReclaimable).length;
-  
+
   const allWorkOrders = new Set<string>();
   const allProfiles = new Set<string>();
-  
+
   cuts.forEach((cut: Cut) => {
     const segments = cut.segments;
     if (segments) {
-      segments.forEach(segment => {
+      segments.forEach((segment) => {
         if (segment.workOrderId) allWorkOrders.add(segment.workOrderId);
       });
     }
@@ -190,44 +205,46 @@ export function calculateStockMetrics(cuts: ReadonlyArray<Cut>): AggregatedMetri
 /**
  * Aggregate waste by category
  */
-export function aggregateWasteByCategory(wasteDistribution: WasteDistribution): Array<{
+export function aggregateWasteByCategory(
+  wasteDistribution: WasteDistribution,
+): Array<{
   category: string;
   count: number;
   percentage: number;
   color: string;
 }> {
   const total = wasteDistribution.totalPieces || 1;
-  
+
   return [
     {
-      category: 'Minimal (<50mm)',
+      category: "Minimal (<50mm)",
       count: wasteDistribution.minimal || 0,
       percentage: ((wasteDistribution.minimal || 0) / total) * 100,
-      color: '#10b981', // success
+      color: "#10b981", // success
     },
     {
-      category: 'Small (50-150mm)',
+      category: "Small (50-150mm)",
       count: wasteDistribution.small || 0,
       percentage: ((wasteDistribution.small || 0) / total) * 100,
-      color: '#3b82f6', // primary
+      color: "#3b82f6", // primary
     },
     {
-      category: 'Medium (150-300mm)',
+      category: "Medium (150-300mm)",
       count: wasteDistribution.medium || 0,
       percentage: ((wasteDistribution.medium || 0) / total) * 100,
-      color: '#f59e0b', // warning
+      color: "#f59e0b", // warning
     },
     {
-      category: 'Large (300-500mm)',
+      category: "Large (300-500mm)",
       count: wasteDistribution.large || 0,
       percentage: ((wasteDistribution.large || 0) / total) * 100,
-      color: '#ef4444', // error
+      color: "#ef4444", // error
     },
     {
-      category: 'Excessive (>500mm)',
+      category: "Excessive (>500mm)",
       count: wasteDistribution.excessive || 0,
       percentage: ((wasteDistribution.excessive || 0) / total) * 100,
-      color: '#dc2626', // error dark
+      color: "#dc2626", // error dark
     },
   ];
 }
@@ -235,24 +252,31 @@ export function aggregateWasteByCategory(wasteDistribution: WasteDistribution): 
 /**
  * Build cost breakdown from result
  */
-export function buildCostBreakdown(result: OptimizationResult): CostBreakdownData {
-  const costBreakdown = (result as {
-    costBreakdown?: {
-      materialCost?: number;
-      laborCost?: number;
-      wasteCost?: number;
-      setupCost?: number;
-      cuttingCost?: number;
-      timeCost?: number;
-      totalCost?: number;
+export function buildCostBreakdown(
+  result: OptimizationResult,
+): CostBreakdownData {
+  const costBreakdown = (
+    result as {
+      costBreakdown?: {
+        materialCost?: number;
+        laborCost?: number;
+        wasteCost?: number;
+        setupCost?: number;
+        cuttingCost?: number;
+        timeCost?: number;
+        totalCost?: number;
+      };
     }
-  }).costBreakdown;
-  
+  ).costBreakdown;
+
   if (costBreakdown) {
-    const cuts = (result as {cuts?: ReadonlyArray<Cut>}).cuts || [];
-    const totalUsedLength = cuts.reduce((sum: number, c: Cut) => sum + (c.usedLength || 0), 0);
-    const totalUsedMeters = (totalUsedLength / 1000) || 1;
-    
+    const cuts = (result as { cuts?: ReadonlyArray<Cut> }).cuts || [];
+    const totalUsedLength = cuts.reduce(
+      (sum: number, c: Cut) => sum + (c.usedLength || 0),
+      0,
+    );
+    const totalUsedMeters = totalUsedLength / 1000 || 1;
+
     return {
       materialCost: costBreakdown.materialCost || 0,
       laborCost: costBreakdown.laborCost || 0,
@@ -261,19 +285,23 @@ export function buildCostBreakdown(result: OptimizationResult): CostBreakdownDat
       cuttingCost: costBreakdown.cuttingCost || 0,
       timeCost: costBreakdown.timeCost || 0,
       totalCost: costBreakdown.totalCost || result.totalCost || 0,
-      costPerMeter: (costBreakdown.totalCost || result.totalCost || 0) / totalUsedMeters,
+      costPerMeter:
+        (costBreakdown.totalCost || result.totalCost || 0) / totalUsedMeters,
     };
   }
-  
+
   // Fallback: Use top-level cost fields
-  const cuts = (result as {cuts?: ReadonlyArray<Cut>}).cuts || [];
-  const totalUsedLength = cuts.reduce((sum: number, c: Cut) => sum + (c.usedLength || 0), 0);
-  const totalUsedMeters = (totalUsedLength / 1000) || 1;
-  
+  const cuts = (result as { cuts?: ReadonlyArray<Cut> }).cuts || [];
+  const totalUsedLength = cuts.reduce(
+    (sum: number, c: Cut) => sum + (c.usedLength || 0),
+    0,
+  );
+  const totalUsedMeters = totalUsedLength / 1000 || 1;
+
   return {
     materialCost: result.totalCost ? result.totalCost * 0.6 : 0,
     laborCost: result.totalCost ? result.totalCost * 0.25 : 0,
-    wasteCost: result.totalCost ? result.totalCost * 0.10 : 0,
+    wasteCost: result.totalCost ? result.totalCost * 0.1 : 0,
     setupCost: result.totalCost ? result.totalCost * 0.05 : 0,
     cuttingCost: 0,
     timeCost: 0,
@@ -287,29 +315,29 @@ export function buildCostBreakdown(result: OptimizationResult): CostBreakdownDat
  */
 const workOrderColorCache = new Map<string, string>();
 const WORK_ORDER_COLORS = [
-  '#3b82f6', // blue
-  '#10b981', // green
-  '#f59e0b', // orange
-  '#8b5cf6', // purple
-  '#ec4899', // pink
-  '#06b6d4', // cyan
-  '#f97316', // orange-red
-  '#14b8a6', // teal
+  "#3b82f6", // blue
+  "#10b981", // green
+  "#f59e0b", // orange
+  "#8b5cf6", // purple
+  "#ec4899", // pink
+  "#06b6d4", // cyan
+  "#f97316", // orange-red
+  "#14b8a6", // teal
 ];
 
 export function getWorkOrderColor(workOrderId: string): string {
-  if (!workOrderId || workOrderId === 'N/A') {
-    return '#94a3b8'; // neutral gray
+  if (!workOrderId || workOrderId === "N/A") {
+    return "#94a3b8"; // neutral gray
   }
-  
+
   if (workOrderColorCache.has(workOrderId)) {
     return workOrderColorCache.get(workOrderId)!;
   }
-  
+
   const colorIndex = workOrderColorCache.size % WORK_ORDER_COLORS.length;
   const color = WORK_ORDER_COLORS[colorIndex];
   workOrderColorCache.set(workOrderId, color);
-  
+
   return color;
 }
 
@@ -327,9 +355,9 @@ export function formatLength(lengthMm: number): string {
  * Format currency
  */
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('tr-TR', {
-    style: 'currency',
-    currency: 'TRY',
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
@@ -340,13 +368,13 @@ export function formatCurrency(amount: number): string {
  */
 export function getWasteCategoryColor(category: string): string {
   const colors: Record<string, string> = {
-    minimal: '#10b981',
-    small: '#3b82f6',
-    medium: '#f59e0b',
-    large: '#ef4444',
-    excessive: '#dc2626',
+    minimal: "#10b981",
+    small: "#3b82f6",
+    medium: "#f59e0b",
+    large: "#ef4444",
+    excessive: "#dc2626",
   };
-  return colors[category] || '#94a3b8';
+  return colors[category] || "#94a3b8";
 }
 
 /**
@@ -354,11 +382,11 @@ export function getWasteCategoryColor(category: string): string {
  */
 export function getWasteCategoryLabel(category: string): string {
   const labels: Record<string, string> = {
-    minimal: 'Minimal (<50mm)',
-    small: 'Küçük (50-150mm)',
-    medium: 'Orta (150-300mm)',
-    large: 'Büyük (300-500mm)',
-    excessive: 'Aşırı (>500mm)',
+    minimal: "Minimal (<50mm)",
+    small: "Küçük (50-150mm)",
+    medium: "Orta (150-300mm)",
+    large: "Büyük (300-500mm)",
+    excessive: "Aşırı (>500mm)",
   };
   return labels[category] || category;
 }
@@ -401,7 +429,7 @@ export interface StockPlan {
 export interface CutSegment {
   readonly length: number;
   readonly quantity: number;
-  readonly workOrderId?: string;  // ✅ FIX: Add workOrderId to CutSegment
+  readonly workOrderId?: string; // ✅ FIX: Add workOrderId to CutSegment
   readonly profileType?: string; // ✅ FIX: Add profileType to CutSegment
 }
 
@@ -409,10 +437,9 @@ export interface CutSegment {
  * Group cuts by stock length - Simplified version
  */
 export function groupCutsByStockLength(
-  cuts: ReadonlyArray<Cut>, 
-  algorithm?: string
+  cuts: ReadonlyArray<Cut>,
+  algorithm?: string,
 ): ReadonlyArray<StockLengthGroup> {
-  
   if (!cuts || cuts.length === 0) {
     return [];
   }
@@ -421,7 +448,7 @@ export function groupCutsByStockLength(
 
   // Group cuts by stock length
   const byStockLength: Record<string, Cut[]> = {};
-  
+
   for (const cut of cuts) {
     const key = String(cut.stockLength);
     if (!byStockLength[key]) {
@@ -431,76 +458,89 @@ export function groupCutsByStockLength(
   }
 
   // Transform to StockLengthGroup
-  return Object.entries(byStockLength).map(([stockLengthStr, stockCuts]) => {
-    const stockLength = Number(stockLengthStr);
-    
-    // Calculate aggregates
-    const totalWaste = stockCuts.reduce((sum, cut) => sum + cut.remainingLength, 0);
-    const avgEfficiency = stockCuts.reduce((sum, cut) => {
-      const eff = (cut.usedLength / cut.stockLength) * 100;
-      return sum + eff;
-    }, 0) / stockCuts.length;
+  return Object.entries(byStockLength)
+    .map(([stockLengthStr, stockCuts]) => {
+      const stockLength = Number(stockLengthStr);
 
-    // Create plans (one plan per cut)
-    const plans: StockPlan[] = stockCuts.map((cut) => {
-      // Extract work orders from segments
-      const workOrderIds = Array.from(
-        new Set(
-          cut.segments
-            .map(s => s.workOrderId)
-            .filter(id => id !== undefined && id !== null && id !== '' && id !== 'N/A')
-        )
+      // Calculate aggregates
+      const totalWaste = stockCuts.reduce(
+        (sum, cut) => sum + cut.remainingLength,
+        0,
       );
+      const avgEfficiency =
+        stockCuts.reduce((sum, cut) => {
+          const eff = (cut.usedLength / cut.stockLength) * 100;
+          return sum + eff;
+        }, 0) / stockCuts.length;
 
-      // Use first work order ID if available, otherwise N/A
-      const workOrderId = workOrderIds.length > 0 
-        ? workOrderIds[0] || 'N/A'
-        : 'N/A';
+      // Create plans (one plan per cut)
+      const plans: StockPlan[] = stockCuts.map((cut) => {
+        // Extract work orders from segments
+        const workOrderIds = Array.from(
+          new Set(
+            cut.segments
+              .map((s) => s.workOrderId)
+              .filter(
+                (id) =>
+                  id !== undefined && id !== null && id !== "" && id !== "N/A",
+              ),
+          ),
+        );
+
+        // Use first work order ID if available, otherwise N/A
+        const workOrderId =
+          workOrderIds.length > 0 ? workOrderIds[0] || "N/A" : "N/A";
+
+        return {
+          stockLength: cut.stockLength,
+          planId: cut.id,
+          workOrderId: workOrderId,
+          workOrderCount:
+            workOrderIds.length > 1 ? workOrderIds.length : undefined,
+          algorithm: algorithm || "Unknown",
+          stockCount: 1, // Each cut = 1 stock
+          totalPieces: cut.segmentCount,
+          efficiency: (cut.usedLength / cut.stockLength) * 100,
+          totalWaste: cut.remainingLength,
+          cuts: [
+            {
+              cutId: cut.id,
+              segments: cut.segments.map((s) => ({
+                length: s.length,
+                quantity: s.quantity || 1,
+                workOrderId: s.workOrderId, // ✅ FIX: Preserve workOrderId in segments
+                profileType: s.profileType, // ✅ FIX: Preserve profileType in segments
+              })),
+              waste: cut.remainingLength,
+              efficiency: (cut.usedLength / cut.stockLength) * 100,
+            },
+          ],
+        };
+      });
+
+      // Calculate totals for this stock length
+      const totalPieces = plans.reduce((sum, p) => sum + p.totalPieces, 0);
+      const totalStocks = plans.reduce((sum, p) => sum + p.stockCount, 0);
 
       return {
-        stockLength: cut.stockLength,
-        planId: cut.id,
-        workOrderId: workOrderId,
-        workOrderCount: workOrderIds.length > 1 ? workOrderIds.length : undefined,
-        algorithm: algorithm || 'Unknown',
-        stockCount: 1, // Each cut = 1 stock
-        totalPieces: cut.segmentCount,
-        efficiency: (cut.usedLength / cut.stockLength) * 100,
-        totalWaste: cut.remainingLength,
-        cuts: [{
-          cutId: cut.id,
-          segments: cut.segments.map(s => ({
-            length: s.length,
-            quantity: s.quantity || 1,
-            workOrderId: s.workOrderId,  // ✅ FIX: Preserve workOrderId in segments
-            profileType: s.profileType,  // ✅ FIX: Preserve profileType in segments
-          })),
-          waste: cut.remainingLength,
-          efficiency: (cut.usedLength / cut.stockLength) * 100
-        }]
+        stockLength,
+        plans,
+        totalPieces,
+        totalStocks,
+        avgEfficiency,
       };
-    });
-
-    // Calculate totals for this stock length
-    const totalPieces = plans.reduce((sum, p) => sum + p.totalPieces, 0);
-    const totalStocks = plans.reduce((sum, p) => sum + p.stockCount, 0);
-
-    return {
-      stockLength,
-      plans,
-      totalPieces,
-      totalStocks,
-      avgEfficiency
-    };
-  }).sort((a, b) => a.stockLength - b.stockLength); // Sort by stock length ascending
+    })
+    .sort((a, b) => a.stockLength - b.stockLength); // Sort by stock length ascending
 }
 
 /**
  * Format cutting pattern
  */
-export function formatCuttingPattern(segments: ReadonlyArray<CutSegment>, waste: number): string {
+export function formatCuttingPattern(
+  segments: ReadonlyArray<CutSegment>,
+  waste: number,
+): string {
   // "4x992mm + 3x1200mm + 2x850mm (Atık: 166mm)" formatı
-  const parts = segments.map(s => `${s.quantity}x${s.length}mm`).join(' + ');
+  const parts = segments.map((s) => `${s.quantity}x${s.length}mm`).join(" + ");
   return `${parts} (Atık: ${waste}mm)`;
 }
-

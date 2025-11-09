@@ -1,12 +1,12 @@
 /**
  * LEMNİX Statistics Entity Response Schemas
  * Zod schemas for backend response validation
- * 
+ *
  * @module entities/statistics/model
  * @version 1.0.0 - Response Validation Layer
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Statistics overview schema
@@ -37,10 +37,14 @@ export const usageAnalyticsSchema = z.object({
   uniqueUsers: z.number().int().nonnegative(),
   averageResponseTime: z.number().nonnegative(),
   requestsByEndpoint: z.record(z.number().int().nonnegative()),
-  requestsByHour: z.array(z.object({
-    hour: z.number().int().min(0).max(23),
-    count: z.number().int().nonnegative(),
-  })).readonly(),
+  requestsByHour: z
+    .array(
+      z.object({
+        hour: z.number().int().min(0).max(23),
+        count: z.number().int().nonnegative(),
+      }),
+    )
+    .readonly(),
   peakHour: z.number().int().min(0).max(23),
   activeUsers: z.number().int().nonnegative(),
 });
@@ -60,26 +64,34 @@ export const profileUsageStatsSchema = z.object({
  * Cutting list trends schema
  */
 export const cuttingListTrendsSchema = z.object({
-  daily: z.array(z.object({
-    date: z.string(),
-    count: z.number().int().nonnegative(),
-    totalLength: z.number().nonnegative(),
-    averageEfficiency: z.number().min(0).max(1),
-  })).readonly(),
+  daily: z
+    .array(
+      z.object({
+        date: z.string(),
+        count: z.number().int().nonnegative(),
+        totalLength: z.number().nonnegative(),
+        averageEfficiency: z.number().min(0).max(1),
+      }),
+    )
+    .readonly(),
   totalLists: z.number().int().nonnegative(),
   averageItemsPerList: z.number().nonnegative(),
-  trend: z.enum(['increasing', 'stable', 'decreasing']),
+  trend: z.enum(["increasing", "stable", "decreasing"]),
 });
 
 /**
  * Waste reduction trends schema
  */
 export const wasteReductionTrendsSchema = z.object({
-  daily: z.array(z.object({
-    date: z.string(),
-    wasteReduction: z.number().nonnegative(),
-    costSavings: z.number().nonnegative(),
-  })).readonly(),
+  daily: z
+    .array(
+      z.object({
+        date: z.string(),
+        wasteReduction: z.number().nonnegative(),
+        costSavings: z.number().nonnegative(),
+      }),
+    )
+    .readonly(),
   totalWasteSaved: z.number().nonnegative(),
   totalCostSaved: z.number().nonnegative(),
   averageReductionRate: z.number().min(0).max(1),
@@ -89,7 +101,7 @@ export const wasteReductionTrendsSchema = z.object({
  * System health metrics schema
  */
 export const systemHealthMetricsSchema = z.object({
-  status: z.enum(['healthy', 'degraded', 'unhealthy']),
+  status: z.enum(["healthy", "degraded", "unhealthy"]),
   uptime: z.number().int().nonnegative(),
   cpu: z.object({
     usage: z.number().min(0).max(100),
@@ -133,7 +145,7 @@ export const optimizationAnalyticsSchema = z.object({
 /**
  * Validation helpers
  */
-export const validateStatisticsOverview = (data: unknown) => 
+export const validateStatisticsOverview = (data: unknown) =>
   statisticsOverviewSchema.safeParse(data).data ?? null;
 
 export const validateAlgorithmPerformance = (data: unknown) =>
@@ -159,4 +171,3 @@ export const validatePerformanceMetrics = (data: unknown) =>
 
 export const validateOptimizationAnalytics = (data: unknown) =>
   optimizationAnalyticsSchema.safeParse(data).data ?? null;
-

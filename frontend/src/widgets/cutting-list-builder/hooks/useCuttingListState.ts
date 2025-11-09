@@ -4,15 +4,15 @@
  * @version 1.0.0
  */
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { 
-  CuttingList, 
-  WorkOrderForm, 
-  WorkOrderItem, 
+import { useState, useMemo, useCallback, useEffect } from "react";
+import {
+  CuttingList,
+  WorkOrderForm,
+  WorkOrderItem,
   LoadingState,
-  ProfileFormItem
-} from '../types';
-import { MeasurementConverter } from '@/shared/lib/utils/measurementConverter';
+  ProfileFormItem,
+} from "../types";
+import { MeasurementConverter } from "@/shared/lib/utils/measurementConverter";
 
 // ✅ CRITICAL FIX: Remove unused props interface
 // These callbacks are not used in this hook, they're in useCuttingListData
@@ -26,55 +26,64 @@ export const useCuttingListState = () => {
   const [cuttingList, setCuttingList] = useState<CuttingList | null>(null);
   const [cuttingLists, setCuttingLists] = useState<CuttingList[]>([]);
   const [selectedWeekNumber, setSelectedWeekNumber] = useState<number>(1);
-  
+
   // Auto-generate title based on week number
   const [title, setTitle] = useState<string>(() => {
     const weekNum = 1;
     const year = new Date().getFullYear();
     return `${year} - ${weekNum}. Hafta Kesim Listesi`;
   });
-  const [productName, setProductName] = useState<string>('');
-  
+  const [productName, setProductName] = useState<string>("");
+
   // UI states
   const [activeTab, setActiveTab] = useState<number>(0);
-  const [loadingState, setLoadingState] = useState<LoadingState>(LoadingState.IDLE);
+  const [loadingState, setLoadingState] = useState<LoadingState>(
+    LoadingState.IDLE,
+  );
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
+
   // Dialog states
-  const [showNewProductDialog, setShowNewProductDialog] = useState<boolean>(false);
+  const [showNewProductDialog, setShowNewProductDialog] =
+    useState<boolean>(false);
   const [showNewItemDialog, setShowNewItemDialog] = useState<boolean>(false);
   const [showEditItemDialog, setShowEditItemDialog] = useState<boolean>(false);
-  
+
   // Form states
-  const [currentSectionId, setCurrentSectionId] = useState<string>('');
+  const [currentSectionId, setCurrentSectionId] = useState<string>("");
   const [editingItem, setEditingItem] = useState<WorkOrderItem | null>(null);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Form data
   const [newItemForm, setNewItemForm] = useState<WorkOrderForm>({
-    productName: '', // ✅ Section context for smart suggestions
-    workOrderId: '',
-    date: new Date().toISOString().split('T')[0],
-    version: '1.0',
-    color: '',
-    note: '',
-    orderQuantity: '1',
-    size: '',
-    profiles: [{ id: '1', profile: '', measurement: '', quantity: '1' }],
-    priority: '1'
+    productName: "", // ✅ Section context for smart suggestions
+    workOrderId: "",
+    date: new Date().toISOString().split("T")[0],
+    version: "1.0",
+    color: "",
+    note: "",
+    orderQuantity: "1",
+    size: "",
+    profiles: [{ id: "1", profile: "", measurement: "", quantity: "1" }],
+    priority: "1",
   });
 
   // Smart suggestions states
   const [availableSizes, setAvailableSizes] = useState<string[]>([]);
-  const [profileCombinations, setProfileCombinations] = useState<Array<{
-    id: string;
-    profiles: Array<{ profile: string; measurement: string; ratio: number }>;
-    usageCount: number;
-    lastUsed: string;
-  }>>([]);
-  const [showCombinationDialog, setShowCombinationDialog] = useState<boolean>(false);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState<boolean>(false);
+  const [profileCombinations, setProfileCombinations] = useState<
+    Array<{
+      id: string;
+      profiles: Array<{ profile: string; measurement: string; ratio: number }>;
+      usageCount: number;
+      lastUsed: string;
+    }>
+  >([]);
+  const [showCombinationDialog, setShowCombinationDialog] =
+    useState<boolean>(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] =
+    useState<boolean>(false);
 
   // ============================================================================
   // EFFECTS
@@ -93,63 +102,99 @@ export const useCuttingListState = () => {
   const getCurrentWeekNumber = useCallback((): number => {
     const now = new Date();
     const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const days = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
+    const days = Math.floor(
+      (now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000),
+    );
     return Math.ceil((days + startOfYear.getDay() + 1) / 7);
   }, []);
 
-  const currentWeekNumber = useMemo(() => getCurrentWeekNumber(), [getCurrentWeekNumber]);
+  const currentWeekNumber = useMemo(
+    () => getCurrentWeekNumber(),
+    [getCurrentWeekNumber],
+  );
 
-  const autoGeneratedTitle = useMemo(() => 
-    `${selectedWeekNumber}. HAFTA KESİM LİSTESİ`, 
-    [selectedWeekNumber]
+  const autoGeneratedTitle = useMemo(
+    () => `${selectedWeekNumber}. HAFTA KESİM LİSTESİ`,
+    [selectedWeekNumber],
   );
 
   const cuttingListStats = useMemo(() => {
     if (!cuttingList) return null;
-    
+
     const totalSections = cuttingList.sections.length;
-    const totalItems = cuttingList.sections.reduce((total, section) => 
-      total + section.items.length, 0
+    const totalItems = cuttingList.sections.reduce(
+      (total, section) => total + section.items.length,
+      0,
     );
-    const totalProfiles = cuttingList.sections.reduce((total, section) => 
-      total + section.items.reduce((sum, item) => sum + (item.profiles?.length || 0), 0), 0
+    const totalProfiles = cuttingList.sections.reduce(
+      (total, section) =>
+        total +
+        section.items.reduce(
+          (sum, item) => sum + (item.profiles?.length || 0),
+          0,
+        ),
+      0,
     );
-    const completedItems = cuttingList.sections.reduce((total, section) => 
-      total + section.items.filter(item => item.status === 'completed').length, 0
+    const completedItems = cuttingList.sections.reduce(
+      (total, section) =>
+        total +
+        section.items.filter((item) => item.status === "completed").length,
+      0,
     );
     const efficiency = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
-    const totalQuantity = cuttingList.sections.reduce((total, section) => 
-      total + section.items.reduce((sum, item) => 
-        sum + (item.profiles?.reduce((qty, profile) => qty + profile.quantity, 0) || 0), 0
-      ), 0
+    const totalQuantity = cuttingList.sections.reduce(
+      (total, section) =>
+        total +
+        section.items.reduce(
+          (sum, item) =>
+            sum +
+            (item.profiles?.reduce(
+              (qty, profile) => qty + profile.quantity,
+              0,
+            ) || 0),
+          0,
+        ),
+      0,
     );
-    
-    return { totalSections, totalItems, totalProfiles, completedItems, efficiency, totalQuantity };
+
+    return {
+      totalSections,
+      totalItems,
+      totalProfiles,
+      completedItems,
+      efficiency,
+      totalQuantity,
+    };
   }, [cuttingList]);
 
   const isFormValid = useMemo(() => {
     if (!currentSectionId || !cuttingList) return false;
-    
+
     const requiredFields = [
       newItemForm.workOrderId.trim(),
       newItemForm.date.trim(),
       newItemForm.version.trim(),
       newItemForm.color.trim(),
       newItemForm.orderQuantity.trim(),
-      newItemForm.size.trim()
+      newItemForm.size.trim(),
     ];
 
-    const hasRequiredFields = requiredFields.every(field => field);
-    const hasValidQuantity = !isNaN(parseInt(newItemForm.orderQuantity)) && parseInt(newItemForm.orderQuantity) > 0;
+    const hasRequiredFields = requiredFields.every((field) => field);
+    const hasValidQuantity =
+      !isNaN(parseInt(newItemForm.orderQuantity)) &&
+      parseInt(newItemForm.orderQuantity) > 0;
     const hasProfiles = newItemForm.profiles.length > 0;
-    const hasValidProfiles = newItemForm.profiles.every(profile => 
-      profile.measurement.trim() && 
-      profile.quantity.trim() && 
-      !isNaN(parseInt(profile.quantity)) && 
-      parseInt(profile.quantity) > 0
+    const hasValidProfiles = newItemForm.profiles.every(
+      (profile) =>
+        profile.measurement.trim() &&
+        profile.quantity.trim() &&
+        !isNaN(parseInt(profile.quantity)) &&
+        parseInt(profile.quantity) > 0,
     );
 
-    return hasRequiredFields && hasValidQuantity && hasProfiles && hasValidProfiles;
+    return (
+      hasRequiredFields && hasValidQuantity && hasProfiles && hasValidProfiles
+    );
   }, [currentSectionId, cuttingList, newItemForm]);
 
   // ============================================================================
@@ -158,100 +203,115 @@ export const useCuttingListState = () => {
 
   const resetNewItemForm = useCallback(() => {
     setNewItemForm({
-      productName: '', // ✅ Reset product name
-      workOrderId: '',
-      date: new Date().toISOString().split('T')[0],
-      version: '1.0',
-      color: '',
-      note: '',
-      orderQuantity: '1',
-      size: '',
-      profiles: [{ id: '1', profile: '', measurement: '', quantity: '1' }],
-      priority: '1'
+      productName: "", // ✅ Reset product name
+      workOrderId: "",
+      date: new Date().toISOString().split("T")[0],
+      version: "1.0",
+      color: "",
+      note: "",
+      orderQuantity: "1",
+      size: "",
+      profiles: [{ id: "1", profile: "", measurement: "", quantity: "1" }],
+      priority: "1",
     });
   }, []);
 
-  const handleFormChange = useCallback((field: keyof Omit<WorkOrderForm, 'profiles'>, value: string) => {
-    setNewItemForm(prev => ({ ...prev, [field]: value }));
-  }, []);
+  const handleFormChange = useCallback(
+    (field: keyof Omit<WorkOrderForm, "profiles">, value: string) => {
+      setNewItemForm((prev) => ({ ...prev, [field]: value }));
+    },
+    [],
+  );
 
   const addProfile = useCallback(() => {
     const newProfileId = (newItemForm.profiles.length + 1).toString();
-    setNewItemForm(prev => ({
+    setNewItemForm((prev) => ({
       ...prev,
-      profiles: [...prev.profiles, { 
-        id: newProfileId, 
-        profile: '', 
-        measurement: '', 
-        quantity: '1' 
-      }]
+      profiles: [
+        ...prev.profiles,
+        {
+          id: newProfileId,
+          profile: "",
+          measurement: "",
+          quantity: "1",
+        },
+      ],
     }));
   }, [newItemForm.profiles.length]);
 
-  const removeProfile = useCallback((profileId: string) => {
-    if (newItemForm.profiles.length > 1) {
-      setNewItemForm(prev => ({
-        ...prev,
-        profiles: prev.profiles.filter(profile => profile.id !== profileId)
-      }));
-    }
-  }, [newItemForm.profiles.length]);
-
-
-  const handleProfileChange = useCallback((profileId: string, field: keyof ProfileFormItem, value: string) => {
-    // Yazarken ham değerleri sakla; birim eklemeyi submit aşamasına bırak
-    setNewItemForm(prev => ({
-      ...prev,
-      profiles: prev.profiles.map(profile => 
-        profile.id === profileId ? { ...profile, [field]: value } : profile
-      )
-    }));
-  }, []);
-
-  const handleEditItem = useCallback((sectionId: string, item: WorkOrderItem) => {
-    setCurrentSectionId(sectionId);
-    // Map backend priority values to Select options ('1' | '2')
-    const rawPriority = (item as unknown as { priority?: string }).priority;
-    const normalizedPriority: '1' | '2' = rawPriority === '2' || rawPriority === 'high' ? '2' : '1';
-    setEditingItem({
-      ...item,
-      priority: normalizedPriority,
-      // ✅ FIX: Ensure profiles is always an array
-      profiles: Array.isArray(item.profiles) ? item.profiles : []
-    });
-    
-    // Convert date to YYYY-MM-DD format if needed
-    let formattedDate = item.date;
-    if (formattedDate && formattedDate.includes('.')) {
-      const parts = formattedDate.split('.');
-      if (parts.length === 3) {
-        formattedDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+  const removeProfile = useCallback(
+    (profileId: string) => {
+      if (newItemForm.profiles.length > 1) {
+        setNewItemForm((prev) => ({
+          ...prev,
+          profiles: prev.profiles.filter((profile) => profile.id !== profileId),
+        }));
       }
-    }
-    
-    setNewItemForm({
-      productName: '', // Add missing productName field
-      workOrderId: item.workOrderId,
-      date: formattedDate,
-      version: item.version,
-      color: item.color,
-      note: item.note,
-      orderQuantity: item.orderQuantity.toString(),
-      size: item.size,
-      priority: normalizedPriority,
-      profiles: (item.profiles || []).map(profile => ({
-        id: profile.id,
-        profile: profile.profile,
-        measurement: profile.measurement,
-        quantity: profile.quantity.toString()
-      }))
-    });
-    
-    setShowEditItemDialog(true);
-  }, []);
+    },
+    [newItemForm.profiles.length],
+  );
+
+  const handleProfileChange = useCallback(
+    (profileId: string, field: keyof ProfileFormItem, value: string) => {
+      // Yazarken ham değerleri sakla; birim eklemeyi submit aşamasına bırak
+      setNewItemForm((prev) => ({
+        ...prev,
+        profiles: prev.profiles.map((profile) =>
+          profile.id === profileId ? { ...profile, [field]: value } : profile,
+        ),
+      }));
+    },
+    [],
+  );
+
+  const handleEditItem = useCallback(
+    (sectionId: string, item: WorkOrderItem) => {
+      setCurrentSectionId(sectionId);
+      // Map backend priority values to Select options ('1' | '2')
+      const rawPriority = (item as unknown as { priority?: string }).priority;
+      const normalizedPriority: "1" | "2" =
+        rawPriority === "2" || rawPriority === "high" ? "2" : "1";
+      setEditingItem({
+        ...item,
+        priority: normalizedPriority,
+        // ✅ FIX: Ensure profiles is always an array
+        profiles: Array.isArray(item.profiles) ? item.profiles : [],
+      });
+
+      // Convert date to YYYY-MM-DD format if needed
+      let formattedDate = item.date;
+      if (formattedDate && formattedDate.includes(".")) {
+        const parts = formattedDate.split(".");
+        if (parts.length === 3) {
+          formattedDate = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+        }
+      }
+
+      setNewItemForm({
+        productName: "", // Add missing productName field
+        workOrderId: item.workOrderId,
+        date: formattedDate,
+        version: item.version,
+        color: item.color,
+        note: item.note,
+        orderQuantity: item.orderQuantity.toString(),
+        size: item.size,
+        priority: normalizedPriority,
+        profiles: (item.profiles || []).map((profile) => ({
+          id: profile.id,
+          profile: profile.profile,
+          measurement: profile.measurement,
+          quantity: profile.quantity.toString(),
+        })),
+      });
+
+      setShowEditItemDialog(true);
+    },
+    [],
+  );
 
   const toggleSectionExpansion = useCallback((sectionId: string) => {
-    setExpandedSections(prev => {
+    setExpandedSections((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(sectionId)) {
         newSet.delete(sectionId);
@@ -270,14 +330,16 @@ Renk: ${item.color}
 Sipariş Adedi: ${item.orderQuantity}
 Ebat: ${item.size}
 Profiller:
-${item.profiles.map(p => {
-  const m = p.measurement?.toString() ?? '';
-  const display = m.includes('mm') ? m : `${m}mm`;
-  return `- ${p.profile}: ${display} (${p.quantity} adet)`;
-}).join('\n')}`;
-    
+${item.profiles
+  .map((p) => {
+    const m = p.measurement?.toString() ?? "";
+    const display = m.includes("mm") ? m : `${m}mm`;
+    return `- ${p.profile}: ${display} (${p.quantity} adet)`;
+  })
+  .join("\n")}`;
+
     navigator.clipboard.writeText(text);
-    setSuccess('İş emri panoya kopyalandı');
+    setSuccess("İş emri panoya kopyalandı");
   }, []);
 
   const convertMeasurementToMM = useCallback((value: string): string => {
@@ -346,6 +408,6 @@ ${item.profiles.map(p => {
     handleEditItem,
     toggleSectionExpansion,
     copyItemToClipboard,
-    convertMeasurementToMM
+    convertMeasurementToMM,
   };
 };

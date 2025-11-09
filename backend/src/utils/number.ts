@@ -2,7 +2,7 @@
  * @fileoverview Güvenli sayı biçimlendirme yardımcıları
  * @module NumberUtils
  * @version 1.0.0
- * 
+ *
  * NSGA-II ve diğer algoritmalarda undefined/null/NaN değerlerin
  * güvenli biçimlendirilmesi için yardımcı fonksiyonlar
  */
@@ -14,9 +14,9 @@
  */
 export function toNumberOrNull(value: unknown): number | null {
   if (value === null || value === undefined) return null;
-  
-  const num = typeof value === 'string' ? Number(value) : (value as number);
-  
+
+  const num = typeof value === "string" ? Number(value) : (value as number);
+
   return Number.isFinite(num) ? num : null;
 }
 
@@ -26,7 +26,12 @@ export function toNumberOrNull(value: unknown): number | null {
  * @returns Finite sayı veya null (geçersiz değerler için)
  */
 export function toFiniteNumber(value: unknown): number | null {
-  const n = typeof value === 'number' ? value : (typeof value === 'string' ? Number(value) : NaN);
+  const n =
+    typeof value === "number"
+      ? value
+      : typeof value === "string"
+        ? Number(value)
+        : NaN;
   return Number.isFinite(n) ? n : null;
 }
 
@@ -82,7 +87,7 @@ export function toRoundedOrNull(value: unknown, digits = 3): number | null {
  */
 export function toFixedOrNA(value: unknown, digits = 3): string {
   const num = toNumberOrNull(value);
-  return num === null ? 'N/A' : num.toFixed(digits);
+  return num === null ? "N/A" : num.toFixed(digits);
 }
 
 /**
@@ -92,7 +97,11 @@ export function toFixedOrNA(value: unknown, digits = 3): string {
  * @returns Bölüm sonucu veya NaN (geçersiz işlem için)
  */
 export function safeDivide(numerator: number, denominator: number): number {
-  if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator === 0) {
+  if (
+    !Number.isFinite(numerator) ||
+    !Number.isFinite(denominator) ||
+    denominator === 0
+  ) {
     return NaN;
   }
   return numerator / denominator;
@@ -118,10 +127,10 @@ export function safeDiv(a: unknown, b: unknown): number | null {
  */
 export function safeAverage(values: number[]): number | null {
   if (!Array.isArray(values) || values.length === 0) return null;
-  
-  const validValues = values.filter(v => Number.isFinite(v));
+
+  const validValues = values.filter((v) => Number.isFinite(v));
   if (validValues.length === 0) return null;
-  
+
   const sum = validValues.reduce((a, b) => a + b, 0);
   return sum / validValues.length;
 }
@@ -131,10 +140,11 @@ export function safeAverage(values: number[]): number | null {
  * @param objectives - Kontrol edilecek objective değerleri
  * @returns Geçerli mi?
  */
-export function isValidObjectives(objectives: Record<string, unknown>): boolean {
-  return Object.values(objectives).every(value => 
-    value !== null && 
-    value !== undefined && 
-    Number.isFinite(value as number)
+export function isValidObjectives(
+  objectives: Record<string, unknown>,
+): boolean {
+  return Object.values(objectives).every(
+    (value) =>
+      value !== null && value !== undefined && Number.isFinite(value as number),
   );
 }

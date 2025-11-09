@@ -65,7 +65,7 @@ export interface ChangeEvent<T = unknown> {
 export interface ComponentProps {
   className?: string;
   id?: string;
-  'data-testid'?: string;
+  "data-testid"?: string;
   children?: React.ReactNode;
 }
 
@@ -192,14 +192,14 @@ export interface TestConfig {
 // Generic Build Types
 export interface BuildConfig {
   target: string;
-  mode: 'development' | 'production' | 'test';
+  mode: "development" | "production" | "test";
   sourceMap: boolean;
   minify: boolean;
 }
 
 // Generic Environment Types
 export interface EnvironmentConfig {
-  NODE_ENV: 'development' | 'production' | 'test';
+  NODE_ENV: "development" | "production" | "test";
   API_URL: string;
   VERSION: string;
   DEBUG: boolean;
@@ -207,10 +207,10 @@ export interface EnvironmentConfig {
 
 // Generic Logging Types
 export interface LogLevel {
-  ERROR: 'error';
-  WARN: 'warn';
-  INFO: 'info';
-  DEBUG: 'debug';
+  ERROR: "error";
+  WARN: "warn";
+  INFO: "info";
+  DEBUG: "debug";
 }
 
 export interface LogEntry {
@@ -242,7 +242,7 @@ export interface AppConfig {
     retries: number;
   };
   ui: {
-    theme: 'light' | 'dark';
+    theme: "light" | "dark";
     language: string;
     animations: boolean;
   };

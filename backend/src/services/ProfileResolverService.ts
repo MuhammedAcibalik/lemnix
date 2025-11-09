@@ -5,8 +5,8 @@
  * @description Resolves profile definitions and stock lengths for work orders based on mappings
  */
 
-import { PrismaClient } from '@prisma/client';
-import { ILogger, NoOpLogger } from './logger';
+import { PrismaClient } from "@prisma/client";
+import { ILogger, NoOpLogger } from "./logger";
 
 // Type aliases for Prisma models (will be available after prisma generate)
 type ProfileDefinition = {
@@ -44,7 +44,7 @@ export interface ProfileResolutionResult {
   readonly profileName: string;
   readonly stockLengths: readonly number[];
   readonly defaultStockLength: number;
-  readonly source: 'mapping' | 'fallback';
+  readonly source: "mapping" | "fallback";
 }
 
 export interface ProfileResolutionParams {
@@ -73,34 +73,41 @@ export class ProfileResolverService {
    * @returns Profile resolution result or null if no profiles found
    */
   public async resolveProfileForWorkOrder(
-    params: ProfileResolutionParams
+    params: ProfileResolutionParams,
   ): Promise<ProfileResolutionResult | null> {
     const { workOrderId, profileType, weekNumber, year } = params;
 
-    this.logger.info('[ProfileResolver] Resolving profile', {
+    this.logger.info("[ProfileResolver] Resolving profile", {
       workOrderId,
       profileType,
       weekNumber,
-      year
+      year,
     });
 
     // Try to find mapping first
     if (weekNumber !== undefined && year !== undefined) {
-      const mapping = await this.findMapping(workOrderId, profileType, weekNumber, year);
-      
+      const mapping = await this.findMapping(
+        workOrderId,
+        profileType,
+        weekNumber,
+        year,
+      );
+
       if (mapping) {
-        this.logger.info('[ProfileResolver] Found mapping', {
+        this.logger.info("[ProfileResolver] Found mapping", {
           workOrderId,
           profileType,
-          profileId: mapping.profileId
+          profileId: mapping.profileId,
         });
-        
-        const profileResult = await this.getProfileWithStockLengths(mapping.profileId);
-        
+
+        const profileResult = await this.getProfileWithStockLengths(
+          mapping.profileId,
+        );
+
         if (profileResult) {
           return {
             ...profileResult,
-            source: 'mapping'
+            source: "mapping",
           };
         }
       }
@@ -108,24 +115,27 @@ export class ProfileResolverService {
 
     // Fallback: Try to find any active profile matching profile type
     // This is a simple fallback - return first active profile
-    this.logger.info('[ProfileResolver] No mapping found, using fallback', {
+    this.logger.info("[ProfileResolver] No mapping found, using fallback", {
       workOrderId,
-      profileType
+      profileType,
     });
 
     const fallbackProfile = await this.findFallbackProfile(profileType);
-    
+
     if (fallbackProfile) {
       return {
         ...fallbackProfile,
-        source: 'fallback'
+        source: "fallback",
       };
     }
 
-    this.logger.warn('[ProfileResolver] No profile found (mapping or fallback)', {
-      workOrderId,
-      profileType
-    });
+    this.logger.warn(
+      "[ProfileResolver] No profile found (mapping or fallback)",
+      {
+        workOrderId,
+        profileType,
+      },
+    );
 
     return null;
   }
@@ -133,22 +143,30 @@ export class ProfileResolverService {
   /**
    * Get all active profiles for a profile type (when no specific mapping exists)
    */
-  public async getAllActiveProfiles(profileType?: string): Promise<ProfileResolutionResult[]> {
-    const profiles = await (this.prisma as unknown as {
-      profileDefinition: {
-        findMany: (args: unknown) => Promise<Array<ProfileDefinition & { stockLengths: ProfileStockLength[] }>>;
-      };
-    }).profileDefinition.findMany({
+  public async getAllActiveProfiles(
+    profileType?: string,
+  ): Promise<ProfileResolutionResult[]> {
+    const profiles = await (
+      this.prisma as unknown as {
+        profileDefinition: {
+          findMany: (
+            args: unknown,
+          ) => Promise<
+            Array<ProfileDefinition & { stockLengths: ProfileStockLength[] }>
+          >;
+        };
+      }
+    ).profileDefinition.findMany({
       where: {
-        isActive: true
+        isActive: true,
       },
       include: {
         stockLengths: {
           orderBy: {
-            priority: 'asc'
-          }
-        }
-      }
+            priority: "asc",
+          },
+        },
+      },
     });
 
     const results: ProfileResolutionResult[] = [];
@@ -158,8 +176,12 @@ export class ProfileResolverService {
         continue;
       }
 
-      const stockLengths = profile.stockLengths.map((sl: ProfileStockLength) => sl.stockLength);
-      const defaultStockLength = profile.stockLengths.find((sl: ProfileStockLength) => sl.isDefault)?.stockLength || stockLengths[0];
+      const stockLengths = profile.stockLengths.map(
+        (sl: ProfileStockLength) => sl.stockLength,
+      );
+      const defaultStockLength =
+        profile.stockLengths.find((sl: ProfileStockLength) => sl.isDefault)
+          ?.stockLength || stockLengths[0];
 
       results.push({
         profileId: profile.id,
@@ -167,13 +189,13 @@ export class ProfileResolverService {
         profileName: profile.profileName,
         stockLengths,
         defaultStockLength,
-        source: 'fallback'
+        source: "fallback",
       });
     }
 
-    this.logger.info('[ProfileResolver] Found active profiles', {
+    this.logger.info("[ProfileResolver] Found active profiles", {
       count: results.length,
-      profileType
+      profileType,
     });
 
     return results;
@@ -186,22 +208,24 @@ export class ProfileResolverService {
     workOrderId: string,
     profileType: string,
     weekNumber: number,
-    year: number
+    year: number,
   ): Promise<{ profileId: string } | null> {
-    const mapping = await (this.prisma as unknown as {
-      workOrderProfileMapping: {
-        findFirst: (args: unknown) => Promise<WorkOrderProfileMapping | null>;
-      };
-    }).workOrderProfileMapping.findFirst({
+    const mapping = await (
+      this.prisma as unknown as {
+        workOrderProfileMapping: {
+          findFirst: (args: unknown) => Promise<WorkOrderProfileMapping | null>;
+        };
+      }
+    ).workOrderProfileMapping.findFirst({
       where: {
         workOrderId,
         profileType,
         weekNumber,
-        year
+        year,
       },
       select: {
-        profileId: true
-      }
+        profileId: true,
+      },
     });
 
     return mapping;
@@ -211,21 +235,27 @@ export class ProfileResolverService {
    * Get profile with stock lengths
    */
   private async getProfileWithStockLengths(
-    profileId: string
-  ): Promise<Omit<ProfileResolutionResult, 'source'> | null> {
-    const profile = await (this.prisma as unknown as {
-      profileDefinition: {
-        findUnique: (args: unknown) => Promise<(ProfileDefinition & { stockLengths: ProfileStockLength[] }) | null>;
-      };
-    }).profileDefinition.findUnique({
+    profileId: string,
+  ): Promise<Omit<ProfileResolutionResult, "source"> | null> {
+    const profile = await (
+      this.prisma as unknown as {
+        profileDefinition: {
+          findUnique: (
+            args: unknown,
+          ) => Promise<
+            (ProfileDefinition & { stockLengths: ProfileStockLength[] }) | null
+          >;
+        };
+      }
+    ).profileDefinition.findUnique({
       where: { id: profileId },
       include: {
         stockLengths: {
           orderBy: {
-            priority: 'asc'
-          }
-        }
-      }
+            priority: "asc",
+          },
+        },
+      },
     });
 
     if (!profile || !profile.isActive) {
@@ -233,22 +263,26 @@ export class ProfileResolverService {
     }
 
     if (profile.stockLengths.length === 0) {
-      this.logger.warn('[ProfileResolver] Profile has no stock lengths', {
+      this.logger.warn("[ProfileResolver] Profile has no stock lengths", {
         profileId,
-        profileCode: profile.profileCode
+        profileCode: profile.profileCode,
       });
       return null;
     }
 
-    const stockLengths = profile.stockLengths.map((sl: ProfileStockLength) => sl.stockLength);
-    const defaultStockLength = profile.stockLengths.find((sl: ProfileStockLength) => sl.isDefault)?.stockLength || stockLengths[0];
+    const stockLengths = profile.stockLengths.map(
+      (sl: ProfileStockLength) => sl.stockLength,
+    );
+    const defaultStockLength =
+      profile.stockLengths.find((sl: ProfileStockLength) => sl.isDefault)
+        ?.stockLength || stockLengths[0];
 
     return {
       profileId: profile.id,
       profileCode: profile.profileCode,
       profileName: profile.profileName,
       stockLengths,
-      defaultStockLength
+      defaultStockLength,
     };
   }
 
@@ -256,25 +290,31 @@ export class ProfileResolverService {
    * Find fallback profile (first active profile)
    */
   private async findFallbackProfile(
-    profileType: string
-  ): Promise<Omit<ProfileResolutionResult, 'source'> | null> {
+    profileType: string,
+  ): Promise<Omit<ProfileResolutionResult, "source"> | null> {
     // For now, just return first active profile
     // Future: could match by profileType or other criteria
-    const profile = await (this.prisma as unknown as {
-      profileDefinition: {
-        findFirst: (args: unknown) => Promise<(ProfileDefinition & { stockLengths: ProfileStockLength[] }) | null>;
-      };
-    }).profileDefinition.findFirst({
+    const profile = await (
+      this.prisma as unknown as {
+        profileDefinition: {
+          findFirst: (
+            args: unknown,
+          ) => Promise<
+            (ProfileDefinition & { stockLengths: ProfileStockLength[] }) | null
+          >;
+        };
+      }
+    ).profileDefinition.findFirst({
       where: {
-        isActive: true
+        isActive: true,
       },
       include: {
         stockLengths: {
           orderBy: {
-            priority: 'asc'
-          }
-        }
-      }
+            priority: "asc",
+          },
+        },
+      },
     });
 
     if (!profile) {
@@ -290,18 +330,20 @@ export class ProfileResolverService {
   public async hasProfileMapping(
     workOrderId: string,
     weekNumber: number,
-    year: number
+    year: number,
   ): Promise<boolean> {
-    const count = await (this.prisma as unknown as {
-      workOrderProfileMapping: {
-        count: (args: unknown) => Promise<number>;
-      };
-    }).workOrderProfileMapping.count({
+    const count = await (
+      this.prisma as unknown as {
+        workOrderProfileMapping: {
+          count: (args: unknown) => Promise<number>;
+        };
+      }
+    ).workOrderProfileMapping.count({
       where: {
         workOrderId,
         weekNumber,
-        year
-      }
+        year,
+      },
     });
 
     return count > 0;
@@ -313,32 +355,41 @@ export class ProfileResolverService {
   public async getWorkOrderMappings(
     workOrderId: string,
     weekNumber: number,
-    year: number
-  ): Promise<Array<{
-    readonly profileType: string;
-    readonly profileCode: string;
-    readonly profileName: string;
-  }>> {
-    const mappings = await (this.prisma as unknown as {
-      workOrderProfileMapping: {
-        findMany: (args: unknown) => Promise<Array<WorkOrderProfileMapping & { profile: ProfileDefinition }>>;
-      };
-    }).workOrderProfileMapping.findMany({
+    year: number,
+  ): Promise<
+    Array<{
+      readonly profileType: string;
+      readonly profileCode: string;
+      readonly profileName: string;
+    }>
+  > {
+    const mappings = await (
+      this.prisma as unknown as {
+        workOrderProfileMapping: {
+          findMany: (
+            args: unknown,
+          ) => Promise<
+            Array<WorkOrderProfileMapping & { profile: ProfileDefinition }>
+          >;
+        };
+      }
+    ).workOrderProfileMapping.findMany({
       where: {
         workOrderId,
         weekNumber,
-        year
+        year,
       },
       include: {
-        profile: true
-      }
+        profile: true,
+      },
     });
 
-    return mappings.map((m: WorkOrderProfileMapping & { profile: ProfileDefinition }) => ({
-      profileType: m.profileType,
-      profileCode: m.profile.profileCode,
-      profileName: m.profile.profileName
-    }));
+    return mappings.map(
+      (m: WorkOrderProfileMapping & { profile: ProfileDefinition }) => ({
+        profileType: m.profileType,
+        profileCode: m.profile.profileCode,
+        profileName: m.profile.profileName,
+      }),
+    );
   }
 }
-

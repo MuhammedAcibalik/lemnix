@@ -2,7 +2,7 @@
  * @fileoverview Progressive Upload Hook
  * @module hooks/useProgressiveUpload
  * @version 1.0.0
- * 
+ *
  * ⚡🔐 CRITICAL: Real-time progress tracking for secure uploads
  * - WebSocket-based progress updates
  * - Real-time user feedback
@@ -10,10 +10,10 @@
  * - Memory-efficient handling
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { io, Socket } from 'socket.io-client';
-import { productionPlanApi } from '@/entities/production-plan/api/productionPlanApi';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { io, Socket } from "socket.io-client";
+import { productionPlanApi } from "@/entities/production-plan/api/productionPlanApi";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -21,7 +21,7 @@ import { productionPlanApi } from '@/entities/production-plan/api/productionPlan
 
 export interface ProgressUpdate {
   sessionId: string;
-  operation: 'upload' | 'retrieve';
+  operation: "upload" | "retrieve";
   progress: {
     stage: string;
     percentage: number;
@@ -65,12 +65,12 @@ export function useProgressiveUpload(): UseProgressiveUploadReturn {
 
   const [progress, setProgress] = useState<UploadProgress>({
     isActive: false,
-    stage: 'idle',
+    stage: "idle",
     percentage: 0,
-    message: 'Hazır',
+    message: "Hazır",
     itemsProcessed: 0,
     totalItems: 0,
-    startTime: 0
+    startTime: 0,
   });
 
   const [isUploading, setIsUploading] = useState(false);
@@ -84,25 +84,25 @@ export function useProgressiveUpload(): UseProgressiveUploadReturn {
         return;
       }
 
-      const socket = io(import.meta.env.VITE_WS_URL || 'ws://localhost:3001', {
-        transports: ['websocket'],
+      const socket = io(import.meta.env.VITE_WS_URL || "ws://localhost:3001", {
+        transports: ["websocket"],
         query: {
-          sessionId: sessionIdRef.current || 'anonymous'
-        }
+          sessionId: sessionIdRef.current || "anonymous",
+        },
       });
 
-      socket.on('connect', () => {
-        console.log('🔌 WebSocket connected for progressive upload');
+      socket.on("connect", () => {
+        console.log("🔌 WebSocket connected for progressive upload");
         sessionIdRef.current = socket.id || null;
       });
 
-      socket.on('disconnect', () => {
-        console.log('🔌 WebSocket disconnected');
+      socket.on("disconnect", () => {
+        console.log("🔌 WebSocket disconnected");
       });
 
-      socket.on('progress-update', (update: ProgressUpdate) => {
-        if (update.operation === 'upload') {
-          setProgress(prev => ({
+      socket.on("progress-update", (update: ProgressUpdate) => {
+        if (update.operation === "upload") {
+          setProgress((prev) => ({
             ...prev,
             isActive: true,
             stage: update.progress.stage,
@@ -110,7 +110,7 @@ export function useProgressiveUpload(): UseProgressiveUploadReturn {
             message: update.progress.message,
             itemsProcessed: update.progress.itemsProcessed,
             totalItems: update.progress.totalItems,
-            estimatedTimeRemaining: update.progress.estimatedTimeRemaining
+            estimatedTimeRemaining: update.progress.estimatedTimeRemaining,
           }));
         }
       });
@@ -132,19 +132,19 @@ export function useProgressiveUpload(): UseProgressiveUploadReturn {
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append("file", file);
 
-      const response = await fetch('/api/production-plan/upload-progressive', {
-        method: 'POST',
+      const response = await fetch("/api/production-plan/upload-progressive", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock-dev-token-lemnix-2025'}`
+          Authorization: `Bearer ${localStorage.getItem("token") || "mock-dev-token-lemnix-2025"}`,
         },
-        body: formData
+        body: formData,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Upload failed');
+        throw new Error(errorData.error || "Upload failed");
       }
 
       return response.json();
@@ -153,73 +153,76 @@ export function useProgressiveUpload(): UseProgressiveUploadReturn {
       setError(null);
       setResult(null);
       setIsUploading(true);
-      setProgress(prev => ({
+      setProgress((prev) => ({
         ...prev,
         isActive: true,
-        stage: 'starting',
+        stage: "starting",
         percentage: 0,
-        message: 'Yükleme başlıyor...',
-        startTime: Date.now()
+        message: "Yükleme başlıyor...",
+        startTime: Date.now(),
       }));
     },
     onSuccess: (data) => {
       setResult(data);
-      setProgress(prev => ({
+      setProgress((prev) => ({
         ...prev,
         isActive: false,
-        stage: 'complete',
+        stage: "complete",
         percentage: 100,
-        message: 'Yükleme tamamlandı!',
-        duration: Date.now() - prev.startTime
+        message: "Yükleme tamamlandı!",
+        duration: Date.now() - prev.startTime,
       }));
 
       // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['production-plan'] });
-      queryClient.invalidateQueries({ queryKey: ['production-plan-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ["production-plan"] });
+      queryClient.invalidateQueries({ queryKey: ["production-plan-metrics"] });
 
-      console.log('✅ Progressive upload completed', data);
+      console.log("✅ Progressive upload completed", data);
     },
     onError: (error) => {
       setError(error.message);
-      setProgress(prev => ({
+      setProgress((prev) => ({
         ...prev,
         isActive: false,
-        stage: 'error',
+        stage: "error",
         message: `Hata: ${error.message}`,
-        duration: Date.now() - prev.startTime
+        duration: Date.now() - prev.startTime,
       }));
-      console.error('❌ Progressive upload failed', error);
+      console.error("❌ Progressive upload failed", error);
     },
     onSettled: () => {
       setIsUploading(false);
-    }
+    },
   });
 
   // Upload file function
-  const uploadFile = useCallback((file: File) => {
-    if (!file) {
-      setError('Dosya seçilmedi');
-      return;
-    }
+  const uploadFile = useCallback(
+    (file: File) => {
+      if (!file) {
+        setError("Dosya seçilmedi");
+        return;
+      }
 
-    if (!socketRef.current?.connected) {
-      setError('WebSocket bağlantısı kurulamadı');
-      return;
-    }
+      if (!socketRef.current?.connected) {
+        setError("WebSocket bağlantısı kurulamadı");
+        return;
+      }
 
-    uploadMutation.mutate(file);
-  }, [uploadMutation]);
+      uploadMutation.mutate(file);
+    },
+    [uploadMutation],
+  );
 
   // Reset function
   const reset = useCallback(() => {
     setProgress({
       isActive: false,
-      stage: 'idle',
+      stage: "idle",
       percentage: 0,
-      message: 'Hazır',
+      message: "Hazır",
       itemsProcessed: 0,
       totalItems: 0,
-      startTime: 0
+      startTime: 0,
     });
     setError(null);
     setResult(null);
@@ -232,7 +235,7 @@ export function useProgressiveUpload(): UseProgressiveUploadReturn {
     isUploading,
     error,
     result,
-    reset
+    reset,
   };
 }
 
@@ -246,12 +249,12 @@ export function useProgressiveRetrieval() {
 
   const [progress, setProgress] = useState<UploadProgress>({
     isActive: false,
-    stage: 'idle',
+    stage: "idle",
     percentage: 0,
-    message: 'Hazır',
+    message: "Hazır",
     itemsProcessed: 0,
     totalItems: 0,
-    startTime: 0
+    startTime: 0,
   });
 
   // Initialize WebSocket connection
@@ -261,17 +264,17 @@ export function useProgressiveRetrieval() {
         return;
       }
 
-      const socket = io(import.meta.env.VITE_WS_URL || 'ws://localhost:3001', {
-        transports: ['websocket']
+      const socket = io(import.meta.env.VITE_WS_URL || "ws://localhost:3001", {
+        transports: ["websocket"],
       });
 
-      socket.on('connect', () => {
-        console.log('🔌 WebSocket connected for progressive retrieval');
+      socket.on("connect", () => {
+        console.log("🔌 WebSocket connected for progressive retrieval");
       });
 
-      socket.on('progress-update', (update: ProgressUpdate) => {
-        if (update.operation === 'retrieve') {
-          setProgress(prev => ({
+      socket.on("progress-update", (update: ProgressUpdate) => {
+        if (update.operation === "retrieve") {
+          setProgress((prev) => ({
             ...prev,
             isActive: true,
             stage: update.progress.stage,
@@ -279,7 +282,7 @@ export function useProgressiveRetrieval() {
             message: update.progress.message,
             itemsProcessed: update.progress.itemsProcessed,
             totalItems: update.progress.totalItems,
-            estimatedTimeRemaining: update.progress.estimatedTimeRemaining
+            estimatedTimeRemaining: update.progress.estimatedTimeRemaining,
           }));
         }
       });
@@ -299,46 +302,46 @@ export function useProgressiveRetrieval() {
 
   const retrieveData = useCallback(async (filters: any = {}) => {
     try {
-      setProgress(prev => ({
+      setProgress((prev) => ({
         ...prev,
         isActive: true,
-        stage: 'starting',
+        stage: "starting",
         percentage: 0,
-        message: 'Veriler yükleniyor...',
-        startTime: Date.now()
+        message: "Veriler yükleniyor...",
+        startTime: Date.now(),
       }));
 
-      const response = await fetch('/api/production-plan/progressive', {
-        method: 'GET',
+      const response = await fetch("/api/production-plan/progressive", {
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || 'mock-dev-token-lemnix-2025'}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${localStorage.getItem("token") || "mock-dev-token-lemnix-2025"}`,
+          "Content-Type": "application/json",
+        },
       });
 
       if (!response.ok) {
-        throw new Error('Data retrieval failed');
+        throw new Error("Data retrieval failed");
       }
 
       const data = await response.json();
-      
-      setProgress(prev => ({
+
+      setProgress((prev) => ({
         ...prev,
         isActive: false,
-        stage: 'complete',
+        stage: "complete",
         percentage: 100,
-        message: 'Veriler yüklendi!',
-        duration: Date.now() - prev.startTime
+        message: "Veriler yüklendi!",
+        duration: Date.now() - prev.startTime,
       }));
 
       return data;
     } catch (error) {
-      setProgress(prev => ({
+      setProgress((prev) => ({
         ...prev,
         isActive: false,
-        stage: 'error',
+        stage: "error",
         message: `Hata: ${(error as Error).message}`,
-        duration: Date.now() - prev.startTime
+        duration: Date.now() - prev.startTime,
       }));
       throw error;
     }
@@ -346,6 +349,6 @@ export function useProgressiveRetrieval() {
 
   return {
     retrieveData,
-    progress
+    progress,
   };
 }

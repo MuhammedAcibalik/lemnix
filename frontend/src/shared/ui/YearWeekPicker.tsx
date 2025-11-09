@@ -3,7 +3,7 @@
  * Allows users to select week and year for filtering data
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from "react";
 import {
   Box,
   TextField,
@@ -13,14 +13,14 @@ import {
   Stack,
   Typography,
   Button,
-} from '@mui/material';
+} from "@mui/material";
 import {
   CalendarToday as CalendarTodayIcon,
   NavigateBefore as NavigateBeforeIcon,
   NavigateNext as NavigateNextIcon,
-} from '@mui/icons-material';
-import { useDesignSystem } from '@/shared/hooks';
-import { alpha } from '@mui/material/styles';
+} from "@mui/icons-material";
+import { useDesignSystem } from "@/shared/hooks";
+import { alpha } from "@mui/material/styles";
 
 interface YearWeekPickerProps {
   readonly initialWeek: number;
@@ -101,7 +101,7 @@ export const YearWeekPicker: React.FC<YearWeekPickerProps> = ({
           borderRadius: `${ds.borderRadius.button}px`,
           borderColor: ds.colors.neutral[300],
           color: ds.colors.text.primary,
-          '&:hover': {
+          "&:hover": {
             borderColor: ds.colors.primary.main,
             backgroundColor: alpha(ds.colors.primary.main, 0.04),
           },
@@ -114,23 +114,23 @@ export const YearWeekPicker: React.FC<YearWeekPickerProps> = ({
         anchorEl={anchorEl}
         onClose={handleClose}
         anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
+          vertical: "bottom",
+          horizontal: "left",
         }}
         transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
+          vertical: "top",
+          horizontal: "left",
         }}
         PaperProps={{
           sx: {
             borderRadius: `${ds.borderRadius.lg}px`,
             boxShadow: ds.shadows.soft.lg,
-            p: ds.spacing['3'],
+            p: ds.spacing["3"],
             minWidth: 300,
           },
         }}
       >
-        <Stack spacing={ds.spacing['3']}>
+        <Stack spacing={ds.spacing["3"]}>
           <Typography
             variant="h6"
             sx={{
@@ -140,7 +140,7 @@ export const YearWeekPicker: React.FC<YearWeekPickerProps> = ({
           >
             Hafta Seç
           </Typography>
-          <Stack direction="row" spacing={ds.spacing['2']} alignItems="center">
+          <Stack direction="row" spacing={ds.spacing["2"]} alignItems="center">
             <TextField
               select
               label="Yıl"
@@ -149,7 +149,7 @@ export const YearWeekPicker: React.FC<YearWeekPickerProps> = ({
               size="small"
               fullWidth
               sx={{
-                '& .MuiOutlinedInput-root': {
+                "& .MuiOutlinedInput-root": {
                   borderRadius: `${ds.borderRadius.input}px`,
                 },
               }}
@@ -168,7 +168,7 @@ export const YearWeekPicker: React.FC<YearWeekPickerProps> = ({
               size="small"
               fullWidth
               sx={{
-                '& .MuiOutlinedInput-root': {
+                "& .MuiOutlinedInput-root": {
                   borderRadius: `${ds.borderRadius.input}px`,
                 },
               }}
@@ -180,13 +180,17 @@ export const YearWeekPicker: React.FC<YearWeekPickerProps> = ({
               ))}
             </TextField>
           </Stack>
-          <Stack direction="row" spacing={ds.spacing['1']} justifyContent="center">
+          <Stack
+            direction="row"
+            spacing={ds.spacing["1"]}
+            justifyContent="center"
+          >
             <IconButton
               onClick={handlePreviousWeek}
               size="small"
               sx={{
                 color: ds.colors.text.secondary,
-                '&:hover': {
+                "&:hover": {
                   color: ds.colors.primary.main,
                   backgroundColor: alpha(ds.colors.primary.main, 0.08),
                 },
@@ -196,8 +200,8 @@ export const YearWeekPicker: React.FC<YearWeekPickerProps> = ({
             </IconButton>
             <Typography
               sx={{
-                px: ds.spacing['2'],
-                py: ds.spacing['1'],
+                px: ds.spacing["2"],
+                py: ds.spacing["1"],
                 fontWeight: ds.typography.fontWeight.medium,
                 color: ds.colors.text.primary,
               }}
@@ -209,7 +213,7 @@ export const YearWeekPicker: React.FC<YearWeekPickerProps> = ({
               size="small"
               sx={{
                 color: ds.colors.text.secondary,
-                '&:hover': {
+                "&:hover": {
                   color: ds.colors.primary.main,
                   backgroundColor: alpha(ds.colors.primary.main, 0.08),
                 },
@@ -218,7 +222,11 @@ export const YearWeekPicker: React.FC<YearWeekPickerProps> = ({
               <NavigateNextIcon />
             </IconButton>
           </Stack>
-          <Stack direction="row" spacing={ds.spacing['2']} justifyContent="flex-end">
+          <Stack
+            direction="row"
+            spacing={ds.spacing["2"]}
+            justifyContent="flex-end"
+          >
             <Button
               onClick={handleClose}
               variant="outlined"
@@ -227,7 +235,7 @@ export const YearWeekPicker: React.FC<YearWeekPickerProps> = ({
                 borderRadius: `${ds.borderRadius.button}px`,
                 borderColor: ds.colors.neutral[300],
                 color: ds.colors.text.primary,
-                '&:hover': {
+                "&:hover": {
                   borderColor: ds.colors.primary.main,
                   backgroundColor: alpha(ds.colors.primary.main, 0.04),
                 },
@@ -242,8 +250,8 @@ export const YearWeekPicker: React.FC<YearWeekPickerProps> = ({
               sx={{
                 borderRadius: `${ds.borderRadius.button}px`,
                 background: ds.gradients.primary,
-                color: '#ffffff',
-                '&:hover': {
+                color: "#ffffff",
+                "&:hover": {
                   background: ds.gradients.primary,
                   opacity: 0.9,
                 },
@@ -257,4 +265,3 @@ export const YearWeekPicker: React.FC<YearWeekPickerProps> = ({
     </Box>
   );
 };
-

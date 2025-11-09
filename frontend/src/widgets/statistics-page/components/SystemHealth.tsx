@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 import {
   Box,
   Typography,
@@ -12,8 +12,8 @@ import {
   CardContent,
   Grid,
   Chip,
-  LinearProgress
-} from '@mui/material';
+  LinearProgress,
+} from "@mui/material";
 
 interface SystemHealthProps {
   data: Record<string, unknown>;
@@ -22,7 +22,7 @@ interface SystemHealthProps {
 export const SystemHealth: React.FC<SystemHealthProps> = ({ data }) => {
   if (!data) {
     return (
-      <Box sx={{ textAlign: 'center', py: 8 }}>
+      <Box sx={{ textAlign: "center", py: 8 }}>
         <Typography variant="h6" color="text.secondary">
           No system health data available
         </Typography>
@@ -35,7 +35,7 @@ export const SystemHealth: React.FC<SystemHealthProps> = ({ data }) => {
       <Typography variant="h4" sx={{ fontWeight: 700, mb: 3 }}>
         System Health
       </Typography>
-      
+
       <Grid container spacing={3}>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
@@ -43,7 +43,10 @@ export const SystemHealth: React.FC<SystemHealthProps> = ({ data }) => {
               <Typography variant="h6" sx={{ mb: 2 }}>
                 Response Time
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: '#10b981' }}>
+              <Typography
+                variant="h4"
+                sx={{ fontWeight: 700, color: "#10b981" }}
+              >
                 {String(data.responseTime || 0)}ms
               </Typography>
             </CardContent>
@@ -56,8 +59,11 @@ export const SystemHealth: React.FC<SystemHealthProps> = ({ data }) => {
               <Typography variant="h6" sx={{ mb: 2 }}>
                 Error Rate
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: '#ef4444' }}>
-                {String(data.errorRate || '0%')}
+              <Typography
+                variant="h4"
+                sx={{ fontWeight: 700, color: "#ef4444" }}
+              >
+                {String(data.errorRate || "0%")}
               </Typography>
             </CardContent>
           </Card>
@@ -69,7 +75,10 @@ export const SystemHealth: React.FC<SystemHealthProps> = ({ data }) => {
               <Typography variant="h6" sx={{ mb: 2 }}>
                 Memory Usage
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: '#3b82f6' }}>
+              <Typography
+                variant="h4"
+                sx={{ fontWeight: 700, color: "#3b82f6" }}
+              >
                 {String(data.memoryUsage || 0)}MB
               </Typography>
             </CardContent>
@@ -82,7 +91,10 @@ export const SystemHealth: React.FC<SystemHealthProps> = ({ data }) => {
               <Typography variant="h6" sx={{ mb: 2 }}>
                 CPU Usage
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: '#f59e0b' }}>
+              <Typography
+                variant="h4"
+                sx={{ fontWeight: 700, color: "#f59e0b" }}
+              >
                 {String(data.cpuUsage || 0)}s
               </Typography>
             </CardContent>

@@ -2,7 +2,7 @@
  * @fileoverview Asynchronous Encryption Service
  * @module services/asyncEncryptionService
  * @version 1.0.0
- * 
+ *
  * 🔐⚡ CRITICAL: High-performance encryption with security maintained
  * - Asynchronous encryption/decryption operations
  * - Memory-efficient streaming for large datasets
@@ -10,9 +10,9 @@
  * - Maintains AES-256-GCM security standards
  */
 
-import { EventEmitter } from 'events';
-import { encryptionService } from './encryptionService';
-import { logger } from './logger';
+import { EventEmitter } from "events";
+import { encryptionService } from "./encryptionService";
+import { logger } from "./logger";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -55,24 +55,24 @@ export class AsyncEncryptionService extends EventEmitter {
    */
   async encryptProductionPlanItems(
     items: any[],
-    options: BatchEncryptionOptions = {}
+    options: BatchEncryptionOptions = {},
   ): Promise<EncryptionResult<any[]>> {
     const startTime = Date.now();
     const batchSize = options.batchSize || this.defaultBatchSize;
     const concurrency = options.concurrency || this.defaultConcurrency;
-    
+
     const progress: EncryptionProgress = {
       total: items.length,
       processed: 0,
       percentage: 0,
-      startTime
+      startTime,
     };
 
     try {
-      logger.info('Starting async encryption', {
+      logger.info("Starting async encryption", {
         itemCount: items.length,
         batchSize,
-        concurrency
+        concurrency,
       });
 
       const encryptedItems: any[] = [];
@@ -81,14 +81,14 @@ export class AsyncEncryptionService extends EventEmitter {
       // Process items in batches
       for (let i = 0; i < items.length; i += batchSize) {
         const batch = items.slice(i, i + batchSize);
-        const batchPromises = batch.map((item, index) => 
-          this.encryptSingleItem(item, i + index, progress, options)
+        const batchPromises = batch.map((item, index) =>
+          this.encryptSingleItem(item, i + index, progress, options),
         );
 
         // Process batch with concurrency control
         const batchResults = await this.processWithConcurrency(
           batchPromises,
-          concurrency
+          concurrency,
         );
 
         // Collect results
@@ -96,23 +96,27 @@ export class AsyncEncryptionService extends EventEmitter {
           if (result.success) {
             encryptedItems.push(result.data);
           } else {
-            errors.push(result.error || 'Unknown encryption error');
+            errors.push(result.error || "Unknown encryption error");
           }
         }
 
         // Update progress
         progress.processed = Math.min(i + batchSize, items.length);
-        progress.percentage = Math.round((progress.processed / progress.total) * 100);
-        
+        progress.percentage = Math.round(
+          (progress.processed / progress.total) * 100,
+        );
+
         // Calculate estimated time remaining
         if (progress.processed > 0) {
           const elapsed = Date.now() - startTime;
           const rate = progress.processed / elapsed;
-          progress.estimatedTimeRemaining = Math.round((progress.total - progress.processed) / rate);
+          progress.estimatedTimeRemaining = Math.round(
+            (progress.total - progress.processed) / rate,
+          );
         }
 
         // Emit progress event
-        this.emit('progress', { ...progress });
+        this.emit("progress", { ...progress });
         options.onProgress?.(progress);
 
         // Small delay to prevent blocking
@@ -122,11 +126,11 @@ export class AsyncEncryptionService extends EventEmitter {
       }
 
       const duration = Date.now() - startTime;
-      logger.info('Async encryption completed', {
+      logger.info("Async encryption completed", {
         itemCount: items.length,
         encryptedCount: encryptedItems.length,
         errorCount: errors.length,
-        duration: `${duration}ms`
+        duration: `${duration}ms`,
       });
 
       return {
@@ -134,21 +138,20 @@ export class AsyncEncryptionService extends EventEmitter {
         data: encryptedItems,
         errors: errors.length > 0 ? errors : undefined,
         progress,
-        duration
+        duration,
       };
-
     } catch (error) {
-      logger.error('Async encryption failed', {
+      logger.error("Async encryption failed", {
         error: (error as Error).message,
         processed: progress.processed,
-        total: progress.total
+        total: progress.total,
       });
 
       return {
         success: false,
         errors: [(error as Error).message],
         progress,
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       };
     }
   }
@@ -158,24 +161,24 @@ export class AsyncEncryptionService extends EventEmitter {
    */
   async decryptProductionPlanItems(
     items: any[],
-    options: BatchEncryptionOptions = {}
+    options: BatchEncryptionOptions = {},
   ): Promise<EncryptionResult<any[]>> {
     const startTime = Date.now();
     const batchSize = options.batchSize || this.defaultBatchSize;
     const concurrency = options.concurrency || this.defaultConcurrency;
-    
+
     const progress: EncryptionProgress = {
       total: items.length,
       processed: 0,
       percentage: 0,
-      startTime
+      startTime,
     };
 
     try {
-      logger.info('Starting async decryption', {
+      logger.info("Starting async decryption", {
         itemCount: items.length,
         batchSize,
-        concurrency
+        concurrency,
       });
 
       const decryptedItems: any[] = [];
@@ -184,14 +187,14 @@ export class AsyncEncryptionService extends EventEmitter {
       // Process items in batches
       for (let i = 0; i < items.length; i += batchSize) {
         const batch = items.slice(i, i + batchSize);
-        const batchPromises = batch.map((item, index) => 
-          this.decryptSingleItem(item, i + index, progress, options)
+        const batchPromises = batch.map((item, index) =>
+          this.decryptSingleItem(item, i + index, progress, options),
         );
 
         // Process batch with concurrency control
         const batchResults = await this.processWithConcurrency(
           batchPromises,
-          concurrency
+          concurrency,
         );
 
         // Collect results
@@ -199,23 +202,27 @@ export class AsyncEncryptionService extends EventEmitter {
           if (result.success) {
             decryptedItems.push(result.data);
           } else {
-            errors.push(result.error || 'Unknown decryption error');
+            errors.push(result.error || "Unknown decryption error");
           }
         }
 
         // Update progress
         progress.processed = Math.min(i + batchSize, items.length);
-        progress.percentage = Math.round((progress.processed / progress.total) * 100);
-        
+        progress.percentage = Math.round(
+          (progress.processed / progress.total) * 100,
+        );
+
         // Calculate estimated time remaining
         if (progress.processed > 0) {
           const elapsed = Date.now() - startTime;
           const rate = progress.processed / elapsed;
-          progress.estimatedTimeRemaining = Math.round((progress.total - progress.processed) / rate);
+          progress.estimatedTimeRemaining = Math.round(
+            (progress.total - progress.processed) / rate,
+          );
         }
 
         // Emit progress event
-        this.emit('progress', { ...progress });
+        this.emit("progress", { ...progress });
         options.onProgress?.(progress);
 
         // Small delay to prevent blocking
@@ -225,11 +232,11 @@ export class AsyncEncryptionService extends EventEmitter {
       }
 
       const duration = Date.now() - startTime;
-      logger.info('Async decryption completed', {
+      logger.info("Async decryption completed", {
         itemCount: items.length,
         decryptedCount: decryptedItems.length,
         errorCount: errors.length,
-        duration: `${duration}ms`
+        duration: `${duration}ms`,
       });
 
       return {
@@ -237,21 +244,20 @@ export class AsyncEncryptionService extends EventEmitter {
         data: decryptedItems,
         errors: errors.length > 0 ? errors : undefined,
         progress,
-        duration
+        duration,
       };
-
     } catch (error) {
-      logger.error('Async decryption failed', {
+      logger.error("Async decryption failed", {
         error: (error as Error).message,
         processed: progress.processed,
-        total: progress.total
+        total: progress.total,
       });
 
       return {
         success: false,
         errors: [(error as Error).message],
         progress,
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       };
     }
   }
@@ -263,17 +269,27 @@ export class AsyncEncryptionService extends EventEmitter {
     item: any,
     index: number,
     progress: EncryptionProgress,
-    options: BatchEncryptionOptions
+    options: BatchEncryptionOptions,
   ): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
       // ✅ PERFORMANCE: Encrypt once, use for both fields
       const encryptedAd = encryptionService.encryptString(item.ad);
-      const encryptedSiparisVeren = encryptionService.encryptString(item.siparisVeren);
-      const encryptedMusteriNo = encryptionService.encryptString(item.musteriNo);
-      const encryptedMusteriKalemi = encryptionService.encryptString(item.musteriKalemi);
+      const encryptedSiparisVeren = encryptionService.encryptString(
+        item.siparisVeren,
+      );
+      const encryptedMusteriNo = encryptionService.encryptString(
+        item.musteriNo,
+      );
+      const encryptedMusteriKalemi = encryptionService.encryptString(
+        item.musteriKalemi,
+      );
       const encryptedSiparis = encryptionService.encryptString(item.siparis);
-      const encryptedMalzemeNo = encryptionService.encryptString(item.malzemeNo);
-      const encryptedMalzemeKisaMetni = encryptionService.encryptString(item.malzemeKisaMetni);
+      const encryptedMalzemeNo = encryptionService.encryptString(
+        item.malzemeNo,
+      );
+      const encryptedMalzemeKisaMetni = encryptionService.encryptString(
+        item.malzemeKisaMetni,
+      );
 
       const encryptedItem = {
         ...item,
@@ -292,19 +308,18 @@ export class AsyncEncryptionService extends EventEmitter {
         encryptedMusteriKalemi,
         encryptedSiparis,
         encryptedMalzemeNo,
-        encryptedMalzemeKisaMetni
+        encryptedMalzemeKisaMetni,
       };
 
       return { success: true, data: encryptedItem };
-
     } catch (error) {
       const errorMessage = `Encryption failed for item ${index}: ${(error as Error).message}`;
-      logger.warn('Item encryption failed', {
+      logger.warn("Item encryption failed", {
         index,
         error: (error as Error).message,
-        itemId: item.id
+        itemId: item.id,
       });
-      
+
       options.onError?.(error as Error, item);
       return { success: false, error: errorMessage };
     }
@@ -317,18 +332,19 @@ export class AsyncEncryptionService extends EventEmitter {
     item: any,
     index: number,
     progress: EncryptionProgress,
-    options: BatchEncryptionOptions
+    options: BatchEncryptionOptions,
   ): Promise<{ success: boolean; data?: any; error?: string }> {
     try {
       // ✅ PERFORMANCE: Check if item has encrypted fields before processing
-      const hasEncryptedFields = item.encryptedAd || 
-        item.encryptedSiparisVeren || 
+      const hasEncryptedFields =
+        item.encryptedAd ||
+        item.encryptedSiparisVeren ||
         item.encryptedMusteriNo ||
         item.encryptedMusteriKalemi ||
         item.encryptedSiparis ||
         item.encryptedMalzemeNo ||
         item.encryptedMalzemeKisaMetni;
-      
+
       if (!hasEncryptedFields) {
         return { success: true, data: item }; // Return as-is if no encrypted fields
       }
@@ -336,25 +352,38 @@ export class AsyncEncryptionService extends EventEmitter {
       const decryptedItem = {
         ...item,
         // Decrypt sensitive fields for display
-        ad: item.encryptedAd ? encryptionService.decryptString(item.encryptedAd) : item.ad,
-        siparisVeren: item.encryptedSiparisVeren ? encryptionService.decryptString(item.encryptedSiparisVeren) : item.siparisVeren,
-        musteriNo: item.encryptedMusteriNo ? encryptionService.decryptString(item.encryptedMusteriNo) : item.musteriNo,
-        musteriKalemi: item.encryptedMusteriKalemi ? encryptionService.decryptString(item.encryptedMusteriKalemi) : item.musteriKalemi,
-        siparis: item.encryptedSiparis ? encryptionService.decryptString(item.encryptedSiparis) : item.siparis,
-        malzemeNo: item.encryptedMalzemeNo ? encryptionService.decryptString(item.encryptedMalzemeNo) : item.malzemeNo,
-        malzemeKisaMetni: item.encryptedMalzemeKisaMetni ? encryptionService.decryptString(item.encryptedMalzemeKisaMetni) : item.malzemeKisaMetni
+        ad: item.encryptedAd
+          ? encryptionService.decryptString(item.encryptedAd)
+          : item.ad,
+        siparisVeren: item.encryptedSiparisVeren
+          ? encryptionService.decryptString(item.encryptedSiparisVeren)
+          : item.siparisVeren,
+        musteriNo: item.encryptedMusteriNo
+          ? encryptionService.decryptString(item.encryptedMusteriNo)
+          : item.musteriNo,
+        musteriKalemi: item.encryptedMusteriKalemi
+          ? encryptionService.decryptString(item.encryptedMusteriKalemi)
+          : item.musteriKalemi,
+        siparis: item.encryptedSiparis
+          ? encryptionService.decryptString(item.encryptedSiparis)
+          : item.siparis,
+        malzemeNo: item.encryptedMalzemeNo
+          ? encryptionService.decryptString(item.encryptedMalzemeNo)
+          : item.malzemeNo,
+        malzemeKisaMetni: item.encryptedMalzemeKisaMetni
+          ? encryptionService.decryptString(item.encryptedMalzemeKisaMetni)
+          : item.malzemeKisaMetni,
       };
 
       return { success: true, data: decryptedItem };
-
     } catch (error) {
       const errorMessage = `Decryption failed for item ${index}: ${(error as Error).message}`;
-      logger.warn('Item decryption failed', {
+      logger.warn("Item decryption failed", {
         index,
         error: (error as Error).message,
-        itemId: item.id
+        itemId: item.id,
       });
-      
+
       options.onError?.(error as Error, item);
       return { success: false, error: errorMessage };
     }
@@ -365,16 +394,16 @@ export class AsyncEncryptionService extends EventEmitter {
    */
   private async processWithConcurrency<T>(
     promises: Promise<T>[],
-    concurrency: number
+    concurrency: number,
   ): Promise<T[]> {
     const results: T[] = [];
-    
+
     for (let i = 0; i < promises.length; i += concurrency) {
       const batch = promises.slice(i, i + concurrency);
       const batchResults = await Promise.all(batch);
       results.push(...batchResults);
     }
-    
+
     return results;
   }
 
@@ -382,7 +411,7 @@ export class AsyncEncryptionService extends EventEmitter {
    * Utility delay function
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 

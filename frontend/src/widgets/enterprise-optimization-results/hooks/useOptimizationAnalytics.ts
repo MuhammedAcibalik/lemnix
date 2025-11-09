@@ -4,21 +4,28 @@
  * @version 1.0.0
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 export const useOptimizationAnalytics = () => {
-  const [analytics, setAnalytics] = useState<Record<string, unknown> | null>(null);
-  const [systemHealth, setSystemHealth] = useState<Record<string, unknown> | null>(null);
+  const [analytics, setAnalytics] = useState<Record<string, unknown> | null>(
+    null,
+  );
+  const [systemHealth, setSystemHealth] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
   const [isLoadingSystemHealth, setIsLoadingSystemHealth] = useState(false);
   const [isUnauthorized, setIsUnauthorized] = useState(false);
 
   // Data validation helper functions
-  const validateAnalyticsData = (data: unknown): data is Record<string, unknown> => {
+  const validateAnalyticsData = (
+    data: unknown,
+  ): data is Record<string, unknown> => {
     try {
       if (!data || typeof data !== "object") return false;
       const obj = data as Record<string, unknown>;
-      
+
       // ✅ FIX: More flexible validation - only check essential fields
       if (typeof obj.timeRange !== "string") return false;
       if (typeof obj.metrics !== "object" || !obj.metrics) return false;
@@ -28,16 +35,28 @@ export const useOptimizationAnalytics = () => {
       const metrics = obj.metrics as Record<string, unknown>;
       const metricKeys = Object.keys(metrics);
       if (metricKeys.length === 0) return false;
-      
+
       // Check at least one metric has the expected structure
       for (const key of metricKeys) {
         const metric = metrics[key];
         if (typeof metric === "object" && metric !== null) {
           const metricObj = metric as Record<string, unknown>;
           // Only require current, average, trend if they exist
-          if (metricObj.current !== undefined && typeof metricObj.current !== "number") return false;
-          if (metricObj.average !== undefined && typeof metricObj.average !== "number") return false;
-          if (metricObj.trend !== undefined && !["up", "down", "stable"].includes(metricObj.trend as string)) return false;
+          if (
+            metricObj.current !== undefined &&
+            typeof metricObj.current !== "number"
+          )
+            return false;
+          if (
+            metricObj.average !== undefined &&
+            typeof metricObj.average !== "number"
+          )
+            return false;
+          if (
+            metricObj.trend !== undefined &&
+            !["up", "down", "stable"].includes(metricObj.trend as string)
+          )
+            return false;
         }
       }
 
@@ -48,11 +67,13 @@ export const useOptimizationAnalytics = () => {
     }
   };
 
-  const validateSystemHealthData = (data: unknown): data is Record<string, unknown> => {
+  const validateSystemHealthData = (
+    data: unknown,
+  ): data is Record<string, unknown> => {
     try {
       if (!data || typeof data !== "object") return false;
       const obj = data as Record<string, unknown>;
-      
+
       // ✅ FIX: More flexible validation - only check essential fields
       if (typeof obj.status !== "string") return false;
       if (typeof obj.version !== "string") return false;
@@ -67,8 +88,16 @@ export const useOptimizationAnalytics = () => {
           if (typeof service === "object" && service !== null) {
             const serviceObj = service as Record<string, unknown>;
             // Only validate if status exists
-            if (serviceObj.status !== undefined && typeof serviceObj.status !== "string") return false;
-            if (serviceObj.responseTime !== undefined && typeof serviceObj.responseTime !== "number") return false;
+            if (
+              serviceObj.status !== undefined &&
+              typeof serviceObj.status !== "string"
+            )
+              return false;
+            if (
+              serviceObj.responseTime !== undefined &&
+              typeof serviceObj.responseTime !== "number"
+            )
+              return false;
           }
         }
       }
@@ -79,7 +108,8 @@ export const useOptimizationAnalytics = () => {
         const metricKeys = Object.keys(metrics);
         for (const key of metricKeys) {
           const metric = metrics[key];
-          if (typeof metric !== "number" && typeof metric !== "object") return false;
+          if (typeof metric !== "number" && typeof metric !== "object")
+            return false;
         }
       }
 
@@ -97,7 +127,7 @@ export const useOptimizationAnalytics = () => {
     if (isUnauthorized) {
       return;
     }
-    
+
     setIsLoadingAnalytics(true);
     let retryCount = 0;
     const maxRetries = 3;
@@ -109,16 +139,19 @@ export const useOptimizationAnalytics = () => {
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
         // Get auth token from localStorage
-        const authToken = localStorage.getItem('auth_token');
-        
-        const response = await fetch("/api/enterprise/analytics?timeRange=day", {
-          signal: controller.signal,
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache",
-            ...(authToken && { "Authorization": `Bearer ${authToken}` }), // ✅ FIX: Add auth token
+        const authToken = localStorage.getItem("auth_token");
+
+        const response = await fetch(
+          "/api/enterprise/analytics?timeRange=day",
+          {
+            signal: controller.signal,
+            headers: {
+              "Content-Type": "application/json",
+              "Cache-Control": "no-cache",
+              ...(authToken && { Authorization: `Bearer ${authToken}` }), // ✅ FIX: Add auth token
+            },
           },
-        });
+        );
 
         clearTimeout(timeoutId);
 
@@ -150,7 +183,9 @@ export const useOptimizationAnalytics = () => {
           });
           return; // Exit early on 401
         } else {
-          console.warn(`Analytics API returned ${response.status}: ${response.statusText}`);
+          console.warn(
+            `Analytics API returned ${response.status}: ${response.statusText}`,
+          );
         }
       } catch (error) {
         retryCount++;
@@ -193,7 +228,7 @@ export const useOptimizationAnalytics = () => {
     if (isUnauthorized) {
       return;
     }
-    
+
     setIsLoadingSystemHealth(true);
     let retryCount = 0;
     const maxRetries = 3;
@@ -205,14 +240,14 @@ export const useOptimizationAnalytics = () => {
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
         // Get auth token from localStorage
-        const authToken = localStorage.getItem('auth_token');
-        
+        const authToken = localStorage.getItem("auth_token");
+
         const response = await fetch("/api/enterprise/system-health", {
           signal: controller.signal,
           headers: {
             "Content-Type": "application/json",
             "Cache-Control": "no-cache",
-            ...(authToken && { "Authorization": `Bearer ${authToken}` }), // ✅ FIX: Add auth token
+            ...(authToken && { Authorization: `Bearer ${authToken}` }), // ✅ FIX: Add auth token
           },
         });
 
@@ -245,7 +280,9 @@ export const useOptimizationAnalytics = () => {
           });
           return; // Exit early on 401
         } else {
-          console.warn(`System health API returned ${response.status}: ${response.statusText}`);
+          console.warn(
+            `System health API returned ${response.status}: ${response.statusText}`,
+          );
         }
       } catch (error) {
         retryCount++;
@@ -267,7 +304,9 @@ export const useOptimizationAnalytics = () => {
     }
 
     // All retries failed, use fallback
-    console.error("All system health fetch attempts failed, using fallback data");
+    console.error(
+      "All system health fetch attempts failed, using fallback data",
+    );
     setSystemHealth({
       status: "unknown",
       services: {
@@ -304,7 +343,7 @@ export const useOptimizationAnalytics = () => {
         void fetchAnalytics();
       }
     }, 30000);
-    
+
     const healthInterval = setInterval(() => {
       if (!isUnauthorized) {
         void fetchSystemHealth();
@@ -321,6 +360,6 @@ export const useOptimizationAnalytics = () => {
     analytics,
     systemHealth,
     isLoadingAnalytics,
-    isLoadingSystemHealth
+    isLoadingSystemHealth,
   };
 };

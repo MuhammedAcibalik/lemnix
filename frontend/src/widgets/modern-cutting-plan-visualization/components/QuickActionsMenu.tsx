@@ -4,22 +4,16 @@
  * @version 1.0.0
  */
 
-import React from 'react';
-import {
-  Fab,
-  Menu,
-  MenuItem
-} from '@mui/material';
+import React from "react";
+import { Fab, Menu, MenuItem } from "@mui/material";
 import {
   MoreVert as MoreVertIcon,
   Save as SaveIcon,
   Share as ShareIcon,
-  ContentCopy as CopyIcon
-} from '@mui/icons-material';
-import { OptimizationResult } from '@/shared/types/legacy';
-import {
-  QuickActionsMenuProps
-} from '../types';
+  ContentCopy as CopyIcon,
+} from "@mui/icons-material";
+import { OptimizationResult } from "@/shared/types/legacy";
+import { QuickActionsMenuProps } from "../types";
 
 /**
  * Quick Actions Menu Component
@@ -29,14 +23,14 @@ export const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
   onClose,
   onExport,
   onCopy,
-  optimizationResult
+  optimizationResult,
 }) => {
   const handleCopy = () => {
     try {
       navigator.clipboard.writeText(JSON.stringify(optimizationResult));
       onCopy();
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+      console.error("Failed to copy to clipboard:", error);
     }
   };
 
@@ -46,7 +40,7 @@ export const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
       <Fab
         color="primary"
         aria-label="Hızlı İşlemler"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        sx={{ position: "fixed", bottom: 16, right: 16 }}
       >
         <MoreVertIcon />
       </Fab>
@@ -57,21 +51,36 @@ export const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
         open={Boolean(anchorEl)}
         onClose={onClose}
         anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
+          vertical: "top",
+          horizontal: "left",
         }}
         transformOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
+          vertical: "bottom",
+          horizontal: "right",
         }}
       >
-        <MenuItem onClick={() => { onExport('json'); onClose(); }}>
+        <MenuItem
+          onClick={() => {
+            onExport("json");
+            onClose();
+          }}
+        >
           <SaveIcon sx={{ mr: 1 }} /> Kaydet
         </MenuItem>
-        <MenuItem onClick={() => { onExport('image'); onClose(); }}>
+        <MenuItem
+          onClick={() => {
+            onExport("image");
+            onClose();
+          }}
+        >
           <ShareIcon sx={{ mr: 1 }} /> Paylaş
         </MenuItem>
-        <MenuItem onClick={() => { handleCopy(); onClose(); }}>
+        <MenuItem
+          onClick={() => {
+            handleCopy();
+            onClose();
+          }}
+        >
           <CopyIcon sx={{ mr: 1 }} /> Kopyala
         </MenuItem>
       </Menu>

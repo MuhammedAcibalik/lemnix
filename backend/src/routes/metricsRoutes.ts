@@ -2,13 +2,13 @@
  * @fileoverview Metrics Routes - Performance Monitoring
  * @module MetricsRoutes
  * @version 1.0.0
- * 
+ *
  * ✅ P3-12: Web Vitals backend reporting
  */
 
-import { Router, Request, Response } from 'express';
-import type { Router as ExpressRouter } from 'express';
-import { logger } from '../services/logger';
+import { Router, Request, Response } from "express";
+import type { Router as ExpressRouter } from "express";
+import { logger } from "../services/logger";
 
 const router: ExpressRouter = Router();
 
@@ -18,7 +18,7 @@ const router: ExpressRouter = Router();
 interface WebVitalMetric {
   readonly name: string; // LCP, CLS, INP, FCP, TTFB
   readonly value: number;
-  readonly rating: 'good' | 'needs-improvement' | 'poor';
+  readonly rating: "good" | "needs-improvement" | "poor";
   readonly delta: number;
   readonly id: string;
   readonly navigationType: string;
@@ -28,30 +28,33 @@ interface WebVitalMetric {
  * POST /api/metrics/web-vitals
  * ✅ P3-12: Receive Web Vitals metrics from frontend
  */
-router.post('/web-vitals', (req: Request, res: Response): void => {
+router.post("/web-vitals", (req: Request, res: Response): void => {
   try {
     const metric: WebVitalMetric = req.body;
-    
+
     // Validation - check for required fields
-    if (!metric || !metric.name || typeof metric.value !== 'number') {
-      logger.warn('[WEB-VITALS] Invalid metric data', { 
+    if (!metric || !metric.name || typeof metric.value !== "number") {
+      logger.warn("[WEB-VITALS] Invalid metric data", {
         hasBody: !!req.body,
         hasName: !!metric?.name,
         valueType: typeof metric?.value,
       });
       res.status(400).json({
         success: false,
-        error: { message: 'Invalid metric: name and numeric value required', code: 'INVALID_METRIC' },
+        error: {
+          message: "Invalid metric: name and numeric value required",
+          code: "INVALID_METRIC",
+        },
       });
       return;
     }
 
     // Log metric (with safe access for optional fields)
-    logger.info('[WEB-VITALS] Metric received', {
+    logger.info("[WEB-VITALS] Metric received", {
       name: metric.name,
       value: metric.value,
-      rating: metric.rating || 'unknown',
-      navigationType: metric.navigationType || 'unknown',
+      rating: metric.rating || "unknown",
+      navigationType: metric.navigationType || "unknown",
       timestamp: new Date().toISOString(),
     });
 
@@ -72,13 +75,13 @@ router.post('/web-vitals', (req: Request, res: Response): void => {
 
     res.status(200).json({
       success: true,
-      message: 'Metric received',
+      message: "Metric received",
     });
   } catch (error) {
-    logger.error('[WEB-VITALS] Error storing metric', { error });
+    logger.error("[WEB-VITALS] Error storing metric", { error });
     res.status(500).json({
       success: false,
-      error: { message: 'Failed to store metric', code: 'INTERNAL_ERROR' },
+      error: { message: "Failed to store metric", code: "INTERNAL_ERROR" },
     });
   }
 });
@@ -87,7 +90,7 @@ router.post('/web-vitals', (req: Request, res: Response): void => {
  * GET /api/metrics/web-vitals/summary
  * Get aggregated Web Vitals summary
  */
-router.get('/web-vitals/summary', (req: Request, res: Response): void => {
+router.get("/web-vitals/summary", (req: Request, res: Response): void => {
   try {
     // TODO: Query SystemMetrics table and aggregate
     // For now, return placeholder
@@ -102,13 +105,12 @@ router.get('/web-vitals/summary', (req: Request, res: Response): void => {
       },
     });
   } catch (error) {
-    logger.error('[WEB-VITALS] Error getting summary', { error });
+    logger.error("[WEB-VITALS] Error getting summary", { error });
     res.status(500).json({
       success: false,
-      error: { message: 'Failed to get summary', code: 'INTERNAL_ERROR' },
+      error: { message: "Failed to get summary", code: "INTERNAL_ERROR" },
     });
   }
 });
 
 export default router;
-

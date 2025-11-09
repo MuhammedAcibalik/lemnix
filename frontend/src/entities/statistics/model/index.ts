@@ -3,6 +3,5 @@
  * Public API for types and schemas
  */
 
-export * from './schemas';
-export * from './types';
-
+export * from "./schemas";
+export * from "./types";

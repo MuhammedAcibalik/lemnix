@@ -12,11 +12,11 @@ export type {
   SaveMappingResponse,
   PopularMappingsResponse,
   IncrementUsageRequest,
-  IncrementUsageResponse
-} from './model/types';
+  IncrementUsageResponse,
+} from "./model/types";
 
 // API Client
-export { materialProfileMappingApi } from './api/materialProfileMappingApi';
+export { materialProfileMappingApi } from "./api/materialProfileMappingApi";
 
 // React Query Hooks
 export {
@@ -25,13 +25,13 @@ export {
   usePopularMappings,
   useSaveProfileMapping,
   useIncrementUsageCount,
-  materialProfileMappingKeys
-} from './api/materialProfileMappingQueries';
+  materialProfileMappingKeys,
+} from "./api/materialProfileMappingQueries";
 
 // Helper Functions
 export {
   getConfidenceColor,
   getConfidenceLabel,
   isProfileSuggestion,
-  isSaveMappingRequest
-} from './model/types';
+  isSaveMappingRequest,
+} from "./model/types";

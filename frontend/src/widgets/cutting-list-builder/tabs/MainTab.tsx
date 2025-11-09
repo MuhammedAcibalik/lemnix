@@ -2,17 +2,17 @@
  * @fileoverview Main Tab - Orchestration Layer
  * @module MainTab
  * @version 3.0.0 - RBAC Integration
- * 
+ *
  * ✅ P1-4: Permission-aware UI rendering
  * Pure orchestration component - delegates all rendering to sub-components
  */
 
-import React from 'react';
-import { CuttingList, WorkOrderItem, LoadingState } from '../types';
-import { NewCuttingListSection } from '../components/NewCuttingListSection';
-import { CuttingListsGrid } from '../components/CuttingListsGrid';
-import { CuttingListDetails } from '../components/CuttingListDetails';
-import { Permission, usePermissions } from '@/shared/hooks';
+import React from "react";
+import { CuttingList, WorkOrderItem, LoadingState } from "../types";
+import { NewCuttingListSection } from "../components/NewCuttingListSection";
+import { CuttingListsGrid } from "../components/CuttingListsGrid";
+import { CuttingListDetails } from "../components/CuttingListDetails";
+import { Permission, usePermissions } from "@/shared/hooks";
 
 interface MainTabProps {
   cuttingList: CuttingList | null;

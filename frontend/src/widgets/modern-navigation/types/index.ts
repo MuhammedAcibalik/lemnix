@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 
 // ============================================================================
 // MAIN COMPONENT PROPS
@@ -23,9 +23,12 @@ export interface ModernNavigationProps {
 export interface NavigationItem {
   id: string;
   label: string;
-  icon: React.ComponentType<{ className?: string; sx?: Record<string, unknown> }>;
+  icon: React.ComponentType<{
+    className?: string;
+    sx?: Record<string, unknown>;
+  }>;
   description: string;
-  category: 'main' | 'tools' | 'settings';
+  category: "main" | "tools" | "settings";
   shortcut?: string;
   badge?: number;
   isNew?: boolean;
@@ -36,7 +39,10 @@ export interface NavigationItem {
 export interface CommandPaletteItem {
   id: string;
   label: string;
-  icon: React.ComponentType<{ className?: string; sx?: Record<string, unknown> }>;
+  icon: React.ComponentType<{
+    className?: string;
+    sx?: Record<string, unknown>;
+  }>;
   description: string;
   action: () => void;
   category: string;
@@ -51,7 +57,10 @@ export interface CommandItem {
   readonly title: string;
   readonly description: string;
   readonly category: string;
-  readonly icon: React.ComponentType<{ className?: string; sx?: Record<string, unknown> }>;
+  readonly icon: React.ComponentType<{
+    className?: string;
+    sx?: Record<string, unknown>;
+  }>;
   readonly shortcut?: string;
   readonly action: () => void;
 }
@@ -60,14 +69,21 @@ export interface CommandItem {
 // CATEGORY AND THEME TYPES
 // ============================================================================
 
-export type NavigationCategory = 'main' | 'tools' | 'settings';
+export type NavigationCategory = "main" | "tools" | "settings";
 
-export type CommandCategory = 'Navigasyon' | 'Hızlı Eylemler' | 'Sistem' | 'Yardım';
+export type CommandCategory =
+  | "Navigasyon"
+  | "Hızlı Eylemler"
+  | "Sistem"
+  | "Yardım";
 
 export interface CategoryTheme {
   color: string;
   backgroundColor: string;
-  icon: React.ComponentType<{ className?: string; sx?: Record<string, unknown> }>;
+  icon: React.ComponentType<{
+    className?: string;
+    sx?: Record<string, unknown>;
+  }>;
 }
 
 export interface CategoryThemes {
@@ -244,5 +260,5 @@ export interface AppConfig {
   brandName: string;
   domain: string;
   version: string;
-  environment: 'development' | 'production' | 'test';
+  environment: "development" | "production" | "test";
 }

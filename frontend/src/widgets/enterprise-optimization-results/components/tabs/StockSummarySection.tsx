@@ -4,18 +4,18 @@
  * @version 1.0.0
  */
 
-import React from 'react';
-import { OptimizationResult, Cut } from '../../types';
+import React from "react";
+import { OptimizationResult, Cut } from "../../types";
 import {
   Box,
   Typography,
   Card,
   CardContent,
   Grid,
-  Avatar
-} from '@mui/material';
-import { BarChart as BarChartIcon } from '@mui/icons-material';
-import { StockCard } from './StockCard';
+  Avatar,
+} from "@mui/material";
+import { BarChart as BarChartIcon } from "@mui/icons-material";
+import { StockCard } from "./StockCard";
 
 interface StockSummaryItem {
   length: number;
@@ -31,7 +31,7 @@ interface StockSummarySectionProps {
 
 export const StockSummarySection: React.FC<StockSummarySectionProps> = ({
   result,
-  onCuttingPlanDetails
+  onCuttingPlanDetails,
 }) => {
   if (!result.cuts || result.cuts.length === 0) {
     return null;
@@ -54,7 +54,7 @@ export const StockSummarySection: React.FC<StockSummarySectionProps> = ({
       acc[key].waste += cut.remainingLength;
       return acc;
     },
-    {}
+    {},
   );
 
   const stockItems = Object.values(stockSummary) as StockSummaryItem[];

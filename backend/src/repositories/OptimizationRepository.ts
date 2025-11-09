@@ -1,14 +1,14 @@
 /**
  * Optimization Repository
  * Data access layer for Optimization operations
- * 
+ *
  * @module repositories/OptimizationRepository
  * @version 1.0.0
  */
 
-import { prisma } from '../config/database';
-import { Optimization, OptimizationStatistics, Prisma } from '@prisma/client';
-import { logger } from '../services/logger';
+import { prisma } from "../config/database";
+import { Optimization, OptimizationStatistics, Prisma } from "@prisma/client";
+import { logger } from "../services/logger";
 
 export class OptimizationRepository {
   private static instance: OptimizationRepository;
@@ -25,11 +25,13 @@ export class OptimizationRepository {
   /**
    * Create a new optimization record
    */
-  public async create(data: Prisma.OptimizationCreateInput): Promise<Optimization> {
+  public async create(
+    data: Prisma.OptimizationCreateInput,
+  ): Promise<Optimization> {
     try {
       return await prisma.optimization.create({ data });
     } catch (error) {
-      logger.error('Failed to create optimization', { error });
+      logger.error("Failed to create optimization", { error });
       throw error;
     }
   }
@@ -46,13 +48,13 @@ export class OptimizationRepository {
             select: {
               id: true,
               email: true,
-              name: true
-            }
-          }
-        }
+              name: true,
+            },
+          },
+        },
       });
     } catch (error) {
-      logger.error('Failed to find optimization', { id, error });
+      logger.error("Failed to find optimization", { id, error });
       throw error;
     }
   }
@@ -60,15 +62,22 @@ export class OptimizationRepository {
   /**
    * Find recent optimizations for a user
    */
-  public async findRecent(userId: string, limit: number = 10): Promise<Optimization[]> {
+  public async findRecent(
+    userId: string,
+    limit: number = 10,
+  ): Promise<Optimization[]> {
     try {
       return await prisma.optimization.findMany({
         where: { userId },
-        orderBy: { createdAt: 'desc' },
-        take: limit
+        orderBy: { createdAt: "desc" },
+        take: limit,
       });
     } catch (error) {
-      logger.error('Failed to find recent optimizations', { userId, limit, error });
+      logger.error("Failed to find recent optimizations", {
+        userId,
+        limit,
+        error,
+      });
       throw error;
     }
   }
@@ -79,19 +88,19 @@ export class OptimizationRepository {
   public async findByAlgorithm(
     algorithm: string,
     status?: string,
-    limit: number = 50
+    limit: number = 50,
   ): Promise<Optimization[]> {
     try {
       return await prisma.optimization.findMany({
         where: {
           algorithm,
-          ...(status && { status })
+          ...(status && { status }),
         },
-        orderBy: { createdAt: 'desc' },
-        take: limit
+        orderBy: { createdAt: "desc" },
+        take: limit,
       });
     } catch (error) {
-      logger.error('Failed to find by algorithm', { algorithm, status, error });
+      logger.error("Failed to find by algorithm", { algorithm, status, error });
       throw error;
     }
   }
@@ -101,15 +110,15 @@ export class OptimizationRepository {
    */
   public async update(
     id: string,
-    data: Prisma.OptimizationUpdateInput
+    data: Prisma.OptimizationUpdateInput,
   ): Promise<Optimization> {
     try {
       return await prisma.optimization.update({
         where: { id },
-        data
+        data,
       });
     } catch (error) {
-      logger.error('Failed to update optimization', { id, error });
+      logger.error("Failed to update optimization", { id, error });
       throw error;
     }
   }
@@ -117,14 +126,19 @@ export class OptimizationRepository {
   /**
    * Get optimization statistics by algorithm
    */
-  public async getStatistics(algorithm?: string): Promise<OptimizationStatistics[]> {
+  public async getStatistics(
+    algorithm?: string,
+  ): Promise<OptimizationStatistics[]> {
     try {
       return await prisma.optimizationStatistics.findMany({
         where: algorithm ? { algorithm } : undefined,
-        orderBy: { createdAt: 'desc' }
+        orderBy: { createdAt: "desc" },
       });
     } catch (error) {
-      logger.error('Failed to get optimization statistics', { algorithm, error });
+      logger.error("Failed to get optimization statistics", {
+        algorithm,
+        error,
+      });
       throw error;
     }
   }
@@ -133,12 +147,12 @@ export class OptimizationRepository {
    * Create optimization statistics record
    */
   public async createStatistics(
-    data: Prisma.OptimizationStatisticsCreateInput
+    data: Prisma.OptimizationStatisticsCreateInput,
   ): Promise<OptimizationStatistics> {
     try {
       return await prisma.optimizationStatistics.create({ data });
     } catch (error) {
-      logger.error('Failed to create optimization statistics', { error });
+      logger.error("Failed to create optimization statistics", { error });
       throw error;
     }
   }
@@ -146,30 +160,32 @@ export class OptimizationRepository {
   /**
    * Get algorithm performance summary
    */
-  public async getAlgorithmPerformance(): Promise<Array<{
-    algorithm: string;
-    avgExecutionTime: number;
-    totalRuns: number;
-    avgEfficiency: number;
-  }>> {
+  public async getAlgorithmPerformance(): Promise<
+    Array<{
+      algorithm: string;
+      avgExecutionTime: number;
+      totalRuns: number;
+      avgEfficiency: number;
+    }>
+  > {
     try {
       const stats = await prisma.optimizationStatistics.groupBy({
-        by: ['algorithm'],
+        by: ["algorithm"],
         _avg: {
           executionTimeMs: true,
-          averageEfficiency: true
+          averageEfficiency: true,
         },
-        _count: true
+        _count: true,
       });
 
-      return stats.map(stat => ({
+      return stats.map((stat) => ({
         algorithm: stat.algorithm,
         avgExecutionTime: stat._avg.executionTimeMs || 0,
         totalRuns: stat._count,
-        avgEfficiency: stat._avg.averageEfficiency || 0
+        avgEfficiency: stat._avg.averageEfficiency || 0,
       }));
     } catch (error) {
-      logger.error('Failed to get algorithm performance', { error });
+      logger.error("Failed to get algorithm performance", { error });
       throw error;
     }
   }
@@ -185,17 +201,16 @@ export class OptimizationRepository {
       const result = await prisma.optimization.deleteMany({
         where: {
           createdAt: { lt: cutoffDate },
-          status: 'completed'
-        }
+          status: "completed",
+        },
       });
 
       return result.count;
     } catch (error) {
-      logger.error('Failed to delete old optimizations', { days, error });
+      logger.error("Failed to delete old optimizations", { days, error });
       throw error;
     }
   }
 }
 
 export const optimizationRepository = OptimizationRepository.getInstance();
-

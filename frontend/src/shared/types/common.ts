@@ -1,7 +1,7 @@
 /**
  * LEMNİX Shared Common Types
  * Domain-agnostic common types
- * 
+ *
  * @module shared/types
  * @version 1.0.0 - FSD Compliant
  */
@@ -14,22 +14,22 @@ type Brand<K, T> = K & { __brand: T };
 /**
  * Unique identifier (UUID or similar)
  */
-export type ID = Brand<string, 'ID'>;
+export type ID = Brand<string, "ID">;
 
 /**
  * ISO 8601 timestamp string
  */
-export type Timestamp = Brand<string, 'Timestamp'>;
+export type Timestamp = Brand<string, "Timestamp">;
 
 /**
  * Email address
  */
-export type Email = Brand<string, 'Email'>;
+export type Email = Brand<string, "Email">;
 
 /**
  * URL string
  */
-export type URL = Brand<string, 'URL'>;
+export type URL = Brand<string, "URL">;
 
 /**
  * Generic metadata object
@@ -54,10 +54,10 @@ export interface Entity {
  * Loadable state for async operations
  */
 export type LoadableState<T, E = Error> =
-  | { readonly status: 'idle' }
-  | { readonly status: 'loading' }
-  | { readonly status: 'success'; readonly data: T }
-  | { readonly status: 'error'; readonly error: E };
+  | { readonly status: "idle" }
+  | { readonly status: "loading" }
+  | { readonly status: "success"; readonly data: T }
+  | { readonly status: "error"; readonly error: E };
 
 /**
  * Result type for operations
@@ -103,10 +103,9 @@ export interface Range {
 /**
  * Color (hex string)
  */
-export type Color = Brand<string, 'Color'>;
+export type Color = Brand<string, "Color">;
 
 /**
  * Percentage (0-100)
  */
-export type Percentage = Brand<number, 'Percentage'>;
-
+export type Percentage = Brand<number, "Percentage">;

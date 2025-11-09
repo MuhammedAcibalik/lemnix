@@ -5,7 +5,7 @@
  */
 
 // Main component
-export { CuttingListBuilder } from './CuttingListBuilder';
+export { CuttingListBuilder } from "./CuttingListBuilder";
 
 // Types
 export type {
@@ -24,40 +24,40 @@ export type {
   PageHeaderProps,
   ActionToolbarProps,
   CuttingListStatsProps,
-} from './types';
+} from "./types";
 
-export type { ProductSection } from './types';
+export type { ProductSection } from "./types";
 
 // Styled components (as components, not types)
-export { 
-  StyledCard, 
-  StyledButton, 
-  StyledTextField, 
-  StyledChip, 
-  PageHeader, 
-  ActionToolbar, 
-  CuttingListStats as CuttingListStatsComponent 
-} from './styled';
+export {
+  StyledCard,
+  StyledButton,
+  StyledTextField,
+  StyledChip,
+  PageHeader,
+  ActionToolbar,
+  CuttingListStats as CuttingListStatsComponent,
+} from "./styled";
 
 // Hooks
-export { useCuttingListState } from './hooks/useCuttingListState';
-export { useCuttingListData } from './hooks/useCuttingListData';
-export { useSmartSuggestions } from './hooks/useSmartSuggestions';
+export { useCuttingListState } from "./hooks/useCuttingListState";
+export { useCuttingListData } from "./hooks/useCuttingListData";
+export { useSmartSuggestions } from "./hooks/useSmartSuggestions";
 
 // Dialogs
-export { NewProductDialog } from './dialogs/NewProductDialog';
-export { NewItemDialog } from './dialogs/NewItemDialog';
-export { CombinationDialog } from './dialogs/CombinationDialog';
-export { EditItemDialog } from './dialogs/EditItemDialog';
+export { NewProductDialog } from "./dialogs/NewProductDialog";
+export { NewItemDialog } from "./dialogs/NewItemDialog";
+export { CombinationDialog } from "./dialogs/CombinationDialog";
+export { EditItemDialog } from "./dialogs/EditItemDialog";
 
 // Components
-export { ProductSection as ProductSectionComponent } from './components/ProductSection';
-export { WorkOrderItem as WorkOrderItemComponent } from './components/WorkOrderItem';
-export { CuttingListsGrid } from './components/CuttingListsGrid';
-export { NewCuttingListSection } from './components/NewCuttingListSection';
-export { CuttingListDetails } from './components/CuttingListDetails';
-export { StatisticsTab } from './components/StatisticsTab';
-export { SettingsTab } from './components/SettingsTab';
+export { ProductSection as ProductSectionComponent } from "./components/ProductSection";
+export { WorkOrderItem as WorkOrderItemComponent } from "./components/WorkOrderItem";
+export { CuttingListsGrid } from "./components/CuttingListsGrid";
+export { NewCuttingListSection } from "./components/NewCuttingListSection";
+export { CuttingListDetails } from "./components/CuttingListDetails";
+export { StatisticsTab } from "./components/StatisticsTab";
+export { SettingsTab } from "./components/SettingsTab";
 
 // Tabs
-export { MainTab } from './tabs/MainTab';
+export { MainTab } from "./tabs/MainTab";

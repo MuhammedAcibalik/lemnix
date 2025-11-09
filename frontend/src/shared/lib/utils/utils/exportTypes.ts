@@ -47,10 +47,10 @@ export interface StatisticsData {
 }
 
 export interface ExportOptions {
-  format: 'excel' | 'pdf';
+  format: "excel" | "pdf";
   includeCharts: boolean;
   includeRawData: boolean;
-  language: 'tr' | 'en';
+  language: "tr" | "en";
   filename?: string;
 }
 
@@ -59,7 +59,7 @@ export interface ExcelSheetData {
   headers: string[];
   data: (string | number)[][];
   chartData?: {
-    type: 'pie' | 'bar' | 'line';
+    type: "pie" | "bar" | "line";
     title: string;
     data: Record<string, unknown>[];
     labels: string[];
@@ -68,12 +68,14 @@ export interface ExcelSheetData {
 
 export interface PDFSection {
   title: string;
-  content: string | Array<{
-    label: string;
-    value: string | number;
-  }>;
+  content:
+    | string
+    | Array<{
+        label: string;
+        value: string | number;
+      }>;
   chart?: {
-    type: 'pie' | 'bar' | 'line';
+    type: "pie" | "bar" | "line";
     title: string;
     data: Record<string, unknown>[];
     labels: string[];

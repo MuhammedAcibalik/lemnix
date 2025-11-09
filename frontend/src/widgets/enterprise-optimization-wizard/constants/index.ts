@@ -4,69 +4,73 @@
  * @version 1.0.0
  */
 
-import { 
+import {
   RecyclingOutlined as WasteIcon,
   Speed as SpeedIcon,
   AttachMoney as CostIcon,
-  Timeline as TimelineIcon
-} from '@mui/icons-material';
-import { AlgorithmInfo, ObjectiveInfo, OptimizationParams } from '../types';
+  Timeline as TimelineIcon,
+} from "@mui/icons-material";
+import { AlgorithmInfo, ObjectiveInfo, OptimizationParams } from "../types";
 
 // Algorithm configurations - ALIGNED WITH BACKEND (5 algorithms available)
 export const ALGORITHMS: AlgorithmInfo[] = [
-  { 
-    value: 'ffd',
-    label: 'First Fit Decreasing (FFD)',
-    description: 'Hızlı ve dengeli, genel amaçlı optimizasyon',
+  {
+    value: "ffd",
+    label: "First Fit Decreasing (FFD)",
+    description: "Hızlı ve dengeli, genel amaçlı optimizasyon",
     speed: 5,
-    accuracy: 4
+    accuracy: 4,
   },
-  { 
-    value: 'bfd',
-    label: 'Best Fit Decreasing (BFD)',
-    description: 'Atık minimizasyonu odaklı, kalite öncelikli',
+  {
+    value: "bfd",
+    label: "Best Fit Decreasing (BFD)",
+    description: "Atık minimizasyonu odaklı, kalite öncelikli",
     speed: 4,
-    accuracy: 5
+    accuracy: 5,
   },
-  { 
-    value: 'genetic',
-    label: 'Genetic Algorithm v1.7.1',
-    description: 'GPU destekli evrimsel optimizasyon, en iyi kalite',
+  {
+    value: "genetic",
+    label: "Genetic Algorithm v1.7.1",
+    description: "GPU destekli evrimsel optimizasyon, en iyi kalite",
     speed: 2,
-    accuracy: 5
+    accuracy: 5,
   },
-  { 
-    value: 'pooling',
-    label: 'Profile Pooling',
-    description: 'Profil bazlı gruplama, çoklu iş emri optimizasyonu',
+  {
+    value: "pooling",
+    label: "Profile Pooling",
+    description: "Profil bazlı gruplama, çoklu iş emri optimizasyonu",
     speed: 3,
-    accuracy: 4
+    accuracy: 4,
   },
-  { 
-    value: 'pattern-exact',
-    label: 'Pattern Exact Search',
-    description: 'Kesin pattern bazlı, garantili minimum fire',
+  {
+    value: "pattern-exact",
+    label: "Pattern Exact Search",
+    description: "Kesin pattern bazlı, garantili minimum fire",
     speed: 1,
-    accuracy: 5
-  }
+    accuracy: 5,
+  },
 ];
 
 // Optimization objectives
 export const OBJECTIVES: ObjectiveInfo[] = [
-  { type: 'minimize-waste', label: 'Atığı Minimize Et', icon: WasteIcon },
-  { type: 'minimize-cost', label: 'Maliyeti Minimize Et', icon: CostIcon },
-  { type: 'minimize-time', label: 'Zamanı Minimize Et', icon: TimelineIcon },
-  { type: 'maximize-efficiency', label: 'Verimliliği Maksimize Et', icon: SpeedIcon }
+  { type: "minimize-waste", label: "Atığı Minimize Et", icon: WasteIcon },
+  { type: "minimize-cost", label: "Maliyeti Minimize Et", icon: CostIcon },
+  { type: "minimize-time", label: "Zamanı Minimize Et", icon: TimelineIcon },
+  {
+    type: "maximize-efficiency",
+    label: "Verimliliği Maksimize Et",
+    icon: SpeedIcon,
+  },
 ];
 
 // Default optimization parameters
 export const DEFAULT_PARAMS: OptimizationParams = {
-  algorithm: 'pattern-exact', // ✅ TEMPORARY: Testing new Pattern Exact algorithm
+  algorithm: "pattern-exact", // ✅ TEMPORARY: Testing new Pattern Exact algorithm
   objectives: [
-    { type: 'minimize-waste', weight: 0.4, priority: 'high' },
-    { type: 'maximize-efficiency', weight: 0.3, priority: 'high' },
-    { type: 'minimize-cost', weight: 0.2, priority: 'medium' },
-    { type: 'minimize-time', weight: 0.1, priority: 'low' }
+    { type: "minimize-waste", weight: 0.4, priority: "high" },
+    { type: "maximize-efficiency", weight: 0.3, priority: "high" },
+    { type: "minimize-cost", weight: 0.2, priority: "medium" },
+    { type: "minimize-time", weight: 0.1, priority: "low" },
   ],
   constraints: {
     kerfWidth: 0, // ✅ FIX: Kesim listelerindeki ölçüler zaten kerf payı eklenmiş
@@ -74,18 +78,18 @@ export const DEFAULT_PARAMS: OptimizationParams = {
     endSafety: 0, // ✅ No end safety - all fire is cut from start
     minScrapLength: 75,
     maxWastePercentage: 10,
-    maxCutsPerStock: 50
+    maxCutsPerStock: 50,
   },
   stockLengths: [6100, 4100, 3500],
-  unit: 'mm'
+  unit: "mm",
 };
 
 // Wizard steps configuration
 export const WIZARD_STEPS = [
-  'Kesim Listesi Seçimi',
-  'Algoritma ve Parametreler',
-  'Ön İzleme ve Doğrulama',
-  'Optimizasyon Sonuçları'
+  "Kesim Listesi Seçimi",
+  "Algoritma ve Parametreler",
+  "Ön İzleme ve Doğrulama",
+  "Optimizasyon Sonuçları",
 ] as const;
 
 // Performance configuration
@@ -95,17 +99,17 @@ export const PERFORMANCE_CONFIG = {
   parallelProcessing: true,
   cacheResults: true,
   populationSize: 50,
-  generations: 100
+  generations: 100,
 } as const;
 
 // Cost model configuration
 export const COST_MODEL = {
   materialCost: 0.05,
-  cuttingCost: 0.10,
-  setupCost: 2.00,
+  cuttingCost: 0.1,
+  setupCost: 2.0,
   wasteCost: 0.03,
-  timeCost: 0.50,
-  energyCost: 0.15
+  timeCost: 0.5,
+  energyCost: 0.15,
 } as const;
 
 // No sample items - use real data only
@@ -123,9 +127,9 @@ export const SAMPLE_CUTTING_ITEMS: Array<{
 
 // API endpoints
 export const API_ENDPOINTS = {
-  CUTTING_LISTS: 'http://localhost:3001/api/cutting-list',
-  OPTIMIZE: '/api/enterprise/optimize',
-  COMPARE: '/api/enterprise/compare'
+  CUTTING_LISTS: "http://localhost:3001/api/cutting-list",
+  OPTIMIZE: "/api/enterprise/optimize",
+  COMPARE: "/api/enterprise/compare",
 } as const;
 
 // Validation limits
@@ -137,5 +141,5 @@ export const VALIDATION_LIMITS = {
   MIN_STOCK_LENGTH: 100,
   MAX_STOCK_LENGTH: 20000,
   MIN_WASTE_PERCENTAGE: 0,
-  MAX_WASTE_PERCENTAGE: 100
+  MAX_WASTE_PERCENTAGE: 100,
 } as const;

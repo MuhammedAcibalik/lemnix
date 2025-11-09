@@ -4,18 +4,17 @@
  * @version 1.0.0
  */
 
-import React, { useMemo } from 'react';
-import { 
-  OptimizationResult, 
-  WorkOrder, 
-  Pool, 
-  Segment, 
+import React, { useMemo } from "react";
+import {
+  OptimizationResult,
+  WorkOrder,
+  Pool,
+  Segment,
   Cut,
   StockGroup,
   GroupData,
-  DuplicateProfileTypes
-} from '../types';
-
+  DuplicateProfileTypes,
+} from "../types";
 
 export const useOptimizationData = (result: OptimizationResult | null) => {
   // Process cutting list from result.cuts
@@ -42,17 +41,18 @@ export const useOptimizationData = (result: OptimizationResult | null) => {
           cut.id ||
           "DEFAULT_WORK_ORDER";
 
-        workOrderId && items.push({
-          id: `${workOrderId}-${segment.profileType}-${segment.length}`,
-          workOrderId: workOrderId,
-          version: "V1.0",
-          color: "Eloksal",
-          size: "40x40",
-          profileType: segment.profileType,
-          length: segment.length,
-          quantity: segment.quantity || 1,
-          cuttingPattern: "Standart",
-        });
+        workOrderId &&
+          items.push({
+            id: `${workOrderId}-${segment.profileType}-${segment.length}`,
+            workOrderId: workOrderId,
+            version: "V1.0",
+            color: "Eloksal",
+            size: "40x40",
+            profileType: segment.profileType,
+            length: segment.length,
+            quantity: segment.quantity || 1,
+            cuttingPattern: "Standart",
+          });
       });
     });
 
@@ -60,12 +60,12 @@ export const useOptimizationData = (result: OptimizationResult | null) => {
     const uniqueItems = items.reduce(
       (acc, item) => {
         const key = `${item.workOrderId}-${item.profileType}-${item.length}`;
-        acc[key] = acc[key] 
+        acc[key] = acc[key]
           ? { ...acc[key], quantity: acc[key].quantity + item.quantity }
           : item;
         return acc;
       },
-      {} as Record<string, (typeof items)[0]>
+      {} as Record<string, (typeof items)[0]>,
     );
 
     return Object.values(uniqueItems);
@@ -81,7 +81,7 @@ export const useOptimizationData = (result: OptimizationResult | null) => {
         const profileType = segment.profileType;
         profileTypeCount.set(
           profileType,
-          (profileTypeCount.get(profileType) || 0) + 1
+          (profileTypeCount.get(profileType) || 0) + 1,
         );
       });
     });
@@ -126,24 +126,26 @@ export const useOptimizationData = (result: OptimizationResult | null) => {
 
     result.cuts.forEach((cut) => {
       // Modern functional approach with optional chaining
-      const hasWorkOrderSegments = cut.segments?.some(
-        (segment: Segment) =>
-          segment.workOrderId === workOrderId ||
-          segment.workOrderItemId === workOrderId
-      ) || false;
+      const hasWorkOrderSegments =
+        cut.segments?.some(
+          (segment: Segment) =>
+            segment.workOrderId === workOrderId ||
+            segment.workOrderItemId === workOrderId,
+        ) || false;
 
       // Modern conditional execution with logical AND
-      hasWorkOrderSegments && (() => {
-        const stockLength = cut.stockLength;
-        // Modern object initialization with logical OR
-        stockGroups[stockLength] = stockGroups[stockLength] || {
-          stockLength,
-          cuts: [],
-          totalPieces: 0,
-        };
-        stockGroups[stockLength].cuts.push(cut);
-        stockGroups[stockLength].totalPieces += cut.segmentCount || 0;
-      })();
+      hasWorkOrderSegments &&
+        (() => {
+          const stockLength = cut.stockLength;
+          // Modern object initialization with logical OR
+          stockGroups[stockLength] = stockGroups[stockLength] || {
+            stockLength,
+            cuts: [],
+            totalPieces: 0,
+          };
+          stockGroups[stockLength].cuts.push(cut);
+          stockGroups[stockLength].totalPieces += cut.segmentCount || 0;
+        })();
     });
 
     return Object.values(stockGroups);
@@ -153,57 +155,68 @@ export const useOptimizationData = (result: OptimizationResult | null) => {
   const getProfileTypeIcon = (profileType: string): React.ReactElement => {
     // This would contain the profile type icon logic
     // For now, return a simple div
-    return React.createElement('div', null, profileType);
+    return React.createElement("div", null, profileType);
   };
 
   // Get algorithm profile - Modern object mapping
-  const getAlgorithmProfile = (algorithm?: string): { icon: React.ReactElement; label: string } => {
-    const algorithmMap: Record<string, { icon: React.ReactElement; label: string }> = {
+  const getAlgorithmProfile = (
+    algorithm?: string,
+  ): { icon: React.ReactElement; label: string } => {
+    const algorithmMap: Record<
+      string,
+      { icon: React.ReactElement; label: string }
+    > = {
       ffd: {
-        icon: React.createElement('div', null, 'F'),
-        label: "FFD"
+        icon: React.createElement("div", null, "F"),
+        label: "FFD",
       },
       bfd: {
-        icon: React.createElement('div', null, 'B'),
-        label: "BFD"
+        icon: React.createElement("div", null, "B"),
+        label: "BFD",
       },
       default: {
-        icon: React.createElement('div', null, '?'),
-        label: "Bilinmeyen"
-      }
+        icon: React.createElement("div", null, "?"),
+        label: "Bilinmeyen",
+      },
     };
-    
-    return algorithmMap[algorithm?.toLowerCase() || 'default'] || algorithmMap.default;
+
+    return (
+      algorithmMap[algorithm?.toLowerCase() || "default"] ||
+      algorithmMap.default
+    );
   };
 
   // Get severity color - Modern pattern matching
   const getSeverityColor = (
     value: number,
-    thresholds: { good: number; warning: number }
+    thresholds: { good: number; warning: number },
   ): "success" | "warning" | "error" => {
     const severityMap = [
       { condition: value >= thresholds.good, result: "success" as const },
       { condition: value >= thresholds.warning, result: "warning" as const },
-      { condition: true, result: "error" as const }
+      { condition: true, result: "error" as const },
     ];
-    
+
     return severityMap.find(({ condition }) => condition)?.result || "error";
   };
 
   // Get recommendation icon - Modern object mapping
   const getRecommendationIcon = (severity: string): React.ReactElement => {
     const iconMap: Record<string, React.ReactElement> = {
-      critical: React.createElement('div', null, 'Error'),
-      error: React.createElement('div', null, 'Error'),
-      warning: React.createElement('div', null, 'Warning'),
-      info: React.createElement('div', null, 'Info')
+      critical: React.createElement("div", null, "Error"),
+      error: React.createElement("div", null, "Error"),
+      warning: React.createElement("div", null, "Warning"),
+      info: React.createElement("div", null, "Info"),
     };
-    
+
     return iconMap[severity.toLowerCase()] || iconMap.info;
   };
 
   // Generate cutting pattern explanation
-  const generateCuttingPatternExplanation = (group: { cuts: Cut[] }, groupData: GroupData): string => {
+  const generateCuttingPatternExplanation = (
+    group: { cuts: Cut[] },
+    groupData: GroupData,
+  ): string => {
     const { totalPieces, barCount, avgRemaining, groupEfficiency } = groupData;
     const stockLength = group.cuts[0]?.stockLength || 6100;
     const profileType = group.cuts[0]?.profileType || "Bilinmeyen";
@@ -224,12 +237,12 @@ export const useOptimizationData = (result: OptimizationResult | null) => {
 
   // Format plan label from segments
   const formatPlanLabelFromSegments = (
-    segments: Array<{ length: number }>
+    segments: Array<{ length: number }>,
   ): string => {
     if (!segments || segments.length === 0) return "Plan yok";
     const count = new Map<number, number>();
     segments.forEach((s) =>
-      count.set(s.length, (count.get(s.length) ?? 0) + 1)
+      count.set(s.length, (count.get(s.length) ?? 0) + 1),
     );
     return [...count.entries()]
       .sort((a, b) => b[0] - a[0])
@@ -251,7 +264,7 @@ export const useOptimizationData = (result: OptimizationResult | null) => {
     getRecommendationIcon,
     generateCuttingPatternExplanation,
     fmtMm,
-    formatPlanLabelFromSegments
+    formatPlanLabelFromSegments,
   };
 };
 
@@ -259,18 +272,22 @@ export const useOptimizationData = (result: OptimizationResult | null) => {
 function buildEnterpriseRows(result: OptimizationResult | null): {
   workOrders: WorkOrder[];
 } {
-  const cuts: Cut[] = Array.isArray(result?.cuts) ? result.cuts.map(c => ({ 
-    ...c, 
-    segmentCount: c.segmentCount || 0 
-  })) as Cut[] : [];
+  const cuts: Cut[] = Array.isArray(result?.cuts)
+    ? (result.cuts.map((c) => ({
+        ...c,
+        segmentCount: c.segmentCount || 0,
+      })) as Cut[])
+    : [];
 
-  const validCuts = cuts.filter(
-    (c): c is Cut =>
-      c &&
-      Number.isFinite(c.stockLength) &&
-      Number.isFinite(c.usedLength) &&
-      Number.isFinite(c.remainingLength)
-  ).map(c => ({ ...c, segmentCount: c.segmentCount || 0 })) as Cut[];
+  const validCuts = cuts
+    .filter(
+      (c): c is Cut =>
+        c &&
+        Number.isFinite(c.stockLength) &&
+        Number.isFinite(c.usedLength) &&
+        Number.isFinite(c.remainingLength),
+    )
+    .map((c) => ({ ...c, segmentCount: c.segmentCount || 0 })) as Cut[];
 
   const defaultWO: string | number | undefined = undefined; // No workOrderId at result level
   const grouped = new Map<string | number, Cut[]>();
@@ -279,8 +296,8 @@ function buildEnterpriseRows(result: OptimizationResult | null): {
     let wo: string | number | undefined = undefined;
 
     if (c.segments && c.segments.length > 0) {
-      const segmentWithWO = c.segments.find(
-        (s: Segment) => Boolean(s.workOrderId || s.workOrderItemId)
+      const segmentWithWO = c.segments.find((s: Segment) =>
+        Boolean(s.workOrderId || s.workOrderItemId),
       );
       wo = segmentWithWO?.workOrderId || segmentWithWO?.workOrderItemId;
     }
@@ -304,7 +321,10 @@ function buildEnterpriseRows(result: OptimizationResult | null): {
       stockCount,
       totalSegments,
       efficiency: efficiencyResult.efficiency,
-      cuts: list.map(cut => ({ ...cut, segmentCount: cut.segmentCount || 0 })) as Cut[],
+      cuts: list.map((cut) => ({
+        ...cut,
+        segmentCount: cut.segmentCount || 0,
+      })) as Cut[],
     };
   });
 
@@ -322,10 +342,12 @@ function buildPoolRows(result: OptimizationResult | null): {
     cuts: Cut[];
   }>;
 } {
-  const cuts: Cut[] = Array.isArray(result?.cuts) ? result.cuts.map(c => ({ 
-    ...c, 
-    segmentCount: c.segmentCount || 0 
-  })) as Cut[] : [];
+  const cuts: Cut[] = Array.isArray(result?.cuts)
+    ? (result.cuts.map((c) => ({
+        ...c,
+        segmentCount: c.segmentCount || 0,
+      })) as Cut[])
+    : [];
 
   const poolMap = new Map<string, Cut[]>();
 
@@ -340,18 +362,22 @@ function buildPoolRows(result: OptimizationResult | null): {
     const stockCount = poolCuts.length;
     const totalSegments = poolCuts.reduce(
       (sum, cut) => sum + (cut.segmentCount || 0),
-      0
+      0,
     );
 
     const workOrderIds = new Set<string>();
     poolCuts.forEach((cut) => {
       // Modern conditional execution with optional chaining
-      cut.workOrderBreakdown?.forEach((breakdown: { workOrderId: string | number }) => {
-        workOrderIds.add(String(breakdown.workOrderId));
-      });
-      
+      cut.workOrderBreakdown?.forEach(
+        (breakdown: { workOrderId: string | number }) => {
+          workOrderIds.add(String(breakdown.workOrderId));
+        },
+      );
+
       // Modern conditional with logical AND
-      (cut.workOrderId && cut.workOrderId !== "MIXED") && workOrderIds.add(String(cut.workOrderId));
+      cut.workOrderId &&
+        cut.workOrderId !== "MIXED" &&
+        workOrderIds.add(String(cut.workOrderId));
     });
 
     return {
@@ -361,7 +387,10 @@ function buildPoolRows(result: OptimizationResult | null): {
       stockCount,
       totalSegments,
       efficiency: result?.efficiency || 0,
-      cuts: poolCuts.map(cut => ({ ...cut, segmentCount: cut.segmentCount || 0 })) as Cut[],
+      cuts: poolCuts.map((cut) => ({
+        ...cut,
+        segmentCount: cut.segmentCount || 0,
+      })) as Cut[],
     };
   });
 
@@ -413,7 +442,9 @@ function calculateWorkOrderEfficiency(cuts: Cut[]): {
     }
 
     if (!isFinite(remainingLength) || remainingLength < 0) {
-      errors.push(`Invalid remainingLength: ${cut.remainingLength} for cut ${cut.id}`);
+      errors.push(
+        `Invalid remainingLength: ${cut.remainingLength} for cut ${cut.id}`,
+      );
       continue;
     }
 
@@ -421,7 +452,7 @@ function calculateWorkOrderEfficiency(cuts: Cut[]): {
     const sum = usedLength + remainingLength;
     if (Math.abs(sum - stockLength) > tolerance) {
       errors.push(
-        `Invariant violation: usedLength (${usedLength}) + remainingLength (${remainingLength}) !== stockLength (${stockLength}) for cut ${cut.id}`
+        `Invariant violation: usedLength (${usedLength}) + remainingLength (${remainingLength}) !== stockLength (${stockLength}) for cut ${cut.id}`,
       );
       continue;
     }

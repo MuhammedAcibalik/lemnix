@@ -1,27 +1,27 @@
 /**
  * GPU Status Badge Component
  * Shows GPU acceleration status
- * 
+ *
  * @module shared/ui
  * @version 1.0.0
  */
 
-import React from 'react';
-import { Chip, Tooltip, CircularProgress } from '@mui/material';
-import { Memory as GPUIcon } from '@mui/icons-material';
+import React from "react";
+import { Chip, Tooltip, CircularProgress } from "@mui/material";
+import { Memory as GPUIcon } from "@mui/icons-material";
 
 export interface GPUStatusBadgeProps {
   readonly isSupported: boolean;
   readonly isInitialized: boolean;
   readonly isLoading?: boolean;
-  readonly size?: 'small' | 'medium';
+  readonly size?: "small" | "medium";
 }
 
 export const GPUStatusBadge: React.FC<GPUStatusBadgeProps> = ({
   isSupported,
   isInitialized,
   isLoading = false,
-  size = 'small',
+  size = "small",
 }) => {
   if (isLoading) {
     return (
@@ -49,7 +49,10 @@ export const GPUStatusBadge: React.FC<GPUStatusBadgeProps> = ({
 
   if (isInitialized) {
     return (
-      <Tooltip title="GPU hızlandırma aktif - Optimizasyonlar 10x daha hızlı!" arrow>
+      <Tooltip
+        title="GPU hızlandırma aktif - Optimizasyonlar 10x daha hızlı!"
+        arrow
+      >
         <Chip
           icon={<GPUIcon />}
           label="⚡ GPU Aktif"
@@ -73,4 +76,3 @@ export const GPUStatusBadge: React.FC<GPUStatusBadgeProps> = ({
     </Tooltip>
   );
 };
-

@@ -4,30 +4,36 @@
  * @version 1.0.0
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { productionPlanApi } from './productionPlanApi';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { productionPlanApi } from "./productionPlanApi";
 import type {
   ProductionPlan,
   ProductionPlanFilters,
   ProductionPlanMetrics,
   UploadProductionPlanRequest,
   BackorderItem,
-  ProductionPlanStatistics
-} from '../model/types';
+  ProductionPlanStatistics,
+} from "../model/types";
 
 // Query Keys
 export const productionPlanKeys = {
-  all: ['production-plan'] as const,
-  lists: () => [...productionPlanKeys.all, 'list'] as const,
-  list: (filters: ProductionPlanFilters) => [...productionPlanKeys.lists(), filters] as const,
-  details: () => [...productionPlanKeys.all, 'detail'] as const,
+  all: ["production-plan"] as const,
+  lists: () => [...productionPlanKeys.all, "list"] as const,
+  list: (filters: ProductionPlanFilters) =>
+    [...productionPlanKeys.lists(), filters] as const,
+  details: () => [...productionPlanKeys.all, "detail"] as const,
   detail: (id: string) => [...productionPlanKeys.details(), id] as const,
-  byWeek: (weekNumber: number, year: number) => [...productionPlanKeys.all, 'week', weekNumber, year] as const,
-  metrics: (filters: Pick<ProductionPlanFilters, 'weekNumber' | 'year' | 'status'>) => 
-    [...productionPlanKeys.all, 'metrics', filters] as const,
-  workOrderItems: (workOrderId: string) => [...productionPlanKeys.all, 'work-order', workOrderId] as const,
-  backorder: (filters: ProductionPlanFilters) => [...productionPlanKeys.all, 'backorder', filters] as const,
-  statistics: (filters: ProductionPlanFilters) => [...productionPlanKeys.all, 'statistics', filters] as const,
+  byWeek: (weekNumber: number, year: number) =>
+    [...productionPlanKeys.all, "week", weekNumber, year] as const,
+  metrics: (
+    filters: Pick<ProductionPlanFilters, "weekNumber" | "year" | "status">,
+  ) => [...productionPlanKeys.all, "metrics", filters] as const,
+  workOrderItems: (workOrderId: string) =>
+    [...productionPlanKeys.all, "work-order", workOrderId] as const,
+  backorder: (filters: ProductionPlanFilters) =>
+    [...productionPlanKeys.all, "backorder", filters] as const,
+  statistics: (filters: ProductionPlanFilters) =>
+    [...productionPlanKeys.all, "statistics", filters] as const,
 } as const;
 
 // Queries
@@ -45,8 +51,8 @@ export const useProductionPlans = (filters: ProductionPlanFilters = {}) => {
     // ✅ PERFORMANCE: Use cache when possible
     meta: {
       forceRefresh: false,
-      source: 'optimized-cache'
-    }
+      source: "optimized-cache",
+    },
   });
 };
 
@@ -71,7 +77,7 @@ export const useProductionPlanByWeek = (weekNumber: number, year: number) => {
 };
 
 export const useProductionPlanMetrics = (
-  filters: Pick<ProductionPlanFilters, 'weekNumber' | 'year' | 'status'> = {}
+  filters: Pick<ProductionPlanFilters, "weekNumber" | "year" | "status"> = {},
 ) => {
   return useQuery({
     queryKey: productionPlanKeys.metrics(filters),
@@ -86,7 +92,8 @@ export const useProductionPlanMetrics = (
 export const useProductionPlanItemsByWorkOrder = (workOrderId: string) => {
   return useQuery({
     queryKey: productionPlanKeys.workOrderItems(workOrderId),
-    queryFn: () => productionPlanApi.getProductionPlanItemsByWorkOrder(workOrderId),
+    queryFn: () =>
+      productionPlanApi.getProductionPlanItemsByWorkOrder(workOrderId),
     enabled: !!workOrderId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -98,22 +105,25 @@ export const useUploadProductionPlan = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: UploadProductionPlanRequest) => 
+    mutationFn: (request: UploadProductionPlanRequest) =>
       productionPlanApi.uploadProductionPlan(request.file),
     onSuccess: (data) => {
-      console.log('✅ [UploadProductionPlan] Upload successful, invalidating cache...', data);
-      
+      console.log(
+        "✅ [UploadProductionPlan] Upload successful, invalidating cache...",
+        data,
+      );
+
       // Invalidate all production plan queries (this will trigger refetch)
       queryClient.invalidateQueries({ queryKey: productionPlanKeys.all });
-      
+
       // Force refetch the main list query
       queryClient.refetchQueries({ queryKey: productionPlanKeys.lists() });
       queryClient.refetchQueries({ queryKey: productionPlanKeys.metrics({}) });
-      
-      console.log('✅ [UploadProductionPlan] Cache invalidated and refetched');
+
+      console.log("✅ [UploadProductionPlan] Cache invalidated and refetched");
     },
     onError: (error) => {
-      console.error('Upload production plan error:', error);
+      console.error("Upload production plan error:", error);
     },
   });
 };
@@ -126,12 +136,12 @@ export const useDeleteProductionPlan = () => {
     onSuccess: (data, id) => {
       // Invalidate all production plan queries
       queryClient.invalidateQueries({ queryKey: productionPlanKeys.all });
-      
+
       // Remove from cache
       queryClient.removeQueries({ queryKey: productionPlanKeys.detail(id) });
     },
     onError: (error) => {
-      console.error('Delete production plan error:', error);
+      console.error("Delete production plan error:", error);
     },
   });
 };
@@ -151,7 +161,8 @@ export const usePrefetchProductionPlan = () => {
   const prefetchProductionPlanByWeek = (weekNumber: number, year: number) => {
     queryClient.prefetchQuery({
       queryKey: productionPlanKeys.byWeek(weekNumber, year),
-      queryFn: () => productionPlanApi.getProductionPlanByWeek(weekNumber, year),
+      queryFn: () =>
+        productionPlanApi.getProductionPlanByWeek(weekNumber, year),
       staleTime: 5 * 60 * 1000,
     });
   };
@@ -182,19 +193,19 @@ export const useCreateCuttingListFromPlan = () => {
     onSuccess: (data) => {
       // Invalidate production plan queries to refresh data
       queryClient.invalidateQueries({ queryKey: productionPlanKeys.all });
-      
+
       // If successful, we could also invalidate cutting list queries if they exist
       // queryClient.invalidateQueries({ queryKey: ['cutting-list'] });
     },
     onError: (error) => {
-      console.error('Create cutting list from plan error:', error);
+      console.error("Create cutting list from plan error:", error);
     },
   });
 };
 
 export const useGetLinkedPlanItems = (cuttingListId: string) => {
   return useQuery({
-    queryKey: [...productionPlanKeys.all, 'linked-items', cuttingListId],
+    queryKey: [...productionPlanKeys.all, "linked-items", cuttingListId],
     queryFn: () => productionPlanApi.getLinkedPlanItems(cuttingListId),
     enabled: !!cuttingListId,
     staleTime: 5 * 60 * 1000,
@@ -205,14 +216,14 @@ export const useUnlinkPlanItemFromCuttingList = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (planItemId: string) => 
+    mutationFn: (planItemId: string) =>
       productionPlanApi.unlinkPlanItemFromCuttingList(planItemId),
     onSuccess: () => {
       // Invalidate production plan queries to refresh data
       queryClient.invalidateQueries({ queryKey: productionPlanKeys.all });
     },
     onError: (error) => {
-      console.error('Unlink plan item from cutting list error:', error);
+      console.error("Unlink plan item from cutting list error:", error);
     },
   });
 };
@@ -233,7 +244,9 @@ export const useBackorderItems = (filters: ProductionPlanFilters = {}) => {
 };
 
 // Statistics queries
-export const useProductionPlanStatistics = (filters: ProductionPlanFilters = {}) => {
+export const useProductionPlanStatistics = (
+  filters: ProductionPlanFilters = {},
+) => {
   return useQuery({
     queryKey: productionPlanKeys.statistics(filters),
     queryFn: () => productionPlanApi.getStatistics(filters),

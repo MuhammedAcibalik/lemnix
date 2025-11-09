@@ -1,13 +1,13 @@
 /**
  * Stagger Animation Component
  * Animates children with stagger delay
- * 
+ *
  * @module shared/ui/Motion
  * @version 2.0.0
  */
 
-import React from 'react';
-import { motion } from 'framer-motion';
+import React from "react";
+import { motion } from "framer-motion";
 
 export interface StaggerProps {
   readonly children: React.ReactNode;
@@ -53,4 +53,3 @@ export const Stagger: React.FC<StaggerProps> = ({
     </motion.div>
   );
 };
-

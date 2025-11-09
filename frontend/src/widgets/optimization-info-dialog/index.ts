@@ -4,6 +4,5 @@
  * @version 1.0.0
  */
 
-export { OptimizationInfoDialog } from './index.tsx';
-export { OptimizationInfoDialog as default } from './index.tsx';
-
+export { OptimizationInfoDialog } from "./index.tsx";
+export { OptimizationInfoDialog as default } from "./index.tsx";

@@ -1,6 +1,6 @@
 /**
  * Audit History Widget Types
- * 
+ *
  * @module widgets/audit-history
  * @version 1.0.0
  */
@@ -9,20 +9,20 @@ import type {
   AuditAction,
   AuditSeverity,
   AuditOutcome,
-} from '@/entities/audit';
+} from "@/entities/audit";
 
 /**
  * Timeline view mode
  */
-export type TimelineViewMode = 'compact' | 'detailed' | 'grouped';
+export type TimelineViewMode = "compact" | "detailed" | "grouped";
 
 /**
  * Filter state
  */
 export interface AuditFilterState {
-  readonly action: AuditAction | 'all';
-  readonly severity: AuditSeverity | 'all';
-  readonly outcome: AuditOutcome | 'all';
+  readonly action: AuditAction | "all";
+  readonly severity: AuditSeverity | "all";
+  readonly outcome: AuditOutcome | "all";
   readonly userId: string;
   readonly dateRange: {
     readonly startDate: string | null;
@@ -34,8 +34,8 @@ export interface AuditFilterState {
 /**
  * Sort configuration
  */
-export type SortField = 'timestamp' | 'action' | 'severity' | 'duration';
-export type SortOrder = 'asc' | 'desc';
+export type SortField = "timestamp" | "action" | "severity" | "duration";
+export type SortOrder = "asc" | "desc";
 
 export interface AuditSortConfig {
   readonly field: SortField;
@@ -57,9 +57,8 @@ export interface AuditViewPreferences {
  * Export options
  */
 export interface AuditExportOptions {
-  readonly format: 'excel' | 'csv' | 'json';
+  readonly format: "excel" | "csv" | "json";
   readonly includeFilters: boolean;
   readonly includeStatistics: boolean;
   readonly filename?: string;
 }
-

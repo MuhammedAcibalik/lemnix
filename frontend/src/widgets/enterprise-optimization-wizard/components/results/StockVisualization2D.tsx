@@ -1,17 +1,17 @@
 /**
  * Stock Visualization 2D Component
  * Interactive SVG-based stock cutting visualization
- * 
+ *
  * @module enterprise-optimization-wizard/components/results
  * @version 1.0.0
  */
 
-import React, { useState, useMemo } from 'react';
-import { Box, Typography, Tooltip, Chip, Stack, alpha } from '@mui/material';
-import { CardV2 } from '@/shared';
-import { useDesignSystem } from '@/shared/hooks';
-import type { StockBreakdownData } from './utils';
-import { formatLength, getWasteCategoryColor } from './utils';
+import React, { useState, useMemo } from "react";
+import { Box, Typography, Tooltip, Chip, Stack, alpha } from "@mui/material";
+import { CardV2 } from "@/shared";
+import { useDesignSystem } from "@/shared/hooks";
+import type { StockBreakdownData } from "./utils";
+import { formatLength, getWasteCategoryColor } from "./utils";
 
 export interface StockVisualization2DProps {
   readonly stocks: ReadonlyArray<StockBreakdownData>;
@@ -44,41 +44,42 @@ export const StockVisualization2D: React.FC<StockVisualization2DProps> = ({
   const BAR_WIDTH = SVG_WIDTH - LABEL_WIDTH - 40;
 
   return (
-    <CardV2 variant="glass" sx={{ p: ds.spacing['4'], height: '100%' }}>
+    <CardV2 variant="glass" sx={{ p: ds.spacing["4"], height: "100%" }}>
       {/* Header */}
-      <Box sx={{ mb: ds.spacing['3'] }}>
+      <Box sx={{ mb: ds.spacing["3"] }}>
         <Typography
           sx={{
-            fontSize: '1.125rem',
+            fontSize: "1.125rem",
             fontWeight: ds.typography.fontWeight.semibold,
             color: ds.colors.text.primary,
-            mb: ds.spacing['2'],
+            mb: ds.spacing["2"],
           }}
         >
           Kesim Planı Görselleştirme
         </Typography>
         <Typography
           sx={{
-            fontSize: '0.875rem',
+            fontSize: "0.875rem",
             color: ds.colors.text.secondary,
           }}
         >
-          Her çubuk bir stok çubuğunu temsil eder. Renkler farklı iş emirlerini gösterir.
+          Her çubuk bir stok çubuğunu temsil eder. Renkler farklı iş emirlerini
+          gösterir.
         </Typography>
       </Box>
 
       {/* Legend */}
-      <Stack 
-        direction="row" 
-        spacing={ds.spacing['2']} 
-        sx={{ mb: ds.spacing['3'], flexWrap: 'wrap', gap: ds.spacing['2'] }}
+      <Stack
+        direction="row"
+        spacing={ds.spacing["2"]}
+        sx={{ mb: ds.spacing["3"], flexWrap: "wrap", gap: ds.spacing["2"] }}
       >
         <Chip
           label="Kullanılan Alan"
           size="small"
           sx={{
             height: 28,
-            fontSize: '0.8125rem',
+            fontSize: "0.8125rem",
             backgroundColor: alpha(ds.colors.primary.main, 0.1),
             color: ds.colors.primary.main,
           }}
@@ -88,7 +89,7 @@ export const StockVisualization2D: React.FC<StockVisualization2DProps> = ({
           size="small"
           sx={{
             height: 28,
-            fontSize: '0.8125rem',
+            fontSize: "0.8125rem",
             backgroundColor: alpha(ds.colors.error.main, 0.1),
             color: ds.colors.error.main,
           }}
@@ -100,14 +101,14 @@ export const StockVisualization2D: React.FC<StockVisualization2DProps> = ({
             variant="outlined"
             sx={{
               height: 28,
-              fontSize: '0.8125rem',
+              fontSize: "0.8125rem",
             }}
           />
         )}
       </Stack>
 
       {/* Stock Bars */}
-      <Stack spacing={ds.spacing['3']}>
+      <Stack spacing={ds.spacing["3"]}>
         {visibleStocks.map((stock) => {
           const isSelected = selectedStockIndex === stock.stockIndex;
           const scaleX = BAR_WIDTH / stock.stockLength;
@@ -117,23 +118,34 @@ export const StockVisualization2D: React.FC<StockVisualization2DProps> = ({
               key={stock.stockIndex}
               onClick={() => onStockClick?.(stock.stockIndex)}
               sx={{
-                cursor: onStockClick ? 'pointer' : 'default',
-                p: ds.spacing['3'],
+                cursor: onStockClick ? "pointer" : "default",
+                p: ds.spacing["3"],
                 borderRadius: `${ds.borderRadius.md}px`,
-                backgroundColor: isSelected ? alpha(ds.colors.primary.main, 0.05) : 'transparent',
-                border: `1px solid ${isSelected ? ds.colors.primary.main : 'transparent'}`,
+                backgroundColor: isSelected
+                  ? alpha(ds.colors.primary.main, 0.05)
+                  : "transparent",
+                border: `1px solid ${isSelected ? ds.colors.primary.main : "transparent"}`,
                 transition: ds.transitions.fast,
-                '&:hover': onStockClick ? {
-                  backgroundColor: alpha(ds.colors.primary.main, 0.03),
-                  borderColor: ds.colors.primary[300],
-                } : {},
+                "&:hover": onStockClick
+                  ? {
+                      backgroundColor: alpha(ds.colors.primary.main, 0.03),
+                      borderColor: ds.colors.primary[300],
+                    }
+                  : {},
               }}
             >
               {/* Stock Label */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: ds.spacing['2'], mb: ds.spacing['2'] }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: ds.spacing["2"],
+                  mb: ds.spacing["2"],
+                }}
+              >
                 <Typography
                   sx={{
-                    fontSize: '1rem',
+                    fontSize: "1rem",
                     fontWeight: ds.typography.fontWeight.semibold,
                     color: ds.colors.text.primary,
                     minWidth: LABEL_WIDTH,
@@ -141,34 +153,37 @@ export const StockVisualization2D: React.FC<StockVisualization2DProps> = ({
                 >
                   Stok #{stock.stockIndex}
                 </Typography>
-                
+
                 <Chip
                   label={`${stock.segmentCount} kesim`}
                   size="small"
                   sx={{
                     height: 24,
-                    fontSize: '0.75rem',
+                    fontSize: "0.75rem",
                     fontWeight: 600,
                   }}
                 />
-                
+
                 <Chip
                   label={formatLength(stock.wasteLength)}
                   size="small"
                   sx={{
                     height: 24,
-                    fontSize: '0.75rem',
+                    fontSize: "0.75rem",
                     fontWeight: 600,
-                    backgroundColor: alpha(getWasteCategoryColor(stock.wasteCategory), 0.1),
+                    backgroundColor: alpha(
+                      getWasteCategoryColor(stock.wasteCategory),
+                      0.1,
+                    ),
                     color: getWasteCategoryColor(stock.wasteCategory),
                   }}
                 />
-                
+
                 <Typography
                   sx={{
-                    fontSize: '0.8125rem',
+                    fontSize: "0.8125rem",
                     color: ds.colors.text.secondary,
-                    ml: 'auto',
+                    ml: "auto",
                   }}
                 >
                   {stock.usedPercentage.toFixed(1)}% kullanım
@@ -179,7 +194,7 @@ export const StockVisualization2D: React.FC<StockVisualization2DProps> = ({
               <svg
                 width={SVG_WIDTH}
                 height={SVG_HEIGHT}
-                style={{ display: 'block' }}
+                style={{ display: "block" }}
               >
                 <defs>
                   {/* Hatched pattern for waste */}
@@ -215,7 +230,7 @@ export const StockVisualization2D: React.FC<StockVisualization2DProps> = ({
 
                 {/* Segments */}
                 {stock.segments.map((segment) => {
-                  const x = LABEL_WIDTH + (segment.startPosition * scaleX);
+                  const x = LABEL_WIDTH + segment.startPosition * scaleX;
                   const width = segment.length * scaleX;
                   const isHovered = hoveredSegment === segment.id;
 
@@ -223,18 +238,22 @@ export const StockVisualization2D: React.FC<StockVisualization2DProps> = ({
                     <Tooltip
                       key={segment.id}
                       title={
-                        <Box sx={{ p: ds.spacing['1'] }}>
-                          <Typography sx={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                        <Box sx={{ p: ds.spacing["1"] }}>
+                          <Typography
+                            sx={{ fontSize: "0.75rem", fontWeight: 600 }}
+                          >
                             {segment.profileType}
                           </Typography>
-                          <Typography sx={{ fontSize: '0.6875rem' }}>
-                            {formatLength(segment.length)} × {segment.quantity} adet
+                          <Typography sx={{ fontSize: "0.6875rem" }}>
+                            {formatLength(segment.length)} × {segment.quantity}{" "}
+                            adet
                           </Typography>
-                          <Typography sx={{ fontSize: '0.6875rem' }}>
+                          <Typography sx={{ fontSize: "0.6875rem" }}>
                             İş Emri: {segment.workOrderId}
                           </Typography>
-                          <Typography sx={{ fontSize: '0.6875rem' }}>
-                            Pozisyon: {formatLength(segment.startPosition)} - {formatLength(segment.endPosition)}
+                          <Typography sx={{ fontSize: "0.6875rem" }}>
+                            Pozisyon: {formatLength(segment.startPosition)} -{" "}
+                            {formatLength(segment.endPosition)}
                           </Typography>
                         </Box>
                       }
@@ -248,13 +267,13 @@ export const StockVisualization2D: React.FC<StockVisualization2DProps> = ({
                         height={BAR_HEIGHT}
                         fill={segment.color}
                         opacity={isHovered ? 0.9 : 0.7}
-                        stroke={isHovered ? '#fff' : 'none'}
+                        stroke={isHovered ? "#fff" : "none"}
                         strokeWidth={isHovered ? 2 : 0}
                         onMouseEnter={() => setHoveredSegment(segment.id)}
                         onMouseLeave={() => setHoveredSegment(null)}
                         style={{
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
                         }}
                       />
                     </Tooltip>
@@ -265,14 +284,16 @@ export const StockVisualization2D: React.FC<StockVisualization2DProps> = ({
                 {stock.wasteLength > 0 && (
                   <Tooltip
                     title={
-                      <Box sx={{ p: ds.spacing['1'] }}>
-                        <Typography sx={{ fontSize: '0.75rem', fontWeight: 600 }}>
+                      <Box sx={{ p: ds.spacing["1"] }}>
+                        <Typography
+                          sx={{ fontSize: "0.75rem", fontWeight: 600 }}
+                        >
                           Fire (Atık)
                         </Typography>
-                        <Typography sx={{ fontSize: '0.6875rem' }}>
+                        <Typography sx={{ fontSize: "0.6875rem" }}>
                           {formatLength(stock.wasteLength)}
                         </Typography>
-                        <Typography sx={{ fontSize: '0.6875rem' }}>
+                        <Typography sx={{ fontSize: "0.6875rem" }}>
                           Kategori: {stock.wasteCategory}
                         </Typography>
                       </Box>
@@ -281,7 +302,7 @@ export const StockVisualization2D: React.FC<StockVisualization2DProps> = ({
                     placement="top"
                   >
                     <rect
-                      x={LABEL_WIDTH + (stock.usedLength * scaleX)}
+                      x={LABEL_WIDTH + stock.usedLength * scaleX}
                       y={(SVG_HEIGHT - BAR_HEIGHT) / 2}
                       width={stock.wasteLength * scaleX}
                       height={BAR_HEIGHT}
@@ -290,7 +311,7 @@ export const StockVisualization2D: React.FC<StockVisualization2DProps> = ({
                       stroke={ds.colors.error.main}
                       strokeWidth="1"
                       strokeDasharray="4,2"
-                      style={{ cursor: 'help' }}
+                      style={{ cursor: "help" }}
                     />
                   </Tooltip>
                 )}
@@ -324,16 +345,16 @@ export const StockVisualization2D: React.FC<StockVisualization2DProps> = ({
       {stocks.length > maxVisibleStocks && (
         <Box
           sx={{
-            mt: ds.spacing['3'],
-            textAlign: 'center',
-            py: ds.spacing['2'],
+            mt: ds.spacing["3"],
+            textAlign: "center",
+            py: ds.spacing["2"],
             borderRadius: `${ds.borderRadius.md}px`,
             backgroundColor: alpha(ds.colors.neutral[100], 0.5),
           }}
         >
           <Typography
             sx={{
-              fontSize: '0.875rem',
+              fontSize: "0.875rem",
               color: ds.colors.text.secondary,
             }}
           >
@@ -344,4 +365,3 @@ export const StockVisualization2D: React.FC<StockVisualization2DProps> = ({
     </CardV2>
   );
 };
-

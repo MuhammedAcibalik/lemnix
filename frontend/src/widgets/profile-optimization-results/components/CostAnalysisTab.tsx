@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 import {
   Grid,
   Paper,
@@ -14,17 +14,17 @@ import {
   ListItemText,
   LinearProgress,
   Stack,
-  Box
-} from '@mui/material';
-import { CostAnalysisTabProps } from '../types';
-import { messages } from '../constants';
+  Box,
+} from "@mui/material";
+import { CostAnalysisTabProps } from "../types";
+import { messages } from "../constants";
 
 /**
  * Cost Analysis Tab Component
  */
 export const CostAnalysisTab: React.FC<CostAnalysisTabProps> = ({
   result,
-  performanceMetrics
+  performanceMetrics,
 }) => {
   return (
     <Grid container spacing={3}>
@@ -41,7 +41,11 @@ export const CostAnalysisTab: React.FC<CostAnalysisTabProps> = ({
               />
               <LinearProgress
                 variant="determinate"
-                value={(result.costAnalysis.materialCost / result.costAnalysis.totalCost) * 100}
+                value={
+                  (result.costAnalysis.materialCost /
+                    result.costAnalysis.totalCost) *
+                  100
+                }
                 sx={{ width: 100, ml: 2 }}
               />
             </ListItem>
@@ -52,7 +56,11 @@ export const CostAnalysisTab: React.FC<CostAnalysisTabProps> = ({
               />
               <LinearProgress
                 variant="determinate"
-                value={(result.costAnalysis.cuttingCost / result.costAnalysis.totalCost) * 100}
+                value={
+                  (result.costAnalysis.cuttingCost /
+                    result.costAnalysis.totalCost) *
+                  100
+                }
                 sx={{ width: 100, ml: 2 }}
               />
             </ListItem>
@@ -63,7 +71,11 @@ export const CostAnalysisTab: React.FC<CostAnalysisTabProps> = ({
               />
               <LinearProgress
                 variant="determinate"
-                value={(result.costAnalysis.setupCost / result.costAnalysis.totalCost) * 100}
+                value={
+                  (result.costAnalysis.setupCost /
+                    result.costAnalysis.totalCost) *
+                  100
+                }
                 sx={{ width: 100, ml: 2 }}
               />
             </ListItem>
@@ -81,7 +93,11 @@ export const CostAnalysisTab: React.FC<CostAnalysisTabProps> = ({
                 {messages.costAnalysis.costPerCut}
               </Typography>
               <Typography variant="h5">
-                ₺{(result.optimizationResult.totalCost / result.optimizationResult.cuts.length).toFixed(2)}
+                ₺
+                {(
+                  result.optimizationResult.totalCost /
+                  result.optimizationResult.cuts.length
+                ).toFixed(2)}
               </Typography>
             </Box>
             <Box>
@@ -89,7 +105,11 @@ export const CostAnalysisTab: React.FC<CostAnalysisTabProps> = ({
                 {messages.costAnalysis.costPerProfileGroup}
               </Typography>
               <Typography variant="h5">
-                ₺{(result.optimizationResult.totalCost / result.profileGroups.length).toFixed(2)}
+                ₺
+                {(
+                  result.optimizationResult.totalCost /
+                  result.profileGroups.length
+                ).toFixed(2)}
               </Typography>
             </Box>
           </Stack>

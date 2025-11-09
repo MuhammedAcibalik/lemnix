@@ -1,36 +1,33 @@
 /**
  * LEMNİX Audit Entity React Query Hooks
  * Type-safe React Query hooks for audit operations
- * 
+ *
  * @module entities/audit/api
  * @version 1.0.0 - Enterprise Audit Integration
  */
 
-import { useQuery, type UseQueryOptions } from '@tanstack/react-query';
-import {
-  getAuditLogs,
-  getAuditStatistics,
-} from './auditApi';
+import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
+import { getAuditLogs, getAuditStatistics } from "./auditApi";
 import type {
   AuditLogQuery,
   AuditLogResponse,
   AuditStatistics,
-} from '../model/types';
+} from "../model/types";
 
 /**
  * Query keys for React Query
  */
 export const auditKeys = {
-  all: ['audit'] as const,
-  logs: () => [...auditKeys.all, 'logs'] as const,
-  logsFiltered: (query?: AuditLogQuery) => 
+  all: ["audit"] as const,
+  logs: () => [...auditKeys.all, "logs"] as const,
+  logsFiltered: (query?: AuditLogQuery) =>
     [...auditKeys.logs(), query] as const,
-  statistics: () => [...auditKeys.all, 'statistics'] as const,
+  statistics: () => [...auditKeys.all, "statistics"] as const,
 } as const;
 
 /**
  * Hook: Get audit logs with filters
- * 
+ *
  * @example
  * ```tsx
  * const { data, isLoading } = useAuditLogs({
@@ -38,13 +35,13 @@ export const auditKeys = {
  *   limit: 50,
  *   startDate: '2025-01-01T00:00:00Z',
  * });
- * 
+ *
  * console.log(`Total logs: ${data?.total}`);
  * ```
  */
 export function useAuditLogs(
   query?: AuditLogQuery,
-  options?: UseQueryOptions<AuditLogResponse, Error>
+  options?: UseQueryOptions<AuditLogResponse, Error>,
 ) {
   return useQuery({
     queryKey: auditKeys.logsFiltered(query),
@@ -65,17 +62,17 @@ export function useAuditLogs(
 
 /**
  * Hook: Get audit statistics
- * 
+ *
  * @example
  * ```tsx
  * const { data: stats } = useAuditStatistics();
- * 
+ *
  * console.log(`Success rate: ${stats?.successRate}%`);
  * console.log(`Average duration: ${stats?.averageDuration}ms`);
  * ```
  */
 export function useAuditStatistics(
-  options?: UseQueryOptions<AuditStatistics, Error>
+  options?: UseQueryOptions<AuditStatistics, Error>,
 ) {
   return useQuery({
     queryKey: auditKeys.statistics(),
@@ -85,7 +82,10 @@ export function useAuditStatistics(
     retry: (failureCount, error) => {
       const err = error as { response?: { status?: number } };
       // Don't retry 401/403/404
-      if (err?.response?.status && [401, 403, 404].includes(err.response.status)) {
+      if (
+        err?.response?.status &&
+        [401, 403, 404].includes(err.response.status)
+      ) {
         return false;
       }
       return failureCount < 3;
@@ -93,4 +93,3 @@ export function useAuditStatistics(
     ...options,
   });
 }
-

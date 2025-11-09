@@ -32,12 +32,9 @@ import { useOptimizationState } from "./hooks/useOptimizationState";
 // Import types
 import { OptimizationResultsProps, Cut } from "./types";
 
-export const EnterpriseOptimizationResults: React.FC<OptimizationResultsProps> = ({ 
-  result, 
-  cuttingList = [], 
-  onNewOptimization, 
-  onExport,
-}) => {
+export const EnterpriseOptimizationResults: React.FC<
+  OptimizationResultsProps
+> = ({ result, cuttingList = [], onNewOptimization, onExport }) => {
   // Custom hooks for data management
   const {
     processedCuttingList,
@@ -53,20 +50,13 @@ export const EnterpriseOptimizationResults: React.FC<OptimizationResultsProps> =
     getRecommendationIcon,
     generateCuttingPatternExplanation,
     fmtMm,
-    formatPlanLabelFromSegments
+    formatPlanLabelFromSegments,
   } = useOptimizationData(result);
 
-  const {
-    performanceMetrics,
-    wasteAnalysis
-  } = useOptimizationMetrics(result);
+  const { performanceMetrics, wasteAnalysis } = useOptimizationMetrics(result);
 
-  const {
-    analytics,
-    systemHealth,
-    isLoadingAnalytics,
-    isLoadingSystemHealth
-  } = useOptimizationAnalytics();
+  const { analytics, systemHealth, isLoadingAnalytics, isLoadingSystemHealth } =
+    useOptimizationAnalytics();
 
   const {
     // State management
@@ -92,13 +82,13 @@ export const EnterpriseOptimizationResults: React.FC<OptimizationResultsProps> =
     setExportOptions,
     isExporting,
     setIsExporting,
-    
+
     // Actions
     handleWorkOrderClick,
     handleCuttingPlanDetails,
     handleTextExplanation,
     handleExport,
-    fetchProfileOptimization
+    fetchProfileOptimization,
   } = useOptimizationState(result, onExport);
 
   // ✅ FIX: Remove debug log causing console spam
@@ -116,7 +106,7 @@ export const EnterpriseOptimizationResults: React.FC<OptimizationResultsProps> =
 
         {/* No Results State */}
         {!result && (
-          <ResultsHeader 
+          <ResultsHeader
             variant="no-results"
             result={undefined}
             onExport={handleExport}
@@ -143,18 +133,18 @@ export const EnterpriseOptimizationResults: React.FC<OptimizationResultsProps> =
             />
 
             {/* Action Buttons - P0 Features */}
-            <Paper 
-              elevation={2} 
-              sx={{ 
-                p: 2, 
-                mt: 2, 
-                background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
-                border: '1px solid rgba(59, 130, 246, 0.2)'
+            <Paper
+              elevation={2}
+              sx={{
+                p: 2,
+                mt: 2,
+                background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
+                border: "1px solid rgba(59, 130, 246, 0.2)",
               }}
             >
               <Stack direction="row" spacing={2} justifyContent="center">
                 {/* P0-3: Export Button */}
-                <ExportButton resultId={result?.id || 'current'} />
+                <ExportButton resultId={result?.id || "current"} />
               </Stack>
             </Paper>
 
@@ -189,7 +179,9 @@ export const EnterpriseOptimizationResults: React.FC<OptimizationResultsProps> =
               useProfileOptimization={useProfileOptimization}
               onProfileOptimizationToggle={setUseProfileOptimization}
               profileOptimizationResult={profileOptimizationResult || {}}
-              fetchProfileOptimization={() => { /* Placeholder for actual fetch */ }}
+              fetchProfileOptimization={() => {
+                /* Placeholder for actual fetch */
+              }}
               onNewOptimization={onNewOptimization}
               getAlgorithmProfile={getAlgorithmProfile}
               getProfileTypeIcon={getProfileTypeIcon}
@@ -202,9 +194,12 @@ export const EnterpriseOptimizationResults: React.FC<OptimizationResultsProps> =
         {cuttingPlanModal.stock && (
           <CuttingPlanModal
             open={cuttingPlanModal.open}
-            stock={{ ...cuttingPlanModal.stock, segmentCount: cuttingPlanModal.stock.segmentCount || 0 }}
+            stock={{
+              ...cuttingPlanModal.stock,
+              segmentCount: cuttingPlanModal.stock.segmentCount || 0,
+            }}
             onClose={() => {
-              console.log('🔍 Modal onClose called');
+              console.log("🔍 Modal onClose called");
               setCuttingPlanModal({ open: false, stock: null });
             }}
           />
@@ -216,7 +211,7 @@ export const EnterpriseOptimizationResults: React.FC<OptimizationResultsProps> =
             open={kesimDetaylariModal.open}
             workOrder={kesimDetaylariModal.workOrder}
             onClose={() => {
-              console.log('🔍 KesimDetaylariDialog onClose called');
+              console.log("🔍 KesimDetaylariDialog onClose called");
               setKesimDetaylariModal({ open: false, workOrder: null });
             }}
           />
@@ -226,7 +221,12 @@ export const EnterpriseOptimizationResults: React.FC<OptimizationResultsProps> =
         <TextExplanationModal
           explanationData={explanationData}
           textExplanationOpen={textExplanationOpen}
-          onClose={(cardId: string) => setTextExplanationOpen((prev: Record<string, boolean>) => ({ ...prev, [cardId]: false }))}
+          onClose={(cardId: string) =>
+            setTextExplanationOpen((prev: Record<string, boolean>) => ({
+              ...prev,
+              [cardId]: false,
+            }))
+          }
         />
       </Box>
     </ErrorBoundary>

@@ -1,32 +1,41 @@
-import express, { Express, Request, Response } from 'express';
-import compression from 'compression';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
-import { Server as SocketIOServer } from 'socket.io';
-import * as fs from 'fs';
-import * as path from 'path';
-import { correlationIdMiddleware, requestTimingMiddleware } from '../middleware/correlationId';
-import { auditMiddleware, auditSecurityMiddleware } from '../middleware/auditMiddleware';
-import { decryptDataMiddleware, encryptDataMiddleware } from '../middleware/encryptionMiddleware';
-import { etagMiddleware } from '../middleware/caching';
-import { createErrorHandler } from '../middleware/errorHandler';
-import { logger } from '../services/logger';
-import enterpriseOptimizationRoutes from '../routes/enterpriseOptimizationRoutes';
-import cuttingListRoutes from '../routes/cuttingListRoutes';
-import webgpuRoutes from '../routes/webgpuRoutes';
-import errorMetricsRoutes from '../routes/errorMetricsRoutes';
-import statisticsRoutes from '../routes/statisticsRoutes';
-import metricsRoutes from '../routes/metricsRoutes';
-import healthRoutes from '../routes/healthRoutes';
-import suggestionRoutes from '../routes/suggestionRoutes';
-import dashboardRoutes from '../routes/dashboardRoutesV2';
-import productionPlanRoutes from '../routes/productionPlanRoutes';
-import { materialProfileMappingRoutes } from '../routes/materialProfileMappingRoutes';
-import { createProgressiveRoutes } from '../routes/progressiveRoutes';
-import profileManagementRoutes from '../routes/profileManagementRoutes';
-import { env, isDevelopment } from '../config/env';
-import { loggerMiddleware } from './requestLogger';
+import express, { Express, Request, Response } from "express";
+import compression from "compression";
+import cors from "cors";
+import helmet from "helmet";
+import morgan from "morgan";
+import { Server as SocketIOServer } from "socket.io";
+import * as fs from "fs";
+import * as path from "path";
+import {
+  correlationIdMiddleware,
+  requestTimingMiddleware,
+} from "../middleware/correlationId";
+import {
+  auditMiddleware,
+  auditSecurityMiddleware,
+} from "../middleware/auditMiddleware";
+import {
+  decryptDataMiddleware,
+  encryptDataMiddleware,
+} from "../middleware/encryptionMiddleware";
+import { etagMiddleware } from "../middleware/caching";
+import { createErrorHandler } from "../middleware/errorHandler";
+import { logger } from "../services/logger";
+import enterpriseOptimizationRoutes from "../routes/enterpriseOptimizationRoutes";
+import cuttingListRoutes from "../routes/cuttingListRoutes";
+import webgpuRoutes from "../routes/webgpuRoutes";
+import errorMetricsRoutes from "../routes/errorMetricsRoutes";
+import statisticsRoutes from "../routes/statisticsRoutes";
+import metricsRoutes from "../routes/metricsRoutes";
+import healthRoutes from "../routes/healthRoutes";
+import suggestionRoutes from "../routes/suggestionRoutes";
+import dashboardRoutes from "../routes/dashboardRoutesV2";
+import productionPlanRoutes from "../routes/productionPlanRoutes";
+import { materialProfileMappingRoutes } from "../routes/materialProfileMappingRoutes";
+import { createProgressiveRoutes } from "../routes/progressiveRoutes";
+import profileManagementRoutes from "../routes/profileManagementRoutes";
+import { env, isDevelopment } from "../config/env";
+import { loggerMiddleware } from "./requestLogger";
 
 interface CreateAppOptions {
   io: SocketIOServer;
@@ -58,46 +67,49 @@ const helmetConfig = {
     directives: {
       defaultSrc: ["'self'"],
       baseUri: ["'self'"],
-      fontSrc: ["'self'", 'https:', 'data:'],
+      fontSrc: ["'self'", "https:", "data:"],
       formAction: ["'self'"],
       frameAncestors: ["'self'"],
-      imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
       objectSrc: ["'none'"],
       scriptSrc: ["'self'"],
       scriptSrcAttr: ["'none'"],
-      styleSrc: ["'self'", 'https:', "'unsafe-inline'"],
+      styleSrc: ["'self'", "https:", "'unsafe-inline'"],
       upgradeInsecureRequests: [],
     },
   },
   crossOriginEmbedderPolicy: true,
-  crossOriginOpenerPolicy: { policy: 'same-origin' as const },
-  crossOriginResourcePolicy: { policy: 'same-origin' as const },
+  crossOriginOpenerPolicy: { policy: "same-origin" as const },
+  crossOriginResourcePolicy: { policy: "same-origin" as const },
   dnsPrefetchControl: { allow: false },
-  frameguard: { action: 'deny' as const },
+  frameguard: { action: "deny" as const },
   hsts: {
     maxAge: 31536000,
     includeSubDomains: true,
-    preload: true
+    preload: true,
   },
   ieNoOpen: true,
   noSniff: true,
   originAgentCluster: true,
-  permittedCrossDomainPolicies: { permittedPolicies: 'none' as const },
-  referrerPolicy: { policy: 'no-referrer' as const },
+  permittedCrossDomainPolicies: { permittedPolicies: "none" as const },
+  referrerPolicy: { policy: "no-referrer" as const },
   xssFilter: true,
 };
 
 const allowedOrigins = [
   env.FRONTEND_URL,
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://localhost:3001',
-  'https://www.lemnix.com',
-  'https://lemnix.com'
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://localhost:3001",
+  "https://www.lemnix.com",
+  "https://lemnix.com",
 ];
 
 const corsConfig = {
-  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+  origin: (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void,
+  ) => {
     if (!origin) {
       callback(null, true);
       return;
@@ -108,27 +120,23 @@ const corsConfig = {
       return;
     }
 
-    logger.warn('CORS blocked origin', { origin, allowedOrigins });
-    callback(new Error('Not allowed by CORS'), false);
+    logger.warn("CORS blocked origin", { origin, allowedOrigins });
+    callback(new Error("Not allowed by CORS"), false);
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'X-Requested-With',
-    'X-API-Key',
-    'X-Client-Version',
-    'X-Request-ID'
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "X-API-Key",
+    "X-Client-Version",
+    "X-Request-ID",
   ],
-  exposedHeaders: [
-    'X-Request-ID',
-    'X-Response-Time',
-    'X-Rate-Limit-Remaining'
-  ],
+  exposedHeaders: ["X-Request-ID", "X-Response-Time", "X-Rate-Limit-Remaining"],
   maxAge: 86400,
   preflightContinue: false,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 204,
 };
 
 export function createApp({ io }: CreateAppOptions): Express {
@@ -151,12 +159,14 @@ export function createApp({ io }: CreateAppOptions): Express {
   app.use(decryptDataMiddleware);
   app.use(etagMiddleware);
 
-  app.use(morgan('combined', {
-    skip: (req) => req.path === '/health' || req.path === '/readyz'
-  }));
+  app.use(
+    morgan("combined", {
+      skip: (req) => req.path === "/health" || req.path === "/readyz",
+    }),
+  );
 
-  app.use(express.json({ limit: '10mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  app.use(express.json({ limit: "10mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
   app.use(loggerMiddleware);
 
@@ -170,73 +180,78 @@ export function createApp({ io }: CreateAppOptions): Express {
 }
 
 function registerHealthEndpoints(app: Express): void {
-  app.get('/health', (_req: Request, res: Response<HealthResponse>) => {
+  app.get("/health", (_req: Request, res: Response<HealthResponse>) => {
     res.status(200).json({
-      status: 'OK',
+      status: "OK",
       timestamp: new Date().toISOString(),
-      service: 'LEMNİX Backend API',
-      version: '1.0.0',
+      service: "LEMNİX Backend API",
+      version: "1.0.0",
       environment: env.NODE_ENV,
-      uptime: process.uptime()
+      uptime: process.uptime(),
     });
   });
 
-  app.get('/readyz', (_req: Request, res: Response) => {
+  app.get("/readyz", (_req: Request, res: Response) => {
     try {
-      const uploadsDir = path.join(process.cwd(), '..', 'uploads');
+      const uploadsDir = path.join(process.cwd(), "..", "uploads");
       if (!fs.existsSync(uploadsDir)) {
-        res.status(503).json({ status: 'NOT_READY', reason: 'Uploads directory not accessible' });
+        res.status(503).json({
+          status: "NOT_READY",
+          reason: "Uploads directory not accessible",
+        });
         return;
       }
 
-      res.status(200).json({ status: 'READY' });
+      res.status(200).json({ status: "READY" });
     } catch (error) {
-      logger.error('Readiness check failed', error as Error);
-      res.status(503).json({ status: 'NOT_READY', reason: 'System check failed' });
+      logger.error("Readiness check failed", error as Error);
+      res
+        .status(503)
+        .json({ status: "NOT_READY", reason: "System check failed" });
     }
   });
 }
 
 function registerRoutes(app: Express, io: SocketIOServer): void {
-  app.use('/api/cutting-list', cuttingListRoutes);
-  app.use('/api/enterprise', enterpriseOptimizationRoutes);
-  app.use('/api/webgpu', webgpuRoutes);
-  app.use('/api/error-metrics', errorMetricsRoutes);
-  app.use('/api/dashboard', dashboardRoutes);
-  app.use('/api/statistics', statisticsRoutes);
-  app.use('/api/metrics', metricsRoutes);
-  app.use('/api/health', healthRoutes);
-  app.use('/api/suggestions', suggestionRoutes);
-  app.use('/api/production-plan', productionPlanRoutes);
-  app.use('/api/production-plan', createProgressiveRoutes(io));
-  app.use('/api/material-profile-mappings', materialProfileMappingRoutes);
-  app.use('/api/profile-management', profileManagementRoutes);
+  app.use("/api/cutting-list", cuttingListRoutes);
+  app.use("/api/enterprise", enterpriseOptimizationRoutes);
+  app.use("/api/webgpu", webgpuRoutes);
+  app.use("/api/error-metrics", errorMetricsRoutes);
+  app.use("/api/dashboard", dashboardRoutes);
+  app.use("/api/statistics", statisticsRoutes);
+  app.use("/api/metrics", metricsRoutes);
+  app.use("/api/health", healthRoutes);
+  app.use("/api/suggestions", suggestionRoutes);
+  app.use("/api/production-plan", productionPlanRoutes);
+  app.use("/api/production-plan", createProgressiveRoutes(io));
+  app.use("/api/material-profile-mappings", materialProfileMappingRoutes);
+  app.use("/api/profile-management", profileManagementRoutes);
 }
 
 function registerRootEndpoint(app: Express): void {
-  app.get('/', (_req: Request, res: Response) => {
+  app.get("/", (_req: Request, res: Response) => {
     res.json({
-      message: 'LEMNİX Alüminyum Kesim Optimizasyonu API',
-      version: '1.0.0',
+      message: "LEMNİX Alüminyum Kesim Optimizasyonu API",
+      version: "1.0.0",
       environment: env.NODE_ENV,
       endpoints: {
-        health: '/health',
-        ready: '/readyz',
-        cuttingList: '/api/cutting-list',
-        enterprise: '/api/enterprise'
-      }
+        health: "/health",
+        ready: "/readyz",
+        cuttingList: "/api/cutting-list",
+        enterprise: "/api/enterprise",
+      },
     });
   });
 }
 
 function registerNotFoundHandler(app: Express): void {
-  app.use('*', (_req: Request, res: Response<ApiResponse>) => {
+  app.use("*", (_req: Request, res: Response<ApiResponse>) => {
     res.status(404).json({
       success: false,
       error: {
-        message: 'Endpoint not found',
-        code: 'NOT_FOUND'
-      }
+        message: "Endpoint not found",
+        code: "NOT_FOUND",
+      },
     });
   });
 }
@@ -246,7 +261,7 @@ function registerErrorHandler(app: Express): void {
     logger,
     enableStackTrace: isDevelopment,
     enableDetailedErrors: isDevelopment,
-    maxErrorRate: 100
+    maxErrorRate: 100,
   });
 
   app.use(errorHandler);

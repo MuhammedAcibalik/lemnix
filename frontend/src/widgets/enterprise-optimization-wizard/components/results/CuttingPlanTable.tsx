@@ -1,16 +1,20 @@
 /**
  * Cutting Plan Table Component
  * DataGrid with all cutting segments
- * 
+ *
  * @module enterprise-optimization-wizard/components/results
  * @version 1.0.0
  */
 
-import React, { useMemo } from 'react';
-import { Box, Typography, Chip, alpha } from '@mui/material';
-import { DataGrid, type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid';
-import { CardV2 } from '@/shared';
-import { useDesignSystem } from '@/shared/hooks';
+import React, { useMemo } from "react";
+import { Box, Typography, Chip, alpha } from "@mui/material";
+import {
+  DataGrid,
+  type GridColDef,
+  type GridRenderCellParams,
+} from "@mui/x-data-grid";
+import { CardV2 } from "@/shared";
+import { useDesignSystem } from "@/shared/hooks";
 // Cut type definition
 interface Cut {
   id: string;
@@ -26,8 +30,8 @@ interface Cut {
   remainingLength: number;
   wasteCategory: string;
 }
-import { formatLength, getWorkOrderColor } from './utils';
-import type { SegmentTableRow } from './types';
+import { formatLength, getWorkOrderColor } from "./utils";
+import type { SegmentTableRow } from "./types";
 
 export interface CuttingPlanTableProps {
   readonly cuts: ReadonlyArray<Cut>;
@@ -53,11 +57,20 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({ cuts }) => {
           profileType: segment.profileType,
           length: segment.length,
           quantity: segment.quantity || 1,
-          workOrderId: segment.workOrderId || 'N/A',
+          workOrderId: segment.workOrderId || "N/A",
           startPosition: (segment as { position?: number }).position || 0,
-          endPosition: (segment as { endPosition?: number; position?: number; length: number }).endPosition || ((segment as { position?: number; length: number }).position || 0) + segment.length,
+          endPosition:
+            (
+              segment as {
+                endPosition?: number;
+                position?: number;
+                length: number;
+              }
+            ).endPosition ||
+            ((segment as { position?: number; length: number }).position || 0) +
+              segment.length,
           waste: cut.remainingLength || 0,
-          color: getWorkOrderColor(segment.workOrderId || ''),
+          color: getWorkOrderColor(segment.workOrderId || ""),
         });
       });
     });
@@ -67,51 +80,52 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({ cuts }) => {
 
   const columns: GridColDef[] = [
     {
-      field: 'stockIndex',
-      headerName: 'Stok #',
+      field: "stockIndex",
+      headerName: "Stok #",
       width: 80,
-      type: 'number',
+      type: "number",
     },
     {
-      field: 'segmentIndex',
-      headerName: 'Kesim #',
+      field: "segmentIndex",
+      headerName: "Kesim #",
       width: 90,
-      type: 'number',
+      type: "number",
     },
     {
-      field: 'profileType',
-      headerName: 'Profil Tipi',
+      field: "profileType",
+      headerName: "Profil Tipi",
       width: 180,
       flex: 1,
     },
     {
-      field: 'length',
-      headerName: 'Uzunluk',
+      field: "length",
+      headerName: "Uzunluk",
       width: 120,
-      type: 'number',
-      renderCell: (params: GridRenderCellParams) => formatLength(params.value as number),
+      type: "number",
+      renderCell: (params: GridRenderCellParams) =>
+        formatLength(params.value as number),
     },
     {
-      field: 'quantity',
-      headerName: 'Adet',
+      field: "quantity",
+      headerName: "Adet",
       width: 80,
-      type: 'number',
+      type: "number",
     },
     {
-      field: 'workOrderId',
-      headerName: 'İş Emri',
+      field: "workOrderId",
+      headerName: "İş Emri",
       width: 140,
       renderCell: (params: GridRenderCellParams) => {
         const workOrderId = params.value as string;
         const color = params.row.color as string;
-        
+
         return (
           <Chip
             label={workOrderId}
             size="small"
             sx={{
               height: 22,
-              fontSize: '0.6875rem',
+              fontSize: "0.6875rem",
               fontWeight: 600,
               backgroundColor: alpha(color, 0.15),
               color,
@@ -122,35 +136,37 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({ cuts }) => {
       },
     },
     {
-      field: 'startPosition',
-      headerName: 'Başlangıç',
+      field: "startPosition",
+      headerName: "Başlangıç",
       width: 120,
-      type: 'number',
-      renderCell: (params: GridRenderCellParams) => formatLength(params.value as number),
+      type: "number",
+      renderCell: (params: GridRenderCellParams) =>
+        formatLength(params.value as number),
     },
     {
-      field: 'endPosition',
-      headerName: 'Bitiş',
+      field: "endPosition",
+      headerName: "Bitiş",
       width: 120,
-      type: 'number',
-      renderCell: (params: GridRenderCellParams) => formatLength(params.value as number),
+      type: "number",
+      renderCell: (params: GridRenderCellParams) =>
+        formatLength(params.value as number),
     },
   ];
 
   return (
-    <CardV2 variant="glass" sx={{ p: ds.spacing['4'], height: '100%' }}>
+    <CardV2 variant="glass" sx={{ p: ds.spacing["4"], height: "100%" }}>
       <Typography
         sx={{
-          fontSize: '1.125rem',
+          fontSize: "1.125rem",
           fontWeight: ds.typography.fontWeight.semibold,
           color: ds.colors.text.primary,
-          mb: ds.spacing['3'],
+          mb: ds.spacing["3"],
         }}
       >
         Kesim Planı Tablosu
       </Typography>
 
-      <Box sx={{ height: 500, width: '100%' }}>
+      <Box sx={{ height: 500, width: "100%" }}>
         <DataGrid
           rows={rows}
           columns={columns}
@@ -164,12 +180,12 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({ cuts }) => {
           sx={{
             border: `1px solid ${ds.colors.neutral[200]}`,
             borderRadius: `${ds.borderRadius.md}px`,
-            '& .MuiDataGrid-cell': {
-              fontSize: '0.8125rem',
+            "& .MuiDataGrid-cell": {
+              fontSize: "0.8125rem",
             },
-            '& .MuiDataGrid-columnHeaders': {
+            "& .MuiDataGrid-columnHeaders": {
               backgroundColor: alpha(ds.colors.neutral[100], 0.5),
-              fontSize: '0.75rem',
+              fontSize: "0.75rem",
               fontWeight: 600,
             },
           }}
@@ -178,4 +194,3 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({ cuts }) => {
     </CardV2>
   );
 };
-

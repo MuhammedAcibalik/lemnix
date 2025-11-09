@@ -2,19 +2,12 @@
  * @fileoverview Shared Tabs Component
  * @module SharedTabs
  * @version 1.0.0
- * 
+ *
  * Reusable tabs component with consistent styling and behavior
  */
 
-import React from 'react';
-import {
-  Tabs,
-  Tab,
-  Box,
-  Paper,
-  useTheme,
-  alpha
-} from '@mui/material';
+import React from "react";
+import { Tabs, Tab, Box, Paper, useTheme, alpha } from "@mui/material";
 
 interface TabItem {
   label: string;
@@ -27,9 +20,9 @@ interface SharedTabsProps {
   value: number;
   onChange: (event: React.SyntheticEvent, newValue: number) => void;
   tabs: TabItem[];
-  variant?: 'standard' | 'scrollable' | 'fullWidth';
+  variant?: "standard" | "scrollable" | "fullWidth";
   centered?: boolean;
-  orientation?: 'horizontal' | 'vertical';
+  orientation?: "horizontal" | "vertical";
   children: React.ReactNode;
 }
 
@@ -37,10 +30,10 @@ export const SharedTabs: React.FC<SharedTabsProps> = ({
   value,
   onChange,
   tabs,
-  variant = 'fullWidth',
+  variant = "fullWidth",
   centered = false,
-  orientation = 'horizontal',
-  children
+  orientation = "horizontal",
+  children,
 }) => {
   const theme = useTheme();
 
@@ -51,7 +44,7 @@ export const SharedTabs: React.FC<SharedTabsProps> = ({
         sx={{
           borderRadius: theme.shape.borderRadius * 2,
           border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-          overflow: 'hidden',
+          overflow: "hidden",
           mb: 2,
         }}
       >
@@ -62,35 +55,38 @@ export const SharedTabs: React.FC<SharedTabsProps> = ({
           centered={centered}
           orientation={orientation}
           sx={{
-            '& .MuiTab-root': {
-              textTransform: 'none',
+            "& .MuiTab-root": {
+              textTransform: "none",
               fontWeight: theme.typography.fontWeight.medium,
               fontSize: theme.typography.fontSize.sm,
               minHeight: 48,
               color: theme.palette.text.secondary,
-              transition: theme.transitions.create(['color', 'background-color'], {
-                duration: theme.transitions.duration.short,
-              }),
-              '&:hover': {
+              transition: theme.transitions.create(
+                ["color", "background-color"],
+                {
+                  duration: theme.transitions.duration.short,
+                },
+              ),
+              "&:hover": {
                 color: theme.palette.primary.main,
                 backgroundColor: alpha(theme.palette.primary.main, 0.04),
               },
-              '&.Mui-selected': {
+              "&.Mui-selected": {
                 color: theme.palette.primary.main,
                 fontWeight: theme.typography.fontWeight.semiBold,
               },
-              '&.Mui-disabled': {
+              "&.Mui-disabled": {
                 color: theme.palette.action.disabled,
               },
             },
-            '& .MuiTabs-indicator': {
+            "& .MuiTabs-indicator": {
               backgroundColor: theme.palette.primary.main,
               height: 3,
-              borderRadius: '3px 3px 0 0',
+              borderRadius: "3px 3px 0 0",
             },
-            '& .MuiTabs-scrollButtons': {
+            "& .MuiTabs-scrollButtons": {
               color: theme.palette.text.secondary,
-              '&.Mui-disabled': {
+              "&.Mui-disabled": {
                 opacity: 0.3,
               },
             },
@@ -108,10 +104,8 @@ export const SharedTabs: React.FC<SharedTabsProps> = ({
           ))}
         </Tabs>
       </Paper>
-      
-      <Box>
-        {children}
-      </Box>
+
+      <Box>{children}</Box>
     </Box>
   );
 };

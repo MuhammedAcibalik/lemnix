@@ -2,15 +2,15 @@
  * @fileoverview Zod Validation Middleware
  * @module ZodValidationMiddleware
  * @version 1.0.0
- * 
+ *
  * ✅ MIGRATION: express-validator → Zod
  * ✅ ALIGNMENT: Shared schemas with frontend
  * ✅ TYPE SAFETY: Full TypeScript inference
  */
 
-import { Request, Response, NextFunction } from 'express';
-import { z, ZodError, ZodSchema } from 'zod';
-import { logger } from '../services/logger';
+import { Request, Response, NextFunction } from "express";
+import { z, ZodError, ZodSchema } from "zod";
+import { logger } from "../services/logger";
 
 /**
  * Zod validation result
@@ -37,12 +37,12 @@ export function validateBody<T>(schema: ZodSchema<T>) {
     } catch (error) {
       if (error instanceof ZodError) {
         const errors = error.errors.map((err) => ({
-          field: err.path.join('.'),
+          field: err.path.join("."),
           message: err.message,
           code: err.code,
         }));
 
-        logger.warn('[VALIDATION] Request validation failed', {
+        logger.warn("[VALIDATION] Request validation failed", {
           url: req.url,
           method: req.method,
           errors,
@@ -52,8 +52,8 @@ export function validateBody<T>(schema: ZodSchema<T>) {
         res.status(400).json({
           success: false,
           error: {
-            message: 'Validation failed',
-            code: 'VALIDATION_ERROR',
+            message: "Validation failed",
+            code: "VALIDATION_ERROR",
             details: errors,
           },
         });
@@ -61,12 +61,12 @@ export function validateBody<T>(schema: ZodSchema<T>) {
       }
 
       // Unknown error
-      logger.error('[VALIDATION] Unexpected validation error', { error });
+      logger.error("[VALIDATION] Unexpected validation error", { error });
       res.status(500).json({
         success: false,
         error: {
-          message: 'Internal validation error',
-          code: 'INTERNAL_ERROR',
+          message: "Internal validation error",
+          code: "INTERNAL_ERROR",
         },
       });
     }
@@ -85,7 +85,7 @@ export function validateQuery<T>(schema: ZodSchema<T>) {
     } catch (error) {
       if (error instanceof ZodError) {
         const errors = error.errors.map((err) => ({
-          field: err.path.join('.'),
+          field: err.path.join("."),
           message: err.message,
           code: err.code,
         }));
@@ -93,8 +93,8 @@ export function validateQuery<T>(schema: ZodSchema<T>) {
         res.status(400).json({
           success: false,
           error: {
-            message: 'Query validation failed',
-            code: 'VALIDATION_ERROR',
+            message: "Query validation failed",
+            code: "VALIDATION_ERROR",
             details: errors,
           },
         });
@@ -104,8 +104,8 @@ export function validateQuery<T>(schema: ZodSchema<T>) {
       res.status(500).json({
         success: false,
         error: {
-          message: 'Internal validation error',
-          code: 'INTERNAL_ERROR',
+          message: "Internal validation error",
+          code: "INTERNAL_ERROR",
         },
       });
     }
@@ -124,7 +124,7 @@ export function validateParams<T>(schema: ZodSchema<T>) {
     } catch (error) {
       if (error instanceof ZodError) {
         const errors = error.errors.map((err) => ({
-          field: err.path.join('.'),
+          field: err.path.join("."),
           message: err.message,
           code: err.code,
         }));
@@ -132,8 +132,8 @@ export function validateParams<T>(schema: ZodSchema<T>) {
         res.status(400).json({
           success: false,
           error: {
-            message: 'Path parameter validation failed',
-            code: 'VALIDATION_ERROR',
+            message: "Path parameter validation failed",
+            code: "VALIDATION_ERROR",
             details: errors,
           },
         });
@@ -143,8 +143,8 @@ export function validateParams<T>(schema: ZodSchema<T>) {
       res.status(500).json({
         success: false,
         error: {
-          message: 'Internal validation error',
-          code: 'INTERNAL_ERROR',
+          message: "Internal validation error",
+          code: "INTERNAL_ERROR",
         },
       });
     }
@@ -179,8 +179,8 @@ export const cuttingListItemSchema = z.object({
   orderQuantity: z.number().int().positive().max(10000),
   size: z.string().min(1).max(20).trim(),
   profiles: z.array(profileItemSchema).min(1),
-  status: z.enum(['draft', 'ready', 'processing', 'completed']).optional(),
-  priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
+  status: z.enum(["draft", "ready", "processing", "completed"]).optional(),
+  priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
 });
 
 /**
@@ -207,9 +207,14 @@ export const cuttingListSchema = z.object({
  * ✅ ALIGNED with frontend
  */
 export const optimizationObjectiveSchema = z.object({
-  type: z.enum(['minimize-waste', 'maximize-efficiency', 'minimize-cost', 'minimize-time']),
+  type: z.enum([
+    "minimize-waste",
+    "maximize-efficiency",
+    "minimize-cost",
+    "minimize-time",
+  ]),
   weight: z.number().min(0).max(1),
-  priority: z.enum(['low', 'medium', 'high']),
+  priority: z.enum(["low", "medium", "high"]),
 });
 
 /**
@@ -235,7 +240,7 @@ export const performanceSettingsSchema = z.object({
   maxExecutionTime: z.number().int().min(10).max(300).optional(),
   parallelProcessing: z.boolean().optional(),
   cacheResults: z.boolean().optional(),
-  
+
   // GA-specific
   populationSize: z.number().int().min(10).max(100).optional(),
   generations: z.number().int().min(10).max(200).optional(),
@@ -281,7 +286,7 @@ export const materialStockLengthSchema = z.object({
  * Optimization parameters schema
  */
 export const optimizationParamsSchema = z.object({
-  algorithm: z.enum(['ffd', 'bfd', 'genetic', 'pooling']),
+  algorithm: z.enum(["ffd", "bfd", "genetic", "pooling"]),
   objectives: z.array(optimizationObjectiveSchema).min(1),
   constraints: optimizationConstraintsSchema,
   performance: performanceSettingsSchema.optional(),
@@ -301,8 +306,18 @@ export const optimizationRequestSchema = z.object({
  * Pagination schema
  */
 export const paginationSchema = z.object({
-  page: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(1).max(1000)).optional(),
-  limit: z.string().regex(/^\d+$/).transform(Number).pipe(z.number().int().min(1).max(100)).optional(),
+  page: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .pipe(z.number().int().min(1).max(1000))
+    .optional(),
+  limit: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .pipe(z.number().int().min(1).max(100))
+    .optional(),
 });
 
 /**
@@ -323,16 +338,17 @@ export const searchQuerySchema = z.object({
  * Helper: Sanitize string (XSS prevention)
  */
 export const sanitizedStringSchema = (maxLength: number = 255) =>
-  z.string()
+  z
+    .string()
     .trim()
     .transform((val) =>
       val
-        .replace(/[<>]/g, '')
-        .replace(/javascript:/gi, '')
-        .replace(/on\w+\s*=/gi, '')
-        .replace(/data:/gi, '')
-        .replace(/vbscript:/gi, '')
-        .substring(0, maxLength)
+        .replace(/[<>]/g, "")
+        .replace(/javascript:/gi, "")
+        .replace(/on\w+\s*=/gi, "")
+        .replace(/data:/gi, "")
+        .replace(/vbscript:/gi, "")
+        .substring(0, maxLength),
     );
 
 /**
@@ -340,7 +356,7 @@ export const sanitizedStringSchema = (maxLength: number = 255) =>
  */
 export function validateAndParse<T>(
   schema: ZodSchema<T>,
-  data: unknown
+  data: unknown,
 ): ValidationResult<T> {
   try {
     const validated = schema.parse(data);
@@ -353,7 +369,7 @@ export function validateAndParse<T>(
       return {
         success: false,
         errors: error.errors.map((err) => ({
-          field: err.path.join('.'),
+          field: err.path.join("."),
           message: err.message,
           code: err.code,
         })),
@@ -364,9 +380,9 @@ export function validateAndParse<T>(
       success: false,
       errors: [
         {
-          field: 'unknown',
-          message: 'Validation failed',
-          code: 'UNKNOWN_ERROR',
+          field: "unknown",
+          message: "Validation failed",
+          code: "UNKNOWN_ERROR",
         },
       ],
     };

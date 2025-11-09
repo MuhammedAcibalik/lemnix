@@ -1,6 +1,6 @@
 /**
  * LEMNİX Cutting List Entity - Public API
- * 
+ *
  * @module entities/cutting-list
  * @version 1.0.0
  */
@@ -15,7 +15,7 @@ export type {
   AddProductSectionRequest,
   AddItemRequest,
   UpdateItemRequest,
-} from './model/types';
+} from "./model/types";
 
 // API functions (raw)
 export {
@@ -29,7 +29,7 @@ export {
   addItemToSection,
   updateItemInSection,
   deleteItemFromSection,
-} from './api/cuttingListApi';
+} from "./api/cuttingListApi";
 
 // React Query hooks (recommended)
 export {
@@ -43,5 +43,4 @@ export {
   useAddItemToSection,
   useUpdateItemInSection,
   useDeleteItemFromSection,
-} from './api/cuttingListQueries';
-
+} from "./api/cuttingListQueries";

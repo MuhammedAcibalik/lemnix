@@ -5,8 +5,7 @@
  */
 
 // Main component
-export { default } from './EnterpriseOptimizationResults';
+export { default } from "./EnterpriseOptimizationResults";
 
 // Types
-export type { OptimizationResultsProps } from './types';
-
+export type { OptimizationResultsProps } from "./types";

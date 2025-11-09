@@ -4,7 +4,7 @@
  * @version 2.0.0 - Design System v2 Compliant
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -16,47 +16,47 @@ import {
   Chip,
   LinearProgress,
   Backdrop,
-} from '@mui/material';
+} from "@mui/material";
 import {
   CheckCircle as CheckIcon,
   RadioButtonUnchecked as UncheckedIcon,
   Inventory as InventoryIcon,
   Assignment as AssignmentIcon,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
 
 // Design System v2.0
-import { useDesignSystem } from '@/shared/hooks';
-import { CardV2, FadeIn, ScaleIn } from '@/shared';
+import { useDesignSystem } from "@/shared/hooks";
+import { CardV2, FadeIn, ScaleIn } from "@/shared";
 
 // Import modular components
-import { SearchControls } from './components/SearchControls';
-import { SelectionSummary } from './components/SelectionSummary';
-import { ProductGroupSection } from './components/ProductGroupSection';
-import { FilterControls } from './components/FilterControls';
+import { SearchControls } from "./components/SearchControls";
+import { SelectionSummary } from "./components/SelectionSummary";
+import { ProductGroupSection } from "./components/ProductGroupSection";
+import { FilterControls } from "./components/FilterControls";
 
 // Import hooks
-import { useSelectionState } from './hooks/useSelectionState';
+import { useSelectionState } from "./hooks/useSelectionState";
 
 // Import types
-import { CuttingListSelectorProps, FilterState, ExpandedState } from './types';
-import { OptimizationItem } from '@/types';
+import { CuttingListSelectorProps, FilterState, ExpandedState } from "./types";
+import { OptimizationItem } from "@/types";
 
 // Import constants
-import { textContent, stylingConstants } from './constants';
+import { textContent, stylingConstants } from "./constants";
 
 /**
  * CuttingListSelector Component
- * 
+ *
  * Enterprise-grade cutting list selection with modular architecture
  */
 export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
   cuttingList,
   onSelectionChange,
   onConversionComplete,
-  isConverting = false
+  isConverting = false,
 }) => {
   const ds = useDesignSystem();
-  
+
   // Custom hooks
   const {
     selectionState,
@@ -65,20 +65,20 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
     validateSelection,
     selectionStats,
     validationResult,
-    initializeSelectionState
+    initializeSelectionState,
   } = useSelectionState(cuttingList);
 
   // Local state
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<FilterState>({
     showSelectedOnly: false,
     showWorkOrdersOnly: false,
-    profileType: '',
-    searchTerm: ''
+    profileType: "",
+    searchTerm: "",
   });
   const [expandedState, setExpandedState] = useState<ExpandedState>({
     products: {},
-    workOrders: {}
+    workOrders: {},
   });
 
   // Initialize selection state
@@ -89,22 +89,25 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
   // Handle search change
   const handleSearchChange = (term: string) => {
     setSearchTerm(term);
-    setFilters(prev => ({ ...prev, searchTerm: term }));
+    setFilters((prev) => ({ ...prev, searchTerm: term }));
   };
 
   // Handle filter change
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
+    setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
   // Handle expansion toggle
-  const handleExpansionToggle = (type: 'products' | 'workOrders', id: string) => {
-    setExpandedState(prev => ({
+  const handleExpansionToggle = (
+    type: "products" | "workOrders",
+    id: string,
+  ) => {
+    setExpandedState((prev) => ({
       ...prev,
       [type]: {
         ...prev[type],
-        [id]: !prev[type][id]
-      }
+        [id]: !prev[type][id],
+      },
     }));
   };
 
@@ -116,7 +119,7 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
       onConversionComplete({
         success: true,
         items: selectedItems,
-        stats: selectionStats
+        stats: selectionStats,
       });
     }
   };
@@ -124,11 +127,13 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
   // Convert selection to optimization items
   const convertSelectionToOptimizationItems = () => {
     const items: OptimizationItem[] = [];
-    
-    cuttingList.products.forEach(product => {
-      product.sections.forEach(section => {
-        section.items.forEach(item => {
-          const isSelected = selectionState.products[product.id]?.workOrders[section.id]?.profiles[item.id];
+
+    cuttingList.products.forEach((product) => {
+      product.sections.forEach((section) => {
+        section.items.forEach((item) => {
+          const isSelected =
+            selectionState.products[product.id]?.workOrders[section.id]
+              ?.profiles[item.id];
           if (isSelected) {
             items.push({
               id: item.id,
@@ -136,48 +141,58 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
               workOrder: section.name,
               profile: item.profile,
               length: item.length,
-              quantity: item.quantity
+              quantity: item.quantity,
             });
           }
         });
       });
     });
-    
+
     return items;
   };
 
   // Calculate selection progress
   const selectionProgress = useMemo(() => {
     if (selectionStats.totalItems === 0) return 0;
-    return Math.round((selectionStats.selectedItems / selectionStats.totalItems) * 100);
+    return Math.round(
+      (selectionStats.selectedItems / selectionStats.totalItems) * 100,
+    );
   }, [selectionStats]);
 
   return (
-    <Box sx={{ width: '100%' }}>
+    <Box sx={{ width: "100%" }}>
       {/* Modern Hero Header with Progress - Ana sayfa stili */}
       <FadeIn>
-        <CardV2 variant="glass" sx={{ mb: ds.spacing['4'], overflow: 'visible' }}>
-          <Box sx={{ p: ds.spacing['6'] }}>
+        <CardV2
+          variant="glass"
+          sx={{ mb: ds.spacing["4"], overflow: "visible" }}
+        >
+          <Box sx={{ p: ds.spacing["6"] }}>
             {/* Header with Stats Badges */}
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={ds.spacing['3']}>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="flex-start"
+              mb={ds.spacing["3"]}
+            >
               <Box>
-                <Typography 
-                  sx={{ 
-                    fontSize: '2rem',
+                <Typography
+                  sx={{
+                    fontSize: "2rem",
                     fontWeight: 800,
                     background: ds.gradients.primary,
-                    backgroundClip: 'text',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    mb: ds.spacing['1'],
+                    backgroundClip: "text",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    mb: ds.spacing["1"],
                     lineHeight: 1.2,
                   }}
                 >
                   {textContent.header.title}
                 </Typography>
-                <Typography 
-                  sx={{ 
-                    fontSize: '0.9375rem',
+                <Typography
+                  sx={{
+                    fontSize: "0.9375rem",
                     color: ds.colors.text.secondary,
                     fontWeight: 500,
                   }}
@@ -185,16 +200,16 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
                   {textContent.header.subtitle}
                 </Typography>
               </Box>
-              
+
               {/* Quick Stats Badges */}
-              <Stack direction="row" spacing={ds.spacing['2']}>
+              <Stack direction="row" spacing={ds.spacing["2"]}>
                 <Chip
                   icon={<InventoryIcon sx={{ fontSize: 16 }} />}
                   label={`${selectionStats.totalItems} Toplam`}
                   sx={{
                     height: 32,
                     fontWeight: 600,
-                    fontSize: '0.8125rem',
+                    fontSize: "0.8125rem",
                     background: alpha(ds.colors.primary.main, 0.1),
                     color: ds.colors.primary.main,
                     border: `1px solid ${alpha(ds.colors.primary.main, 0.2)}`,
@@ -207,7 +222,7 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
                   sx={{
                     height: 32,
                     fontWeight: 600,
-                    fontSize: '0.8125rem',
+                    fontSize: "0.8125rem",
                     background: alpha(ds.colors.success.main, 0.1),
                     color: ds.colors.success.main,
                     border: `1px solid ${alpha(ds.colors.success.main, 0.2)}`,
@@ -218,28 +233,34 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
             </Stack>
 
             {/* Progress Bar with Completion Badge */}
-            <Stack direction="row" alignItems="center" spacing={ds.spacing['2']}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={ds.spacing["2"]}
+            >
               <Box sx={{ flex: 1 }}>
-                <LinearProgress 
-                  variant="determinate" 
+                <LinearProgress
+                  variant="determinate"
                   value={selectionProgress}
                   sx={{
                     height: 6,
                     borderRadius: `${ds.borderRadius.sm}px`,
                     backgroundColor: alpha(ds.colors.primary.main, 0.1),
-                    '& .MuiLinearProgress-bar': {
+                    "& .MuiLinearProgress-bar": {
                       borderRadius: `${ds.borderRadius.sm}px`,
                       background: ds.gradients.primary,
-                    }
+                    },
                   }}
                 />
               </Box>
               <Chip
-                icon={selectionProgress === 100 ? <CheckIcon /> : <UncheckedIcon />}
+                icon={
+                  selectionProgress === 100 ? <CheckIcon /> : <UncheckedIcon />
+                }
                 label={`%${selectionProgress}`}
                 size="small"
-                color={selectionProgress === 100 ? 'success' : 'default'}
-                sx={{ 
+                color={selectionProgress === 100 ? "success" : "default"}
+                sx={{
                   fontWeight: 700,
                   minWidth: 70,
                 }}
@@ -251,7 +272,7 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
 
       {/* Modern Search and Filter Controls */}
       <ScaleIn delay={0.1}>
-        <Grid container spacing={ds.spacing['3']} sx={{ mb: ds.spacing['4'] }}>
+        <Grid container spacing={ds.spacing["3"]} sx={{ mb: ds.spacing["4"] }}>
           <Grid item xs={12} md={8}>
             <SearchControls
               searchTerm={searchTerm}
@@ -282,21 +303,26 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
       {/* Modern Validation Results */}
       {!validationResult.isValid && (
         <ScaleIn delay={0.2}>
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: ds.spacing['4'],
+          <Alert
+            severity="error"
+            sx={{
+              mb: ds.spacing["4"],
               borderRadius: `${ds.borderRadius.lg}px`,
               boxShadow: ds.shadows.soft.md,
               border: `1px solid ${alpha(ds.colors.error.main, 0.2)}`,
             }}
           >
-            <Typography sx={{ fontWeight: 700, mb: ds.spacing['2'], fontSize: '1rem' }}>
+            <Typography
+              sx={{ fontWeight: 700, mb: ds.spacing["2"], fontSize: "1rem" }}
+            >
               ⚠️ Seçim Hatası
             </Typography>
-            <Stack spacing={ds.spacing['1']}>
+            <Stack spacing={ds.spacing["1"]}>
               {validationResult.errors.map((error, index) => (
-                <Typography key={index} sx={{ fontSize: '0.875rem', pl: ds.spacing['2'] }}>
+                <Typography
+                  key={index}
+                  sx={{ fontSize: "0.875rem", pl: ds.spacing["2"] }}
+                >
                   • {error}
                 </Typography>
               ))}
@@ -307,21 +333,26 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
 
       {validationResult.warnings.length > 0 && (
         <ScaleIn delay={0.3}>
-          <Alert 
-            severity="warning" 
-            sx={{ 
-              mb: ds.spacing['4'],
+          <Alert
+            severity="warning"
+            sx={{
+              mb: ds.spacing["4"],
               borderRadius: `${ds.borderRadius.lg}px`,
               boxShadow: ds.shadows.soft.md,
               border: `1px solid ${alpha(ds.colors.warning.main, 0.2)}`,
             }}
           >
-            <Typography sx={{ fontWeight: 700, mb: ds.spacing['2'], fontSize: '1rem' }}>
+            <Typography
+              sx={{ fontWeight: 700, mb: ds.spacing["2"], fontSize: "1rem" }}
+            >
               💡 Dikkat
             </Typography>
-            <Stack spacing={ds.spacing['1']}>
+            <Stack spacing={ds.spacing["1"]}>
               {validationResult.warnings.map((warning, index) => (
-                <Typography key={index} sx={{ fontSize: '0.875rem', pl: ds.spacing['2'] }}>
+                <Typography
+                  key={index}
+                  sx={{ fontSize: "0.875rem", pl: ds.spacing["2"] }}
+                >
                   • {warning}
                 </Typography>
               ))}
@@ -331,7 +362,7 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
       )}
 
       {/* Product Groups */}
-      <Stack spacing={ds.spacing['3']}>
+      <Stack spacing={ds.spacing["3"]}>
         {cuttingList.products.map((product) => (
           <ProductGroupSection
             key={product.id}
@@ -339,7 +370,7 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
             selectionState={selectionState}
             searchTerm={searchTerm}
             isExpanded={expandedState.products[product.id] || false}
-            onToggleExpansion={(id) => handleExpansionToggle('products', id)}
+            onToggleExpansion={(id) => handleExpansionToggle("products", id)}
             onProductSelectionChange={() => {}} // TODO: Implement
             onWorkOrderSelectionChange={() => {}} // TODO: Implement
             onProfileSelectionChange={() => {}} // TODO: Implement
@@ -349,35 +380,42 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
 
       {/* Modern Loading Backdrop - Ana sayfa stili */}
       <Backdrop
-        sx={{ 
-          color: '#fff', 
+        sx={{
+          color: "#fff",
           zIndex: (theme) => theme.zIndex.drawer + 1,
           background: alpha(ds.colors.neutral[900], 0.85),
-          backdropFilter: 'blur(12px)',
+          backdropFilter: "blur(12px)",
         }}
         open={isConverting}
       >
-        <CardV2 variant="glass" sx={{ p: ds.spacing['8'], textAlign: 'center', minWidth: 320 }}>
-          <CircularProgress 
-            size={72} 
+        <CardV2
+          variant="glass"
+          sx={{ p: ds.spacing["8"], textAlign: "center", minWidth: 320 }}
+        >
+          <CircularProgress
+            size={72}
             thickness={4}
-            sx={{ 
-              mb: ds.spacing['4'],
-              color: ds.colors.primary.main
-            }} 
+            sx={{
+              mb: ds.spacing["4"],
+              color: ds.colors.primary.main,
+            }}
           />
-          <Typography sx={{ 
-            fontSize: '1.25rem',
-            fontWeight: 700,
-            mb: ds.spacing['2'],
-            color: ds.colors.text.primary
-          }}>
+          <Typography
+            sx={{
+              fontSize: "1.25rem",
+              fontWeight: 700,
+              mb: ds.spacing["2"],
+              color: ds.colors.text.primary,
+            }}
+          >
             {textContent.conversion.inProgress}
           </Typography>
-          <Typography sx={{ 
-            fontSize: '0.875rem',
-            color: ds.colors.text.secondary 
-          }}>
+          <Typography
+            sx={{
+              fontSize: "0.875rem",
+              color: ds.colors.text.secondary,
+            }}
+          >
             Seçiminiz optimizasyon için hazırlanıyor...
           </Typography>
         </CardV2>

@@ -137,7 +137,6 @@ export interface WorkOrder {
   cuts: Cut[];
 }
 
-
 export interface Pool {
   poolKey: string;
   profileType: string;

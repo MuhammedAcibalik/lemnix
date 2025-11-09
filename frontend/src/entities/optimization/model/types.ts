@@ -1,33 +1,33 @@
 /**
  * LEMNİX Optimization Entity Types
  * Domain types for optimization operations
- * 
+ *
  * @module entities/optimization/model
  * @version 1.0.0 - FSD Compliant
  * @description Types aligned with backend API structure
  */
 
-import type { ID, Timestamp } from '@/shared';
+import type { ID, Timestamp } from "@/shared";
 
 /**
  * Algorithm types (aligned with backend)
  */
-export type AlgorithmType = 'ffd' | 'bfd' | 'genetic' | 'pooling';
+export type AlgorithmType = "ffd" | "bfd" | "genetic" | "pooling";
 
 /**
  * Optimization objective types
  */
-export type ObjectiveType = 
-  | 'minimize-waste'
-  | 'maximize-efficiency'
-  | 'minimize-cost'
-  | 'minimize-time'
-  | 'maximize-quality';
+export type ObjectiveType =
+  | "minimize-waste"
+  | "maximize-efficiency"
+  | "minimize-cost"
+  | "minimize-time"
+  | "maximize-quality";
 
 /**
  * Objective priority
  */
-export type ObjectivePriority = 'low' | 'medium' | 'high';
+export type ObjectivePriority = "low" | "medium" | "high";
 
 /**
  * Optimization objective
@@ -60,7 +60,7 @@ export interface PerformanceSettings {
   readonly maxExecutionTime?: number; // seconds
   readonly parallelProcessing?: boolean;
   readonly cacheResults?: boolean;
-  
+
   // GA-specific parameters (v1.7.1)
   readonly populationSize?: number; // Override adaptive sizing (10-100)
   readonly generations?: number; // Override adaptive generations (10-200)
@@ -135,7 +135,12 @@ export interface CuttingSegment {
 /**
  * Waste category
  */
-export type WasteCategory = 'minimal' | 'small' | 'medium' | 'large' | 'excessive';
+export type WasteCategory =
+  | "minimal"
+  | "small"
+  | "medium"
+  | "large"
+  | "excessive";
 
 /**
  * Cut (stock piece with segments)
@@ -170,7 +175,7 @@ export interface WasteDistribution {
  * Optimization recommendation
  */
 export interface OptimizationRecommendation {
-  readonly type: 'performance' | 'cost' | 'quality' | 'waste';
+  readonly type: "performance" | "cost" | "quality" | "waste";
   readonly priority: ObjectivePriority;
   readonly message: string;
   readonly impact?: number;
@@ -183,7 +188,7 @@ export interface OptimizationRecommendation {
 export interface AlgorithmMetadata {
   readonly effectiveComplexity: string; // e.g., "O(30 × 100² × 25)"
   readonly actualGenerations: number;
-  readonly convergenceReason: 'early_stop' | 'max_generations' | 'stagnation';
+  readonly convergenceReason: "early_stop" | "max_generations" | "stagnation";
   readonly bestFitness: number; // 0-1 normalized fitness score
   readonly executionTimeMs: number;
   readonly deterministicSeed?: number;
@@ -235,16 +240,16 @@ export interface OptimizationResult {
     readonly parameters: Record<string, unknown>;
     readonly environment: string;
   };
-  
+
   // NEW: GA v1.7.1 telemetry
   readonly algorithmMetadata?: AlgorithmMetadata;
-  
+
   // NEW: Multi-objective metrics
   readonly paretoFrontier?: ParetoFrontier;
-  
+
   // NEW: Detailed cost breakdown
   readonly costBreakdown?: CostBreakdown;
-  
+
   // NEW: Quality metrics
   readonly qualityScore?: number; // 0-100
   readonly confidence?: number; // 0-1
@@ -275,12 +280,12 @@ export interface OptimizationHistoryEntry {
 /**
  * Efficiency category
  */
-export type EfficiencyCategory = 'excellent' | 'good' | 'average' | 'poor';
+export type EfficiencyCategory = "excellent" | "good" | "average" | "poor";
 
 /**
  * Optimization status
  */
-export type OptimizationStatus = 'idle' | 'running' | 'success' | 'error';
+export type OptimizationStatus = "idle" | "running" | "success" | "error";
 
 /**
  * Algorithm information for UI display
@@ -306,52 +311,52 @@ export interface AlgorithmInfo {
  */
 export const ALGORITHM_CATALOG: Record<AlgorithmType, AlgorithmInfo> = {
   ffd: {
-    id: 'ffd',
-    name: 'First-Fit Decreasing',
-    description: 'Hızlı ve basit, küçük optimizasyonlar için ideal',
-    complexity: 'O(n log n)',
+    id: "ffd",
+    name: "First-Fit Decreasing",
+    description: "Hızlı ve basit, küçük optimizasyonlar için ideal",
+    complexity: "O(n log n)",
     scalability: 5,
-    bestFor: ['Hız öncelikli', '< 50 parça', 'Basit optimizasyon'],
+    bestFor: ["Hız öncelikli", "< 50 parça", "Basit optimizasyon"],
     supportsObjectives: false,
     supportsPerformanceTuning: false,
     recommendedItemRange: { min: 1, max: 50 },
-    icon: '⚡',
+    icon: "⚡",
   },
   bfd: {
-    id: 'bfd',
-    name: 'Best-Fit Decreasing',
-    description: 'Dengeli performans ve kalite',
-    complexity: 'O(n²)',
+    id: "bfd",
+    name: "Best-Fit Decreasing",
+    description: "Dengeli performans ve kalite",
+    complexity: "O(n²)",
     scalability: 6,
-    bestFor: ['Orta boyut', '< 100 parça', 'Verimlilik odaklı'],
+    bestFor: ["Orta boyut", "< 100 parça", "Verimlilik odaklı"],
     supportsObjectives: false,
     supportsPerformanceTuning: false,
     recommendedItemRange: { min: 1, max: 100 },
-    icon: '⚖️',
+    icon: "⚖️",
   },
   genetic: {
-    id: 'genetic',
-    name: 'Genetic Algorithm v1.7.1',
-    description: 'En iyi kalite, çoklu hedef optimizasyonu (100/100 Score)',
-    complexity: 'O(P×n²×g)',
+    id: "genetic",
+    name: "Genetic Algorithm v1.7.1",
+    description: "En iyi kalite, çoklu hedef optimizasyonu (100/100 Score)",
+    complexity: "O(P×n²×g)",
     scalability: 7,
-    bestFor: ['Kalite öncelikli', '10-200 parça', 'Çoklu hedef', 'Kurumsal'],
+    bestFor: ["Kalite öncelikli", "10-200 parça", "Çoklu hedef", "Kurumsal"],
     supportsObjectives: true,
     supportsPerformanceTuning: true,
     recommendedItemRange: { min: 10, max: 200 },
-    icon: '🧬',
+    icon: "🧬",
   },
   pooling: {
-    id: 'pooling',
-    name: 'Profile Pooling',
-    description: 'Profil bazlı gruplama ve optimizasyon',
-    complexity: 'O(n×m)',
+    id: "pooling",
+    name: "Profile Pooling",
+    description: "Profil bazlı gruplama ve optimizasyon",
+    complexity: "O(n×m)",
     scalability: 8,
-    bestFor: ['Çok profil', 'Batch işlem', 'Stok yönetimi'],
+    bestFor: ["Çok profil", "Batch işlem", "Stok yönetimi"],
     supportsObjectives: false,
     supportsPerformanceTuning: false,
     recommendedItemRange: { min: 1, max: 500 },
-    icon: '📊',
+    icon: "📊",
   },
 } as const;
 
@@ -362,7 +367,7 @@ export const ALGORITHM_CATALOG: Record<AlgorithmType, AlgorithmInfo> = {
 /**
  * Export format types
  */
-export type ExportFormat = 'excel' | 'pdf' | 'json';
+export type ExportFormat = "excel" | "pdf" | "json";
 
 /**
  * Export request

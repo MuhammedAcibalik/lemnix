@@ -1,6 +1,6 @@
 /**
  * LEMNİX Dashboard Entity - Public API
- * 
+ *
  * @module entities/dashboard
  * @version 1.0.0 - FSD Compliant
  */
@@ -25,8 +25,8 @@ export type {
   ActivityTimelineData,
   DashboardMetricsOptions,
   QuickActionType,
-  QuickAction
-} from './model/types';
+  QuickAction,
+} from "./model/types";
 
 // API Functions
 export {
@@ -35,8 +35,8 @@ export {
   getOptimizationPerformance,
   getActiveOperations,
   getSmartInsights,
-  getActivityTimeline
-} from './api/dashboardApi';
+  getActivityTimeline,
+} from "./api/dashboardApi";
 
 // React Query Hooks
 export {
@@ -46,6 +46,5 @@ export {
   useActiveOperations,
   useSmartInsights,
   useActivityTimeline,
-  dashboardKeys
-} from './api/dashboardQueries';
-
+  dashboardKeys,
+} from "./api/dashboardQueries";

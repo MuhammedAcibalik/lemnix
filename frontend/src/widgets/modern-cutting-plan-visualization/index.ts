@@ -4,6 +4,5 @@
  * @version 1.0.0
  */
 
-export { ModernCuttingPlanVisualization } from './index.tsx';
-export { ModernCuttingPlanVisualization as default } from './index.tsx';
-
+export { ModernCuttingPlanVisualization } from "./index.tsx";
+export { ModernCuttingPlanVisualization as default } from "./index.tsx";

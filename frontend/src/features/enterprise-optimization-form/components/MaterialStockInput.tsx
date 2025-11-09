@@ -2,12 +2,12 @@
  * @fileoverview Multi-Material Stock Length Input Component
  * @module EnterpriseOptimizationForm/components
  * @version 1.0.0
- * 
+ *
  * ✅ P0-4: Multi-material stock length support
  * ✅ BACKEND: materialStockLengths: MaterialStockLength[]
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 import {
   Box,
   Typography,
@@ -24,7 +24,7 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
@@ -32,9 +32,9 @@ import {
   Category as ProfileIcon,
   ExpandMore as ExpandMoreIcon,
   Info as InfoIcon,
-} from '@mui/icons-material';
-import { useDesignSystem } from '@/shared/hooks';
-import type { MaterialStockLength } from '@/entities/optimization';
+} from "@mui/icons-material";
+import { useDesignSystem } from "@/shared/hooks";
+import type { MaterialStockLength } from "@/entities/optimization";
 
 interface MaterialStockInputProps {
   readonly stockLengths: ReadonlyArray<MaterialStockLength>;
@@ -59,7 +59,7 @@ export const MaterialStockInput: React.FC<MaterialStockInputProps> = ({
 
   const addStockLength = () => {
     const newStock: MaterialStockLength = {
-      profileType: missingProfiles[0] || '',
+      profileType: missingProfiles[0] || "",
       stockLength: 6100, // Default
     };
     onChange([...stockLengths, newStock]);
@@ -72,10 +72,10 @@ export const MaterialStockInput: React.FC<MaterialStockInputProps> = ({
   const updateStockLength = (
     index: number,
     field: keyof MaterialStockLength,
-    value: string | number
+    value: string | number,
   ) => {
     const updated = stockLengths.map((stock, i) =>
-      i === index ? { ...stock, [field]: value } : stock
+      i === index ? { ...stock, [field]: value } : stock,
     );
     onChange(updated);
   };
@@ -95,9 +95,9 @@ export const MaterialStockInput: React.FC<MaterialStockInputProps> = ({
       sx={{
         borderRadius: `${ds.borderRadius.lg}px`,
         border: `1px solid ${ds.colors.neutral[300]}`,
-        boxShadow: 'none',
-        '&:before': { display: 'none' },
-        mb: ds.spacing['3'],
+        boxShadow: "none",
+        "&:before": { display: "none" },
+        mb: ds.spacing["3"],
       }}
     >
       <AccordionSummary
@@ -105,26 +105,38 @@ export const MaterialStockInput: React.FC<MaterialStockInputProps> = ({
         sx={{
           background: alpha(ds.colors.primary.main, 0.05),
           borderRadius: `${ds.borderRadius.lg}px`,
-          '&:hover': {
+          "&:hover": {
             background: alpha(ds.colors.primary.main, 0.08),
           },
         }}
       >
-        <Stack direction="row" alignItems="center" spacing={ds.spacing['2']} sx={{ flex: 1 }}>
-          <RulerIcon sx={{ color: ds.colors.primary.main, fontSize: ds.componentSizes.icon.medium }} />
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={ds.spacing["2"]}
+          sx={{ flex: 1 }}
+        >
+          <RulerIcon
+            sx={{
+              color: ds.colors.primary.main,
+              fontSize: ds.componentSizes.icon.medium,
+            }}
+          />
           <Box>
-            <Typography sx={{ fontWeight: 600, fontSize: '0.9375rem' }}>
+            <Typography sx={{ fontWeight: 600, fontSize: "0.9375rem" }}>
               Stok Boyları ({stockLengths.length})
             </Typography>
-            <Typography sx={{ fontSize: '0.75rem', color: ds.colors.text.secondary }}>
+            <Typography
+              sx={{ fontSize: "0.75rem", color: ds.colors.text.secondary }}
+            >
               Profil tiplerine göre stok uzunlukları
             </Typography>
           </Box>
         </Stack>
       </AccordionSummary>
 
-      <AccordionDetails sx={{ p: ds.spacing['3'] }}>
-        <Stack spacing={ds.spacing['2']}>
+      <AccordionDetails sx={{ p: ds.spacing["3"] }}>
+        <Stack spacing={ds.spacing["2"]}>
           {/* Missing Profiles Warning */}
           {missingProfiles.length > 0 && (
             <Card
@@ -133,14 +145,30 @@ export const MaterialStockInput: React.FC<MaterialStockInputProps> = ({
                 border: `1px solid ${alpha(ds.colors.warning.main, 0.2)}`,
               }}
             >
-              <CardContent sx={{ p: ds.spacing['2'], '&:last-child': { pb: ds.spacing['2'] } }}>
-                <Stack direction="row" alignItems="center" spacing={ds.spacing['2']}>
-                  <InfoIcon sx={{ color: ds.colors.warning.main, fontSize: 20 }} />
+              <CardContent
+                sx={{
+                  p: ds.spacing["2"],
+                  "&:last-child": { pb: ds.spacing["2"] },
+                }}
+              >
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  spacing={ds.spacing["2"]}
+                >
+                  <InfoIcon
+                    sx={{ color: ds.colors.warning.main, fontSize: 20 }}
+                  />
                   <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ fontSize: '0.8125rem', fontWeight: 600 }}>
-                      {missingProfiles.length} profil tipi için stok boyu tanımlanmamış
+                    <Typography sx={{ fontSize: "0.8125rem", fontWeight: 600 }}>
+                      {missingProfiles.length} profil tipi için stok boyu
+                      tanımlanmamış
                     </Typography>
-                    <Stack direction="row" spacing={ds.spacing['1']} sx={{ mt: ds.spacing['1'] }}>
+                    <Stack
+                      direction="row"
+                      spacing={ds.spacing["1"]}
+                      sx={{ mt: ds.spacing["1"] }}
+                    >
                       {missingProfiles.map((profile) => (
                         <Chip
                           key={profile}
@@ -148,7 +176,7 @@ export const MaterialStockInput: React.FC<MaterialStockInputProps> = ({
                           size="small"
                           sx={{
                             height: 20,
-                            fontSize: '0.6875rem',
+                            fontSize: "0.6875rem",
                             background: alpha(ds.colors.warning.main, 0.1),
                             color: ds.colors.warning.main,
                           }}
@@ -161,7 +189,7 @@ export const MaterialStockInput: React.FC<MaterialStockInputProps> = ({
                     variant="outlined"
                     onClick={autoFillMissingProfiles}
                     disabled={readonly}
-                    sx={{ textTransform: 'none', fontSize: '0.75rem' }}
+                    sx={{ textTransform: "none", fontSize: "0.75rem" }}
                   >
                     Otomatik Ekle
                   </Button>
@@ -175,19 +203,31 @@ export const MaterialStockInput: React.FC<MaterialStockInputProps> = ({
             <Card
               variant="outlined"
               sx={{
-                p: ds.spacing['4'],
-                textAlign: 'center',
+                p: ds.spacing["4"],
+                textAlign: "center",
                 border: `1px dashed ${ds.colors.neutral[300]}`,
                 background: alpha(ds.colors.neutral[100], 0.5),
               }}
             >
-              <RulerIcon sx={{ fontSize: 40, color: ds.colors.neutral[400], mb: ds.spacing['1'] }} />
-              <Typography sx={{ fontSize: '0.875rem', fontWeight: 500, color: ds.colors.text.secondary }}>
+              <RulerIcon
+                sx={{
+                  fontSize: 40,
+                  color: ds.colors.neutral[400],
+                  mb: ds.spacing["1"],
+                }}
+              />
+              <Typography
+                sx={{
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  color: ds.colors.text.secondary,
+                }}
+              >
                 Henüz stok boyu eklenmemiş
               </Typography>
             </Card>
           ) : (
-            <Stack spacing={ds.spacing['2']}>
+            <Stack spacing={ds.spacing["2"]}>
               {stockLengths.map((stock, index) => (
                 <Card
                   key={index}
@@ -197,23 +237,40 @@ export const MaterialStockInput: React.FC<MaterialStockInputProps> = ({
                     border: `1px solid ${ds.colors.neutral[300]}`,
                   }}
                 >
-                  <CardContent sx={{ p: ds.spacing['2'], '&:last-child': { pb: ds.spacing['2'] } }}>
-                    <Stack direction="row" spacing={ds.spacing['2']} alignItems="center">
+                  <CardContent
+                    sx={{
+                      p: ds.spacing["2"],
+                      "&:last-child": { pb: ds.spacing["2"] },
+                    }}
+                  >
+                    <Stack
+                      direction="row"
+                      spacing={ds.spacing["2"]}
+                      alignItems="center"
+                    >
                       {/* Profile Type */}
                       <TextField
                         label="Profil Tipi"
                         value={stock.profileType}
-                        onChange={(e) => updateStockLength(index, 'profileType', e.target.value)}
+                        onChange={(e) =>
+                          updateStockLength(
+                            index,
+                            "profileType",
+                            e.target.value,
+                          )
+                        }
                         size="small"
                         fullWidth
                         disabled={readonly}
                         InputProps={{
                           startAdornment: (
                             <InputAdornment position="start">
-                              <ProfileIcon sx={{ 
-                                color: ds.colors.primary.main, 
-                                fontSize: ds.componentSizes.icon.small 
-                              }} />
+                              <ProfileIcon
+                                sx={{
+                                  color: ds.colors.primary.main,
+                                  fontSize: ds.componentSizes.icon.small,
+                                }}
+                              />
                             </InputAdornment>
                           ),
                         }}
@@ -225,7 +282,11 @@ export const MaterialStockInput: React.FC<MaterialStockInputProps> = ({
                         type="number"
                         value={stock.stockLength}
                         onChange={(e) =>
-                          updateStockLength(index, 'stockLength', parseInt(e.target.value))
+                          updateStockLength(
+                            index,
+                            "stockLength",
+                            parseInt(e.target.value),
+                          )
                         }
                         size="small"
                         fullWidth
@@ -233,15 +294,23 @@ export const MaterialStockInput: React.FC<MaterialStockInputProps> = ({
                         InputProps={{
                           startAdornment: (
                             <InputAdornment position="start">
-                              <RulerIcon sx={{ 
-                                color: ds.colors.accent.main, 
-                                fontSize: ds.componentSizes.icon.small 
-                              }} />
+                              <RulerIcon
+                                sx={{
+                                  color: ds.colors.accent.main,
+                                  fontSize: ds.componentSizes.icon.small,
+                                }}
+                              />
                             </InputAdornment>
                           ),
                           endAdornment: (
                             <InputAdornment position="end">
-                              <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: ds.colors.text.secondary }}>
+                              <Typography
+                                sx={{
+                                  fontSize: "0.75rem",
+                                  fontWeight: 600,
+                                  color: ds.colors.text.secondary,
+                                }}
+                              >
                                 mm
                               </Typography>
                             </InputAdornment>
@@ -257,12 +326,14 @@ export const MaterialStockInput: React.FC<MaterialStockInputProps> = ({
                             size="small"
                             sx={{
                               color: ds.colors.error.main,
-                              '&:hover': {
+                              "&:hover": {
                                 background: alpha(ds.colors.error.main, 0.1),
                               },
                             }}
                           >
-                            <DeleteIcon sx={{ fontSize: ds.componentSizes.icon.small }} />
+                            <DeleteIcon
+                              sx={{ fontSize: ds.componentSizes.icon.small }}
+                            />
                           </IconButton>
                         </Tooltip>
                       )}
@@ -281,10 +352,10 @@ export const MaterialStockInput: React.FC<MaterialStockInputProps> = ({
               variant="outlined"
               fullWidth
               sx={{
-                textTransform: 'none',
+                textTransform: "none",
                 borderRadius: `${ds.borderRadius.md}px`,
-                borderStyle: 'dashed',
-                py: ds.spacing['2'],
+                borderStyle: "dashed",
+                py: ds.spacing["2"],
               }}
             >
               Stok Boyu Ekle
@@ -295,4 +366,3 @@ export const MaterialStockInput: React.FC<MaterialStockInputProps> = ({
     </Accordion>
   );
 };
-

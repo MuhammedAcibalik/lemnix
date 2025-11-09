@@ -4,38 +4,36 @@
  * @version 2.0.0 - Enterprise Grade Modular Design
  */
 
-import React from 'react';
-import { useTheme, useMediaQuery } from '@mui/material';
+import React from "react";
+import { useTheme, useMediaQuery } from "@mui/material";
 
 // Import modular components
-import { AppBar } from './components/AppBar';
-import { CommandPalette } from './components/CommandPalette';
-import { UserMenu } from './components/UserMenu';
+import { AppBar } from "./components/AppBar";
+import { CommandPalette } from "./components/CommandPalette";
+import { UserMenu } from "./components/UserMenu";
 
 // Import hooks
-import { useNavigationState } from './hooks/useNavigationState';
-import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useNavigationState } from "./hooks/useNavigationState";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 
 // Import types
-import {
-  ModernNavigationProps
-} from './types';
+import { ModernNavigationProps } from "./types";
 
 // Import constants
-import { navigationItems } from './constants/index';
+import { navigationItems } from "./constants/index";
 
 /**
  * Modern Navigation Component
- * 
+ *
  * Enterprise-grade navigation with modular architecture
  */
 export const ModernNavigation: React.FC<ModernNavigationProps> = ({
   activePage,
   onPageChange,
-  onToggleSidebar
+  onToggleSidebar,
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   // Custom hooks for state and functionality
   const {
@@ -44,26 +42,34 @@ export const ModernNavigation: React.FC<ModernNavigationProps> = ({
     openCommandPalette,
     closeCommandPalette,
     openUserMenu,
-    closeUserMenu
+    closeUserMenu,
   } = useNavigationState({
     activePage,
     onPageChange,
-    onToggleSidebar
+    onToggleSidebar,
   });
 
   const { getShortcutDescription, isShortcutAvailable } = useKeyboardShortcuts(
     {
       onPageChange,
       onToggleSidebar,
-      onCommandPaletteToggle: (open) => open ? openCommandPalette() : closeCommandPalette(),
-      onUserMenuToggle: (anchor) => anchor ? openUserMenu({ currentTarget: anchor } as React.MouseEvent<HTMLElement>) : closeUserMenu()
+      onCommandPaletteToggle: (open) =>
+        open ? openCommandPalette() : closeCommandPalette(),
+      onUserMenuToggle: (anchor) =>
+        anchor
+          ? openUserMenu({
+              currentTarget: anchor,
+            } as React.MouseEvent<HTMLElement>)
+          : closeUserMenu(),
     },
     commandPaletteOpen,
-    openCommandPalette
+    openCommandPalette,
   );
 
   // Get current page item
-  const currentPageItem = navigationItems.find(item => item.id === activePage);
+  const currentPageItem = navigationItems.find(
+    (item) => item.id === activePage,
+  );
 
   return (
     <>
@@ -89,10 +95,7 @@ export const ModernNavigation: React.FC<ModernNavigationProps> = ({
       />
 
       {/* User Menu */}
-      <UserMenu
-        anchorEl={userMenuAnchor}
-        onClose={closeUserMenu}
-      />
+      <UserMenu anchorEl={userMenuAnchor} onClose={closeUserMenu} />
     </>
   );
 };

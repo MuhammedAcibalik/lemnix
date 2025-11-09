@@ -4,7 +4,7 @@
  * @version 2.0.0 - Design System v2 Compliant
  */
 
-import React from 'react';
+import React from "react";
 import {
   Stack,
   Typography,
@@ -13,18 +13,21 @@ import {
   Tooltip,
   Chip,
   alpha,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Category as CategoryIcon,
   Add as AddIcon,
   Visibility as VisibilityIcon,
   Assignment as AssignmentIcon,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
 
 // Design System v2.0
-import { useDesignSystem } from '@/shared/hooks';
-import { CardV2 } from '@/shared';
-import { ProductSection as ProductSectionType, WorkOrderItem as WorkOrderItemType } from '../types';
+import { useDesignSystem } from "@/shared/hooks";
+import { CardV2 } from "@/shared";
+import {
+  ProductSection as ProductSectionType,
+  WorkOrderItem as WorkOrderItemType,
+} from "../types";
 
 interface ProductSectionProps {
   section: ProductSectionType;
@@ -42,42 +45,54 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
 }) => {
   const ds = useDesignSystem();
 
-  const totalQuantity = section.items.reduce((sum, item) => sum + (item.orderQuantity || 0), 0);
+  const totalQuantity = section.items.reduce(
+    (sum, item) => sum + (item.orderQuantity || 0),
+    0,
+  );
 
   return (
     <CardV2
       variant="glass"
       sx={{
         transition: ds.transitions.base,
-        '&:hover': {
-          transform: 'translateY(-2px)',
+        "&:hover": {
+          transform: "translateY(-2px)",
           boxShadow: ds.shadows.soft.md,
           borderColor: ds.colors.primary.main,
         },
       }}
     >
-      <Box sx={{ p: ds.spacing['3'] }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Stack direction="row" alignItems="center" spacing={ds.spacing['2']}>
+      <Box sx={{ p: ds.spacing["3"] }}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+        >
+          <Stack direction="row" alignItems="center" spacing={ds.spacing["2"]}>
             <Box
               sx={{
                 width: 40,
                 height: 40,
                 borderRadius: `${ds.borderRadius.md}px`,
                 background: ds.gradients.primary,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 boxShadow: ds.shadows.soft.sm,
               }}
             >
-              <CategoryIcon sx={{ fontSize: ds.componentSizes.icon.medium, color: ds.colors.text.inverse }} />
+              <CategoryIcon
+                sx={{
+                  fontSize: ds.componentSizes.icon.medium,
+                  color: ds.colors.text.inverse,
+                }}
+              />
             </Box>
 
             <Box>
               <Typography
                 sx={{
-                  fontSize: '1rem',
+                  fontSize: "1rem",
                   fontWeight: 600,
                   color: ds.colors.text.primary,
                   mb: 0.5,
@@ -87,12 +102,16 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
               </Typography>
               <Stack direction="row" spacing={1}>
                 <Chip
-                  icon={<AssignmentIcon sx={{ fontSize: ds.componentSizes.icon.small }} />}
+                  icon={
+                    <AssignmentIcon
+                      sx={{ fontSize: ds.componentSizes.icon.small }}
+                    />
+                  }
                   label={`${section.items.length} iş emri`}
                   size="small"
                   sx={{
                     height: 22,
-                    fontSize: '0.6875rem',
+                    fontSize: "0.6875rem",
                     fontWeight: 500,
                     background: alpha(ds.colors.primary.main, 0.1),
                     color: ds.colors.primary.main,
@@ -105,7 +124,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                     size="small"
                     sx={{
                       height: 22,
-                      fontSize: '0.6875rem',
+                      fontSize: "0.6875rem",
                       fontWeight: 500,
                       background: alpha(ds.colors.success.main, 0.1),
                       color: ds.colors.success.main,
@@ -117,7 +136,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
             </Box>
           </Stack>
 
-          <Stack direction="row" spacing={ds.spacing['1']}>
+          <Stack direction="row" spacing={ds.spacing["1"]}>
             <Tooltip title="Detayları Gör" arrow>
               <IconButton
                 onClick={() => onViewDetails?.(section)}
@@ -127,14 +146,16 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                   borderRadius: `${ds.borderRadius.md}px`,
                   background: alpha(ds.colors.primary.main, 0.1),
                   color: ds.colors.primary.main,
-                  '&:hover': {
+                  "&:hover": {
                     background: alpha(ds.colors.primary.main, 0.2),
-                    transform: 'scale(1.1)',
+                    transform: "scale(1.1)",
                   },
                   transition: ds.transitions.fast,
                 }}
               >
-                <VisibilityIcon sx={{ fontSize: ds.componentSizes.icon.medium }} />
+                <VisibilityIcon
+                  sx={{ fontSize: ds.componentSizes.icon.medium }}
+                />
               </IconButton>
             </Tooltip>
 
@@ -147,9 +168,9 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                   borderRadius: `${ds.borderRadius.md}px`,
                   background: alpha(ds.colors.success.main, 0.1),
                   color: ds.colors.success.main,
-                  '&:hover': {
+                  "&:hover": {
                     background: alpha(ds.colors.success.main, 0.2),
-                    transform: 'scale(1.1)',
+                    transform: "scale(1.1)",
                   },
                   transition: ds.transitions.fast,
                 }}

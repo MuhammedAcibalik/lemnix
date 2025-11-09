@@ -1,12 +1,12 @@
 /**
  * Export Dialog Component
  * Advanced export dialog with options
- * 
+ *
  * @module features/export-results/ui
  * @version 1.0.0
  */
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -22,13 +22,19 @@ import {
   FormGroup,
   Stack,
   Divider,
-} from '@mui/material';
-import type { ExportFormat, ExportOptimizationRequest } from '@/entities/optimization';
+} from "@mui/material";
+import type {
+  ExportFormat,
+  ExportOptimizationRequest,
+} from "@/entities/optimization";
 
 export interface ExportDialogProps {
   readonly open: boolean;
   readonly onClose: () => void;
-  readonly onExport: (format: ExportFormat, options?: ExportOptimizationRequest['options']) => void;
+  readonly onExport: (
+    format: ExportFormat,
+    options?: ExportOptimizationRequest["options"],
+  ) => void;
   readonly isLoading?: boolean;
 }
 
@@ -38,7 +44,7 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
   onExport,
   isLoading = false,
 }) => {
-  const [format, setFormat] = useState<ExportFormat>('excel');
+  const [format, setFormat] = useState<ExportFormat>("excel");
   const [includeCharts, setIncludeCharts] = useState(true);
   const [includeMetrics, setIncludeMetrics] = useState(true);
   const [includeRecommendations, setIncludeRecommendations] = useState(true);
@@ -60,10 +66,25 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
             <Typography variant="subtitle2" gutterBottom>
               Dosya Formatı
             </Typography>
-            <RadioGroup value={format} onChange={(e) => setFormat(e.target.value as ExportFormat)}>
-              <FormControlLabel value="excel" control={<Radio />} label="Excel (.xlsx) - Tablo formatı" />
-              <FormControlLabel value="pdf" control={<Radio />} label="PDF (.pdf) - Yazdırılabilir rapor" />
-              <FormControlLabel value="json" control={<Radio />} label="JSON (.json) - Ham veri" />
+            <RadioGroup
+              value={format}
+              onChange={(e) => setFormat(e.target.value as ExportFormat)}
+            >
+              <FormControlLabel
+                value="excel"
+                control={<Radio />}
+                label="Excel (.xlsx) - Tablo formatı"
+              />
+              <FormControlLabel
+                value="pdf"
+                control={<Radio />}
+                label="PDF (.pdf) - Yazdırılabilir rapor"
+              />
+              <FormControlLabel
+                value="json"
+                control={<Radio />}
+                label="JSON (.json) - Ham veri"
+              />
             </RadioGroup>
           </Box>
 
@@ -75,15 +96,32 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
             </Typography>
             <FormGroup>
               <FormControlLabel
-                control={<Checkbox checked={includeCharts} onChange={(e) => setIncludeCharts(e.target.checked)} />}
+                control={
+                  <Checkbox
+                    checked={includeCharts}
+                    onChange={(e) => setIncludeCharts(e.target.checked)}
+                  />
+                }
                 label="Grafikler ve görselleştirmeler"
               />
               <FormControlLabel
-                control={<Checkbox checked={includeMetrics} onChange={(e) => setIncludeMetrics(e.target.checked)} />}
+                control={
+                  <Checkbox
+                    checked={includeMetrics}
+                    onChange={(e) => setIncludeMetrics(e.target.checked)}
+                  />
+                }
                 label="Performans metrikleri"
               />
               <FormControlLabel
-                control={<Checkbox checked={includeRecommendations} onChange={(e) => setIncludeRecommendations(e.target.checked)} />}
+                control={
+                  <Checkbox
+                    checked={includeRecommendations}
+                    onChange={(e) =>
+                      setIncludeRecommendations(e.target.checked)
+                    }
+                  />
+                }
                 label="Öneriler ve iyileştirmeler"
               />
             </FormGroup>
@@ -95,10 +133,9 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
           İptal
         </Button>
         <Button onClick={handleExport} variant="contained" disabled={isLoading}>
-          {isLoading ? 'İndiriliyor...' : 'İndir'}
+          {isLoading ? "İndiriliyor..." : "İndir"}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
-

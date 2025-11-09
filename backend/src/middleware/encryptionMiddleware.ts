@@ -3,17 +3,29 @@
  * @module middleware/encryptionMiddleware
  */
 
-import { Request, Response, NextFunction } from 'express';
-import { encryptField, decryptField, encryptMetadata, decryptMetadata } from '../services/encryptionService';
-import { logger } from '../services/logger';
-import { resolveDataProtection, DataProtectionContext } from '../security/dataProtectionConfig';
+import { Request, Response, NextFunction } from "express";
+import {
+  encryptField,
+  decryptField,
+  encryptMetadata,
+  decryptMetadata,
+} from "../services/encryptionService";
+import { logger } from "../services/logger";
+import {
+  resolveDataProtection,
+  DataProtectionContext,
+} from "../security/dataProtectionConfig";
 
 /**
  * Middleware to encrypt sensitive data before database write operations
  */
-export const encryptDataMiddleware = (req: Request, _res: Response, next: NextFunction): void => {
+export const encryptDataMiddleware = (
+  req: Request,
+  _res: Response,
+  next: NextFunction,
+): void => {
   try {
-    if (!['POST', 'PUT', 'PATCH'].includes(req.method)) {
+    if (!["POST", "PUT", "PATCH"].includes(req.method)) {
       next();
       return;
     }
@@ -24,21 +36,21 @@ export const encryptDataMiddleware = (req: Request, _res: Response, next: NextFu
       return;
     }
 
-    if (req.body && typeof req.body === 'object') {
+    if (req.body && typeof req.body === "object") {
       req.body = encryptPayload(req.body, context);
     }
 
-    logger.debug('Data encrypted for write operation', {
+    logger.debug("Data encrypted for write operation", {
       tableName: context.table,
       method: req.method,
-      path: req.path
+      path: req.path,
     });
 
     next();
   } catch (error) {
-    logger.error('Encryption middleware error', error as Error, {
+    logger.error("Encryption middleware error", error as Error, {
       path: req.path,
-      method: req.method
+      method: req.method,
     });
     next();
   }
@@ -47,9 +59,13 @@ export const encryptDataMiddleware = (req: Request, _res: Response, next: NextFu
 /**
  * Middleware to decrypt sensitive data after database read operations
  */
-export const decryptDataMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+export const decryptDataMiddleware = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): void => {
   try {
-    if (req.method !== 'GET') {
+    if (req.method !== "GET") {
       next();
       return;
     }
@@ -66,10 +82,10 @@ export const decryptDataMiddleware = (req: Request, res: Response, next: NextFun
         const decrypted = decryptPayload(data, context);
         return originalJson(decrypted);
       } catch (error) {
-        logger.warn('Failed to decrypt response data', {
+        logger.warn("Failed to decrypt response data", {
           error: (error as Error).message,
           tableName: context.table,
-          path: req.path
+          path: req.path,
         });
         return originalJson(data as any);
       }
@@ -77,9 +93,9 @@ export const decryptDataMiddleware = (req: Request, res: Response, next: NextFun
 
     next();
   } catch (error) {
-    logger.error('Decryption middleware error', error as Error, {
+    logger.error("Decryption middleware error", error as Error, {
       path: req.path,
-      method: req.method
+      method: req.method,
     });
     next();
   }
@@ -87,23 +103,23 @@ export const decryptDataMiddleware = (req: Request, res: Response, next: NextFun
 
 function encryptPayload(payload: any, context: DataProtectionContext): any {
   if (Array.isArray(payload)) {
-    return payload.map(item => encryptPayload(item, context));
+    return payload.map((item) => encryptPayload(item, context));
   }
 
-  if (!payload || typeof payload !== 'object') {
+  if (!payload || typeof payload !== "object") {
     return payload;
   }
 
   const encrypted: Record<string, unknown> = { ...payload };
 
   for (const field of context.sensitiveFields) {
-    if (typeof encrypted[field] === 'string') {
+    if (typeof encrypted[field] === "string") {
       encrypted[field] = encryptField(encrypted[field] as string);
     }
   }
 
   for (const field of context.metadataFields) {
-    if (encrypted[field] && typeof encrypted[field] === 'object') {
+    if (encrypted[field] && typeof encrypted[field] === "object") {
       encrypted[field] = encryptMetadata(encrypted[field]);
     }
   }
@@ -113,23 +129,23 @@ function encryptPayload(payload: any, context: DataProtectionContext): any {
 
 function decryptPayload(payload: any, context: DataProtectionContext): any {
   if (Array.isArray(payload)) {
-    return payload.map(item => decryptPayload(item, context));
+    return payload.map((item) => decryptPayload(item, context));
   }
 
-  if (!payload || typeof payload !== 'object') {
+  if (!payload || typeof payload !== "object") {
     return payload;
   }
 
   const decrypted: Record<string, unknown> = { ...payload };
 
   for (const field of context.sensitiveFields) {
-    if (typeof decrypted[field] === 'string') {
+    if (typeof decrypted[field] === "string") {
       decrypted[field] = decryptField(decrypted[field] as string);
     }
   }
 
   for (const field of context.metadataFields) {
-    if (typeof decrypted[field] === 'string') {
+    if (typeof decrypted[field] === "string") {
       decrypted[field] = decryptMetadata(decrypted[field] as string);
     }
   }
@@ -137,12 +153,28 @@ function decryptPayload(payload: any, context: DataProtectionContext): any {
   return decrypted;
 }
 
-export function encryptDataForTable(data: any, tableName: string, context?: DataProtectionContext): any {
-  const protection = context ?? { table: tableName, sensitiveFields: [], metadataFields: [] };
+export function encryptDataForTable(
+  data: any,
+  tableName: string,
+  context?: DataProtectionContext,
+): any {
+  const protection = context ?? {
+    table: tableName,
+    sensitiveFields: [],
+    metadataFields: [],
+  };
   return encryptPayload(data, protection);
 }
 
-export function decryptDataForTable(data: any, tableName: string, context?: DataProtectionContext): any {
-  const protection = context ?? { table: tableName, sensitiveFields: [], metadataFields: [] };
+export function decryptDataForTable(
+  data: any,
+  tableName: string,
+  context?: DataProtectionContext,
+): any {
+  const protection = context ?? {
+    table: tableName,
+    sensitiveFields: [],
+    metadataFields: [],
+  };
   return decryptPayload(data, protection);
 }

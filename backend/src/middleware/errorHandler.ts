@@ -3,20 +3,20 @@
  * Centralized error handling with taxonomy, masking, and monitoring
  */
 
-import { Request, Response, NextFunction } from 'express';
-import { v4 as uuidv4 } from 'uuid';
-import { 
-  ErrorClass, 
-  ErrorSeverity, 
-  StructuredError, 
+import { Request, Response, NextFunction } from "express";
+import { v4 as uuidv4 } from "uuid";
+import {
+  ErrorClass,
+  ErrorSeverity,
+  StructuredError,
   ERROR_CODES,
   ERROR_SEVERITY_MAP,
   HTTP_STATUS_MAP,
   RETRY_POLICY_MAP,
   USER_MESSAGES,
-  ErrorContext
-} from '../types/errorTypes';
-import { ILogger } from '../services/logger';
+  ErrorContext,
+} from "../types/errorTypes";
+import { ILogger } from "../services/logger";
 
 interface ErrorHandlerOptions {
   logger: ILogger;
@@ -43,25 +43,37 @@ export class ErrorHandler {
   /**
    * Main error handling middleware
    */
-  public handleError = (error: Error, req: Request, res: Response, next: NextFunction): void => {
+  public handleError = (
+    error: Error,
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): void => {
     try {
       // Generate correlation ID if not present
-      const correlationId = req.headers['x-correlation-id'] as string || uuidv4();
-      
+      const correlationId =
+        (req.headers["x-correlation-id"] as string) || uuidv4();
+
       // Create error context
       const context: ErrorContext = {
-        requestId: req.headers['x-request-id'] as string || uuidv4(),
+        requestId: (req.headers["x-request-id"] as string) || uuidv4(),
         // correlationId,
         timestamp: new Date().toISOString(),
         endpoint: req.path,
         method: req.method,
-        userAgent: req.headers['user-agent'],
-        ipAddress: this.maskIpAddress(req.ip || req.connection.remoteAddress || 'unknown')
+        userAgent: req.headers["user-agent"],
+        ipAddress: this.maskIpAddress(
+          req.ip || req.connection.remoteAddress || "unknown",
+        ),
       };
 
       // Classify error
       const errorClass = this.classifyError(error);
-      const structuredError = this.createStructuredError(error, errorClass, context);
+      const structuredError = this.createStructuredError(
+        error,
+        errorClass,
+        context,
+      );
 
       // Log error with appropriate level
       this.logError(structuredError, error);
@@ -71,19 +83,18 @@ export class ErrorHandler {
 
       // Send response
       this.sendErrorResponse(res, structuredError);
-
     } catch (handlerError) {
       // Fallback error handling
-      this.logger.error('Error in error handler', { 
+      this.logger.error("Error in error handler", {
         originalError: error.message,
-        handlerError: (handlerError as Error).message 
+        handlerError: (handlerError as Error).message,
       });
-      
+
       res.status(500).json({
-        error: 'Internal Server Error',
-        message: 'An unexpected error occurred',
-        correlationId: req.headers['x-correlation-id'] || uuidv4(),
-        timestamp: new Date().toISOString()
+        error: "Internal Server Error",
+        message: "An unexpected error occurred",
+        correlationId: req.headers["x-correlation-id"] || uuidv4(),
+        timestamp: new Date().toISOString(),
       });
     }
   };
@@ -96,32 +107,38 @@ export class ErrorHandler {
     const errorName = error.name.toLowerCase();
 
     // Business logic errors
-    if (errorMessage.includes('optimization') || 
-        errorMessage.includes('cutting') ||
-        errorMessage.includes('profile') ||
-        errorMessage.includes('stock') ||
-        errorMessage.includes('quota') ||
-        errorMessage.includes('business rule')) {
+    if (
+      errorMessage.includes("optimization") ||
+      errorMessage.includes("cutting") ||
+      errorMessage.includes("profile") ||
+      errorMessage.includes("stock") ||
+      errorMessage.includes("quota") ||
+      errorMessage.includes("business rule")
+    ) {
       return ErrorClass.BUSINESS;
     }
 
     // Integration errors
-    if (errorMessage.includes('database') ||
-        errorMessage.includes('connection') ||
-        errorMessage.includes('timeout') ||
-        errorMessage.includes('api') ||
-        errorMessage.includes('external') ||
-        errorMessage.includes('third party')) {
+    if (
+      errorMessage.includes("database") ||
+      errorMessage.includes("connection") ||
+      errorMessage.includes("timeout") ||
+      errorMessage.includes("api") ||
+      errorMessage.includes("external") ||
+      errorMessage.includes("third party")
+    ) {
       return ErrorClass.INTEGRATION;
     }
 
     // Client errors
-    if (errorMessage.includes('validation') ||
-        errorMessage.includes('required') ||
-        errorMessage.includes('invalid') ||
-        errorMessage.includes('missing') ||
-        errorMessage.includes('format') ||
-        errorName.includes('validation')) {
+    if (
+      errorMessage.includes("validation") ||
+      errorMessage.includes("required") ||
+      errorMessage.includes("invalid") ||
+      errorMessage.includes("missing") ||
+      errorMessage.includes("format") ||
+      errorName.includes("validation")
+    ) {
       return ErrorClass.CLIENT;
     }
 
@@ -133,9 +150,9 @@ export class ErrorHandler {
    * Create structured error response
    */
   private createStructuredError(
-    error: Error, 
-    errorClass: ErrorClass, 
-    context: ErrorContext
+    error: Error,
+    errorClass: ErrorClass,
+    context: ErrorContext,
   ): StructuredError {
     const errorId = uuidv4();
     const severity = ERROR_SEVERITY_MAP[errorClass];
@@ -157,8 +174,8 @@ export class ErrorHandler {
       retryAfter: this.getRetryAfter(errorClass),
       retryPolicy,
       timestamp: context.timestamp,
-      service: 'lemnix-backend',
-      version: process.env.npm_package_version || '1.0.0'
+      service: "lemnix-backend",
+      version: process.env.npm_package_version || "1.0.0",
     };
   }
 
@@ -179,11 +196,11 @@ export class ErrorHandler {
       /jwt\s+[\w.-]+/gi,
       /\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}/g, // Credit card numbers
       /\b\d{3}-\d{2}-\d{4}\b/g, // SSN
-      /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g // Email addresses
+      /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, // Email addresses
     ];
 
-    sensitivePatterns.forEach(pattern => {
-      sanitized = sanitized.replace(pattern, '[REDACTED]');
+    sensitivePatterns.forEach((pattern) => {
+      sanitized = sanitized.replace(pattern, "[REDACTED]");
     });
 
     return sanitized;
@@ -192,15 +209,15 @@ export class ErrorHandler {
   /**
    * Extract error details (sanitized)
    */
-  private extractErrorDetails(error: Error): StructuredError['details'] {
+  private extractErrorDetails(error: Error): StructuredError["details"] {
     if (!this.enableDetailedErrors) {
       return undefined;
     }
 
-    const details: StructuredError['details'] = {};
+    const details: StructuredError["details"] = {};
 
     // Extract validation errors
-    if (error.message.includes('validation')) {
+    if (error.message.includes("validation")) {
       const match = error.message.match(/field\s+['"]?(\w+)['"]?/i);
       if (match) {
         details.field = match[1];
@@ -208,7 +225,7 @@ export class ErrorHandler {
     }
 
     // Extract constraint violations
-    if (error.message.includes('constraint')) {
+    if (error.message.includes("constraint")) {
       const match = error.message.match(/constraint\s+['"]?(\w+)['"]?/i);
       if (match) {
         details.constraint = match[1];
@@ -227,25 +244,34 @@ export class ErrorHandler {
 
     switch (errorClass) {
       case ErrorClass.CLIENT:
-        if (message.includes('validation')) return ERROR_CODES.CLIENT.VALIDATION_FAILED;
-        if (message.includes('auth')) return ERROR_CODES.CLIENT.AUTHENTICATION_REQUIRED;
-        if (message.includes('rate limit')) return ERROR_CODES.CLIENT.RATE_LIMIT_EXCEEDED;
+        if (message.includes("validation"))
+          return ERROR_CODES.CLIENT.VALIDATION_FAILED;
+        if (message.includes("auth"))
+          return ERROR_CODES.CLIENT.AUTHENTICATION_REQUIRED;
+        if (message.includes("rate limit"))
+          return ERROR_CODES.CLIENT.RATE_LIMIT_EXCEEDED;
         return ERROR_CODES.CLIENT.INVALID_REQUEST_FORMAT;
 
       case ErrorClass.BUSINESS:
-        if (message.includes('optimization')) return ERROR_CODES.BUSINESS.OPTIMIZATION_FAILED;
-        if (message.includes('stock')) return ERROR_CODES.BUSINESS.INSUFFICIENT_STOCK;
-        if (message.includes('profile')) return ERROR_CODES.BUSINESS.PROFILE_NOT_FOUND;
+        if (message.includes("optimization"))
+          return ERROR_CODES.BUSINESS.OPTIMIZATION_FAILED;
+        if (message.includes("stock"))
+          return ERROR_CODES.BUSINESS.INSUFFICIENT_STOCK;
+        if (message.includes("profile"))
+          return ERROR_CODES.BUSINESS.PROFILE_NOT_FOUND;
         return ERROR_CODES.BUSINESS.BUSINESS_RULE_VIOLATION;
 
       case ErrorClass.INTEGRATION:
-        if (message.includes('database')) return ERROR_CODES.INTEGRATION.DATABASE_CONNECTION_FAILED;
-        if (message.includes('timeout')) return ERROR_CODES.INTEGRATION.EXTERNAL_API_TIMEOUT;
+        if (message.includes("database"))
+          return ERROR_CODES.INTEGRATION.DATABASE_CONNECTION_FAILED;
+        if (message.includes("timeout"))
+          return ERROR_CODES.INTEGRATION.EXTERNAL_API_TIMEOUT;
         return ERROR_CODES.INTEGRATION.EXTERNAL_API_ERROR;
 
       case ErrorClass.SYSTEM:
-        if (message.includes('memory')) return ERROR_CODES.SYSTEM.OUT_OF_MEMORY;
-        if (message.includes('unavailable')) return ERROR_CODES.SYSTEM.SERVICE_UNAVAILABLE;
+        if (message.includes("memory")) return ERROR_CODES.SYSTEM.OUT_OF_MEMORY;
+        if (message.includes("unavailable"))
+          return ERROR_CODES.SYSTEM.SERVICE_UNAVAILABLE;
         return ERROR_CODES.SYSTEM.INTERNAL_SERVER_ERROR;
 
       default:
@@ -257,7 +283,9 @@ export class ErrorHandler {
    * Check if error is recoverable
    */
   private isRecoverable(errorClass: ErrorClass): boolean {
-    return errorClass === ErrorClass.INTEGRATION || errorClass === ErrorClass.SYSTEM;
+    return (
+      errorClass === ErrorClass.INTEGRATION || errorClass === ErrorClass.SYSTEM
+    );
   }
 
   /**
@@ -278,31 +306,34 @@ export class ErrorHandler {
    * Mask IP address for privacy
    */
   private maskIpAddress(ip: string): string {
-    if (!ip || ip === 'unknown') return 'unknown';
-    
+    if (!ip || ip === "unknown") return "unknown";
+
     // IPv4: 192.168.1.1 -> 192.168.1.***
-    if (ip.includes('.')) {
-      const parts = ip.split('.');
+    if (ip.includes(".")) {
+      const parts = ip.split(".");
       if (parts.length === 4) {
         return `${parts[0]}.${parts[1]}.${parts[2]}.***`;
       }
     }
-    
+
     // IPv6: 2001:db8::1 -> 2001:db8::***
-    if (ip.includes(':')) {
-      const parts = ip.split(':');
+    if (ip.includes(":")) {
+      const parts = ip.split(":");
       if (parts.length > 2) {
-        return `${parts.slice(0, -1).join(':')}:***`;
+        return `${parts.slice(0, -1).join(":")}:***`;
       }
     }
-    
+
     return ip;
   }
 
   /**
    * Log error with appropriate level
    */
-  private logError(structuredError: StructuredError, originalError: Error): void {
+  private logError(
+    structuredError: StructuredError,
+    originalError: Error,
+  ): void {
     const logData = {
       errorId: structuredError.errorId,
       correlationId: structuredError.correlationId,
@@ -311,21 +342,21 @@ export class ErrorHandler {
       code: structuredError.code,
       message: structuredError.message,
       context: structuredError.context,
-      stack: this.enableStackTrace ? originalError.stack : undefined
+      stack: this.enableStackTrace ? originalError.stack : undefined,
     };
 
     switch (structuredError.severity) {
       case ErrorSeverity.LOW:
-        this.logger.info('Client error occurred', logData);
+        this.logger.info("Client error occurred", logData);
         break;
       case ErrorSeverity.MEDIUM:
-        this.logger.warn('Business logic error occurred', logData);
+        this.logger.warn("Business logic error occurred", logData);
         break;
       case ErrorSeverity.HIGH:
-        this.logger.error('Integration error occurred', logData);
+        this.logger.error("Integration error occurred", logData);
         break;
       case ErrorSeverity.CRITICAL:
-        this.logger.error('Critical system error occurred', logData);
+        this.logger.error("Critical system error occurred", logData);
         break;
     }
   }
@@ -333,7 +364,10 @@ export class ErrorHandler {
   /**
    * Update error metrics
    */
-  private updateErrorMetrics(errorClass: ErrorClass, severity: ErrorSeverity): void {
+  private updateErrorMetrics(
+    errorClass: ErrorClass,
+    severity: ErrorSeverity,
+  ): void {
     const key = `${errorClass}:${severity}`;
     const currentCount = this.errorCounts.get(key) || 0;
     this.errorCounts.set(key, currentCount + 1);
@@ -349,9 +383,12 @@ export class ErrorHandler {
   /**
    * Send error response to client
    */
-  private sendErrorResponse(res: Response, structuredError: StructuredError): void {
+  private sendErrorResponse(
+    res: Response,
+    structuredError: StructuredError,
+  ): void {
     const httpStatus = HTTP_STATUS_MAP[structuredError.class];
-    
+
     // Create client-safe response (no sensitive data)
     const clientResponse = {
       error: {
@@ -362,8 +399,8 @@ export class ErrorHandler {
         message: structuredError.userMessage,
         recoverable: structuredError.recoverable,
         retryAfter: structuredError.retryAfter,
-        timestamp: structuredError.timestamp
-      }
+        timestamp: structuredError.timestamp,
+      },
     };
 
     res.status(httpStatus).json(clientResponse);

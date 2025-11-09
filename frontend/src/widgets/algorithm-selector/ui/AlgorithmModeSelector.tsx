@@ -2,23 +2,27 @@
  * @fileoverview Algorithm Mode Selector Widget
  * @module widgets/algorithm-selector
  * @version 1.0.0
- * 
+ *
  * FSD: Widget layer - Reusable UI component for algorithm selection
  * Design System v2.0: Uses tokens and glassmorphism
  */
 
-import React from 'react';
-import { 
-  Box, 
-  ToggleButtonGroup, 
-  ToggleButton, 
-  Typography, 
+import React from "react";
+import {
+  Box,
+  ToggleButtonGroup,
+  ToggleButton,
+  Typography,
   Chip,
   Stack,
-  alpha
-} from '@mui/material';
-import { FlashOn, Analytics, AutoAwesome } from '@mui/icons-material';
-import { ALGORITHM_CONFIGS, getRecommendedMode, type AlgorithmMode } from '@/entities/algorithm';
+  alpha,
+} from "@mui/material";
+import { FlashOn, Analytics, AutoAwesome } from "@mui/icons-material";
+import {
+  ALGORITHM_CONFIGS,
+  getRecommendedMode,
+  type AlgorithmMode,
+} from "@/entities/algorithm";
 
 /**
  * Component props (readonly for immutability)
@@ -41,7 +45,7 @@ const ICON_MAP = {
 
 /**
  * Algorithm Mode Selector Component
- * 
+ *
  * Features:
  * - 3 modes: Standard (fast), Advanced (Pareto), Auto (smart)
  * - Smart recommendation based on item count
@@ -55,11 +59,12 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
   disabled = false,
 }) => {
   // Get recommendation based on item count
-  const recommendedMode = itemCount !== undefined ? getRecommendedMode(itemCount) : 'standard';
-  
+  const recommendedMode =
+    itemCount !== undefined ? getRecommendedMode(itemCount) : "standard";
+
   // Debug: Log render
   React.useEffect(() => {
-    console.log('[AlgorithmModeSelector] Rendered:', {
+    console.log("[AlgorithmModeSelector] Rendered:", {
       value,
       itemCount,
       recommendedMode,
@@ -68,12 +73,12 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
   }, [value, itemCount, recommendedMode, disabled]);
 
   return (
-    <Box sx={{ width: '100%' }}>
-      <Typography 
-        variant="subtitle1" 
+    <Box sx={{ width: "100%" }}>
+      <Typography
+        variant="subtitle1"
         fontWeight={600}
         gutterBottom
-        sx={{ color: 'text.primary', mb: 2 }}
+        sx={{ color: "text.primary", mb: 2 }}
       >
         Algoritma Modu
       </Typography>
@@ -87,18 +92,18 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
         fullWidth
         disabled={disabled}
         sx={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
           gap: 1.5,
-          '& .MuiToggleButtonGroup-grouped': {
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: '12px !important',
+          "& .MuiToggleButtonGroup-grouped": {
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: "12px !important",
             margin: 0,
           },
         }}
       >
-        {(['standard', 'advanced', 'auto'] as const).map(mode => {
+        {(["standard", "advanced", "auto"] as const).map((mode) => {
           const config = ALGORITHM_CONFIGS[mode];
           const isRecommended = recommendedMode === mode;
           const isSelected = value === mode;
@@ -109,62 +114,73 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
               key={mode}
               value={mode}
               sx={{
-                flexDirection: 'column',
-                alignItems: 'flex-start',
+                flexDirection: "column",
+                alignItems: "flex-start",
                 p: 2,
-                textAlign: 'left',
-                backgroundColor: isSelected 
-                  ? alpha('#1976d2', 0.08) 
-                  : 'background.paper',
-                '&:hover': {
-                  backgroundColor: alpha('#1976d2', 0.12),
+                textAlign: "left",
+                backgroundColor: isSelected
+                  ? alpha("#1976d2", 0.08)
+                  : "background.paper",
+                "&:hover": {
+                  backgroundColor: alpha("#1976d2", 0.12),
                 },
-                '&.Mui-selected': {
-                  backgroundColor: alpha('#1976d2', 0.16),
-                  borderColor: 'primary.main',
-                  '&:hover': {
-                    backgroundColor: alpha('#1976d2', 0.2),
+                "&.Mui-selected": {
+                  backgroundColor: alpha("#1976d2", 0.16),
+                  borderColor: "primary.main",
+                  "&:hover": {
+                    backgroundColor: alpha("#1976d2", 0.2),
                   },
                 },
               }}
             >
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1, width: '100%' }}>
-                <IconComponent fontSize="small" color={isSelected ? 'primary' : 'action'} />
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ mb: 1, width: "100%" }}
+              >
+                <IconComponent
+                  fontSize="small"
+                  color={isSelected ? "primary" : "action"}
+                />
                 {isRecommended && config.badge && (
-                  <Chip 
-                    label={config.badge} 
-                    size="small" 
-                    color="primary" 
+                  <Chip
+                    label={config.badge}
+                    size="small"
+                    color="primary"
                     variant="outlined"
-                    sx={{ height: 20, fontSize: '0.7rem' }}
+                    sx={{ height: 20, fontSize: "0.7rem" }}
                   />
                 )}
               </Stack>
 
-              <Typography 
-                variant="subtitle2" 
+              <Typography
+                variant="subtitle2"
                 fontWeight={600}
-                sx={{ color: isSelected ? 'primary.main' : 'text.primary', mb: 0.5 }}
+                sx={{
+                  color: isSelected ? "primary.main" : "text.primary",
+                  mb: 0.5,
+                }}
               >
                 {config.name}
               </Typography>
 
-              <Typography 
-                variant="caption" 
+              <Typography
+                variant="caption"
                 color="text.secondary"
-                sx={{ mb: 1, display: 'block', lineHeight: 1.4 }}
+                sx={{ mb: 1, display: "block", lineHeight: 1.4 }}
               >
                 {config.description}
               </Typography>
 
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  color: 'primary.main', 
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "primary.main",
                   fontWeight: 500,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
                 }}
               >
                 ⏱️ {config.estimatedTime}
@@ -175,13 +191,26 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
       </ToggleButtonGroup>
 
       {/* Features list for selected mode */}
-      <Box sx={{ mt: 2, p: 2, bgcolor: alpha('#1976d2', 0.04), borderRadius: 2 }}>
-        <Typography variant="caption" fontWeight={600} color="text.secondary" display="block" sx={{ mb: 1 }}>
+      <Box
+        sx={{ mt: 2, p: 2, bgcolor: alpha("#1976d2", 0.04), borderRadius: 2 }}
+      >
+        <Typography
+          variant="caption"
+          fontWeight={600}
+          color="text.secondary"
+          display="block"
+          sx={{ mb: 1 }}
+        >
           Özellikler:
         </Typography>
         <Stack spacing={0.5}>
           {ALGORITHM_CONFIGS[value].features.map((feature, index) => (
-            <Typography key={index} variant="caption" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Typography
+              key={index}
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+            >
               • {feature}
             </Typography>
           ))}
@@ -190,4 +219,3 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
     </Box>
   );
 };
-

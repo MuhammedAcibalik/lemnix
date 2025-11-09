@@ -4,14 +4,19 @@
  * @version 1.0.0
  */
 
-import React from 'react';
-import { Box } from '@mui/material';
-import { TabPanelProps } from '../types';
+import React from "react";
+import { Box } from "@mui/material";
+import { TabPanelProps } from "../types";
 
 /**
  * TabPanel Component
  */
-export const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => {
+export const TabPanel: React.FC<TabPanelProps> = ({
+  children,
+  value,
+  index,
+  ...other
+}) => {
   return (
     <div
       role="tabpanel"

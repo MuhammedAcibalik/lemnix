@@ -4,10 +4,10 @@
  * @version 2.0.0 - Enterprise Grade Modular Design
  */
 
-import React from 'react';
-import { Snackbar, Alert } from '@mui/material';
-import { SnackbarState, SnackbarCloseHandler } from '../types';
-import { snackbarConfig } from '../constants';
+import React from "react";
+import { Snackbar, Alert } from "@mui/material";
+import { SnackbarState, SnackbarCloseHandler } from "../types";
+import { snackbarConfig } from "../constants";
 
 interface SnackbarWrapperProps {
   snackbar: SnackbarState;
@@ -19,7 +19,7 @@ interface SnackbarWrapperProps {
  */
 export const SnackbarWrapper: React.FC<SnackbarWrapperProps> = ({
   snackbar,
-  onClose
+  onClose,
 }) => {
   return (
     <Snackbar
@@ -31,7 +31,7 @@ export const SnackbarWrapper: React.FC<SnackbarWrapperProps> = ({
       <Alert
         onClose={onClose}
         severity={snackbar.severity}
-        sx={{ width: '100%' }}
+        sx={{ width: "100%" }}
       >
         {snackbar.message}
       </Alert>

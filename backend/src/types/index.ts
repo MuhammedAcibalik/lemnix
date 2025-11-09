@@ -7,61 +7,61 @@
 // ========== DOMAIN ENUMS ==========
 
 export enum WorkOrderStatus {
-  PENDING = 'pending',
-  PROCESSING = 'processing',
-  OPTIMIZING = 'optimizing',
-  READY_FOR_CUTTING = 'ready_for_cutting',
-  IN_PRODUCTION = 'in_production',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
-  ON_HOLD = 'on_hold'
+  PENDING = "pending",
+  PROCESSING = "processing",
+  OPTIMIZING = "optimizing",
+  READY_FOR_CUTTING = "ready_for_cutting",
+  IN_PRODUCTION = "in_production",
+  COMPLETED = "completed",
+  CANCELLED = "cancelled",
+  ON_HOLD = "on_hold",
 }
 
 // Dinamik profil tipi - Excel'den gelen string değerler
 export type ProfileType = string;
 
 export enum OptimizationAlgorithm {
-  FIRST_FIT_DECREASING = 'ffd',
-  BEST_FIT_DECREASING = 'bfd',
-  GENETIC_ALGORITHM = 'genetic',
-  NSGA_II = 'nsga-ii',
-  PROFILE_POOLING = 'pooling',
-  PATTERN_EXACT = 'pattern-exact'
+  FIRST_FIT_DECREASING = "ffd",
+  BEST_FIT_DECREASING = "bfd",
+  GENETIC_ALGORITHM = "genetic",
+  NSGA_II = "nsga-ii",
+  PROFILE_POOLING = "pooling",
+  PATTERN_EXACT = "pattern-exact",
 }
 
 // Alias for backward compatibility
 export type AlgorithmType = OptimizationAlgorithm;
 
 export enum Priority {
-  LOW = 'low',
-  NORMAL = 'normal',
-  HIGH = 'high',
-  URGENT = 'urgent'
+  LOW = "low",
+  NORMAL = "normal",
+  HIGH = "high",
+  URGENT = "urgent",
 }
 
 export enum WasteCategory {
-  MINIMAL = 'minimal', // < 50mm
-  SMALL = 'small',     // 50-150mm
-  MEDIUM = 'medium',   // 150-300mm
-  LARGE = 'large',     // 300-500mm
-  EXCESSIVE = 'excessive' // > 500mm
+  MINIMAL = "minimal", // < 50mm
+  SMALL = "small", // 50-150mm
+  MEDIUM = "medium", // 150-300mm
+  LARGE = "large", // 300-500mm
+  EXCESSIVE = "excessive", // > 500mm
 }
 
 // ========== CUTTING LIST ENUMS (Phase 1 Implementation) ==========
 
 export enum CuttingListStatus {
-  DRAFT = 'DRAFT',
-  READY = 'READY',
-  PROCESSING = 'PROCESSING',
-  COMPLETED = 'COMPLETED',
-  ARCHIVED = 'ARCHIVED'
+  DRAFT = "DRAFT",
+  READY = "READY",
+  PROCESSING = "PROCESSING",
+  COMPLETED = "COMPLETED",
+  ARCHIVED = "ARCHIVED",
 }
 
 export enum ItemPriority {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  URGENT = 'URGENT'
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
+  URGENT = "URGENT",
 }
 
 // ========== CORE DOMAIN MODELS ==========
@@ -75,7 +75,7 @@ export interface WorkOrder {
   readonly dueDate: Date;
   readonly status: WorkOrderStatus;
   readonly priority: Priority;
-  
+
   // Business Metrics
   readonly totalWaste: number;
   readonly totalWasteValue: number;
@@ -84,14 +84,14 @@ export interface WorkOrder {
   readonly actualCost?: number;
   readonly materialCost: number;
   readonly laborCost: number;
-  
+
   // Operational Data
   readonly totalLength: number;
   readonly stockCount: number;
   readonly uniqueProfileTypes: number;
   readonly estimatedProcessingTime: number; // minutes
   readonly actualProcessingTime?: number;
-  
+
   // Metadata
   readonly createdAt: Date;
   readonly updatedAt: Date;
@@ -99,7 +99,7 @@ export interface WorkOrder {
   readonly updatedBy?: string;
   readonly version: number;
   readonly notes?: string;
-  
+
   // Relations
   readonly items: WorkOrderItem[];
   readonly cuttingPlans?: CuttingPlan[];
@@ -133,41 +133,41 @@ export interface CuttingPlan {
   readonly stockLength: number; // Standard: 6100mm
   readonly algorithm: OptimizationAlgorithm;
   readonly optimizationConstraints: OptimizationConstraints;
-  
+
   // Cutting Data
   readonly cuts: Cut[];
   readonly totalStocksUsed: number;
   readonly totalCutsCount: number;
   readonly averageCutsPerStock: number;
-  
+
   // Waste Analysis
   readonly totalWaste: number;
   readonly wastePercentage: number;
   readonly wasteByCategory: WasteDistribution;
   readonly reclaimableWaste: number;
-  
+
   // Performance Metrics
   readonly efficiency: number;
   readonly materialUtilization: number;
   readonly cuttingComplexity: number;
   readonly estimatedSetupTime: number; // minutes
   readonly estimatedCuttingTime: number; // minutes
-  
+
   // Cost Analysis
   readonly materialCost: number;
   readonly wasteCost: number;
   readonly setupCost: number;
   readonly totalCost: number;
-  
+
   // Quality & Validation
   readonly isValidated: boolean;
   readonly validationErrors: ValidationIssue[];
   readonly qualityScore: number; // 0-100
-  
+
   // Multi-Material Support
   readonly materialResults?: MaterialOptimizationResult[];
   readonly materialTypes: ProfileType[];
-  
+
   // Metadata
   readonly createdAt: Date;
   readonly createdBy: string;
@@ -185,41 +185,49 @@ export interface Cut {
   readonly stockLength: number;
   readonly materialType: ProfileType;
   readonly profileType?: ProfileType; // ✅ Frontend uyumluluğu için profileType ekle
-  
+
   // Cutting Segments
   readonly segments: CuttingSegment[];
   readonly segmentCount: number;
-  
+
   // Dimensions & Waste
   readonly usedLength: number;
   readonly remainingLength: number;
   readonly wasteCategory: WasteCategory;
   readonly isReclaimable: boolean;
-  
+
   // Manufacturing Data
   readonly estimatedCuttingTime: number; // minutes
   readonly setupTime: number; // minutes
   readonly kerfLoss: number; // Total kerf width loss
   readonly safetyMargin: number; // Total safety margins
-  
+
   // Quality Control
   readonly toleranceCheck: boolean;
   readonly qualityNotes?: string;
-  
+
   // Operational
   readonly sequence: number; // Order of cutting
   readonly machineId?: string;
-  
+
   // Pooling-specific fields
-  readonly workOrderBreakdown?: Array<{ workOrderId: string | number; count: number }>;
+  readonly workOrderBreakdown?: Array<{
+    workOrderId: string | number;
+    count: number;
+  }>;
   readonly isMixed?: boolean;
   readonly poolKey?: string;
   readonly operatorId?: string;
   readonly actualCuttingTime?: number;
   readonly completedAt?: Date;
-  
+
   // ✅ Cutting Plan Data (additive fields)
-  readonly plan?: Array<{ length: number; count: number; profile?: string; itemId?: string }>;
+  readonly plan?: Array<{
+    length: number;
+    count: number;
+    profile?: string;
+    itemId?: string;
+  }>;
   readonly planLabel?: string; // e.g., "7 × 992 mm" or "4 × 992 mm + 3 × 687 mm"
 }
 
@@ -232,22 +240,22 @@ export interface CuttingSegment {
   readonly quantity: number;
   readonly position: number; // Position from stock start
   readonly endPosition: number; // Calculated end position
-  
+
   // Manufacturing Specifications
   readonly tolerance: number; // +/- mm
   readonly surfaceFinish?: string;
   readonly specialInstructions?: string;
-  
+
   // Traceability
   readonly workOrderItemId: string;
   readonly originalLength: number; // Original requested length
   readonly actualLength?: number; // Measured after cutting
   readonly qualityCheck: boolean;
-  
+
   // Cost Allocation
   readonly unitCost: number;
   readonly totalCost: number;
-  
+
   // Direct fields for cutting list integration
   readonly workOrderId?: string;
   readonly productName?: string;
@@ -256,7 +264,7 @@ export interface CuttingSegment {
   readonly note?: string;
   readonly version?: string;
   readonly date?: string;
-  
+
   // Excel Metadata
   readonly metadata?: {
     readonly color?: string;
@@ -344,13 +352,13 @@ export interface OptimizationResult {
   constraints: OptimizationConstraints;
   recommendations: OptimizationRecommendation[];
   // New fields based on real-world analysis
-  efficiencyCategory: 'excellent' | 'good' | 'average' | 'poor';
+  efficiencyCategory: "excellent" | "good" | "average" | "poor";
   detailedWasteAnalysis: {
-    minimal: number;    // < 50mm
-    small: number;      // 50-150mm
-    medium: number;     // 150-300mm
-    large: number;      // 300-500mm
-    excessive: number;  // > 500mm
+    minimal: number; // < 50mm
+    small: number; // 50-150mm
+    medium: number; // 150-300mm
+    large: number; // 300-500mm
+    excessive: number; // > 500mm
     totalPieces: number;
     averageWaste: number;
   };
@@ -365,20 +373,20 @@ export interface MaterialOptimizationResult {
   readonly stockLength: number;
   readonly cuts: Cut[];
   readonly stockCount: number;
-  
+
   // Material-Specific Metrics
   readonly totalWaste: number;
   readonly wasteValue: number;
   readonly efficiency: number;
   readonly utilization: number;
   readonly materialCost: number;
-  
+
   // Quality & Performance
   readonly averageComplexity: number;
   readonly setupTime: number;
   readonly cuttingTime: number;
   readonly qualityScore: number;
-  
+
   // Recommendations
   readonly recommendations: string[];
   readonly alternativeStockLengths?: number[];
@@ -401,9 +409,9 @@ export interface MaterialStockLength {
 
 export interface WasteDistribution {
   readonly minimal: number; // < 50mm
-  readonly small: number;   // 50-150mm
-  readonly medium: number;  // 150-300mm
-  readonly large: number;   // 300-500mm
+  readonly small: number; // 50-150mm
+  readonly medium: number; // 150-300mm
+  readonly large: number; // 300-500mm
   readonly excessive: number; // > 500mm
   readonly reclaimable: number;
   readonly totalPieces: number;
@@ -420,17 +428,17 @@ export interface DetailedWasteAnalysis {
 }
 
 export interface OptimizationRecommendation {
-  readonly type: 'efficiency' | 'cost' | 'quality' | 'setup' | 'waste';
-  readonly severity: 'info' | 'warning' | 'critical';
+  readonly type: "efficiency" | "cost" | "quality" | "setup" | "waste";
+  readonly severity: "info" | "warning" | "critical";
   readonly message: string;
   readonly impact: string;
   readonly suggestion: string;
   readonly potentialSavings?: number; // Cost savings
-  readonly implementationEffort: 'low' | 'medium' | 'high';
+  readonly implementationEffort: "low" | "medium" | "high";
 }
 
 export interface ValidationIssue {
-  readonly type: 'error' | 'warning' | 'info';
+  readonly type: "error" | "warning" | "info";
   readonly code: string;
   readonly message: string;
   readonly field?: string;
@@ -524,10 +532,10 @@ export class OptimizationError extends Error {
     message: string,
     public readonly code: string,
     public readonly details: Record<string, unknown> = {},
-    public readonly severity: 'low' | 'medium' | 'high' | 'critical' = 'medium'
+    public readonly severity: "low" | "medium" | "high" | "critical" = "medium",
   ) {
     super(message);
-    this.name = 'OptimizationError';
+    this.name = "OptimizationError";
   }
 }
 
@@ -535,10 +543,10 @@ export class ValidationError extends Error {
   constructor(
     message: string,
     public readonly issues: ValidationIssue[] = [],
-    public readonly field?: string
+    public readonly field?: string,
   ) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
   }
 }
 
@@ -546,10 +554,10 @@ export class BusinessRuleError extends Error {
   constructor(
     message: string,
     public readonly rule: string,
-    public readonly context: Record<string, unknown> = {}
+    public readonly context: Record<string, unknown> = {},
   ) {
     super(message);
-    this.name = 'BusinessRuleError';
+    this.name = "BusinessRuleError";
   }
 }
 
@@ -569,7 +577,7 @@ export interface PaginationParams {
   readonly page: number;
   readonly limit: number;
   readonly sortBy?: string;
-  readonly sortOrder: 'asc' | 'desc';
+  readonly sortOrder: "asc" | "desc";
   readonly filters?: Record<string, unknown>;
 }
 
@@ -620,7 +628,7 @@ export interface OptimizationConfig {
 }
 
 export interface SystemHealth {
-  readonly status: 'healthy' | 'degraded' | 'unhealthy';
+  readonly status: "healthy" | "degraded" | "unhealthy";
   readonly version: string;
   readonly uptime: number;
   readonly performance: {
@@ -645,11 +653,15 @@ export const isWorkOrderStatus = (value: string): value is WorkOrderStatus => {
 export const isProfileType = (value: string): value is ProfileType => {
   // Dinamik profil tipi kontrolü - Excel'den gelen herhangi bir string geçerli
   // Kullanıcı Excel'de hangi profil adını kullanırsa o geçerli bir profil tipidir
-  return typeof value === 'string' && value.trim().length > 0;
+  return typeof value === "string" && value.trim().length > 0;
 };
 
-export const isOptimizationAlgorithm = (value: string): value is OptimizationAlgorithm => {
-  return Object.values(OptimizationAlgorithm).includes(value as OptimizationAlgorithm);
+export const isOptimizationAlgorithm = (
+  value: string,
+): value is OptimizationAlgorithm => {
+  return Object.values(OptimizationAlgorithm).includes(
+    value as OptimizationAlgorithm,
+  );
 };
 
 export const isPriority = (value: string): value is Priority => {
@@ -670,16 +682,16 @@ export const MANUFACTURING_CONSTANTS = {
   QUALITY_SCORE_WEIGHTS: {
     efficiency: 0.35,
     wasteReduction: 0.25,
-    complexity: 0.20,
-    setupTime: 0.20
-  }
+    complexity: 0.2,
+    setupTime: 0.2,
+  },
 } as const;
 
 export const COST_PARAMETERS = {
   SETUP_COST_PER_STOCK: 5, // currency units
   LABOR_COST_PER_MINUTE: 0.5, // currency units
   WASTE_COST_MULTIPLIER: 1.2, // material cost * multiplier
-  QUALITY_BONUS_MULTIPLIER: 0.95 // Cost reduction for high quality
+  QUALITY_BONUS_MULTIPLIER: 0.95, // Cost reduction for high quality
 } as const;
 
 // Branch and Bound Node interface
@@ -819,4 +831,4 @@ export interface WorkOrderProfileMappingInput {
 // ========== API RESPONSE TYPES (Phase 1, Step 2) ==========
 
 // Export all API response types and utilities
-export * from './apiResponse';
+export * from "./apiResponse";

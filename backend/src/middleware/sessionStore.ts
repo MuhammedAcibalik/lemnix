@@ -1,4 +1,4 @@
-import { UserRole } from './authorization';
+import { UserRole } from "./authorization";
 
 export interface SessionRecord {
   sessionId: string;
@@ -64,7 +64,7 @@ export class InMemorySessionStore implements SessionStore {
       return [];
     }
     return Array.from(sessionIds)
-      .map(id => this.sessions.get(id))
+      .map((id) => this.sessions.get(id))
       .filter((session): session is SessionRecord => Boolean(session));
   }
 }

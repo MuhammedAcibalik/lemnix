@@ -1,12 +1,12 @@
 /**
  * Validation Hook
- * 
+ *
  * @module shared/lib/validation
  * @version 1.0.0
  */
 
-import { useState, useCallback } from 'react';
-import type { ValidationError, ValidationResult } from './types';
+import { useState, useCallback } from "react";
+import type { ValidationError, ValidationResult } from "./types";
 
 export function useValidation() {
   const [errors, setErrors] = useState<ReadonlyArray<ValidationError>>([]);
@@ -47,4 +47,3 @@ export function useValidation() {
     clearAll,
   } as const;
 }
-

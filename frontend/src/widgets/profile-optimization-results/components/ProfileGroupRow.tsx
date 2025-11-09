@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 import {
   TableRow,
   TableCell,
@@ -12,15 +12,15 @@ import {
   Button,
   Badge,
   Collapse,
-  Box
-} from '@mui/material';
+  Box,
+} from "@mui/material";
 import {
   ExpandMore as ExpandMoreIcon,
-  ExpandLess as ExpandLessIcon
-} from '@mui/icons-material';
-import { ProfileGroupRowProps } from '../types';
-import { messages } from '../constants';
-import { ProfileGroupDetails } from './ProfileGroupDetails';
+  ExpandLess as ExpandLessIcon,
+} from "@mui/icons-material";
+import { ProfileGroupRowProps } from "../types";
+import { messages } from "../constants";
+import { ProfileGroupDetails } from "./ProfileGroupDetails";
 
 /**
  * Profile Group Row Component
@@ -30,7 +30,7 @@ export const ProfileGroupRow: React.FC<ProfileGroupRowProps> = ({
   isExpanded,
   onProfileClick,
   onCuttingPlanDetails,
-  optimizationResult
+  optimizationResult,
 }) => {
   return (
     <React.Fragment>
@@ -46,17 +46,23 @@ export const ProfileGroupRow: React.FC<ProfileGroupRowProps> = ({
           </Typography>
         </TableCell>
         <TableCell align="center">
-          <Typography 
-            variant="body2" 
-            fontWeight="bold" 
-            color={group.efficiency >= 85 ? "success.main" : group.efficiency >= 70 ? "warning.main" : "error.main"}
+          <Typography
+            variant="body2"
+            fontWeight="bold"
+            color={
+              group.efficiency >= 85
+                ? "success.main"
+                : group.efficiency >= 70
+                  ? "warning.main"
+                  : "error.main"
+            }
           >
             {group.efficiency.toFixed(1)}%
           </Typography>
         </TableCell>
         <TableCell align="center">
-          <Typography 
-            variant="body2" 
+          <Typography
+            variant="body2"
             fontWeight="medium"
             color={group.waste > 500 ? "error.main" : "success.main"}
           >
@@ -78,15 +84,17 @@ export const ProfileGroupRow: React.FC<ProfileGroupRowProps> = ({
             onClick={() => onProfileClick(group.profileType)}
             startIcon={isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           >
-            {isExpanded ? messages.profileGroups.hide : messages.profileGroups.show}
+            {isExpanded
+              ? messages.profileGroups.hide
+              : messages.profileGroups.show}
           </Button>
         </TableCell>
       </TableRow>
-      
+
       {/* Expandable Profile Details */}
       {isExpanded && (
         <TableRow>
-          <TableCell colSpan={6} sx={{ p: 0, border: 'none' }}>
+          <TableCell colSpan={6} sx={{ p: 0, border: "none" }}>
             <Collapse in={isExpanded} timeout="auto" unmountOnExit>
               <ProfileGroupDetails
                 group={group}

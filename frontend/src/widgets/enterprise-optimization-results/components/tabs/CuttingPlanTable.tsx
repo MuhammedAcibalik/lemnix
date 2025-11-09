@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 import {
   TableContainer,
   Table,
@@ -14,17 +14,20 @@ import {
   TableBody,
   Paper,
   Alert,
-  AlertTitle
-} from '@mui/material';
-import { WorkOrderRow } from './WorkOrderRow';
-import { WorkOrder, Cut } from '../../types';
+  AlertTitle,
+} from "@mui/material";
+import { WorkOrderRow } from "./WorkOrderRow";
+import { WorkOrder, Cut } from "../../types";
 
 interface CuttingPlanTableProps {
   aggregatedWorkOrders: WorkOrder[];
   expandedWorkOrder: string | null;
   onWorkOrderClick: (workOrderId: string) => void;
   onCuttingPlanDetails: (stock: Cut) => void;
-  getAlgorithmProfile: (algorithm?: string) => { icon: React.ReactNode; label: string };
+  getAlgorithmProfile: (algorithm?: string) => {
+    icon: React.ReactNode;
+    label: string;
+  };
 }
 
 export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({
@@ -32,7 +35,7 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({
   expandedWorkOrder,
   onWorkOrderClick,
   onCuttingPlanDetails,
-  getAlgorithmProfile
+  getAlgorithmProfile,
 }) => {
   return (
     <TableContainer
@@ -188,8 +191,9 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({
             </TableRow>
           ) : (
             aggregatedWorkOrders.map((workOrder: WorkOrder) => {
-              const isExpanded = expandedWorkOrder === String(workOrder.workOrderId);
-              
+              const isExpanded =
+                expandedWorkOrder === String(workOrder.workOrderId);
+
               return (
                 <WorkOrderRow
                   key={workOrder.workOrderId}

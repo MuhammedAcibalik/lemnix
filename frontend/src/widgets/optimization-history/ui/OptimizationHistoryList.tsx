@@ -1,12 +1,12 @@
 /**
  * Optimization History List Component
  * Full-featured history list with filtering and pagination
- * 
+ *
  * @module widgets/optimization-history
  * @version 1.0.0
  */
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Box,
   Paper,
@@ -25,48 +25,59 @@ import {
   Typography,
   CircularProgress,
   Alert,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Visibility as ViewIcon,
   Download as DownloadIcon,
-} from '@mui/icons-material';
-import { useOptimizationHistory, ALGORITHM_CATALOG, type AlgorithmType } from '@/entities/optimization';
+} from "@mui/icons-material";
+import {
+  useOptimizationHistory,
+  ALGORITHM_CATALOG,
+  type AlgorithmType,
+} from "@/entities/optimization";
 
 export interface OptimizationHistoryListProps {
   readonly onViewDetails?: (id: string) => void;
   readonly onExport?: (id: string) => void;
 }
 
-export const OptimizationHistoryList: React.FC<OptimizationHistoryListProps> = ({
-  onViewDetails,
-  onExport,
-}) => {
+export const OptimizationHistoryList: React.FC<
+  OptimizationHistoryListProps
+> = ({ onViewDetails, onExport }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [algorithmFilter, setAlgorithmFilter] = useState<AlgorithmType | 'all'>('all');
+  const [algorithmFilter, setAlgorithmFilter] = useState<AlgorithmType | "all">(
+    "all",
+  );
 
-  const { data: history, isLoading, error } = useOptimizationHistory({
+  const {
+    data: history,
+    isLoading,
+    error,
+  } = useOptimizationHistory({
     page: page + 1,
     pageSize: rowsPerPage,
-    algorithm: algorithmFilter === 'all' ? undefined : algorithmFilter,
+    algorithm: algorithmFilter === "all" ? undefined : algorithmFilter,
   });
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
   const formatDate = (timestamp: string): string => {
-    return new Date(timestamp).toLocaleString('tr-TR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(timestamp).toLocaleString("tr-TR", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -78,7 +89,9 @@ export const OptimizationHistoryList: React.FC<OptimizationHistoryListProps> = (
           select
           label="Algoritma"
           value={algorithmFilter}
-          onChange={(e) => setAlgorithmFilter(e.target.value as AlgorithmType | 'all')}
+          onChange={(e) =>
+            setAlgorithmFilter(e.target.value as AlgorithmType | "all")
+          }
           size="small"
           sx={{ minWidth: 200 }}
         >
@@ -106,9 +119,9 @@ export const OptimizationHistoryList: React.FC<OptimizationHistoryListProps> = (
 
         {!isLoading && !error && history && history.length === 0 && (
           <Alert severity="info" sx={{ m: 2 }}>
-            {algorithmFilter === 'all' 
-              ? 'Henüz optimizasyon geçmişi yok' 
-              : 'Bu algoritma için kayıt bulunamadı'}
+            {algorithmFilter === "all"
+              ? "Henüz optimizasyon geçmişi yok"
+              : "Bu algoritma için kayıt bulunamadı"}
           </Alert>
         )}
 
@@ -133,7 +146,7 @@ export const OptimizationHistoryList: React.FC<OptimizationHistoryListProps> = (
                   const efficiency = item.result.totalEfficiency;
                   const wastePercentage = item.result.wastePercentage;
                   const executionTime = item.result.executionTime;
-                  
+
                   return (
                     <TableRow key={item.id} hover>
                       <TableCell>
@@ -158,26 +171,42 @@ export const OptimizationHistoryList: React.FC<OptimizationHistoryListProps> = (
                         <Chip
                           label={`${efficiency.toFixed(1)}%`}
                           size="small"
-                          color={efficiency >= 90 ? 'success' : efficiency >= 75 ? 'warning' : 'default'}
+                          color={
+                            efficiency >= 90
+                              ? "success"
+                              : efficiency >= 75
+                                ? "warning"
+                                : "default"
+                          }
                         />
                       </TableCell>
                       <TableCell align="right">
                         <Chip
                           label={`${wastePercentage.toFixed(1)}%`}
                           size="small"
-                          color={wastePercentage <= 5 ? 'success' : wastePercentage <= 10 ? 'warning' : 'error'}
+                          color={
+                            wastePercentage <= 5
+                              ? "success"
+                              : wastePercentage <= 10
+                                ? "warning"
+                                : "error"
+                          }
                           variant="outlined"
                         />
                       </TableCell>
                       <TableCell align="right">
                         <Typography variant="body2" color="text.secondary">
-                          {executionTime < 1000 
-                            ? `${executionTime}ms` 
+                          {executionTime < 1000
+                            ? `${executionTime}ms`
                             : `${(executionTime / 1000).toFixed(1)}s`}
                         </Typography>
                       </TableCell>
                       <TableCell align="center">
-                        <Stack direction="row" spacing={1} justifyContent="center">
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          justifyContent="center"
+                        >
                           {onViewDetails && (
                             <IconButton
                               size="small"
@@ -221,4 +250,3 @@ export const OptimizationHistoryList: React.FC<OptimizationHistoryListProps> = (
     </Box>
   );
 };
-

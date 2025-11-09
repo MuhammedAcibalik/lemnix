@@ -4,30 +4,30 @@
  * @version 1.0.0
  */
 
-import React from 'react';
-import { OptimizationResult, Cut } from '../../types';
-import { 
-  Box, 
-  Typography, 
-  Alert, 
-  AlertTitle, 
-  Grid, 
-  TableContainer, 
-  Paper, 
-  Table, 
-  TableHead, 
-  TableRow, 
-  TableCell, 
-  TableBody, 
-  Chip 
-} from '@mui/material';
+import React from "react";
+import { OptimizationResult, Cut } from "../../types";
+import {
+  Box,
+  Typography,
+  Alert,
+  AlertTitle,
+  Grid,
+  TableContainer,
+  Paper,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Chip,
+} from "@mui/material";
 
 interface WasteAnalysisTabProps {
   result: OptimizationResult;
 }
 
 export const WasteAnalysisTab: React.FC<WasteAnalysisTabProps> = ({
-  result
+  result,
 }) => {
   if (!result) {
     return (
@@ -70,11 +70,7 @@ export const WasteAnalysisTab: React.FC<WasteAnalysisTabProps> = ({
       {/* Atık Analizi */}
       <Grid container spacing={3}>
         <Grid item xs={12}>
-          <Alert
-            severity={
-              result.wastePercentage < 10 ? "success" : "warning"
-            }
-          >
+          <Alert severity={result.wastePercentage < 10 ? "success" : "warning"}>
             <AlertTitle>
               Atık Oranı: %{result.wastePercentage?.toFixed(1)}
             </AlertTitle>
@@ -96,32 +92,26 @@ export const WasteAnalysisTab: React.FC<WasteAnalysisTabProps> = ({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Object.entries(wasteAnalysis).map(
-                    ([key, value]) => (
-                      <TableRow key={key}>
-                        <TableCell>
-                          {key.charAt(0).toUpperCase() + key.slice(1)}
-                        </TableCell>
-                        <TableCell align="center">{value}</TableCell>
-                        <TableCell align="center">
-                          {(
-                            (value / result.stockCount) *
-                            100
-                          ).toFixed(1)}
-                          %
-                        </TableCell>
-                        <TableCell>
-                          {key === "reclaimable" && value > 0 && (
-                            <Chip
-                              label="Geri Kazanılabilir"
-                              color="success"
-                              size="small"
-                            />
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  )}
+                  {Object.entries(wasteAnalysis).map(([key, value]) => (
+                    <TableRow key={key}>
+                      <TableCell>
+                        {key.charAt(0).toUpperCase() + key.slice(1)}
+                      </TableCell>
+                      <TableCell align="center">{value}</TableCell>
+                      <TableCell align="center">
+                        {((value / result.stockCount) * 100).toFixed(1)}%
+                      </TableCell>
+                      <TableCell>
+                        {key === "reclaimable" && value > 0 && (
+                          <Chip
+                            label="Geri Kazanılabilir"
+                            color="success"
+                            size="small"
+                          />
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             </TableContainer>

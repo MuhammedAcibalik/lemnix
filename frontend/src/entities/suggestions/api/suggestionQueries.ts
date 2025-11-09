@@ -2,27 +2,35 @@
  * @fileoverview React Query Hooks for Suggestions
  * @module entities/suggestions/api
  * @version 1.0.0
- * 
+ *
  * React Query hooks with proper caching and error handling
  */
 
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
-import { suggestionApi, SmartSuggestion, ProfileSuggestion, CombinationSuggestion, SuggestionStatistics } from './suggestionApi';
+import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import {
+  suggestionApi,
+  SmartSuggestion,
+  ProfileSuggestion,
+  CombinationSuggestion,
+  SuggestionStatistics,
+} from "./suggestionApi";
 
 // ============================================================================
 // QUERY KEYS
 // ============================================================================
 
 export const suggestionKeys = {
-  all: ['suggestions'] as const,
-  products: (query: string) => [...suggestionKeys.all, 'products', query] as const,
-  sizes: (product: string, query: string) => [...suggestionKeys.all, 'sizes', product, query] as const,
-  profiles: (product: string, size: string, query: string) => 
-    [...suggestionKeys.all, 'profiles', product, size, query] as const,
-  combinations: (product: string, size: string) => 
-    [...suggestionKeys.all, 'combinations', product, size] as const,
-  statistics: () => [...suggestionKeys.all, 'statistics'] as const,
-  health: () => [...suggestionKeys.all, 'health'] as const,
+  all: ["suggestions"] as const,
+  products: (query: string) =>
+    [...suggestionKeys.all, "products", query] as const,
+  sizes: (product: string, query: string) =>
+    [...suggestionKeys.all, "sizes", product, query] as const,
+  profiles: (product: string, size: string, query: string) =>
+    [...suggestionKeys.all, "profiles", product, size, query] as const,
+  combinations: (product: string, size: string) =>
+    [...suggestionKeys.all, "combinations", product, size] as const,
+  statistics: () => [...suggestionKeys.all, "statistics"] as const,
+  health: () => [...suggestionKeys.all, "health"] as const,
 };
 
 // ============================================================================
@@ -35,7 +43,7 @@ export const suggestionKeys = {
 export const useProductSuggestions = (
   query: string,
   limit: number = 10,
-  enabled: boolean = true
+  enabled: boolean = true,
 ): UseQueryResult<SmartSuggestion[], unknown> => {
   return useQuery({
     queryKey: suggestionKeys.products(query),
@@ -44,9 +52,12 @@ export const useProductSuggestions = (
     gcTime: 10 * 60 * 1000, // 10 minutes
     enabled: enabled && query.length > 0,
     retry: (failureCount, error: unknown) => {
-      if ((error as { response?: { status?: number } })?.response?.status === 401) return false;
+      if (
+        (error as { response?: { status?: number } })?.response?.status === 401
+      )
+        return false;
       return failureCount < 3;
-    }
+    },
   });
 };
 
@@ -55,9 +66,9 @@ export const useProductSuggestions = (
  */
 export const useSizeSuggestions = (
   productName: string,
-  query: string = '',
+  query: string = "",
   limit: number = 10,
-  enabled: boolean = true
+  enabled: boolean = true,
 ): UseQueryResult<SmartSuggestion[], unknown> => {
   return useQuery({
     queryKey: suggestionKeys.sizes(productName, query),
@@ -66,9 +77,12 @@ export const useSizeSuggestions = (
     gcTime: 10 * 60 * 1000,
     enabled: enabled && !!productName,
     retry: (failureCount, error: unknown) => {
-      if ((error as { response?: { status?: number } })?.response?.status === 401) return false;
+      if (
+        (error as { response?: { status?: number } })?.response?.status === 401
+      )
+        return false;
       return failureCount < 3;
-    }
+    },
   });
 };
 
@@ -78,9 +92,9 @@ export const useSizeSuggestions = (
 export const useProfileSuggestions = (
   productName: string,
   size: string,
-  query: string = '',
+  query: string = "",
   limit: number = 10,
-  enabled: boolean = true
+  enabled: boolean = true,
 ): UseQueryResult<ProfileSuggestion[], unknown> => {
   return useQuery({
     queryKey: suggestionKeys.profiles(productName, size, query),
@@ -89,9 +103,12 @@ export const useProfileSuggestions = (
     gcTime: 10 * 60 * 1000,
     enabled: enabled && !!productName && !!size,
     retry: (failureCount, error: unknown) => {
-      if ((error as { response?: { status?: number } })?.response?.status === 401) return false;
+      if (
+        (error as { response?: { status?: number } })?.response?.status === 401
+      )
+        return false;
       return failureCount < 3;
-    }
+    },
   });
 };
 
@@ -102,7 +119,7 @@ export const useCombinationSuggestions = (
   productName: string,
   size: string,
   limit: number = 5,
-  enabled: boolean = true
+  enabled: boolean = true,
 ): UseQueryResult<CombinationSuggestion[], unknown> => {
   return useQuery({
     queryKey: suggestionKeys.combinations(productName, size),
@@ -111,9 +128,12 @@ export const useCombinationSuggestions = (
     gcTime: 10 * 60 * 1000,
     enabled: enabled && !!productName && !!size,
     retry: (failureCount, error: unknown) => {
-      if ((error as { response?: { status?: number } })?.response?.status === 401) return false;
+      if (
+        (error as { response?: { status?: number } })?.response?.status === 401
+      )
+        return false;
       return failureCount < 3;
-    }
+    },
   });
 };
 
@@ -121,7 +141,7 @@ export const useCombinationSuggestions = (
  * Get suggestion statistics
  */
 export const useSuggestionStatistics = (
-  enabled: boolean = true
+  enabled: boolean = true,
 ): UseQueryResult<SuggestionStatistics, Error> => {
   return useQuery({
     queryKey: suggestionKeys.statistics(),
@@ -129,7 +149,7 @@ export const useSuggestionStatistics = (
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000,
     enabled,
-    retry: 2
+    retry: 2,
   });
 };
 
@@ -137,7 +157,7 @@ export const useSuggestionStatistics = (
  * Health check
  */
 export const useSuggestionHealth = (
-  enabled: boolean = true
+  enabled: boolean = true,
 ): UseQueryResult<{ status: string; totalPatterns: number }, Error> => {
   return useQuery({
     queryKey: suggestionKeys.health(),
@@ -145,22 +165,29 @@ export const useSuggestionHealth = (
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 60 * 1000,
     enabled,
-    retry: 1
+    retry: 1,
   });
 };
 
 /**
  * Apply smart suggestion with one click
- * 
+ *
  * This is the MAGIC feature:
  * User selects product, size, enters orderQuantity
  * → System automatically fills ALL profiles with correct quantities
  */
 export const useApplySmartSuggestion = () => {
   return {
-    applyAsync: async (productName: string, size: string, orderQuantity: number) => {
-      return await suggestionApi.applySmartSuggestion(productName, size, orderQuantity);
-    }
+    applyAsync: async (
+      productName: string,
+      size: string,
+      orderQuantity: number,
+    ) => {
+      return await suggestionApi.applySmartSuggestion(
+        productName,
+        size,
+        orderQuantity,
+      );
+    },
   };
 };
-

@@ -4,9 +4,9 @@
  * @version 1.0.0
  */
 
-import { Request, Response } from 'express';
-import { profileManagementService } from '../services/profileManagementService';
-import { logger } from '../utils/logger';
+import { Request, Response } from "express";
+import { profileManagementService } from "../services/profileManagementService";
+import { logger } from "../utils/logger";
 
 export class ProfileManagementController {
   /**
@@ -15,17 +15,17 @@ export class ProfileManagementController {
    */
   async uploadProfileManagement(req: Request, res: Response): Promise<void> {
     try {
-      logger.info('[ProfileMgmt] Upload request received', {
+      logger.info("[ProfileMgmt] Upload request received", {
         hasFile: !!req.file,
         fileSize: req.file?.size,
-        fileMimetype: req.file?.mimetype
+        fileMimetype: req.file?.mimetype,
       });
 
       if (!req.file) {
-        logger.error('[ProfileMgmt] No file in request');
+        logger.error("[ProfileMgmt] No file in request");
         res.status(400).json({
           success: false,
-          error: 'Excel dosyası yüklenmedi'
+          error: "Excel dosyası yüklenmedi",
         });
         return;
       }
@@ -33,35 +33,36 @@ export class ProfileManagementController {
       const uploadedBy = (req as { user?: { id: string } }).user?.id;
       const result = await profileManagementService.uploadProfileManagement(
         req.file.buffer,
-        uploadedBy
+        uploadedBy,
       );
 
       if (result.success) {
-        logger.info('[ProfileMgmt] Upload successful', result.data);
+        logger.info("[ProfileMgmt] Upload successful", result.data);
 
         res.status(201).json({
           success: true,
           data: result.data,
           warnings: result.errors,
-          message: 'Profil yönetimi başarıyla yüklendi'
+          message: "Profil yönetimi başarıyla yüklendi",
         });
       } else {
-        logger.error('[ProfileMgmt] Upload failed', { errors: result.errors });
+        logger.error("[ProfileMgmt] Upload failed", { errors: result.errors });
 
-        const errors = result.errors || ['Profil yönetimi yüklenemedi'];
+        const errors = result.errors || ["Profil yönetimi yüklenemedi"];
         res.status(400).json({
           success: false,
           error: {
-            message: errors.length > 0 ? errors[0] : 'Profil yönetimi yüklenemedi',
-            details: errors
-          }
+            message:
+              errors.length > 0 ? errors[0] : "Profil yönetimi yüklenemedi",
+            details: errors,
+          },
         });
       }
     } catch (error) {
-      logger.error('[ProfileMgmt] Upload error', { error });
+      logger.error("[ProfileMgmt] Upload error", { error });
       res.status(500).json({
         success: false,
-        error: 'Sunucu hatası'
+        error: "Sunucu hatası",
       });
     }
   }
@@ -73,23 +74,24 @@ export class ProfileManagementController {
   async getProfileDefinitions(req: Request, res: Response): Promise<void> {
     try {
       // Support both activeOnly and isActive parameters
-      const activeOnly = req.query.activeOnly === 'true' || req.query.isActive === 'true';
-      const includeStockLengths = req.query.includeStockLengths !== 'false';
+      const activeOnly =
+        req.query.activeOnly === "true" || req.query.isActive === "true";
+      const includeStockLengths = req.query.includeStockLengths !== "false";
 
       const profiles = await profileManagementService.getProfileDefinitions({
         activeOnly,
-        includeStockLengths
+        includeStockLengths,
       });
 
       res.status(200).json({
         success: true,
-        data: profiles
+        data: profiles,
       });
     } catch (error) {
-      logger.error('[ProfileMgmt] Get definitions error', { error });
+      logger.error("[ProfileMgmt] Get definitions error", { error });
       res.status(500).json({
         success: false,
-        error: 'Profil listesi alınamadı'
+        error: "Profil listesi alınamadı",
       });
     }
   }
@@ -105,7 +107,7 @@ export class ProfileManagementController {
       if (!code) {
         res.status(400).json({
           success: false,
-          error: 'Profil kodu gerekli'
+          error: "Profil kodu gerekli",
         });
         return;
       }
@@ -115,20 +117,20 @@ export class ProfileManagementController {
       if (!profile) {
         res.status(404).json({
           success: false,
-          error: 'Profil bulunamadı'
+          error: "Profil bulunamadı",
         });
         return;
       }
 
       res.status(200).json({
         success: true,
-        data: profile
+        data: profile,
       });
     } catch (error) {
-      logger.error('[ProfileMgmt] Get profile by code error', { error });
+      logger.error("[ProfileMgmt] Get profile by code error", { error });
       res.status(500).json({
         success: false,
-        error: 'Profil alınamadı'
+        error: "Profil alınamadı",
       });
     }
   }
@@ -139,7 +141,10 @@ export class ProfileManagementController {
    */
   async getMappingsByWeek(req: Request, res: Response): Promise<void> {
     try {
-      const weekNumber = parseInt((req.query.weekNumber || req.query.week) as string, 10);
+      const weekNumber = parseInt(
+        (req.query.weekNumber || req.query.week) as string,
+        10,
+      );
       const year = parseInt(req.query.year as string, 10);
 
       if (
@@ -152,25 +157,25 @@ export class ProfileManagementController {
       ) {
         res.status(400).json({
           success: false,
-          error: 'Geçersiz hafta veya yıl parametresi'
+          error: "Geçersiz hafta veya yıl parametresi",
         });
         return;
       }
 
       const mappings = await profileManagementService.getMappingsByWeek(
         weekNumber,
-        year
+        year,
       );
 
       res.status(200).json({
         success: true,
-        data: mappings
+        data: mappings,
       });
     } catch (error) {
-      logger.error('[ProfileMgmt] Get mappings by week error', { error });
+      logger.error("[ProfileMgmt] Get mappings by week error", { error });
       res.status(500).json({
         success: false,
-        error: 'Eşleştirmeler alınamadı'
+        error: "Eşleştirmeler alınamadı",
       });
     }
   }
@@ -188,7 +193,7 @@ export class ProfileManagementController {
       if (!workOrderId) {
         res.status(400).json({
           success: false,
-          error: 'Sipariş no gerekli'
+          error: "Sipariş no gerekli",
         });
         return;
       }
@@ -201,7 +206,7 @@ export class ProfileManagementController {
       ) {
         res.status(400).json({
           success: false,
-          error: 'Geçersiz hafta veya yıl parametresi'
+          error: "Geçersiz hafta veya yıl parametresi",
         });
         return;
       }
@@ -209,18 +214,20 @@ export class ProfileManagementController {
       const mappings = await profileManagementService.getMappingsForWorkOrder(
         workOrderId,
         weekNumber,
-        year
+        year,
       );
 
       res.status(200).json({
         success: true,
-        data: mappings
+        data: mappings,
       });
     } catch (error) {
-      logger.error('[ProfileMgmt] Get mappings for work order error', { error });
+      logger.error("[ProfileMgmt] Get mappings for work order error", {
+        error,
+      });
       res.status(500).json({
         success: false,
-        error: 'İş emri eşleştirmeleri alınamadı'
+        error: "İş emri eşleştirmeleri alınamadı",
       });
     }
   }
@@ -237,29 +244,32 @@ export class ProfileManagementController {
       if (!id || !profileCode) {
         res.status(400).json({
           success: false,
-          error: 'ID ve profil kodu gerekli'
+          error: "ID ve profil kodu gerekli",
         });
         return;
       }
 
-      const result = await profileManagementService.updateMapping(id, profileCode);
+      const result = await profileManagementService.updateMapping(
+        id,
+        profileCode,
+      );
 
       if (result.success) {
         res.status(200).json({
           success: true,
-          message: 'Eşleştirme güncellendi'
+          message: "Eşleştirme güncellendi",
         });
       } else {
         res.status(400).json({
           success: false,
-          error: result.error
+          error: result.error,
         });
       }
     } catch (error) {
-      logger.error('[ProfileMgmt] Update mapping error', { error });
+      logger.error("[ProfileMgmt] Update mapping error", { error });
       res.status(500).json({
         success: false,
-        error: 'Eşleştirme güncellenemedi'
+        error: "Eşleştirme güncellenemedi",
       });
     }
   }
@@ -275,7 +285,7 @@ export class ProfileManagementController {
       if (!id) {
         res.status(400).json({
           success: false,
-          error: 'ID gerekli'
+          error: "ID gerekli",
         });
         return;
       }
@@ -285,19 +295,19 @@ export class ProfileManagementController {
       if (result.success) {
         res.status(200).json({
           success: true,
-          message: 'Profil silindi'
+          message: "Profil silindi",
         });
       } else {
         res.status(400).json({
           success: false,
-          error: result.error
+          error: result.error,
         });
       }
     } catch (error) {
-      logger.error('[ProfileMgmt] Delete profile error', { error });
+      logger.error("[ProfileMgmt] Delete profile error", { error });
       res.status(500).json({
         success: false,
-        error: 'Profil silinemedi'
+        error: "Profil silinemedi",
       });
     }
   }
@@ -306,14 +316,17 @@ export class ProfileManagementController {
    * Get stock lengths for a profile
    * GET /api/profile-management/profile/:code/stock-lengths
    */
-  async getStockLengthsByProfileCode(req: Request, res: Response): Promise<void> {
+  async getStockLengthsByProfileCode(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
     try {
       const { code } = req.params;
 
       if (!code) {
         res.status(400).json({
           success: false,
-          error: 'Profil kodu gerekli'
+          error: "Profil kodu gerekli",
         });
         return;
       }
@@ -323,13 +336,13 @@ export class ProfileManagementController {
 
       res.status(200).json({
         success: true,
-        data: stockLengths
+        data: stockLengths,
       });
     } catch (error) {
-      logger.error('[ProfileMgmt] Get stock lengths error', { error });
+      logger.error("[ProfileMgmt] Get stock lengths error", { error });
       res.status(500).json({
         success: false,
-        error: 'Stok uzunlukları alınamadı'
+        error: "Stok uzunlukları alınamadı",
       });
     }
   }
@@ -344,13 +357,13 @@ export class ProfileManagementController {
 
       res.status(200).json({
         success: true,
-        data: stats
+        data: stats,
       });
     } catch (error) {
-      logger.error('[ProfileMgmt] Get statistics error', { error });
+      logger.error("[ProfileMgmt] Get statistics error", { error });
       res.status(500).json({
         success: false,
-        error: 'İstatistikler alınamadı'
+        error: "İstatistikler alınamadı",
       });
     }
   }
@@ -358,4 +371,3 @@ export class ProfileManagementController {
 
 // Singleton instance
 export const profileManagementController = new ProfileManagementController();
-

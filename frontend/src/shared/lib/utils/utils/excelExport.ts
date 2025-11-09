@@ -4,75 +4,75 @@
  * @version 1.0.0
  */
 
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
-import { StatisticsData, ExcelSheetData, ExportResult } from './exportTypes';
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import { StatisticsData, ExcelSheetData, ExportResult } from "./exportTypes";
 
 // Türkçe sütun başlıkları
 const COLUMN_HEADERS = {
   tr: {
-    overview: ['Kategori', 'Değer', 'Birim'],
-    profiles: ['Profil Tipi', 'Adet', 'Yüzde (%)'],
-    categories: ['Kategori Adı', 'Ürün Sayısı', 'Toplam Miktar'],
-    colors: ['Renk', 'Kullanım Sayısı', 'Yüzde (%)'],
-    sizes: ['Ebat', 'Kullanım Sayısı', 'Yüzde (%)'],
-    combinations: ['Kombinasyon', 'Kullanım Sayısı', 'Yüzde (%)'],
-    workOrders: ['Durum', 'Adet', 'Açıklama']
-  }
+    overview: ["Kategori", "Değer", "Birim"],
+    profiles: ["Profil Tipi", "Adet", "Yüzde (%)"],
+    categories: ["Kategori Adı", "Ürün Sayısı", "Toplam Miktar"],
+    colors: ["Renk", "Kullanım Sayısı", "Yüzde (%)"],
+    sizes: ["Ebat", "Kullanım Sayısı", "Yüzde (%)"],
+    combinations: ["Kombinasyon", "Kullanım Sayısı", "Yüzde (%)"],
+    workOrders: ["Durum", "Adet", "Açıklama"],
+  },
 };
 
 // Kurumsal Excel stil tanımlamaları
 const EXCEL_STYLES = {
   title: {
-    font: { bold: true, size: 18, color: { rgb: '1F2937' }, name: 'Calibri' },
-    alignment: { horizontal: 'center', vertical: 'center' },
-    fill: { fgColor: { rgb: 'F8FAFC' } },
+    font: { bold: true, size: 18, color: { rgb: "1F2937" }, name: "Calibri" },
+    alignment: { horizontal: "center", vertical: "center" },
+    fill: { fgColor: { rgb: "F8FAFC" } },
     border: {
-      bottom: { style: 'thick', color: { rgb: '10B981' } }
-    }
+      bottom: { style: "thick", color: { rgb: "10B981" } },
+    },
   },
   subtitle: {
-    font: { bold: true, size: 14, color: { rgb: '374151' }, name: 'Calibri' },
-    alignment: { horizontal: 'center', vertical: 'center' },
-    fill: { fgColor: { rgb: 'F1F5F9' } }
+    font: { bold: true, size: 14, color: { rgb: "374151" }, name: "Calibri" },
+    alignment: { horizontal: "center", vertical: "center" },
+    fill: { fgColor: { rgb: "F1F5F9" } },
   },
   header: {
-    font: { bold: true, size: 12, color: { rgb: 'FFFFFF' }, name: 'Calibri' },
-    fill: { fgColor: { rgb: '10B981' } },
-    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+    font: { bold: true, size: 12, color: { rgb: "FFFFFF" }, name: "Calibri" },
+    fill: { fgColor: { rgb: "10B981" } },
+    alignment: { horizontal: "center", vertical: "center", wrapText: true },
     border: {
-      top: { style: 'medium', color: { rgb: '059669' } },
-      bottom: { style: 'medium', color: { rgb: '059669' } },
-      left: { style: 'thin', color: { rgb: 'FFFFFF' } },
-      right: { style: 'thin', color: { rgb: 'FFFFFF' } }
-    }
+      top: { style: "medium", color: { rgb: "059669" } },
+      bottom: { style: "medium", color: { rgb: "059669" } },
+      left: { style: "thin", color: { rgb: "FFFFFF" } },
+      right: { style: "thin", color: { rgb: "FFFFFF" } },
+    },
   },
   data: {
-    font: { size: 11, name: 'Calibri' },
-    alignment: { horizontal: 'center', vertical: 'center' },
+    font: { size: 11, name: "Calibri" },
+    alignment: { horizontal: "center", vertical: "center" },
     border: {
-      top: { style: 'thin', color: { rgb: 'E5E7EB' } },
-      bottom: { style: 'thin', color: { rgb: 'E5E7EB' } },
-      left: { style: 'thin', color: { rgb: 'E5E7EB' } },
-      right: { style: 'thin', color: { rgb: 'E5E7EB' } }
-    }
+      top: { style: "thin", color: { rgb: "E5E7EB" } },
+      bottom: { style: "thin", color: { rgb: "E5E7EB" } },
+      left: { style: "thin", color: { rgb: "E5E7EB" } },
+      right: { style: "thin", color: { rgb: "E5E7EB" } },
+    },
   },
   highlight: {
-    font: { bold: true, size: 11, color: { rgb: '059669' }, name: 'Calibri' },
-    fill: { fgColor: { rgb: 'ECFDF5' } },
-    alignment: { horizontal: 'center', vertical: 'center' }
+    font: { bold: true, size: 11, color: { rgb: "059669" }, name: "Calibri" },
+    fill: { fgColor: { rgb: "ECFDF5" } },
+    alignment: { horizontal: "center", vertical: "center" },
   },
   summary: {
-    font: { bold: true, size: 12, color: { rgb: '1F2937' }, name: 'Calibri' },
-    fill: { fgColor: { rgb: 'FEF3C7' } },
-    alignment: { horizontal: 'center', vertical: 'center' },
+    font: { bold: true, size: 12, color: { rgb: "1F2937" }, name: "Calibri" },
+    fill: { fgColor: { rgb: "FEF3C7" } },
+    alignment: { horizontal: "center", vertical: "center" },
     border: {
-      top: { style: 'thick', color: { rgb: 'F59E0B' } },
-      bottom: { style: 'thick', color: { rgb: 'F59E0B' } },
-      left: { style: 'thin', color: { rgb: 'F59E0B' } },
-      right: { style: 'thin', color: { rgb: 'F59E0B' } }
-    }
-  }
+      top: { style: "thick", color: { rgb: "F59E0B" } },
+      bottom: { style: "thick", color: { rgb: "F59E0B" } },
+      left: { style: "thin", color: { rgb: "F59E0B" } },
+      right: { style: "thin", color: { rgb: "F59E0B" } },
+    },
+  },
 };
 
 /**
@@ -80,12 +80,12 @@ const EXCEL_STYLES = {
  */
 export const exportToExcel = async (
   data: StatisticsData,
-  filename?: string
+  filename?: string,
 ): Promise<ExportResult> => {
   try {
     // Workbook oluştur
     const workbook = XLSX.utils.book_new();
-    
+
     // Sayfa verilerini hazırla
     const sheets: ExcelSheetData[] = [
       createOverviewSheet(data),
@@ -94,11 +94,11 @@ export const exportToExcel = async (
       createColorsSheet(data),
       createSizesSheet(data),
       createCombinationsSheet(data),
-      createWorkOrdersSheet(data)
+      createWorkOrdersSheet(data),
     ];
 
     // Her sayfayı workbook'a ekle
-    sheets.forEach(sheet => {
+    sheets.forEach((sheet) => {
       const worksheet = createProfessionalWorksheet(sheet);
 
       // Sayfayı workbook'a ekle
@@ -107,35 +107,35 @@ export const exportToExcel = async (
 
     // Dosya adını oluştur
     const now = new Date();
-    const dateStr = now.toISOString().split('T')[0];
-    const timeStr = now.toTimeString().split(' ')[0].replace(/:/g, '-');
-    const finalFilename = filename || `Lemnix-İstatistikleri-${dateStr}-${timeStr}.xlsx`;
+    const dateStr = now.toISOString().split("T")[0];
+    const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-");
+    const finalFilename =
+      filename || `Lemnix-İstatistikleri-${dateStr}-${timeStr}.xlsx`;
 
     // Excel dosyasını oluştur
-    const excelBuffer = XLSX.write(workbook, { 
-      bookType: 'xlsx', 
-      type: 'array',
-      cellStyles: true
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+      cellStyles: true,
     });
 
     // Dosyayı indir
-    const blob = new Blob([excelBuffer], { 
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
     saveAs(blob, finalFilename);
 
     return {
       success: true,
       filename: finalFilename,
-      message: 'Excel dosyası başarıyla oluşturuldu ve indirildi!'
+      message: "Excel dosyası başarıyla oluşturuldu ve indirildi!",
     };
-
   } catch (error) {
     return {
       success: false,
-      filename: '',
-      message: 'Excel dosyası oluşturulurken hata oluştu!',
-      error: error instanceof Error ? error.message : 'Bilinmeyen hata'
+      filename: "",
+      message: "Excel dosyası oluşturulurken hata oluştu!",
+      error: error instanceof Error ? error.message : "Bilinmeyen hata",
     };
   }
 };
@@ -146,8 +146,10 @@ export const exportToExcel = async (
 const createProfessionalWorksheet = (sheet: ExcelSheetData) => {
   // Başlık satırı ekle
   const titleRow = [sheet.sheetName];
-  const subtitleRow = ['Rapor Tarihi: ' + new Date().toLocaleDateString('tr-TR')];
-  
+  const subtitleRow = [
+    "Rapor Tarihi: " + new Date().toLocaleDateString("tr-TR"),
+  ];
+
   // Veri satırları
   const dataRows = [
     titleRow,
@@ -156,7 +158,7 @@ const createProfessionalWorksheet = (sheet: ExcelSheetData) => {
     sheet.headers,
     ...sheet.data,
     [], // Boş satır
-    ['Toplam Kayıt Sayısı', sheet.data.length, 'adet']
+    ["Toplam Kayıt Sayısı", sheet.data.length, "adet"],
   ];
 
   const worksheet = XLSX.utils.aoa_to_sheet(dataRows);
@@ -167,25 +169,27 @@ const createProfessionalWorksheet = (sheet: ExcelSheetData) => {
     if (index === 1) return { wch: 18 }; // İkinci sütun orta
     return { wch: 15 }; // Diğer sütunlar normal
   });
-  worksheet['!cols'] = columnWidths;
+  worksheet["!cols"] = columnWidths;
 
   // Satır yüksekliklerini ayarla
-  worksheet['!rows'] = [
+  worksheet["!rows"] = [
     { hpt: 25 }, // Başlık satırı
     { hpt: 20 }, // Alt başlık satırı
     { hpt: 10 }, // Boş satır
     { hpt: 30 }, // Header satırı
     ...sheet.data.map(() => ({ hpt: 25 })), // Veri satırları
     { hpt: 10 }, // Boş satır
-    { hpt: 25 }  // Özet satırı
+    { hpt: 25 }, // Özet satırı
   ];
 
   // Stil uygula
   applyWorksheetStyles(worksheet, dataRows.length);
 
   // AutoFilter ekle
-  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-  worksheet['!autofilter'] = { ref: `A4:${XLSX.utils.encode_col(range.e.c)}${4 + sheet.data.length}` };
+  const range = XLSX.utils.decode_range(worksheet["!ref"] || "A1");
+  worksheet["!autofilter"] = {
+    ref: `A4:${XLSX.utils.encode_col(range.e.c)}${4 + sheet.data.length}`,
+  };
 
   return worksheet;
 };
@@ -194,8 +198,8 @@ const createProfessionalWorksheet = (sheet: ExcelSheetData) => {
  * Worksheet stillerini uygular
  */
 const applyWorksheetStyles = (worksheet: XLSX.WorkSheet, rowCount: number) => {
-  const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
-  
+  const range = XLSX.utils.decode_range(worksheet["!ref"] || "A1");
+
   // Başlık satırı stili
   for (let col = range.s.c; col <= range.e.c; col++) {
     const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
@@ -222,7 +226,7 @@ const applyWorksheetStyles = (worksheet: XLSX.WorkSheet, rowCount: number) => {
     for (let col = range.s.c; col <= range.e.c; col++) {
       const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
       if (!worksheet[cellAddress]) continue;
-      
+
       // Özet satırı için özel stil
       if (row === rowCount - 2) {
         worksheet[cellAddress].s = EXCEL_STYLES.summary;
@@ -238,19 +242,19 @@ const applyWorksheetStyles = (worksheet: XLSX.WorkSheet, rowCount: number) => {
  */
 const createOverviewSheet = (data: StatisticsData): ExcelSheetData => {
   return {
-    sheetName: 'Genel Bakış',
+    sheetName: "Genel Bakış",
     headers: COLUMN_HEADERS.tr.overview,
     data: [
-      ['Toplam Ürün Sayısı', data.kesimListesi.toplamUrun, 'adet'],
-      ['Toplam Kategori', data.kesimListesi.toplamKategori, 'adet'],
-      ['Ortalama Miktar', data.kesimListesi.ortalamaMiktar, 'birim'],
-      ['Toplam Ağırlık', data.kesimListesi.toplamAgirlik, 'kg'],
-      ['', '', ''], // Boş satır
-      ['Tamamlanan İş Emirleri', data.isEmirleri.tamamlanan, 'adet'],
-      ['Bekleyen İş Emirleri', data.isEmirleri.bekleyen, 'adet'],
-      ['Toplam İş Emri', data.isEmirleri.toplam, 'adet'],
-      ['Ortalama İşlem Süresi', data.isEmirleri.ortalamaIslemSuresi, 'gün']
-    ]
+      ["Toplam Ürün Sayısı", data.kesimListesi.toplamUrun, "adet"],
+      ["Toplam Kategori", data.kesimListesi.toplamKategori, "adet"],
+      ["Ortalama Miktar", data.kesimListesi.ortalamaMiktar, "birim"],
+      ["Toplam Ağırlık", data.kesimListesi.toplamAgirlik, "kg"],
+      ["", "", ""], // Boş satır
+      ["Tamamlanan İş Emirleri", data.isEmirleri.tamamlanan, "adet"],
+      ["Bekleyen İş Emirleri", data.isEmirleri.bekleyen, "adet"],
+      ["Toplam İş Emri", data.isEmirleri.toplam, "adet"],
+      ["Ortalama İşlem Süresi", data.isEmirleri.ortalamaIslemSuresi, "gün"],
+    ],
   };
 };
 
@@ -259,13 +263,13 @@ const createOverviewSheet = (data: StatisticsData): ExcelSheetData => {
  */
 const createProfilesSheet = (data: StatisticsData): ExcelSheetData => {
   return {
-    sheetName: 'Profil Analizi',
+    sheetName: "Profil Analizi",
     headers: COLUMN_HEADERS.tr.profiles,
-    data: data.profilAnalizi.map(profile => [
+    data: data.profilAnalizi.map((profile) => [
       profile.name,
       profile.count,
-      profile.percentage
-    ])
+      profile.percentage,
+    ]),
   };
 };
 
@@ -274,13 +278,13 @@ const createProfilesSheet = (data: StatisticsData): ExcelSheetData => {
  */
 const createCategoriesSheet = (data: StatisticsData): ExcelSheetData => {
   return {
-    sheetName: 'Ürün Kategorileri',
+    sheetName: "Ürün Kategorileri",
     headers: COLUMN_HEADERS.tr.categories,
-    data: data.urunKategorileri.map(category => [
+    data: data.urunKategorileri.map((category) => [
       category.name,
       category.itemCount,
-      category.totalQuantity
-    ])
+      category.totalQuantity,
+    ]),
   };
 };
 
@@ -289,13 +293,13 @@ const createCategoriesSheet = (data: StatisticsData): ExcelSheetData => {
  */
 const createColorsSheet = (data: StatisticsData): ExcelSheetData => {
   return {
-    sheetName: 'Renk Analizi',
+    sheetName: "Renk Analizi",
     headers: COLUMN_HEADERS.tr.colors,
-    data: data.renkEbat.renkler.map(color => [
+    data: data.renkEbat.renkler.map((color) => [
       color.color,
       color.count,
-      color.percentage
-    ])
+      color.percentage,
+    ]),
   };
 };
 
@@ -304,13 +308,13 @@ const createColorsSheet = (data: StatisticsData): ExcelSheetData => {
  */
 const createSizesSheet = (data: StatisticsData): ExcelSheetData => {
   return {
-    sheetName: 'Ebat Analizi',
+    sheetName: "Ebat Analizi",
     headers: COLUMN_HEADERS.tr.sizes,
-    data: data.renkEbat.ebatlar.map(size => [
+    data: data.renkEbat.ebatlar.map((size) => [
       size.size,
       size.count,
-      size.percentage
-    ])
+      size.percentage,
+    ]),
   };
 };
 
@@ -319,13 +323,13 @@ const createSizesSheet = (data: StatisticsData): ExcelSheetData => {
  */
 const createCombinationsSheet = (data: StatisticsData): ExcelSheetData => {
   return {
-    sheetName: 'Kombinasyonlar',
+    sheetName: "Kombinasyonlar",
     headers: COLUMN_HEADERS.tr.combinations,
-    data: data.renkEbat.kombinasyonlar.map(combo => [
+    data: data.renkEbat.kombinasyonlar.map((combo) => [
       combo.combination,
       combo.count,
-      combo.percentage
-    ])
+      combo.percentage,
+    ]),
   };
 };
 
@@ -334,13 +338,21 @@ const createCombinationsSheet = (data: StatisticsData): ExcelSheetData => {
  */
 const createWorkOrdersSheet = (data: StatisticsData): ExcelSheetData => {
   return {
-    sheetName: 'İş Emirleri',
+    sheetName: "İş Emirleri",
     headers: COLUMN_HEADERS.tr.workOrders,
     data: [
-      ['Tamamlanan', data.isEmirleri.tamamlanan, 'Başarıyla tamamlanan iş emirleri'],
-      ['Bekleyen', data.isEmirleri.bekleyen, 'Henüz başlanmamış iş emirleri'],
-      ['Toplam', data.isEmirleri.toplam, 'Tüm iş emirleri'],
-      ['Ortalama Süre', data.isEmirleri.ortalamaIslemSuresi, 'Gün cinsinden ortalama işlem süresi']
-    ]
+      [
+        "Tamamlanan",
+        data.isEmirleri.tamamlanan,
+        "Başarıyla tamamlanan iş emirleri",
+      ],
+      ["Bekleyen", data.isEmirleri.bekleyen, "Henüz başlanmamış iş emirleri"],
+      ["Toplam", data.isEmirleri.toplam, "Tüm iş emirleri"],
+      [
+        "Ortalama Süre",
+        data.isEmirleri.ortalamaIslemSuresi,
+        "Gün cinsinden ortalama işlem süresi",
+      ],
+    ],
   };
 };

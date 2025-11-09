@@ -4,7 +4,10 @@
  * @version 2.0.0 - Enterprise Grade Modular Design
  */
 
-import { OptimizationItem, OptimizationResult } from '@/entities/optimization/model/types';
+import {
+  OptimizationItem,
+  OptimizationResult,
+} from "@/entities/optimization/model/types";
 
 /**
  * Snackbar state interface
@@ -12,7 +15,7 @@ import { OptimizationItem, OptimizationResult } from '@/entities/optimization/mo
 export interface SnackbarState {
   open: boolean;
   message: string;
-  severity: 'success' | 'error' | 'warning' | 'info';
+  severity: "success" | "error" | "warning" | "info";
 }
 
 /**
@@ -49,7 +52,6 @@ export type PageChangeHandler = (page: string) => void;
  * Optimization handler type
  */
 export type OptimizationHandler = (items: OptimizationItem[]) => Promise<void>;
-
 
 /**
  * Work orders selected handler type

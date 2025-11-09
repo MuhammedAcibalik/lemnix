@@ -1,8 +1,8 @@
 // Backend'den gelen yeni veri tipleri
 export interface ProfileItem {
-  readonly profileType: string;      // Profil tipi (KAPALI ALT, AÇIK ALT, vs.)
-  readonly measurement: string;      // Ölçü
-  readonly quantity: number;         // Parça miktarı
+  readonly profileType: string; // Profil tipi (KAPALI ALT, AÇIK ALT, vs.)
+  readonly measurement: string; // Ölçü
+  readonly quantity: number; // Parça miktarı
   readonly rowIndex: number;
   readonly confidence: number;
 }
@@ -28,14 +28,14 @@ export interface WorkOrderItem {
 // Shared interface for cutting list items across components
 export interface CuttingListItem {
   readonly id: string;
-  readonly workOrderId: string;        // İş Emri
-  readonly color: string;              // Renk
-  readonly version: string;            // Versiyon
-  readonly size: string;               // Ebat
-  readonly profileType: string;        // Profil Tipi
-  readonly length: number;             // Ölçü
-  readonly quantity: number;           // Adet
-  readonly cuttingPattern: string;     // Kesim Deseni
+  readonly workOrderId: string; // İş Emri
+  readonly color: string; // Renk
+  readonly version: string; // Versiyon
+  readonly size: string; // Ebat
+  readonly profileType: string; // Profil Tipi
+  readonly length: number; // Ölçü
+  readonly quantity: number; // Adet
+  readonly cuttingPattern: string; // Kesim Deseni
 }
 
 export interface ProductGroup {
@@ -71,7 +71,7 @@ export interface WorkOrder {
   customerName: string;
   orderDate: Date;
   dueDate: Date;
-  status: 'pending' | 'processing' | 'completed';
+  status: "pending" | "processing" | "completed";
   totalWaste: number;
   efficiency: number;
   createdAt: Date;
@@ -196,13 +196,13 @@ export interface OptimizationResult {
   materialResults?: MaterialOptimizationResult[];
   // New fields based on real-world analysis
   optimizationScore?: number;
-  efficiencyCategory?: 'excellent' | 'good' | 'average' | 'poor';
+  efficiencyCategory?: "excellent" | "good" | "average" | "poor";
   detailedWasteAnalysis?: {
-    minimal: number;    // < 50mm
-    small: number;      // 50-150mm
-    medium: number;     // 150-300mm
-    large: number;      // 300-500mm
-    excessive: number;  // > 500mm
+    minimal: number; // < 50mm
+    small: number; // 50-150mm
+    medium: number; // 150-300mm
+    large: number; // 300-500mm
+    excessive: number; // > 500mm
     totalPieces: number;
     averageWaste: number;
   };
@@ -210,19 +210,19 @@ export interface OptimizationResult {
 
 export interface OptimizationRecommendation {
   type: string;
-  severity: 'info' | 'warning' | 'error';
+  severity: "info" | "warning" | "error";
   message: string;
   impact: string;
   suggestion: string;
   potentialSavings: number;
-  implementationEffort: 'low' | 'medium' | 'high';
+  implementationEffort: "low" | "medium" | "high";
 }
 
 // Form tipleri
 export interface OptimizationFormData {
   items: OptimizationItem[];
   // ALIGNED WITH BACKEND: Only 4 algorithms available
-  algorithm: 'ffd' | 'bfd' | 'genetic' | 'pooling';
+  algorithm: "ffd" | "bfd" | "genetic" | "pooling";
   stockLength: number;
   materialStockLengths?: MaterialStockLength[]; // Malzeme bazlı boy profil uzunlukları
 }
@@ -272,7 +272,6 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
-
 export interface WorkOrderFormState {
   orderNumber: string;
   customerName: string;
@@ -312,4 +311,4 @@ export interface WasteAnalysisChartProps {
 }
 
 // Re-export modern types
-export * from './modern';
+export * from "./modern";

@@ -4,26 +4,26 @@
  * @version 1.0.0
  */
 
-import React from 'react';
-import { OptimizationResult } from '../../types';
-import { 
-  Box, 
-  Typography, 
-  Alert, 
-  AlertTitle, 
-  Grid, 
-  Paper, 
-  List, 
-  ListItem, 
-  ListItemIcon, 
-  ListItemText, 
-  LinearProgress 
-} from '@mui/material';
+import React from "react";
+import { OptimizationResult } from "../../types";
+import {
+  Box,
+  Typography,
+  Alert,
+  AlertTitle,
+  Grid,
+  Paper,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  LinearProgress,
+} from "@mui/material";
 import {
   Speed as SpeedIcon,
   Science as ScienceIcon,
-  Assessment as AssessmentIcon
-} from '@mui/icons-material';
+  Assessment as AssessmentIcon,
+} from "@mui/icons-material";
 
 interface PerformanceTabProps {
   result: OptimizationResult;
@@ -38,7 +38,7 @@ export const PerformanceTab: React.FC<PerformanceTabProps> = ({
   analytics,
   systemHealth,
   isLoadingAnalytics,
-  isLoadingSystemHealth
+  isLoadingSystemHealth,
 }) => {
   if (!result) {
     return (
@@ -75,8 +75,7 @@ export const PerformanceTab: React.FC<PerformanceTabProps> = ({
                 <ListItemText
                   primary="Algoritma Karmaşıklığı"
                   secondary={
-                    result.performanceMetrics?.algorithmComplexity ||
-                    "O(n²)"
+                    result.performanceMetrics?.algorithmComplexity || "O(n²)"
                   }
                 />
               </ListItem>
@@ -98,11 +97,7 @@ export const PerformanceTab: React.FC<PerformanceTabProps> = ({
               Sistem Kullanımı
             </Typography>
             <Box sx={{ mb: 3 }}>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                gutterBottom
-              >
+              <Typography variant="body2" color="text.secondary" gutterBottom>
                 CPU Kullanımı
               </Typography>
               <LinearProgress
@@ -112,11 +107,7 @@ export const PerformanceTab: React.FC<PerformanceTabProps> = ({
               />
             </Box>
             <Box sx={{ mb: 3 }}>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                gutterBottom
-              >
+              <Typography variant="body2" color="text.secondary" gutterBottom>
                 Bellek Kullanımı
               </Typography>
               <LinearProgress
@@ -126,18 +117,12 @@ export const PerformanceTab: React.FC<PerformanceTabProps> = ({
               />
             </Box>
             <Box>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                gutterBottom
-              >
+              <Typography variant="body2" color="text.secondary" gutterBottom>
                 Ölçeklenebilirlik
               </Typography>
               <LinearProgress
                 variant="determinate"
-                value={
-                  (result.performanceMetrics?.scalability || 0) * 10
-                }
+                value={(result.performanceMetrics?.scalability || 0) * 10}
                 color="success"
               />
             </Box>
@@ -177,15 +162,12 @@ export const PerformanceTab: React.FC<PerformanceTabProps> = ({
                               : "0"
                             : "0"}
                         </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                        >
+                        <Typography variant="body2" color="text.secondary">
                           {key.charAt(0).toUpperCase() + key.slice(1)}
                         </Typography>
                       </Box>
                     </Grid>
-                  )
+                  ),
                 )}
               </Grid>
             </Paper>
@@ -214,9 +196,7 @@ export const PerformanceTab: React.FC<PerformanceTabProps> = ({
                           mb: 1,
                         }}
                       >
-                        <Typography variant="body2">
-                          {service}
-                        </Typography>
+                        <Typography variant="body2">{service}</Typography>
                         <Typography variant="body2">
                           {typeof status === "object" &&
                           status !== null &&
@@ -225,7 +205,7 @@ export const PerformanceTab: React.FC<PerformanceTabProps> = ({
                             : "unknown"}
                         </Typography>
                       </Box>
-                    )
+                    ),
                   )}
                 </Grid>
                 <Grid item xs={12} md={6}>
@@ -242,16 +222,14 @@ export const PerformanceTab: React.FC<PerformanceTabProps> = ({
                           mb: 1,
                         }}
                       >
-                        <Typography variant="body2">
-                          {metric}
-                        </Typography>
+                        <Typography variant="body2">{metric}</Typography>
                         <Typography variant="body2" fontWeight="bold">
                           {typeof value === "number"
                             ? `${value.toFixed(1)}%`
-                            : String(value ?? 'N/A')}
+                            : String(value ?? "N/A")}
                         </Typography>
                       </Box>
-                    )
+                    ),
                   )}
                 </Grid>
               </Grid>

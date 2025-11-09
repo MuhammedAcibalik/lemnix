@@ -4,7 +4,7 @@
  * @version 2.0.0 - Enterprise Grade Modular Design
  */
 
-import React from 'react';
+import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -15,49 +15,44 @@ import {
   Box,
   Tabs,
   Tab,
-  IconButton
-} from '@mui/material';
-import {
-  Info as InfoIcon,
-  Close as CloseIcon
-} from '@mui/icons-material';
+  IconButton,
+} from "@mui/material";
+import { Info as InfoIcon, Close as CloseIcon } from "@mui/icons-material";
 
 // Import modular components
-import { TabPanel } from './components/TabPanel';
-import { OverviewTab } from './components/OverviewTab';
-import { AlgorithmsTab } from './components/AlgorithmsTab';
-import { ParametersTab } from './components/ParametersTab';
-import { StepsTab } from './components/StepsTab';
-import { MetricsTab } from './components/MetricsTab';
-import { SimulationTab } from './components/SimulationTab';
+import { TabPanel } from "./components/TabPanel";
+import { OverviewTab } from "./components/OverviewTab";
+import { AlgorithmsTab } from "./components/AlgorithmsTab";
+import { ParametersTab } from "./components/ParametersTab";
+import { StepsTab } from "./components/StepsTab";
+import { MetricsTab } from "./components/MetricsTab";
+import { SimulationTab } from "./components/SimulationTab";
 
 // Import hooks
-import { useDialogState } from './hooks/useDialogState';
+import { useDialogState } from "./hooks/useDialogState";
 
 // Import types
-import {
-  OptimizationInfoDialogProps
-} from './types';
+import { OptimizationInfoDialogProps } from "./types";
 
 // Import constants
-import { 
-  algorithms, 
-  features, 
-  optimizationSteps, 
-  metrics, 
+import {
+  algorithms,
+  features,
+  optimizationSteps,
+  metrics,
   trainingModules,
   dialogConfig,
-  messages 
-} from './constants';
+  messages,
+} from "./constants";
 
 /**
  * Optimization Info Dialog Component
- * 
+ *
  * Enterprise-grade optimization info dialog with modular architecture
  */
 export const OptimizationInfoDialog: React.FC<OptimizationInfoDialogProps> = ({
   open,
-  onClose
+  onClose,
 }) => {
   // Custom hooks for state and functionality
   const {
@@ -76,10 +71,10 @@ export const OptimizationInfoDialog: React.FC<OptimizationInfoDialogProps> = ({
     onResetTraining,
     onStartModule,
     onWorkshopStateChange,
-    onActiveTabChange
+    onActiveTabChange,
   } = useDialogState({
     open,
-    onClose
+    onClose,
   });
 
   return (
@@ -92,18 +87,20 @@ export const OptimizationInfoDialog: React.FC<OptimizationInfoDialogProps> = ({
       PaperProps={{
         sx: {
           borderRadius: dialogConfig.borderRadius,
-          minHeight: dialogConfig.minHeight
-        }
+          minHeight: dialogConfig.minHeight,
+        },
       }}
     >
-      <DialogTitle sx={{ 
-        borderBottom: 1, 
-        borderColor: 'divider',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <DialogTitle
+        sx={{
+          borderBottom: 1,
+          borderColor: "divider",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <InfoIcon color="primary" />
           <Typography variant="h5" fontWeight="bold">
             {messages.dialog.title}
@@ -115,7 +112,7 @@ export const OptimizationInfoDialog: React.FC<OptimizationInfoDialogProps> = ({
       </DialogTitle>
 
       <DialogContent sx={{ p: 0 }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs value={tabValue} onChange={onTabChange} aria-label="info tabs">
             <Tab label="Genel Bakış" />
             <Tab label="Algoritmalar" />
@@ -173,7 +170,7 @@ export const OptimizationInfoDialog: React.FC<OptimizationInfoDialogProps> = ({
         </TabPanel>
       </DialogContent>
 
-      <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+      <DialogActions sx={{ p: 2, borderTop: 1, borderColor: "divider" }}>
         <Button onClick={onClose} variant="contained">
           {messages.dialog.closeButton}
         </Button>

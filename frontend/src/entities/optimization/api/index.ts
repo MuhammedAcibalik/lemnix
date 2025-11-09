@@ -1,6 +1,6 @@
 /**
  * LEMNİX Optimization Entity API Barrel Export
- * 
+ *
  * @module entities/optimization/api
  * @version 1.0.0 - FSD Compliant
  */
@@ -19,14 +19,14 @@ export {
   exportOptimizationResult,
   // NEW: P3-11 Prefetch
   getOptimizationResult,
-} from './optimizationApi';
+} from "./optimizationApi";
 
 // DTO functions (backend-frontend type normalization)
 export {
   normalizeOptimizationResult,
   safeNormalizeOptimizationResult,
   isValidOptimizationResult,
-} from './dto';
+} from "./dto";
 
 // React Query hooks (recommended)
 export {
@@ -39,4 +39,4 @@ export {
   useExportOptimization,
   // ⚠️ Removed unused hooks: useAvailableAlgorithms, useValidateOptimization, useOptimizationEstimate
   // Use raw API functions if needed: getAvailableAlgorithms(), validateOptimizationRequest(), getOptimizationEstimate()
-} from './optimizationQueries';
+} from "./optimizationQueries";

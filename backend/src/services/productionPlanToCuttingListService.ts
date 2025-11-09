@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -36,10 +36,14 @@ export class ProductionPlanToCuttingListService {
   /**
    * Plan itemlarından kesim listesi oluştur
    */
-  async createCuttingListFromPlan(request: CreateCuttingListFromPlanRequest): Promise<CuttingListFromPlanResult> {
+  async createCuttingListFromPlan(
+    request: CreateCuttingListFromPlanRequest,
+  ): Promise<CuttingListFromPlanResult> {
     try {
       // Plan itemlarını doğrula
-      const planItems = await this.validatePlanItems(request.productionPlanItems);
+      const planItems = await this.validatePlanItems(
+        request.productionPlanItems,
+      );
       if (!planItems.success) {
         return { success: false, error: planItems.error };
       }
@@ -48,28 +52,28 @@ export class ProductionPlanToCuttingListService {
       const cuttingList = await prisma.cuttingList.create({
         data: {
           name: request.cuttingListMetadata.name,
-          description: request.cuttingListMetadata.description || '',
-          status: 'draft',
+          description: request.cuttingListMetadata.description || "",
+          status: "draft",
           userId: request.userId,
           metadata: {
-            source: 'production-plan',
+            source: "production-plan",
             createdFromPlan: true,
-            planItemCount: request.productionPlanItems.length
-          }
-        }
+            planItemCount: request.productionPlanItems.length,
+          },
+        },
       });
 
       // Plan itemlarından kesim listesi itemları oluştur
       const cuttingListItems = await this.createCuttingListItems(
         cuttingList.id,
         request.productionPlanItems,
-        planItems.data!
+        planItems.data!,
       );
 
       // Plan itemları ile kesim listesi arasında link kur
       await this.linkPlanItemsToCuttingList(
-        request.productionPlanItems.map(item => item.planItemId),
-        cuttingList.id
+        request.productionPlanItems.map((item) => item.planItemId),
+        cuttingList.id,
       );
 
       return {
@@ -77,14 +81,14 @@ export class ProductionPlanToCuttingListService {
         data: {
           cuttingListId: cuttingList.id,
           name: cuttingList.name,
-          itemCount: cuttingListItems
-        }
+          itemCount: cuttingListItems,
+        },
       };
     } catch (error) {
-      console.error('Error creating cutting list from plan:', error);
+      console.error("Error creating cutting list from plan:", error);
       return {
         success: false,
-        error: 'Kesim listesi oluşturulurken hata oluştu'
+        error: "Kesim listesi oluşturulurken hata oluştu",
       };
     }
   }
@@ -97,27 +101,27 @@ export class ProductionPlanToCuttingListService {
       const items = await prisma.productionPlanItem.findMany({
         where: {
           id: {
-            in: planItemIds.map(item => item.planItemId)
-          }
-        }
+            in: planItemIds.map((item) => item.planItemId),
+          },
+        },
       });
 
       if (items.length !== planItemIds.length) {
         return {
           success: false,
-          error: 'Bazı plan itemları bulunamadı'
+          error: "Bazı plan itemları bulunamadı",
         };
       }
 
       return {
         success: true,
-        data: items
+        data: items,
       };
     } catch (error) {
-      console.error('Error validating plan items:', error);
+      console.error("Error validating plan items:", error);
       return {
         success: false,
-        error: 'Plan itemları doğrulanamadı'
+        error: "Plan itemları doğrulanamadı",
       };
     }
   }
@@ -127,12 +131,14 @@ export class ProductionPlanToCuttingListService {
    */
   private async createCuttingListItems(
     cuttingListId: string,
-    planItems: CreateCuttingListFromPlanRequest['productionPlanItems'],
-    validatedItems: any[]
+    planItems: CreateCuttingListFromPlanRequest["productionPlanItems"],
+    validatedItems: any[],
   ) {
-    const itemsToCreate = planItems.map(planItem => {
-      const validatedItem = validatedItems.find(item => item.id === planItem.planItemId);
-      
+    const itemsToCreate = planItems.map((planItem) => {
+      const validatedItem = validatedItems.find(
+        (item) => item.id === planItem.planItemId,
+      );
+
       return {
         cuttingListId,
         workOrderId: validatedItem.siparis, // Sipariş numarası workOrderId olarak
@@ -143,16 +149,16 @@ export class ProductionPlanToCuttingListService {
         materialNumber: validatedItem.malzemeNo,
         materialDescription: validatedItem.malzemeKisaMetni,
         productionPlanItemId: planItem.planItemId,
-        color: 'Beyaz', // Default color
-        version: '1.0', // Default version
-        size: 'Standard', // Default size
+        color: "Beyaz", // Default color
+        version: "1.0", // Default version
+        size: "Standard", // Default size
         priority: this.mapPriority(validatedItem.oncelik),
-        status: 'draft'
+        status: "draft",
       };
     });
 
     const result = await prisma.cuttingListItem.createMany({
-      data: itemsToCreate
+      data: itemsToCreate,
     });
     return result.count;
   }
@@ -160,16 +166,19 @@ export class ProductionPlanToCuttingListService {
   /**
    * Plan itemları ile kesim listesi arasında link kur
    */
-  private async linkPlanItemsToCuttingList(planItemIds: string[], cuttingListId: string) {
+  private async linkPlanItemsToCuttingList(
+    planItemIds: string[],
+    cuttingListId: string,
+  ) {
     await prisma.productionPlanItem.updateMany({
       where: {
         id: {
-          in: planItemIds
-        }
+          in: planItemIds,
+        },
       },
-        data: {
-          linkedCuttingListId: cuttingListId
-        } as unknown as any
+      data: {
+        linkedCuttingListId: cuttingListId,
+      } as unknown as any,
     });
   }
 
@@ -178,31 +187,34 @@ export class ProductionPlanToCuttingListService {
    */
   private mapPriority(oncelik: string): string {
     switch (oncelik.toLowerCase()) {
-      case 'yuksek':
-      case 'yüksek':
-        return 'high';
-      case 'orta':
-        return 'medium';
-      case 'dusuk':
-      case 'düşük':
-        return 'low';
+      case "yuksek":
+      case "yüksek":
+        return "high";
+      case "orta":
+        return "medium";
+      case "dusuk":
+      case "düşük":
+        return "low";
       default:
-        return 'medium';
+        return "medium";
     }
   }
 
   /**
    * Plan item ile kesim listesi arasında link kur
    */
-  async linkPlanItemToCuttingList(planItemId: string, cuttingListId: string): Promise<void> {
+  async linkPlanItemToCuttingList(
+    planItemId: string,
+    cuttingListId: string,
+  ): Promise<void> {
     try {
       await prisma.productionPlanItem.update({
         where: { id: planItemId },
-        data: { linkedCuttingListId: cuttingListId } as unknown as any
+        data: { linkedCuttingListId: cuttingListId } as unknown as any,
       });
     } catch (error) {
-      console.error('Error linking plan item to cutting list:', error);
-      throw new Error('Plan itemı kesim listesi ile bağlanamadı');
+      console.error("Error linking plan item to cutting list:", error);
+      throw new Error("Plan itemı kesim listesi ile bağlanamadı");
     }
   }
 
@@ -216,15 +228,15 @@ export class ProductionPlanToCuttingListService {
         include: {
           linkedCuttingList: {
             include: {
-              items: true
-            }
-          }
-        } as unknown as any
+              items: true,
+            },
+          },
+        } as unknown as any,
       });
 
       return planItem?.linkedCuttingList || null;
     } catch (error) {
-      console.error('Error getting linked cutting list:', error);
+      console.error("Error getting linked cutting list:", error);
       return null;
     }
   }
@@ -236,11 +248,11 @@ export class ProductionPlanToCuttingListService {
     try {
       await prisma.productionPlanItem.update({
         where: { id: planItemId },
-        data: { linkedCuttingListId: null } as unknown as any
+        data: { linkedCuttingListId: null } as unknown as any,
       });
     } catch (error) {
-      console.error('Error unlinking plan item from cutting list:', error);
-      throw new Error('Plan itemı kesim listesinden ayrılamadı');
+      console.error("Error unlinking plan item from cutting list:", error);
+      throw new Error("Plan itemı kesim listesinden ayrılamadı");
     }
   }
 
@@ -252,14 +264,15 @@ export class ProductionPlanToCuttingListService {
       return await prisma.productionPlanItem.findMany({
         where: { linkedCuttingListId: cuttingListId } as unknown as any,
         include: {
-          plan: true
-        }
+          plan: true,
+        },
       });
     } catch (error) {
-      console.error('Error getting linked plan items:', error);
+      console.error("Error getting linked plan items:", error);
       return [];
     }
   }
 }
 
-export const productionPlanToCuttingListService = new ProductionPlanToCuttingListService();
+export const productionPlanToCuttingListService =
+  new ProductionPlanToCuttingListService();

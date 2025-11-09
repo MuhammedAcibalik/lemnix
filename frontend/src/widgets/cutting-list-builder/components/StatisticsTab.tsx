@@ -4,7 +4,7 @@
  * @version 2.0.0 - Design System v2 Compliant
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 import {
   Box,
   Typography,
@@ -13,18 +13,18 @@ import {
   IconButton,
   Tooltip,
   alpha,
-} from '@mui/material';
+} from "@mui/material";
 import {
   TrendingUp as TrendingUpIcon,
   Assessment as AssessmentIcon,
   Timeline as TimelineIcon,
   BarChart as BarChartIcon,
   OpenInNew as OpenInNewIcon,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
 
 // Design System v2.0
-import { useDesignSystem } from '@/shared/hooks';
-import { CardV2, FadeIn, ScaleIn } from '@/shared';
+import { useDesignSystem } from "@/shared/hooks";
+import { CardV2, FadeIn, ScaleIn } from "@/shared";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -50,18 +50,18 @@ interface CompactStatProps {
   icon: React.ReactNode;
   label: string;
   value: string | number;
-  trend?: 'up' | 'down' | 'neutral';
-  color?: 'primary' | 'success' | 'warning' | 'error';
+  trend?: "up" | "down" | "neutral";
+  color?: "primary" | "success" | "warning" | "error";
   ds: ReturnType<typeof useDesignSystem>;
 }
 
-const CompactStat: React.FC<CompactStatProps> = ({ 
-  icon, 
-  label, 
-  value, 
-  trend = 'neutral',
-  color = 'primary',
-  ds 
+const CompactStat: React.FC<CompactStatProps> = ({
+  icon,
+  label,
+  value,
+  trend = "neutral",
+  color = "primary",
+  ds,
 }) => {
   const colorMap = {
     primary: ds.colors.primary.main,
@@ -70,44 +70,47 @@ const CompactStat: React.FC<CompactStatProps> = ({
     error: ds.colors.error.main,
   };
 
-  const trendColor = trend === 'up' ? ds.colors.success.main : 
-                    trend === 'down' ? ds.colors.error.main : 
-                    ds.colors.neutral[500];
+  const trendColor =
+    trend === "up"
+      ? ds.colors.success.main
+      : trend === "down"
+        ? ds.colors.error.main
+        : ds.colors.neutral[500];
 
   return (
     <ScaleIn delay={100}>
-      <CardV2 
-        variant="glass" 
-        sx={{ 
-          p: ds.spacing['3'],
-          textAlign: 'center',
+      <CardV2
+        variant="glass"
+        sx={{
+          p: ds.spacing["3"],
+          textAlign: "center",
           transition: ds.transitions.base,
-          '&:hover': {
-            transform: 'translateY(-2px)',
+          "&:hover": {
+            transform: "translateY(-2px)",
             boxShadow: ds.shadows.soft.md,
-          }
+          },
         }}
       >
-        <Stack spacing={ds.spacing['2']} alignItems="center">
+        <Stack spacing={ds.spacing["2"]} alignItems="center">
           <Box
             sx={{
               width: 44,
               height: 44,
               borderRadius: `${ds.borderRadius.md}px`,
               background: alpha(colorMap[color], 0.1),
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               color: colorMap[color],
             }}
           >
             {icon}
           </Box>
-          
+
           <Box>
             <Typography
               sx={{
-                fontSize: '1.5rem',
+                fontSize: "1.5rem",
                 fontWeight: 700,
                 color: ds.colors.text.primary,
                 lineHeight: 1.2,
@@ -117,7 +120,7 @@ const CompactStat: React.FC<CompactStatProps> = ({
             </Typography>
             <Typography
               sx={{
-                fontSize: '0.875rem',
+                fontSize: "0.875rem",
                 color: ds.colors.text.secondary,
                 fontWeight: 500,
               }}
@@ -129,15 +132,15 @@ const CompactStat: React.FC<CompactStatProps> = ({
       </CardV2>
     </ScaleIn>
   );
-  };
+};
 
-  // ============================================================================
+// ============================================================================
 // MAIN COMPONENT
-  // ============================================================================
-  
-export const StatisticsTab: React.FC<StatisticsTabProps> = ({ 
-  cuttingListId, 
-  cuttingListStats 
+// ============================================================================
+
+export const StatisticsTab: React.FC<StatisticsTabProps> = ({
+  cuttingListId,
+  cuttingListStats,
 }) => {
   const ds = useDesignSystem();
 
@@ -145,13 +148,20 @@ export const StatisticsTab: React.FC<StatisticsTabProps> = ({
   const derivedStats = useMemo(() => {
     if (!cuttingListStats) return null;
 
-    const completionRate = cuttingListStats.totalItems > 0 
-      ? Math.round((cuttingListStats.completedItems / cuttingListStats.totalItems) * 100)
-      : 0;
+    const completionRate =
+      cuttingListStats.totalItems > 0
+        ? Math.round(
+            (cuttingListStats.completedItems / cuttingListStats.totalItems) *
+              100,
+          )
+        : 0;
 
-    const avgItemsPerSection = cuttingListStats.totalSections > 0
-      ? Math.round(cuttingListStats.totalItems / cuttingListStats.totalSections)
-      : 0;
+    const avgItemsPerSection =
+      cuttingListStats.totalSections > 0
+        ? Math.round(
+            cuttingListStats.totalItems / cuttingListStats.totalSections,
+          )
+        : 0;
 
     return {
       completionRate,
@@ -162,27 +172,30 @@ export const StatisticsTab: React.FC<StatisticsTabProps> = ({
 
   const handleViewDetailedStats = () => {
     // Navigate to full statistics page
-    window.open('/statistics', '_blank');
+    window.open("/statistics", "_blank");
   };
 
   if (!cuttingListStats || !derivedStats) {
     return (
       <FadeIn>
-        <CardV2 variant="glass" sx={{ p: ds.spacing['4'], textAlign: 'center' }}>
-          <Box sx={{ mb: ds.spacing['4'] }}>
-            <AssessmentIcon 
-              sx={{ 
-                fontSize: 48, 
+        <CardV2
+          variant="glass"
+          sx={{ p: ds.spacing["4"], textAlign: "center" }}
+        >
+          <Box sx={{ mb: ds.spacing["4"] }}>
+            <AssessmentIcon
+              sx={{
+                fontSize: 48,
                 color: ds.colors.neutral[400],
-                mb: ds.spacing['3']
-              }} 
+                mb: ds.spacing["3"],
+              }}
             />
             <Typography
               sx={{
                 color: ds.colors.text.primary,
-                fontSize: '1.125rem',
+                fontSize: "1.125rem",
                 fontWeight: 600,
-                mb: ds.spacing['1'],
+                mb: ds.spacing["1"],
               }}
             >
               Kesim Listesi İstatistikleri
@@ -190,36 +203,64 @@ export const StatisticsTab: React.FC<StatisticsTabProps> = ({
             <Typography
               sx={{
                 color: ds.colors.text.secondary,
-                fontSize: '0.875rem',
-                mb: ds.spacing['4'],
+                fontSize: "0.875rem",
+                mb: ds.spacing["4"],
               }}
             >
               İstatistikleri görüntülemek için önce bir kesim listesi oluşturun
             </Typography>
-            
+
             {/* Demo Stats Preview */}
-            <Stack direction="row" spacing={ds.spacing['3']} sx={{ mb: ds.spacing['4'] }}>
-              <Box sx={{ flex: 1, textAlign: 'center' }}>
-                <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: ds.colors.neutral[300] }}>
+            <Stack
+              direction="row"
+              spacing={ds.spacing["3"]}
+              sx={{ mb: ds.spacing["4"] }}
+            >
+              <Box sx={{ flex: 1, textAlign: "center" }}>
+                <Typography
+                  sx={{
+                    fontSize: "1.5rem",
+                    fontWeight: 700,
+                    color: ds.colors.neutral[300],
+                  }}
+                >
                   0
                 </Typography>
-                <Typography sx={{ fontSize: '0.75rem', color: ds.colors.neutral[500] }}>
+                <Typography
+                  sx={{ fontSize: "0.75rem", color: ds.colors.neutral[500] }}
+                >
                   Ürün Grubu
                 </Typography>
               </Box>
-              <Box sx={{ flex: 1, textAlign: 'center' }}>
-                <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: ds.colors.neutral[300] }}>
+              <Box sx={{ flex: 1, textAlign: "center" }}>
+                <Typography
+                  sx={{
+                    fontSize: "1.5rem",
+                    fontWeight: 700,
+                    color: ds.colors.neutral[300],
+                  }}
+                >
                   0
                 </Typography>
-                <Typography sx={{ fontSize: '0.75rem', color: ds.colors.neutral[500] }}>
+                <Typography
+                  sx={{ fontSize: "0.75rem", color: ds.colors.neutral[500] }}
+                >
                   İş Emri
                 </Typography>
               </Box>
-              <Box sx={{ flex: 1, textAlign: 'center' }}>
-                <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: ds.colors.neutral[300] }}>
+              <Box sx={{ flex: 1, textAlign: "center" }}>
+                <Typography
+                  sx={{
+                    fontSize: "1.5rem",
+                    fontWeight: 700,
+                    color: ds.colors.neutral[300],
+                  }}
+                >
                   0%
                 </Typography>
-                <Typography sx={{ fontSize: '0.75rem', color: ds.colors.neutral[500] }}>
+                <Typography
+                  sx={{ fontSize: "0.75rem", color: ds.colors.neutral[500] }}
+                >
                   Verimlilik
                 </Typography>
               </Box>
@@ -229,40 +270,44 @@ export const StatisticsTab: React.FC<StatisticsTabProps> = ({
       </FadeIn>
     );
   }
-  
+
   return (
     <FadeIn>
-      <Stack spacing={ds.spacing['4']}>
-      {/* Header */}
-        <CardV2 
-          variant="glass" 
-          sx={{ 
-            p: ds.spacing['2'],
+      <Stack spacing={ds.spacing["4"]}>
+        {/* Header */}
+        <CardV2
+          variant="glass"
+          sx={{
+            p: ds.spacing["2"],
             border: `1px solid ${ds.colors.neutral[300]}`,
           }}
         >
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Box>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <Box>
               <Typography
                 sx={{
-                  fontSize: '1.25rem',
+                  fontSize: "1.25rem",
                   fontWeight: 700,
                   color: ds.colors.text.primary,
-                  mb: ds.spacing['1'],
+                  mb: ds.spacing["1"],
                 }}
               >
                 Kesim Listesi İstatistikleri
-            </Typography>
+              </Typography>
               <Typography
                 sx={{
-                  fontSize: '0.875rem',
+                  fontSize: "0.875rem",
                   color: ds.colors.text.secondary,
                 }}
               >
                 Genel bakış ve performans metrikleri
-          </Typography>
-          </Box>
-          
+              </Typography>
+            </Box>
+
             <Tooltip title="Detaylı İstatistikler" arrow>
               <IconButton
                 onClick={handleViewDetailedStats}
@@ -270,9 +315,9 @@ export const StatisticsTab: React.FC<StatisticsTabProps> = ({
                   background: alpha(ds.colors.primary.main, 0.1),
                   color: ds.colors.primary.main,
                   borderRadius: `${ds.borderRadius.md}px`,
-                  '&:hover': {
+                  "&:hover": {
                     background: alpha(ds.colors.primary.main, 0.2),
-                    transform: 'scale(1.1)',
+                    transform: "scale(1.1)",
                   },
                   transition: ds.transitions.fast,
                 }}
@@ -284,9 +329,9 @@ export const StatisticsTab: React.FC<StatisticsTabProps> = ({
         </CardV2>
 
         {/* Stats Grid */}
-        <Stack direction="row" spacing={ds.spacing['3']}>
+        <Stack direction="row" spacing={ds.spacing["3"]}>
           {/* Left Column */}
-          <Stack spacing={ds.spacing['3']} sx={{ flex: 1 }}>
+          <Stack spacing={ds.spacing["3"]} sx={{ flex: 1 }}>
             <CompactStat
               icon={<AssessmentIcon />}
               label="Toplam Bölüm"
@@ -294,28 +339,40 @@ export const StatisticsTab: React.FC<StatisticsTabProps> = ({
               color="primary"
               ds={ds}
             />
-            
+
             <CompactStat
               icon={<TimelineIcon />}
               label="Tamamlanan"
               value={`${cuttingListStats.completedItems}/${cuttingListStats.totalItems}`}
-              trend={derivedStats.completionRate > 80 ? 'up' : derivedStats.completionRate > 50 ? 'neutral' : 'down'}
+              trend={
+                derivedStats.completionRate > 80
+                  ? "up"
+                  : derivedStats.completionRate > 50
+                    ? "neutral"
+                    : "down"
+              }
               color="success"
               ds={ds}
             />
           </Stack>
 
           {/* Right Column */}
-          <Stack spacing={ds.spacing['3']} sx={{ flex: 1 }}>
+          <Stack spacing={ds.spacing["3"]} sx={{ flex: 1 }}>
             <CompactStat
               icon={<BarChartIcon />}
               label="Verimlilik"
               value={`${derivedStats.efficiency}%`}
-              trend={derivedStats.efficiency > 85 ? 'up' : derivedStats.efficiency > 70 ? 'neutral' : 'down'}
+              trend={
+                derivedStats.efficiency > 85
+                  ? "up"
+                  : derivedStats.efficiency > 70
+                    ? "neutral"
+                    : "down"
+              }
               color="success"
               ds={ds}
             />
-            
+
             <CompactStat
               icon={<TrendingUpIcon />}
               label="Toplam Miktar"
@@ -327,37 +384,43 @@ export const StatisticsTab: React.FC<StatisticsTabProps> = ({
         </Stack>
 
         {/* Summary Card */}
-        <CardV2 variant="glass" sx={{ p: ds.spacing['4'] }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <CardV2 variant="glass" sx={{ p: ds.spacing["4"] }}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+          >
             <Box>
               <Typography
                 sx={{
-                  fontSize: '1rem',
+                  fontSize: "1rem",
                   fontWeight: 600,
                   color: ds.colors.text.primary,
-                  mb: ds.spacing['1'],
+                  mb: ds.spacing["1"],
                 }}
               >
                 Özet
               </Typography>
-              <Stack direction="row" spacing={ds.spacing['2']}>
+              <Stack direction="row" spacing={ds.spacing["2"]}>
                 <Chip
                   label={`${derivedStats.completionRate}% Tamamlandı`}
                   size="small"
                   sx={{
-                    background: derivedStats.completionRate > 80 
-                      ? alpha(ds.colors.success.main, 0.1) 
-                      : alpha(ds.colors.warning.main, 0.1),
-                    color: derivedStats.completionRate > 80 
-                      ? ds.colors.success.main 
-                      : ds.colors.warning.main,
+                    background:
+                      derivedStats.completionRate > 80
+                        ? alpha(ds.colors.success.main, 0.1)
+                        : alpha(ds.colors.warning.main, 0.1),
+                    color:
+                      derivedStats.completionRate > 80
+                        ? ds.colors.success.main
+                        : ds.colors.warning.main,
                     fontWeight: 600,
                     borderRadius: `${ds.borderRadius.sm}px`,
                   }}
                 />
-          <Chip
+                <Chip
                   label={`${cuttingListStats.totalProfiles} Profil Türü`}
-            size="small"
+                  size="small"
                   sx={{
                     background: alpha(ds.colors.primary.main, 0.1),
                     color: ds.colors.primary.main,
@@ -365,11 +428,11 @@ export const StatisticsTab: React.FC<StatisticsTabProps> = ({
                     borderRadius: `${ds.borderRadius.sm}px`,
                   }}
                 />
-        </Stack>
-      </Box>
+              </Stack>
+            </Box>
           </Stack>
         </CardV2>
-            </Stack>
+      </Stack>
     </FadeIn>
   );
 };

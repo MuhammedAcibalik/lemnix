@@ -2,12 +2,12 @@
  * @fileoverview Styled Components for CuttingListBuilder
  * @module CuttingListBuilderStyled
  * @version 3.0.0 - Design System v2 Migration
- * 
+ *
  * DEPRECATED: Most components now use CardV2/ButtonV2 directly
  * This file maintained for legacy compatibility only
  */
 
-import React from 'react';
+import React from "react";
 import {
   Card,
   Button,
@@ -18,10 +18,10 @@ import {
   Stack,
   Grid,
   alpha,
-} from '@mui/material';
+} from "@mui/material";
 
 // Design System v2.0
-import { useDesignSystem } from '@/shared/hooks';
+import { useDesignSystem } from "@/shared/hooks";
 import {
   StyledCardProps,
   StyledButtonProps,
@@ -31,7 +31,7 @@ import {
   ActionToolbarProps,
   CuttingListStatsProps,
   StatsItem,
-} from './types';
+} from "./types";
 
 // ============================================================================
 // LEGACY STYLED COMPONENTS (Use CardV2/ButtonV2 for new code)
@@ -39,7 +39,7 @@ import {
 
 export const StyledCard: React.FC<StyledCardProps> = ({
   children,
-  variant = 'default',
+  variant = "default",
   sx = {},
   ...props
 }) => {
@@ -55,9 +55,9 @@ export const StyledCard: React.FC<StyledCardProps> = ({
         backdropFilter: ds.glass.backdropFilter,
         boxShadow: ds.shadows.soft.sm,
         transition: ds.transitions.base,
-        '&:hover': {
+        "&:hover": {
           boxShadow: ds.shadows.soft.md,
-          transform: 'translateY(-2px)',
+          transform: "translateY(-2px)",
         },
         ...sx,
       }}
@@ -69,8 +69,8 @@ export const StyledCard: React.FC<StyledCardProps> = ({
 
 export const StyledButton: React.FC<StyledButtonProps> = ({
   children,
-  variant = 'contained',
-  size = 'medium',
+  variant = "contained",
+  size = "medium",
   sx = {},
   ...props
 }) => {
@@ -84,14 +84,22 @@ export const StyledButton: React.FC<StyledButtonProps> = ({
       sx={{
         borderRadius: `${ds.borderRadius.md}px`,
         fontWeight: 600,
-        fontSize: size === 'small' ? '0.8125rem' : size === 'large' ? '0.9375rem' : '0.875rem',
-        textTransform: 'none',
-        padding: size === 'large' ? '10px 20px' : size === 'small' ? '6px 12px' : '8px 16px',
-        background: variant === 'contained'
-          ? ds.gradients.primary
-          : undefined,
-        '&:hover': {
-          transform: 'translateY(-1px)',
+        fontSize:
+          size === "small"
+            ? "0.8125rem"
+            : size === "large"
+              ? "0.9375rem"
+              : "0.875rem",
+        textTransform: "none",
+        padding:
+          size === "large"
+            ? "10px 20px"
+            : size === "small"
+              ? "6px 12px"
+              : "8px 16px",
+        background: variant === "contained" ? ds.gradients.primary : undefined,
+        "&:hover": {
+          transform: "translateY(-1px)",
           boxShadow: ds.shadows.soft.sm,
         },
         transition: ds.transitions.fast,
@@ -113,12 +121,12 @@ export const StyledTextField: React.FC<StyledTextFieldProps> = ({
     <TextField
       {...props}
       sx={{
-        '& .MuiOutlinedInput-root': {
+        "& .MuiOutlinedInput-root": {
           borderRadius: `${ds.borderRadius.md}px`,
-          '&:hover fieldset': {
+          "&:hover fieldset": {
             borderColor: ds.colors.primary.main,
           },
-          '&.Mui-focused fieldset': {
+          "&.Mui-focused fieldset": {
             borderColor: ds.colors.primary.main,
           },
         },
@@ -140,7 +148,7 @@ export const StyledChip: React.FC<StyledChipProps> = ({
       sx={{
         borderRadius: `${ds.borderRadius.sm}px`,
         fontWeight: 600,
-        fontSize: '0.75rem',
+        fontSize: "0.75rem",
         ...sx,
       }}
     />
@@ -161,8 +169,8 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   return (
     <Box
       sx={{
-        p: ds.spacing['4'],
-        mb: ds.spacing['4'],
+        p: ds.spacing["4"],
+        mb: ds.spacing["4"],
         borderRadius: `${ds.borderRadius.lg}px`,
         background: ds.glass.background,
         border: ds.glass.border,
@@ -171,7 +179,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       }}
     >
       <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Stack direction="row" alignItems="center" spacing={ds.spacing['3']}>
+        <Stack direction="row" alignItems="center" spacing={ds.spacing["3"]}>
           {icon && (
             <Box
               sx={{
@@ -179,9 +187,9 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                 height: 48,
                 borderRadius: `${ds.borderRadius.lg}px`,
                 background: ds.gradients.primary,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 color: ds.colors.text.inverse,
                 boxShadow: ds.shadows.soft.sm,
               }}
@@ -192,7 +200,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           <Box>
             <Typography
               sx={{
-                fontSize: '1.5rem',
+                fontSize: "1.5rem",
                 fontWeight: 700,
                 color: ds.colors.text.primary,
                 mb: 0.5,
@@ -203,7 +211,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             {subtitle && (
               <Typography
                 sx={{
-                  fontSize: '0.875rem',
+                  fontSize: "0.875rem",
                   color: ds.colors.text.secondary,
                 }}
               >
@@ -232,8 +240,8 @@ export const ActionToolbar: React.FC<ActionToolbarProps> = ({
   return (
     <Box
       sx={{
-        p: ds.spacing['3'],
-        mb: ds.spacing['4'],
+        p: ds.spacing["3"],
+        mb: ds.spacing["4"],
         borderRadius: `${ds.borderRadius.lg}px`,
         background: ds.glass.background,
         border: ds.glass.border,
@@ -241,7 +249,12 @@ export const ActionToolbar: React.FC<ActionToolbarProps> = ({
         boxShadow: ds.shadows.soft.sm,
       }}
     >
-      <Stack direction="row" alignItems="center" spacing={ds.spacing['2']} flexWrap="wrap">
+      <Stack
+        direction="row"
+        alignItems="center"
+        spacing={ds.spacing["2"]}
+        flexWrap="wrap"
+      >
         {primaryAction && (
           <Button
             onClick={primaryAction.onClick}
@@ -249,7 +262,7 @@ export const ActionToolbar: React.FC<ActionToolbarProps> = ({
             disabled={loading}
             sx={{
               borderRadius: `${ds.borderRadius.md}px`,
-              textTransform: 'none',
+              textTransform: "none",
               fontWeight: 600,
               background: ds.gradients.primary,
               color: ds.colors.text.inverse,
@@ -268,7 +281,7 @@ export const ActionToolbar: React.FC<ActionToolbarProps> = ({
             variant="outlined"
             sx={{
               borderRadius: `${ds.borderRadius.md}px`,
-              textTransform: 'none',
+              textTransform: "none",
               fontWeight: 600,
             }}
           >
@@ -286,25 +299,36 @@ export const ActionToolbar: React.FC<ActionToolbarProps> = ({
 // CUTTING LIST STATS (Legacy)
 // ============================================================================
 
-export const CuttingListStats: React.FC<CuttingListStatsProps> = ({ stats }) => {
+export const CuttingListStats: React.FC<CuttingListStatsProps> = ({
+  stats,
+}) => {
   const ds = useDesignSystem();
 
   return (
-    <Grid container spacing={ds.spacing['2']}>
+    <Grid container spacing={ds.spacing["2"]}>
       {stats.map((item, index) => (
         <Grid item xs={12} sm={4} key={index}>
           <Box
             sx={{
-              p: ds.spacing['3'],
+              p: ds.spacing["3"],
               borderRadius: `${ds.borderRadius.md}px`,
               background: alpha(item.color ?? ds.colors.primary.main, 0.1),
               border: `1px solid ${alpha(item.color ?? ds.colors.primary.main, 0.2)}`,
             }}
           >
-            <Typography sx={{ fontSize: '1.5rem', fontWeight: 700, color: item.color ?? ds.colors.primary.main, mb: 0.5 }}>
+            <Typography
+              sx={{
+                fontSize: "1.5rem",
+                fontWeight: 700,
+                color: item.color ?? ds.colors.primary.main,
+                mb: 0.5,
+              }}
+            >
               {item.value}
             </Typography>
-            <Typography sx={{ fontSize: '0.75rem', color: ds.colors.text.secondary }}>
+            <Typography
+              sx={{ fontSize: "0.75rem", color: ds.colors.text.secondary }}
+            >
               {item.title}
             </Typography>
           </Box>

@@ -2,19 +2,22 @@
  * @fileoverview Progressive Routes
  * @module routes/progressiveRoutes
  * @version 1.0.0
- * 
+ *
  * ⚡🔐 CRITICAL: Real-time progress tracking routes
  * - WebSocket-enabled endpoints
  * - Security maintained throughout
  * - Real-time user feedback
  */
 
-import { Router } from 'express';
-import { ProgressiveController, setupProgressiveWebSocket } from '../controllers/progressiveController';
-import { authenticateToken } from '../middleware/authentication';
-import { validateSession } from '../middleware/sessionValidation';
-import { logRequestDetails } from '../middleware/requestLogging';
-import { Server as SocketIOServer } from 'socket.io';
+import { Router } from "express";
+import {
+  ProgressiveController,
+  setupProgressiveWebSocket,
+} from "../controllers/progressiveController";
+import { authenticateToken } from "../middleware/authentication";
+import { validateSession } from "../middleware/sessionValidation";
+import { logRequestDetails } from "../middleware/requestLogging";
+import { Server as SocketIOServer } from "socket.io";
 
 // ============================================================================
 // ROUTES
@@ -33,11 +36,12 @@ export function createProgressiveRoutes(io: SocketIOServer): Router {
    * @access Private (requires authentication)
    */
   router.post(
-    '/upload-progressive',
+    "/upload-progressive",
     authenticateToken,
     validateSession,
     logRequestDetails,
-    (req, res) => progressiveController.uploadProductionPlanProgressive(req, res)
+    (req, res) =>
+      progressiveController.uploadProductionPlanProgressive(req, res),
   );
 
   /**
@@ -46,11 +50,11 @@ export function createProgressiveRoutes(io: SocketIOServer): Router {
    * @access Private (requires authentication)
    */
   router.get(
-    '/progressive',
+    "/progressive",
     authenticateToken,
     validateSession,
     logRequestDetails,
-    (req, res) => progressiveController.getProductionPlansProgressive(req, res)
+    (req, res) => progressiveController.getProductionPlansProgressive(req, res),
   );
 
   /**
@@ -59,11 +63,11 @@ export function createProgressiveRoutes(io: SocketIOServer): Router {
    * @access Private (requires authentication)
    */
   router.get(
-    '/progress/:sessionId',
+    "/progress/:sessionId",
     authenticateToken,
     validateSession,
     logRequestDetails,
-    (req, res) => progressiveController.getProgress(req, res)
+    (req, res) => progressiveController.getProgress(req, res),
   );
 
   return router;

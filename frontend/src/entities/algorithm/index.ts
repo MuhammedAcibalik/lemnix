@@ -1,21 +1,20 @@
 /**
  * @fileoverview Algorithm Entity - Public API
  * @module entities/algorithm
- * 
+ *
  * FSD: Public API exports for algorithm entity
  */
 
-export type { 
+export type {
   AlgorithmMode,
   AlgorithmConfig,
   ParetoOptimizationResult,
   OptimizationResult,
-  AlgorithmComparisonResult
-} from './model/types';
+  AlgorithmComparisonResult,
+} from "./model/types";
 
-export { 
+export {
   ALGORITHM_CONFIGS,
   getRecommendedMode,
-  getAlgorithmConfig
-} from './model/types';
-
+  getAlgorithmConfig,
+} from "./model/types";

@@ -1,38 +1,38 @@
 /**
  * LEMNİX Audit Entity Types
  * Enterprise audit log domain types
- * 
+ *
  * @module entities/audit/model
  * @version 1.0.0 - FSD Compliant
  * @description Aligned with backend audit types
  */
 
-import type { ID, Timestamp } from '@/shared/types';
+import type { ID, Timestamp } from "@/shared/types";
 
 /**
  * Audit action types (aligned with backend)
  */
 export type AuditAction =
-  | 'optimization_started'
-  | 'optimization_completed'
-  | 'optimization_failed'
-  | 'export_requested'
-  | 'export_completed'
-  | 'metrics_accessed'
-  | 'analytics_generated'
-  | 'health_check_performed'
-  | 'algorithm_compared'
-  | 'history_accessed';
+  | "optimization_started"
+  | "optimization_completed"
+  | "optimization_failed"
+  | "export_requested"
+  | "export_completed"
+  | "metrics_accessed"
+  | "analytics_generated"
+  | "health_check_performed"
+  | "algorithm_compared"
+  | "history_accessed";
 
 /**
  * Audit severity levels
  */
-export type AuditSeverity = 'info' | 'warning' | 'error' | 'critical';
+export type AuditSeverity = "info" | "warning" | "error" | "critical";
 
 /**
  * Audit outcome
  */
-export type AuditOutcome = 'success' | 'failure';
+export type AuditOutcome = "success" | "failure";
 
 /**
  * Base audit log entry (aligned with backend)
@@ -106,74 +106,74 @@ export interface AuditActionMetadata {
  */
 export const AUDIT_ACTION_CATALOG: Record<AuditAction, AuditActionMetadata> = {
   optimization_started: {
-    action: 'optimization_started',
-    label: 'Optimizasyon Başlatıldı',
-    icon: '▶️',
-    color: '#3b82f6',
-    description: 'Yeni optimizasyon işlemi başlatıldı',
+    action: "optimization_started",
+    label: "Optimizasyon Başlatıldı",
+    icon: "▶️",
+    color: "#3b82f6",
+    description: "Yeni optimizasyon işlemi başlatıldı",
   },
   optimization_completed: {
-    action: 'optimization_completed',
-    label: 'Optimizasyon Tamamlandı',
-    icon: '✅',
-    color: '#10b981',
-    description: 'Optimizasyon başarıyla tamamlandı',
+    action: "optimization_completed",
+    label: "Optimizasyon Tamamlandı",
+    icon: "✅",
+    color: "#10b981",
+    description: "Optimizasyon başarıyla tamamlandı",
   },
   optimization_failed: {
-    action: 'optimization_failed',
-    label: 'Optimizasyon Başarısız',
-    icon: '❌',
-    color: '#ef4444',
-    description: 'Optimizasyon işlemi başarısız oldu',
+    action: "optimization_failed",
+    label: "Optimizasyon Başarısız",
+    icon: "❌",
+    color: "#ef4444",
+    description: "Optimizasyon işlemi başarısız oldu",
   },
   export_requested: {
-    action: 'export_requested',
-    label: 'Export İstendi',
-    icon: '📥',
-    color: '#8b5cf6',
-    description: 'Sonuç export işlemi başlatıldı',
+    action: "export_requested",
+    label: "Export İstendi",
+    icon: "📥",
+    color: "#8b5cf6",
+    description: "Sonuç export işlemi başlatıldı",
   },
   export_completed: {
-    action: 'export_completed',
-    label: 'Export Tamamlandı',
-    icon: '📦',
-    color: '#10b981',
-    description: 'Export başarıyla oluşturuldu',
+    action: "export_completed",
+    label: "Export Tamamlandı",
+    icon: "📦",
+    color: "#10b981",
+    description: "Export başarıyla oluşturuldu",
   },
   metrics_accessed: {
-    action: 'metrics_accessed',
-    label: 'Metrik Görüntülendi',
-    icon: '📊',
-    color: '#6366f1',
-    description: 'Sistem metrikleri görüntülendi',
+    action: "metrics_accessed",
+    label: "Metrik Görüntülendi",
+    icon: "📊",
+    color: "#6366f1",
+    description: "Sistem metrikleri görüntülendi",
   },
   analytics_generated: {
-    action: 'analytics_generated',
-    label: 'Analitik Oluşturuldu',
-    icon: '📈',
-    color: '#8b5cf6',
-    description: 'Analitik rapor oluşturuldu',
+    action: "analytics_generated",
+    label: "Analitik Oluşturuldu",
+    icon: "📈",
+    color: "#8b5cf6",
+    description: "Analitik rapor oluşturuldu",
   },
   health_check_performed: {
-    action: 'health_check_performed',
-    label: 'Sistem Kontrolü',
-    icon: '🏥',
-    color: '#14b8a6',
-    description: 'Sistem sağlık kontrolü yapıldı',
+    action: "health_check_performed",
+    label: "Sistem Kontrolü",
+    icon: "🏥",
+    color: "#14b8a6",
+    description: "Sistem sağlık kontrolü yapıldı",
   },
   algorithm_compared: {
-    action: 'algorithm_compared',
-    label: 'Algoritma Karşılaştırması',
-    icon: '⚖️',
-    color: '#f59e0b',
-    description: 'Algoritmalar karşılaştırıldı',
+    action: "algorithm_compared",
+    label: "Algoritma Karşılaştırması",
+    icon: "⚖️",
+    color: "#f59e0b",
+    description: "Algoritmalar karşılaştırıldı",
   },
   history_accessed: {
-    action: 'history_accessed',
-    label: 'Geçmiş Görüntülendi',
-    icon: '📜',
-    color: '#64748b',
-    description: 'Optimizasyon geçmişi görüntülendi',
+    action: "history_accessed",
+    label: "Geçmiş Görüntülendi",
+    icon: "📜",
+    color: "#64748b",
+    description: "Optimizasyon geçmişi görüntülendi",
   },
 } as const;
 
@@ -189,28 +189,27 @@ export interface SeverityMetadata {
 
 export const SEVERITY_CATALOG: Record<AuditSeverity, SeverityMetadata> = {
   info: {
-    severity: 'info',
-    label: 'Bilgi',
-    color: '#3b82f6',
-    icon: 'ℹ️',
+    severity: "info",
+    label: "Bilgi",
+    color: "#3b82f6",
+    icon: "ℹ️",
   },
   warning: {
-    severity: 'warning',
-    label: 'Uyarı',
-    color: '#f59e0b',
-    icon: '⚠️',
+    severity: "warning",
+    label: "Uyarı",
+    color: "#f59e0b",
+    icon: "⚠️",
   },
   error: {
-    severity: 'error',
-    label: 'Hata',
-    color: '#ef4444',
-    icon: '❌',
+    severity: "error",
+    label: "Hata",
+    color: "#ef4444",
+    icon: "❌",
   },
   critical: {
-    severity: 'critical',
-    label: 'Kritik',
-    color: '#dc2626',
-    icon: '🔥',
+    severity: "critical",
+    label: "Kritik",
+    color: "#dc2626",
+    icon: "🔥",
   },
 } as const;
-

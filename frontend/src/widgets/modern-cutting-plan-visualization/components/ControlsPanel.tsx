@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 import {
   Card,
   CardContent,
@@ -12,8 +12,8 @@ import {
   Stack,
   Button,
   IconButton,
-  Tooltip
-} from '@mui/material';
+  Tooltip,
+} from "@mui/material";
 import {
   ZoomIn as ZoomInIcon,
   ZoomOut as ZoomOutIcon,
@@ -22,11 +22,9 @@ import {
   ViewList as ViewListIcon,
   ViewModule as ViewModuleIcon,
   Download as DownloadIcon,
-  Print as PrintIcon
-} from '@mui/icons-material';
-import {
-  ControlsPanelProps
-} from '../types';
+  Print as PrintIcon,
+} from "@mui/icons-material";
+import { ControlsPanelProps } from "../types";
 
 /**
  * Controls Panel Component
@@ -42,21 +40,33 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
   showExportOptions,
   currentPage,
   totalPages,
-  stocksPerPage
+  stocksPerPage,
 }) => {
   return (
     <Card elevation={2} sx={{ mb: 3 }}>
       <CardContent sx={{ p: 2 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" flexWrap="wrap" gap={2}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          flexWrap="wrap"
+          gap={2}
+        >
           {/* View Controls */}
           <Stack direction="row" spacing={1}>
             <Tooltip title="Yakınlaştır">
-              <IconButton onClick={() => onZoom('in')} disabled={settings.zoomLevel >= 3}>
+              <IconButton
+                onClick={() => onZoom("in")}
+                disabled={settings.zoomLevel >= 3}
+              >
                 <ZoomInIcon />
               </IconButton>
             </Tooltip>
             <Tooltip title="Uzaklaştır">
-              <IconButton onClick={() => onZoom('out')} disabled={settings.zoomLevel <= 0.5}>
+              <IconButton
+                onClick={() => onZoom("out")}
+                disabled={settings.zoomLevel <= 0.5}
+              >
                 <ZoomOutIcon />
               </IconButton>
             </Tooltip>
@@ -75,18 +85,22 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
           {/* View Mode Toggle */}
           <Stack direction="row" spacing={1}>
             <Button
-              variant={settings.viewMode === 'detailed' ? 'contained' : 'outlined'}
+              variant={
+                settings.viewMode === "detailed" ? "contained" : "outlined"
+              }
               size="small"
               startIcon={<ViewListIcon />}
-              onClick={() => onViewModeChange('detailed')}
+              onClick={() => onViewModeChange("detailed")}
             >
               Detaylı
             </Button>
             <Button
-              variant={settings.viewMode === 'compact' ? 'contained' : 'outlined'}
+              variant={
+                settings.viewMode === "compact" ? "contained" : "outlined"
+              }
               size="small"
               startIcon={<ViewModuleIcon />}
-              onClick={() => onViewModeChange('compact')}
+              onClick={() => onViewModeChange("compact")}
             >
               Kompakt
             </Button>
@@ -102,11 +116,11 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
             >
               ← Önceki
             </Button>
-            
+
             <Typography variant="body2" sx={{ px: 1 }}>
               {currentPage + 1} / {totalPages}
             </Typography>
-            
+
             <Button
               variant="outlined"
               size="small"
@@ -124,7 +138,7 @@ export const ControlsPanel: React.FC<ControlsPanelProps> = ({
                 variant="outlined"
                 size="small"
                 startIcon={<DownloadIcon />}
-                onClick={() => onExport('pdf')}
+                onClick={() => onExport("pdf")}
               >
                 PDF
               </Button>

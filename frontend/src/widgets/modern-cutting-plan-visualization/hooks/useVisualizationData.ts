@@ -4,21 +4,17 @@
  * @version 1.0.0
  */
 
-import { useMemo } from 'react';
-import { OptimizationResult } from '@/shared/types/legacy';
-import {
-  CuttingStock,
-  OverallStatistics,
-  PaginatedData
-} from '../types';
+import { useMemo } from "react";
+import { OptimizationResult } from "@/shared/types/legacy";
+import { CuttingStock, OverallStatistics, PaginatedData } from "../types";
 import {
   processOptimizationSegments,
   groupSegmentsByProfileAndLength,
   convertToCuttingStocks,
   calculateOverallStatistics,
   createPaginatedData,
-  isValidOptimizationResult
-} from '../utils';
+  isValidOptimizationResult,
+} from "../utils";
 
 /**
  * Custom hook for processing optimization data into visualization format
@@ -27,7 +23,7 @@ export const useVisualizationData = (
   optimizationResult: OptimizationResult,
   stockLength: number,
   stocksPerPage: number,
-  currentPage: number
+  currentPage: number,
 ) => {
   // Process the optimization result into cutting stocks
   const processedData = useMemo((): CuttingStock[] => {
@@ -37,17 +33,23 @@ export const useVisualizationData = (
 
     try {
       // Step 1: Process segments from optimization result
-      const segments = processOptimizationSegments(optimizationResult, stockLength);
-      
+      const segments = processOptimizationSegments(
+        optimizationResult,
+        stockLength,
+      );
+
       // Step 2: Group segments by profile type and length
       const groupedSegments = groupSegmentsByProfileAndLength(segments);
-      
+
       // Step 3: Convert to cutting stocks
-      const cuttingStocks = convertToCuttingStocks(groupedSegments, stockLength);
-      
+      const cuttingStocks = convertToCuttingStocks(
+        groupedSegments,
+        stockLength,
+      );
+
       return cuttingStocks;
     } catch (error) {
-      console.error('Error processing optimization data:', error);
+      console.error("Error processing optimization data:", error);
       return [];
     }
   }, [optimizationResult, stockLength]);
@@ -67,7 +69,7 @@ export const useVisualizationData = (
         materialCost: 0,
         wasteCost: 0,
         usedCost: 0,
-        costEfficiency: 0
+        costEfficiency: 0,
       };
     }
 
@@ -89,15 +91,15 @@ export const useVisualizationData = (
     processedData,
     overallStatistics,
     paginatedData,
-    
+
     // Validation flags
     hasData,
     hasValidResult,
     totalPages,
-    
+
     // Data counts
     totalStocks: processedData.length,
     showingCount: paginatedData.showingCount,
-    currentPageData: paginatedData.data
+    currentPageData: paginatedData.data,
   };
 };

@@ -1,40 +1,46 @@
 /**
  * LEMNİX WebGPU Entity React Query Hooks
  * Type-safe React Query hooks for WebGPU operations
- * 
+ *
  * @module entities/webgpu/api
  * @version 1.0.0
  */
 
-import { useQuery, useMutation, useQueryClient, type UseQueryOptions, type UseMutationOptions } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  type UseQueryOptions,
+  type UseMutationOptions,
+} from "@tanstack/react-query";
 import {
   getWebGPUStatus,
   initializeWebGPU,
   runWebGPUOptimization,
   getWebGPUInfo,
   cleanupWebGPU,
-} from './webgpuApi';
+} from "./webgpuApi";
 import type {
   WebGPUStatus,
   WebGPUInfo,
   WebGPUOptimizationRequest,
   WebGPUOptimizationResult,
-} from '../model/types';
+} from "../model/types";
 
 /**
  * Query keys for React Query
  */
 export const webgpuKeys = {
-  all: ['webgpu'] as const,
-  status: () => [...webgpuKeys.all, 'status'] as const,
-  info: () => [...webgpuKeys.all, 'info'] as const,
+  all: ["webgpu"] as const,
+  status: () => [...webgpuKeys.all, "status"] as const,
+  info: () => [...webgpuKeys.all, "info"] as const,
 } as const;
 
 /**
  * Hook: Get WebGPU status
  */
 export function useWebGPUStatus(
-  options?: UseQueryOptions<WebGPUStatus, Error>
+  options?: UseQueryOptions<WebGPUStatus, Error>,
 ) {
   return useQuery({
     queryKey: webgpuKeys.status(),
@@ -49,9 +55,7 @@ export function useWebGPUStatus(
 /**
  * Hook: Get WebGPU device info
  */
-export function useWebGPUInfo(
-  options?: UseQueryOptions<WebGPUInfo, Error>
-) {
+export function useWebGPUInfo(options?: UseQueryOptions<WebGPUInfo, Error>) {
   return useQuery({
     queryKey: webgpuKeys.info(),
     queryFn: getWebGPUInfo,
@@ -66,7 +70,7 @@ export function useWebGPUInfo(
  * Hook: Initialize WebGPU
  */
 export function useInitializeWebGPU(
-  options?: UseMutationOptions<WebGPUStatus, Error, void>
+  options?: UseMutationOptions<WebGPUStatus, Error, void>,
 ) {
   const queryClient = useQueryClient();
 
@@ -84,7 +88,11 @@ export function useInitializeWebGPU(
  * Hook: Run WebGPU optimization
  */
 export function useWebGPUOptimization(
-  options?: UseMutationOptions<WebGPUOptimizationResult, Error, WebGPUOptimizationRequest>
+  options?: UseMutationOptions<
+    WebGPUOptimizationResult,
+    Error,
+    WebGPUOptimizationRequest
+  >,
 ) {
   return useMutation({
     mutationFn: runWebGPUOptimization,
@@ -96,7 +104,7 @@ export function useWebGPUOptimization(
  * Hook: Cleanup WebGPU resources
  */
 export function useCleanupWebGPU(
-  options?: UseMutationOptions<void, Error, void>
+  options?: UseMutationOptions<void, Error, void>,
 ) {
   const queryClient = useQueryClient();
 
@@ -109,4 +117,3 @@ export function useCleanupWebGPU(
     ...options,
   });
 }
-

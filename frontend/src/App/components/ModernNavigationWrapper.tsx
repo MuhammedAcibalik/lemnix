@@ -4,9 +4,9 @@
  * @version 2.0.0 - Enterprise Grade Modular Design
  */
 
-import React from 'react';
-import { ModernNavigation } from '@/widgets/modern-navigation';
-import { PageChangeHandler } from '../types';
+import React from "react";
+import { ModernNavigation } from "@/widgets/modern-navigation";
+import { PageChangeHandler } from "../types";
 
 interface ModernNavigationWrapperProps {
   activePage: string;
@@ -16,10 +16,9 @@ interface ModernNavigationWrapperProps {
 /**
  * Modern Navigation Wrapper Component
  */
-export const ModernNavigationWrapper: React.FC<ModernNavigationWrapperProps> = ({
-  activePage,
-  onPageChange
-}) => {
+export const ModernNavigationWrapper: React.FC<
+  ModernNavigationWrapperProps
+> = ({ activePage, onPageChange }) => {
   return (
     <ModernNavigation
       activePage={activePage}

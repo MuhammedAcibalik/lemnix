@@ -1,19 +1,32 @@
 /**
  * Cutting Plan Data Grid Component - Professional Edition
  * MUI DataGrid with advanced styling and functionality
- * 
+ *
  * @module enterprise-optimization-wizard/components/results
  * @version 2.0.0
  */
 
-import React, { useState, useMemo } from 'react';
-import { Box, Button, Chip, Stack, alpha, IconButton, Collapse, Typography } from '@mui/material';
-import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
-import { useDesignSystem } from '@/shared/hooks';
-import { CardV2 } from '@/shared/ui/Card/Card.v2';
-import { Visibility as ViewIcon, ExpandMore, ExpandLess } from '@mui/icons-material';
-import type { StockPlan } from './utils';
-import { CuttingPatternDialog } from './CuttingPatternDialog';
+import React, { useState, useMemo } from "react";
+import {
+  Box,
+  Button,
+  Chip,
+  Stack,
+  alpha,
+  IconButton,
+  Collapse,
+  Typography,
+} from "@mui/material";
+import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import { useDesignSystem } from "@/shared/hooks";
+import { CardV2 } from "@/shared/ui/Card/Card.v2";
+import {
+  Visibility as ViewIcon,
+  ExpandMore,
+  ExpandLess,
+} from "@mui/icons-material";
+import type { StockPlan } from "./utils";
+import { CuttingPatternDialog } from "./CuttingPatternDialog";
 
 interface CuttingPlanDataGridProps {
   readonly plans: ReadonlyArray<StockPlan>;
@@ -29,13 +42,18 @@ interface GroupedPlan {
   totalWaste: number;
   cuts: ReadonlyArray<{
     readonly cutId: string;
-    readonly segments: ReadonlyArray<{ readonly length: number; readonly quantity: number }>;
+    readonly segments: ReadonlyArray<{
+      readonly length: number;
+      readonly quantity: number;
+    }>;
     readonly waste: number;
     readonly efficiency: number;
   }>;
 }
 
-export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({ plans }) => {
+export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({
+  plans,
+}) => {
   const ds = useDesignSystem();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<StockPlan | null>(null);
@@ -52,7 +70,7 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({ plans 
   };
 
   const handleToggleExpand = (workOrderId: string) => {
-    setExpandedRows(prev => {
+    setExpandedRows((prev) => {
       const next = new Set(prev);
       if (next.has(workOrderId)) {
         next.delete(workOrderId);
@@ -65,7 +83,6 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({ plans 
 
   // Group plans by work order
   const groupedPlans = useMemo(() => {
-
     const byWorkOrder: Record<string, GroupedPlan> = {};
 
     for (const plan of plans) {
@@ -79,10 +96,10 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({ plans 
           totalPieces: 0,
           avgEfficiency: 0,
           totalWaste: 0,
-          cuts: []
+          cuts: [],
         };
       }
-      
+
       byWorkOrder[key].stockCount += plan.stockCount;
       byWorkOrder[key].totalPieces += plan.totalPieces;
       byWorkOrder[key].totalWaste += plan.totalWaste;
@@ -90,52 +107,62 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({ plans 
     }
 
     // Calculate average efficiency
-    return Object.values(byWorkOrder).map(group => ({
+    return Object.values(byWorkOrder).map((group) => ({
       ...group,
-      avgEfficiency: group.cuts.reduce((sum, c) => sum + c.efficiency, 0) / group.cuts.length
+      avgEfficiency:
+        group.cuts.reduce((sum, c) => sum + c.efficiency, 0) /
+        group.cuts.length,
     }));
   }, [plans]);
 
   const columns: GridColDef[] = [
-    { 
-      field: 'workOrderId', 
-      headerName: 'İŞ EMRİ', 
+    {
+      field: "workOrderId",
+      headerName: "İŞ EMRİ",
       width: 200,
       renderCell: (params: GridRenderCellParams<GroupedPlan>) => {
         // Always display the actual work order ID
-        const displayLabel = params.row.workOrderId || 'N/A';
-        
+        const displayLabel = params.row.workOrderId || "N/A";
+
         return (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: ds.spacing['1'] }}>
-            <IconButton 
-              size="small" 
+          <Box
+            sx={{ display: "flex", alignItems: "center", gap: ds.spacing["1"] }}
+          >
+            <IconButton
+              size="small"
               onClick={() => handleToggleExpand(params.row.workOrderId)}
-              sx={{ 
+              sx={{
                 p: 0.5,
                 color: ds.colors.text.secondary,
-                '&:hover': {
+                "&:hover": {
                   color: ds.colors.primary.main,
-                  backgroundColor: alpha(ds.colors.primary.main, 0.1)
-                }
+                  backgroundColor: alpha(ds.colors.primary.main, 0.1),
+                },
               }}
             >
-              {expandedRows.has(params.row.workOrderId) ? <ExpandLess /> : <ExpandMore />}
+              {expandedRows.has(params.row.workOrderId) ? (
+                <ExpandLess />
+              ) : (
+                <ExpandMore />
+              )}
             </IconButton>
             <Chip
               label={displayLabel}
               size="small"
               sx={{
                 height: 26,
-                fontSize: '0.8125rem',
+                fontSize: "0.8125rem",
                 fontWeight: 600,
-                background: params.row.workOrderId !== 'N/A'
-                  ? alpha(ds.colors.primary.main, 0.1)
-                  : alpha(ds.colors.neutral[400], 0.1),
-                color: params.row.workOrderId !== 'N/A'
-                  ? ds.colors.primary.main
-                  : ds.colors.text.secondary,
+                background:
+                  params.row.workOrderId !== "N/A"
+                    ? alpha(ds.colors.primary.main, 0.1)
+                    : alpha(ds.colors.neutral[400], 0.1),
+                color:
+                  params.row.workOrderId !== "N/A"
+                    ? ds.colors.primary.main
+                    : ds.colors.text.secondary,
                 border: `1px solid ${
-                  params.row.workOrderId !== 'N/A'
+                  params.row.workOrderId !== "N/A"
                     ? alpha(ds.colors.primary.main, 0.2)
                     : alpha(ds.colors.neutral[400], 0.2)
                 }`,
@@ -145,9 +172,9 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({ plans 
         );
       },
     },
-    { 
-      field: 'algorithm', 
-      headerName: 'ALGORİTMA', 
+    {
+      field: "algorithm",
+      headerName: "ALGORİTMA",
       width: 180,
       renderCell: (params: GridRenderCellParams<GroupedPlan>) => (
         <Chip
@@ -155,7 +182,7 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({ plans 
           size="small"
           sx={{
             height: 26,
-            fontSize: '0.8125rem',
+            fontSize: "0.8125rem",
             fontWeight: 600,
             background: alpha(ds.colors.info.main, 0.1),
             color: ds.colors.info.main,
@@ -164,59 +191,64 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({ plans 
         />
       ),
     },
-    { 
-      field: 'stockCount', 
-      headerName: 'KULLANILAN STOK', 
+    {
+      field: "stockCount",
+      headerName: "KULLANILAN STOK",
       width: 160,
-      align: 'center',
-      headerAlign: 'center',
+      align: "center",
+      headerAlign: "center",
       renderCell: (params: GridRenderCellParams<GroupedPlan>) => (
-        <Box sx={{ 
-          fontSize: '1rem',
-          fontWeight: ds.typography.fontWeight.bold,
-          color: ds.colors.text.primary,
-        }}>
+        <Box
+          sx={{
+            fontSize: "1rem",
+            fontWeight: ds.typography.fontWeight.bold,
+            color: ds.colors.text.primary,
+          }}
+        >
           {params.row.stockCount} Adet
         </Box>
       ),
     },
-    { 
-      field: 'totalPieces', 
-      headerName: 'TOPLAM PARÇA', 
+    {
+      field: "totalPieces",
+      headerName: "TOPLAM PARÇA",
       width: 150,
-      align: 'center',
-      headerAlign: 'center',
+      align: "center",
+      headerAlign: "center",
       renderCell: (params: GridRenderCellParams<GroupedPlan>) => (
-        <Box sx={{ 
-          fontSize: '1rem',
-          fontWeight: ds.typography.fontWeight.bold,
-          color: ds.colors.primary.main,
-        }}>
+        <Box
+          sx={{
+            fontSize: "1rem",
+            fontWeight: ds.typography.fontWeight.bold,
+            color: ds.colors.primary.main,
+          }}
+        >
           {params.row.totalPieces} Parça
         </Box>
       ),
     },
-    { 
-      field: 'avgEfficiency', 
-      headerName: 'VERİMLİLİK', 
+    {
+      field: "avgEfficiency",
+      headerName: "VERİMLİLİK",
       width: 150,
-      align: 'center',
-      headerAlign: 'center',
+      align: "center",
+      headerAlign: "center",
       renderCell: (params: GridRenderCellParams<GroupedPlan>) => {
         const efficiency = params.row.avgEfficiency;
-        const color = efficiency >= 80 
-          ? ds.colors.success.main 
-          : efficiency >= 60 
-            ? ds.colors.warning.main 
-            : ds.colors.error.main;
-        
+        const color =
+          efficiency >= 80
+            ? ds.colors.success.main
+            : efficiency >= 60
+              ? ds.colors.warning.main
+              : ds.colors.error.main;
+
         return (
           <Chip
             label={`${efficiency.toFixed(1)}%`}
             size="small"
             sx={{
               height: 26,
-              fontSize: '0.8125rem',
+              fontSize: "0.8125rem",
               fontWeight: 700,
               background: alpha(color, 0.1),
               color: color,
@@ -226,28 +258,33 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({ plans 
         );
       },
     },
-    { 
-      field: 'totalWaste', 
-      headerName: 'TOPLAM ATIK', 
+    {
+      field: "totalWaste",
+      headerName: "TOPLAM ATIK",
       width: 140,
-      align: 'center',
-      headerAlign: 'center',
+      align: "center",
+      headerAlign: "center",
       renderCell: (params: GridRenderCellParams<GroupedPlan>) => (
-        <Box sx={{ 
-          fontSize: '0.9375rem',
-          fontWeight: ds.typography.fontWeight.semibold,
-          color: params.row.totalWaste > 500 ? ds.colors.error.main : ds.colors.text.secondary,
-        }}>
+        <Box
+          sx={{
+            fontSize: "0.9375rem",
+            fontWeight: ds.typography.fontWeight.semibold,
+            color:
+              params.row.totalWaste > 500
+                ? ds.colors.error.main
+                : ds.colors.text.secondary,
+          }}
+        >
           {params.row.totalWaste}mm
         </Box>
       ),
     },
     {
-      field: 'details',
-      headerName: 'DETAYLAR',
+      field: "details",
+      headerName: "DETAYLAR",
       width: 160,
-      align: 'center',
-      headerAlign: 'center',
+      align: "center",
+      headerAlign: "center",
       sortable: false,
       renderCell: (params: GridRenderCellParams<GroupedPlan>) => (
         <Button
@@ -266,24 +303,24 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({ plans 
               totalPieces: params.row.totalPieces,
               efficiency: params.row.avgEfficiency,
               totalWaste: params.row.totalWaste,
-              cuts: params.row.cuts
+              cuts: params.row.cuts,
             };
             handleOpenDialog(mockPlan);
           }}
           sx={{
-            textTransform: 'none',
-            fontSize: '0.8125rem',
+            textTransform: "none",
+            fontSize: "0.8125rem",
             fontWeight: 600,
             height: 32,
-            px: ds.spacing['2'],
+            px: ds.spacing["2"],
             background: ds.gradients.primary,
-            color: 'white',
-            boxShadow: 'none',
-            '&:hover': {
+            color: "white",
+            boxShadow: "none",
+            "&:hover": {
               background: ds.gradients.primary,
               opacity: 0.9,
               boxShadow: ds.shadows.soft.sm,
-              transform: 'translateY(-1px)',
+              transform: "translateY(-1px)",
             },
           }}
         >
@@ -295,14 +332,14 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({ plans 
 
   return (
     <>
-      <CardV2 
-        sx={{ 
-          p: ds.spacing['3'], 
-          mb: ds.spacing['4'],
+      <CardV2
+        sx={{
+          p: ds.spacing["3"],
+          mb: ds.spacing["4"],
           border: `1px solid ${alpha(ds.colors.neutral[300], 0.5)}`,
         }}
       >
-        <Box sx={{ height: 'auto', width: '100%' }}>
+        <Box sx={{ height: "auto", width: "100%" }}>
           <DataGrid
             rows={groupedPlans}
             columns={columns}
@@ -316,79 +353,99 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({ plans 
             autoHeight
             disableRowSelectionOnClick
             sx={{
-              border: 'none',
-              '& .MuiDataGrid-columnHeaders': {
+              border: "none",
+              "& .MuiDataGrid-columnHeaders": {
                 backgroundColor: alpha(ds.colors.primary.main, 0.05),
                 borderRadius: `${ds.borderRadius.md}px`,
-                mb: ds.spacing['1'],
+                mb: ds.spacing["1"],
                 borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
               },
-              '& .MuiDataGrid-columnHeaderTitle': {
+              "& .MuiDataGrid-columnHeaderTitle": {
                 fontWeight: ds.typography.fontWeight.bold,
-                fontSize: '0.8125rem',
+                fontSize: "0.8125rem",
                 color: ds.colors.text.primary,
-                letterSpacing: '0.5px',
+                letterSpacing: "0.5px",
               },
-              '& .MuiDataGrid-cell': {
+              "& .MuiDataGrid-cell": {
                 borderColor: alpha(ds.colors.neutral[200], 0.5),
-                fontSize: '0.875rem',
+                fontSize: "0.875rem",
               },
-              '& .MuiDataGrid-row': {
-                '&:hover': {
+              "& .MuiDataGrid-row": {
+                "&:hover": {
                   backgroundColor: alpha(ds.colors.primary.main, 0.02),
-                  cursor: 'pointer',
+                  cursor: "pointer",
                 },
-                '&.Mui-selected': {
+                "&.Mui-selected": {
                   backgroundColor: alpha(ds.colors.primary.main, 0.05),
-                  '&:hover': {
+                  "&:hover": {
                     backgroundColor: alpha(ds.colors.primary.main, 0.08),
                   },
                 },
               },
-              '& .MuiDataGrid-footerContainer': {
+              "& .MuiDataGrid-footerContainer": {
                 borderTop: `1px solid ${alpha(ds.colors.neutral[300], 0.5)}`,
-                mt: ds.spacing['2'],
+                mt: ds.spacing["2"],
               },
             }}
           />
-          
+
           {/* Expandable detail rows */}
           {groupedPlans.map((group) => (
-            <Collapse key={`detail-${group.workOrderId}`} in={expandedRows.has(group.workOrderId)}>
-              <Box sx={{ 
-                mt: ds.spacing['2'], 
-                p: ds.spacing['3'],
-                backgroundColor: alpha(ds.colors.neutral[50], 0.5),
-                borderRadius: `${ds.borderRadius.md}px`,
-                border: `1px solid ${alpha(ds.colors.neutral[200], 0.5)}`
-              }}>
-                <Typography variant="subtitle2" sx={{ 
-                  mb: ds.spacing['2'],
-                  fontWeight: ds.typography.fontWeight.semibold,
-                  color: ds.colors.text.primary
-                }}>
+            <Collapse
+              key={`detail-${group.workOrderId}`}
+              in={expandedRows.has(group.workOrderId)}
+            >
+              <Box
+                sx={{
+                  mt: ds.spacing["2"],
+                  p: ds.spacing["3"],
+                  backgroundColor: alpha(ds.colors.neutral[50], 0.5),
+                  borderRadius: `${ds.borderRadius.md}px`,
+                  border: `1px solid ${alpha(ds.colors.neutral[200], 0.5)}`,
+                }}
+              >
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    mb: ds.spacing["2"],
+                    fontWeight: ds.typography.fontWeight.semibold,
+                    color: ds.colors.text.primary,
+                  }}
+                >
                   Kesim Detayları ({group.cuts.length} kesim)
                 </Typography>
                 {group.cuts.map((cut, idx) => (
-                  <Box key={cut.cutId} sx={{ 
-                    mb: ds.spacing['2'],
-                    p: ds.spacing['2'],
-                    backgroundColor: 'white',
-                    borderRadius: `${ds.borderRadius.md}px`,
-                    border: `1px solid ${alpha(ds.colors.neutral[200], 0.3)}`,
-                    '&:last-child': { mb: 0 }
-                  }}>
-                    <Typography variant="body2" sx={{ 
-                      fontWeight: ds.typography.fontWeight.medium,
-                      mb: ds.spacing['1']
-                    }}>
-                      Kesim {idx + 1}: {cut.segments.map(s => `${s.quantity}x${s.length}mm`).join(' + ')}
+                  <Box
+                    key={cut.cutId}
+                    sx={{
+                      mb: ds.spacing["2"],
+                      p: ds.spacing["2"],
+                      backgroundColor: "white",
+                      borderRadius: `${ds.borderRadius.md}px`,
+                      border: `1px solid ${alpha(ds.colors.neutral[200], 0.3)}`,
+                      "&:last-child": { mb: 0 },
+                    }}
+                  >
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontWeight: ds.typography.fontWeight.medium,
+                        mb: ds.spacing["1"],
+                      }}
+                    >
+                      Kesim {idx + 1}:{" "}
+                      {cut.segments
+                        .map((s) => `${s.quantity}x${s.length}mm`)
+                        .join(" + ")}
                     </Typography>
-                    <Typography variant="caption" sx={{ 
-                      color: ds.colors.text.secondary,
-                      display: 'flex',
-                      gap: ds.spacing['2']
-                    }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: ds.colors.text.secondary,
+                        display: "flex",
+                        gap: ds.spacing["2"],
+                      }}
+                    >
                       <span>Atık: {cut.waste}mm</span>
                       <span>|</span>
                       <span>Verimlilik: {cut.efficiency.toFixed(1)}%</span>
@@ -400,7 +457,7 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({ plans 
           ))}
         </Box>
       </CardV2>
-      
+
       <CuttingPatternDialog
         open={dialogOpen}
         onClose={handleCloseDialog}

@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import React from 'react';
+import React from "react";
 import {
   Typography,
   Accordion,
@@ -17,15 +17,15 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Alert
-} from '@mui/material';
+  Alert,
+} from "@mui/material";
 import {
   ExpandMore as ExpandMoreIcon,
   CheckCircle as CheckIcon,
-  Close as CloseIcon
-} from '@mui/icons-material';
-import { messages } from '../constants';
-import { AlgorithmsTabProps } from '../types';
+  Close as CloseIcon,
+} from "@mui/icons-material";
+import { messages } from "../constants";
+import { AlgorithmsTabProps } from "../types";
 
 /**
  * Algorithms Tab Component
@@ -33,7 +33,7 @@ import { AlgorithmsTabProps } from '../types';
 export const AlgorithmsTab: React.FC<AlgorithmsTabProps> = ({
   algorithms,
   expandedAlgorithm,
-  onAlgorithmExpand
+  onAlgorithmExpand,
 }) => {
   return (
     <>
@@ -45,13 +45,22 @@ export const AlgorithmsTab: React.FC<AlgorithmsTabProps> = ({
       </Typography>
 
       {algorithms.map((algo) => (
-        <Accordion 
+        <Accordion
           key={algo.id}
           expanded={expandedAlgorithm === algo.id}
-          onChange={(e, isExpanded) => onAlgorithmExpand(isExpanded ? algo.id : false)}
+          onChange={(e, isExpanded) =>
+            onAlgorithmExpand(isExpanded ? algo.id : false)
+          }
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 2,
+                width: "100%",
+              }}
+            >
               {algo.icon}
               <Box sx={{ flexGrow: 1 }}>
                 <Typography variant="subtitle1" fontWeight="bold">
@@ -61,10 +70,25 @@ export const AlgorithmsTab: React.FC<AlgorithmsTabProps> = ({
                   {algo.name}
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                <Chip label={algo.complexity} size="small" color="primary" variant="outlined" />
-                <Chip label={algo.efficiency} size="small" color="success" variant="outlined" />
-                <Chip label={algo.speed} size="small" color="info" variant="outlined" />
+              <Box sx={{ display: "flex", gap: 1 }}>
+                <Chip
+                  label={algo.complexity}
+                  size="small"
+                  color="primary"
+                  variant="outlined"
+                />
+                <Chip
+                  label={algo.efficiency}
+                  size="small"
+                  color="success"
+                  variant="outlined"
+                />
+                <Chip
+                  label={algo.speed}
+                  size="small"
+                  color="info"
+                  variant="outlined"
+                />
               </Box>
             </Box>
           </AccordionSummary>
@@ -76,26 +100,38 @@ export const AlgorithmsTab: React.FC<AlgorithmsTabProps> = ({
                 </Typography>
               </Grid>
               <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="success.main" gutterBottom>
+                <Typography
+                  variant="subtitle2"
+                  color="success.main"
+                  gutterBottom
+                >
                   Avantajlar
                 </Typography>
                 <List dense>
                   {algo.pros.map((pro, idx) => (
                     <ListItem key={idx}>
-                      <ListItemIcon><CheckIcon fontSize="small" color="success" /></ListItemIcon>
+                      <ListItemIcon>
+                        <CheckIcon fontSize="small" color="success" />
+                      </ListItemIcon>
                       <ListItemText primary={pro} />
                     </ListItem>
                   ))}
                 </List>
               </Grid>
               <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" color="warning.main" gutterBottom>
+                <Typography
+                  variant="subtitle2"
+                  color="warning.main"
+                  gutterBottom
+                >
                   Dezavantajlar
                 </Typography>
                 <List dense>
                   {algo.cons.map((con, idx) => (
                     <ListItem key={idx}>
-                      <ListItemIcon><CloseIcon fontSize="small" color="warning" /></ListItemIcon>
+                      <ListItemIcon>
+                        <CloseIcon fontSize="small" color="warning" />
+                      </ListItemIcon>
                       <ListItemText primary={con} />
                     </ListItem>
                   ))}
