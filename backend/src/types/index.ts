@@ -815,3 +815,8 @@ export interface WorkOrderProfileMappingInput {
   readonly year: number;
   readonly uploadedBy?: string;
 }
+
+// ========== API RESPONSE TYPES (Phase 1, Step 2) ==========
+
+// Export all API response types and utilities
+export * from './apiResponse';
