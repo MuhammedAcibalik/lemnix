@@ -47,6 +47,23 @@ export enum WasteCategory {
   EXCESSIVE = 'excessive' // > 500mm
 }
 
+// ========== CUTTING LIST ENUMS (Phase 1 Implementation) ==========
+
+export enum CuttingListStatus {
+  DRAFT = 'DRAFT',
+  READY = 'READY',
+  PROCESSING = 'PROCESSING',
+  COMPLETED = 'COMPLETED',
+  ARCHIVED = 'ARCHIVED'
+}
+
+export enum ItemPriority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
+  URGENT = 'URGENT'
+}
+
 // ========== CORE DOMAIN MODELS ==========
 
 export interface WorkOrder {
@@ -798,3 +815,8 @@ export interface WorkOrderProfileMappingInput {
   readonly year: number;
   readonly uploadedBy?: string;
 }
+
+// ========== API RESPONSE TYPES (Phase 1, Step 2) ==========
+
+// Export all API response types and utilities
+export * from './apiResponse';

@@ -7,6 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Enums for Cutting List feature
+enum CuttingListStatus {
+  DRAFT
+  READY
+  PROCESSING
+  COMPLETED
+  ARCHIVED
+}
+
+enum ItemPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 model User {
   id            String         @id @default(cuid())
   email         String         @unique
@@ -30,7 +46,7 @@ model CuttingList {
   id                  String                  @id @default(cuid())
   name                String
   description         String?
-  status              String                  @default("draft")
+  status              CuttingListStatus       @default(DRAFT)
   createdAt           DateTime                @default(now())
   updatedAt           DateTime                @updatedAt
   userId              String
@@ -55,7 +71,7 @@ model CuttingList {
 }
 
 model CuttingListItem {
-  id                   String      @id @default(cuid())
+  id                   String            @id @default(cuid())
   workOrderId          String
   date                 String?
   color                String
@@ -67,15 +83,15 @@ model CuttingListItem {
   orderQuantity        Int?
   cuttingPattern       String?
   notes                String?
-  priority             String      @default("medium")
-  status               String      @default("draft")
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
+  priority             ItemPriority      @default(MEDIUM)
+  status               CuttingListStatus @default(DRAFT)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
   cuttingListId        String
   materialDescription  String?
   materialNumber       String?
   productionPlanItemId String?
-  cuttingList          CuttingList @relation(fields: [cuttingListId], references: [id], onDelete: Cascade)
+  cuttingList          CuttingList       @relation(fields: [cuttingListId], references: [id], onDelete: Cascade)
 
   @@index([cuttingListId])
   @@index([workOrderId])
