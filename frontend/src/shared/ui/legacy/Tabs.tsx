@@ -57,8 +57,8 @@ export const SharedTabs: React.FC<SharedTabsProps> = ({
           sx={{
             "& .MuiTab-root": {
               textTransform: "none",
-              fontWeight: theme.typography.fontWeight.medium,
-              fontSize: theme.typography.fontSize.sm,
+              fontWeight: 500,
+              fontSize: "0.875rem",
               minHeight: 48,
               color: theme.palette.text.secondary,
               transition: theme.transitions.create(
@@ -73,7 +73,7 @@ export const SharedTabs: React.FC<SharedTabsProps> = ({
               },
               "&.Mui-selected": {
                 color: theme.palette.primary.main,
-                fontWeight: theme.typography.fontWeight.semiBold,
+                fontWeight: 600,
               },
               "&.Mui-disabled": {
                 color: theme.palette.action.disabled,

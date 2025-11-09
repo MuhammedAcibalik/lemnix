@@ -7,6 +7,50 @@
  * Design System v2.0: Uses tokens and glassmorphism
  */
 
+// WebGPU type declarations (since they're not in TS lib yet)
+declare global {
+  interface GPU {
+    requestAdapter(options?: GPURequestAdapterOptions): Promise<GPUAdapter | null>;
+  }
+
+  interface GPUAdapter {
+    features: Set<GPUFeatureName>;
+    limits: GPUSupportedLimits;
+    requestDevice(descriptor?: GPUDeviceDescriptor): Promise<GPUDevice>;
+    requestAdapterInfo(): Promise<GPUAdapterInfo>;
+  }
+
+  interface GPUDevice {
+    features: Set<GPUFeatureName>;
+    limits: GPUSupportedLimits;
+  }
+
+  interface GPURequestAdapterOptions {
+    powerPreference?: "low-power" | "high-performance";
+  }
+
+  interface GPUAdapterInfo {
+    vendor?: string;
+    architecture?: string;
+    description?: string;
+  }
+
+  interface GPUSupportedLimits {
+    maxStorageBufferBindingSize?: number;
+    maxComputeWorkgroupSizeX?: number;
+  }
+
+  interface GPUDeviceDescriptor {
+    requiredFeatures?: GPUFeatureName[];
+  }
+
+  type GPUFeatureName = string;
+
+  interface Navigator {
+    gpu?: GPU;
+  }
+}
+
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -100,15 +144,7 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
       }
 
       // Request adapter
-      const adapter = await (
-        navigator as unknown as {
-          gpu: {
-            requestAdapter: (options: {
-              powerPreference: string;
-            }) => Promise<GPUAdapter | null>;
-          };
-        }
-      ).gpu.requestAdapter({
+      const adapter = await (navigator as Navigator & { gpu?: GPU }).gpu?.requestAdapter({
         powerPreference: "high-performance",
       });
 
@@ -123,37 +159,19 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
       }
 
       // Get adapter info
-      const info = await (
-        adapter as unknown as {
-          requestAdapterInfo: () => Promise<{
-            vendor?: string;
-            architecture?: string;
-            description?: string;
-          }>;
-        }
-      ).requestAdapterInfo();
+      const info = await adapter.requestAdapterInfo();
 
       // Request device to test actual GPU access
-      const device = await (
-        adapter as unknown as { requestDevice: () => Promise<GPUDevice> }
-      ).requestDevice();
+      const device = await adapter.requestDevice();
 
       const gpuInfo: GPUInfo = {
         vendor: info.vendor || "Unknown",
         architecture: info.architecture || "Unknown",
         description: info.description || "Unknown",
-        features: Array.from(
-          (adapter as unknown as { features: GPUFeatureName[] }).features,
-        ),
+        features: Array.from(adapter.features),
         limits: {
-          maxStorageBufferBindingSize: (
-            adapter as unknown as {
-              limits: { maxStorageBufferBindingSize: number };
-            }
-          ).limits.maxStorageBufferBindingSize,
-          maxBufferSize: (
-            adapter as unknown as { limits: { maxBufferSize: number } }
-          ).limits.maxBufferSize,
+          maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize || 0,
+          maxBufferSize: adapter.limits.maxComputeWorkgroupSizeX || 0,
         },
       };
 

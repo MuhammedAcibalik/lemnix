@@ -34,7 +34,7 @@ export interface CuttingList {
   metadata?: {
     totalItems: number;
     totalLength: number;
-    estimatedCost: number;
+    estimatedCost?: number;
   };
 }
 
@@ -390,15 +390,14 @@ export const useCuttingListStore = create<
           }
         },
 
-        moveItem: (id: string, targetIndex: number) => {
+        moveItem: (fromIndex: number, toIndex: number) => {
           const { currentList } = get();
           if (!currentList) return;
 
           const items = [...currentList.items];
-          const sourceIndex = items.findIndex((item) => item.id === id);
-          if (sourceIndex !== -1) {
-            const [item] = items.splice(sourceIndex, 1);
-            items.splice(targetIndex, 0, item);
+          if (fromIndex >= 0 && fromIndex < items.length) {
+            const [item] = items.splice(fromIndex, 1);
+            items.splice(toIndex, 0, item);
 
             set({
               currentList: {
@@ -410,16 +409,13 @@ export const useCuttingListStore = create<
           }
         },
 
-        bulkUpdateItems: (
-          updates: Array<{ id: string; updates: Partial<CuttingListItem> }>,
-        ) => {
+        bulkUpdateItems: (ids: string[], updates: Partial<CuttingListItem>) => {
           const { currentList } = get();
           if (!currentList) return;
 
-          const items = currentList.items.map((item) => {
-            const update = updates.find((u) => u.id === item.id);
-            return update ? { ...item, ...update.updates } : item;
-          });
+          const items = currentList.items.map((item) =>
+            ids.includes(item.id) ? { ...item, ...updates } : item
+          );
 
           set({
             currentList: {
@@ -447,24 +443,40 @@ export const useCuttingListStore = create<
           });
         },
 
-        bulkMoveItems: (itemIds: string[], targetIndex: number) => {
-          const { currentList } = get();
+        bulkMoveItems: (ids: string[], targetListId: string) => {
+          const { currentList, lists } = get();
           if (!currentList) return;
 
-          const items = [...currentList.items];
-          const itemsToMove = items.filter((item) => itemIds.includes(item.id));
-          const remainingItems = items.filter(
-            (item) => !itemIds.includes(item.id),
+          // Find items to move
+          const itemsToMove = currentList.items.filter((item) =>
+            ids.includes(item.id)
           );
 
-          remainingItems.splice(targetIndex, 0, ...itemsToMove);
+          // Remove items from current list
+          const updatedCurrentList = {
+            ...currentList,
+            items: currentList.items.filter((item) => !ids.includes(item.id)),
+            updatedAt: new Date().toISOString(),
+          };
+
+          // Find target list and add items
+          const updatedLists = lists.map((list) => {
+            if (list.id === targetListId) {
+              return {
+                ...list,
+                items: [...list.items, ...itemsToMove],
+                updatedAt: new Date().toISOString(),
+              };
+            }
+            if (list.id === currentList.id) {
+              return updatedCurrentList;
+            }
+            return list;
+          });
 
           set({
-            currentList: {
-              ...currentList,
-              items: remainingItems,
-              updatedAt: new Date().toISOString(),
-            },
+            currentList: updatedCurrentList,
+            lists: updatedLists,
           });
         },
       }),

@@ -57,15 +57,35 @@ interface RawStatisticsData {
     averageProcessingTime?: number;
   };
   profileAnalysis?: {
-    profileTypes?: unknown[];
+    profileTypes?: Array<{
+      name: string;
+      count: number;
+      percentage: string;
+    }>;
   };
   productCategories?: {
-    categories?: unknown[];
+    categories?: Array<{
+      name: string;
+      itemCount: number;
+      totalQuantity: number;
+    }>;
   };
   colorSize?: {
-    colorAnalysis?: unknown[];
-    sizeAnalysis?: unknown[];
-    colorSizeCombinations?: unknown[];
+    colorAnalysis?: Array<{
+      color: string;
+      count: number;
+      percentage: string;
+    }>;
+    sizeAnalysis?: Array<{
+      size: string;
+      count: number;
+      percentage: string;
+    }>;
+    colorSizeCombinations?: Array<{
+      combination: string;
+      count: number;
+      percentage: string;
+    }>;
   };
 }
 

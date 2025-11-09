@@ -36,35 +36,35 @@ export const useKeyboardShortcuts = (
             break;
           case "h":
             event.preventDefault();
-            handlers.onPageChange("home");
+            handlers.onPageChange?.("home");
             break;
           case "d":
             event.preventDefault();
-            handlers.onPageChange("dashboard");
+            handlers.onPageChange?.("dashboard");
             break;
           case "l":
             event.preventDefault();
-            handlers.onPageChange("cutting-list");
+            handlers.onPageChange?.("cutting-list");
             break;
           case "e":
             event.preventDefault();
-            handlers.onPageChange("enterprise-optimization");
+            handlers.onPageChange?.("enterprise-optimization");
             break;
           case "s":
             event.preventDefault();
-            handlers.onPageChange("statistics");
+            handlers.onPageChange?.("statistics");
             break;
           case "p":
             event.preventDefault();
-            handlers.onPageChange("production-plan");
+            handlers.onPageChange?.("production-plan");
             break;
           case "m":
             event.preventDefault();
-            handlers.onPageChange("profile-management");
+            handlers.onPageChange?.("profile-management");
             break;
           case ",":
             event.preventDefault();
-            handlers.onPageChange("settings");
+            handlers.onPageChange?.("settings");
             break;
         }
       }
@@ -116,7 +116,7 @@ export const useKeyboardShortcuts = (
 
   // Get shortcut description for a given key combination
   const getShortcutDescription = useCallback((key: string): string => {
-    return keyboardShortcuts[key]?.description || "";
+    return (keyboardShortcuts as unknown as Record<string, { description?: string }>)[key]?.description || "";
   }, []);
 
   // Check if a shortcut is available
