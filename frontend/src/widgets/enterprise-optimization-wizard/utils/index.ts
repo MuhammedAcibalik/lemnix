@@ -70,6 +70,7 @@ export const calculatePreviewMetrics = (
 // Transform cutting list to optimization items
 export const transformToOptimizationItems = (
   cuttingList: Array<{
+    id?: string;
     profileType: string;
     length: number;
     quantity: number;
@@ -82,7 +83,7 @@ export const transformToOptimizationItems = (
   unit: LengthUnit,
 ): OptimizationItem[] => {
   return cuttingList.map((item, index) => ({
-    id: (item as any).id || `${item.workOrderId}-${index}`,
+    id: item.id || `${item.workOrderId}-${index}`,
     profileType: item.profileType,
     length: convertUnit(item.length, unit, "mm"),
     quantity: item.quantity,
@@ -100,7 +101,13 @@ export const buildOptimizationRequest = (
   items: OptimizationItem[],
   params: {
     algorithm: string;
-    objectives: Array<{ type: string; weight: number; priority: string }>;
+    objectives: Array<{ 
+      type: string; 
+      weight: number; 
+      priority: string;
+      target?: number;
+      tolerance?: number;
+    }>;
     constraints: {
       kerfWidth: number;
       startSafety: number;
@@ -125,8 +132,8 @@ export const buildOptimizationRequest = (
         | "maximize-quality",
       weight: obj.weight,
       priority: obj.priority as "low" | "medium" | "high",
-      target: (obj as any).target,
-      tolerance: (obj as any).tolerance,
+      target: obj.target,
+      tolerance: obj.tolerance,
     })),
     constraints: {
       ...params.constraints,

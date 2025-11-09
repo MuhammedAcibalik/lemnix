@@ -36,7 +36,17 @@ export class WorkOrderLabelGenerator {
   /**
    * Generate single label
    */
-  private async generateSingleLabel(label: WorkOrderLabelData): Promise<any> {
+  private async generateSingleLabel(label: WorkOrderLabelData): Promise<{
+    qrCode: string;
+    stockNumber: number;
+    segmentNumber: number;
+    profileType: string;
+    length: string;
+    quantity: number;
+    workOrderId: string;
+    position: string;
+    barcode: string;
+  }> {
     const qrCode = await this.generateQRCode(label.qrCodeData);
 
     return {

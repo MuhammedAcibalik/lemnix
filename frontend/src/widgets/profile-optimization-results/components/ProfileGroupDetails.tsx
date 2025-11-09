@@ -14,7 +14,7 @@ import {
   Grid,
 } from "@mui/material";
 import { Info as InfoIcon } from "@mui/icons-material";
-import { ProfileGroupDetailsProps } from "../types";
+import { ProfileGroupDetailsProps, Cut } from "../types";
 import { messages } from "../constants";
 
 /**
@@ -60,8 +60,8 @@ export const ProfileGroupDetails: React.FC<ProfileGroupDetailsProps> = ({
                       ),
                     )
                     ?.reduce(
-                      (sum: number, cut: any) =>
-                        sum + ((cut.usedLength as number) || 0),
+                      (sum: number, cut: Cut) =>
+                        sum + (cut.usedLength || 0),
                       0,
                     ) || 0,
                 waste:
@@ -72,8 +72,8 @@ export const ProfileGroupDetails: React.FC<ProfileGroupDetailsProps> = ({
                       ),
                     )
                     ?.reduce(
-                      (sum: number, cut: any) =>
-                        sum + ((cut.remainingLength as number) || 0),
+                      (sum: number, cut: Cut) =>
+                        sum + (cut.remainingLength || 0),
                       0,
                     ) || 0,
                 workOrderId: group.workOrders.join(", "),
@@ -92,8 +92,8 @@ export const ProfileGroupDetails: React.FC<ProfileGroupDetailsProps> = ({
                       ),
                     )
                     ?.reduce(
-                      (sum: number, cut: any) =>
-                        sum + ((cut.segmentCount as number) || 0),
+                      (sum: number, cut: Cut) =>
+                        sum + (cut.segmentCount || 0),
                       0,
                     ) || 0,
                 efficiency: group.efficiency

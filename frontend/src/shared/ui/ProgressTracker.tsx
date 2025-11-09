@@ -164,7 +164,7 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({
             </Typography>
             <Chip
               label={stageInfo.label}
-              color={stageInfo.color as any}
+              color={stageInfo.color as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
               size="small"
               icon={stageInfo.icon}
             />
@@ -337,7 +337,7 @@ export const CompactProgressTracker: React.FC<{
       </Typography>
       <Chip
         label={stageInfo.label}
-        color={stageInfo.color as any}
+        color={stageInfo.color as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
         size="small"
         icon={stageInfo.icon}
       />
