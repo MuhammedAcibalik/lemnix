@@ -33,7 +33,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
 } from "@mui/icons-material";
-import { useDesignSystem } from "@/shared/lib/useDesignSystem";
+import { useDesignSystem } from "@/shared/hooks/useDesignSystem.v2";
 
 // ============================================================================
 // TYPES AND INTERFACES

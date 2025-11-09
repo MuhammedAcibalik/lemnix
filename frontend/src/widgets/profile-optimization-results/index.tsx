@@ -39,8 +39,8 @@ import { ProfileOptimizationResultsProps } from "./types";
 // Import constants
 import { tabConfig, messages } from "./constants";
 
-// Import CuttingPlanModal from EnterpriseOptimizationResults
-import { CuttingPlanModal } from "../EnterpriseOptimizationResults/components/CuttingPlanModal";
+// Import CuttingPlanModal from enterprise-optimization-results
+import { CuttingPlanModal } from "../enterprise-optimization-results/components/CuttingPlanModal";
 
 /**
  * Profile Optimization Results Component

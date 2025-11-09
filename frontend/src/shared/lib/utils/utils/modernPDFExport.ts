@@ -14,14 +14,20 @@ export interface ModernStatisticsData {
     totalCategories?: number;
     [key: string]: unknown;
   };
-  profileAnalysis?: unknown;
-  productCategories?: unknown;
+  profileAnalysis?: Array<unknown> | { length?: number; [key: string]: unknown };
+  productCategories?: Array<unknown> | { length?: number; [key: string]: unknown };
   colorSizeAnalysis?: {
-    colors?: unknown;
-    sizes?: unknown;
-    combinations?: unknown;
+    colors?: Array<unknown>;
+    sizes?: Array<unknown>;
+    combinations?: Array<unknown>;
   };
-  workOrders?: unknown;
+  workOrders?: {
+    completed?: number;
+    total?: number;
+    trends?: Array<unknown>;
+    averageProcessingTime?: number;
+    [key: string]: unknown;
+  };
   [key: string]: unknown;
 }
 
@@ -610,9 +616,9 @@ const addSummaryBox = (
   // Özet veriler
   const summaryItems = [
     `Toplam Veri Noktası: ${calculateDataPoints(data)}`,
-    `Analiz Edilen Kategori: ${data.productCategories?.length}`,
-    `İş Emri Durumu: ${data.workOrders?.completed}/${data.workOrders?.total} tamamlandı`,
-    `Genel Verimlilik: ${data.overview?.efficiencyScore}%`,
+    `Analiz Edilen Kategori: ${Array.isArray(data.productCategories) ? data.productCategories.length : 0}`,
+    `İş Emri Durumu: ${data.workOrders?.completed || 0}/${data.workOrders?.total || 0} tamamlandı`,
+    `Genel Verimlilik: ${data.overview?.efficiencyScore || 0}%`,
   ];
 
   doc.setFontSize(template.fonts.sizes.small);
@@ -754,8 +760,10 @@ const addTrendCharts = async (
   doc.text("📈 İş Emri Trendi", x + 10, y + 15);
 
   // Basit çizgi grafik çizer
-  const chartData = data.workOrders?.trends.slice(-7);
-  const maxValue = Math.max(...chartData.map((d) => d.completed));
+  const chartData = Array.isArray(data.workOrders?.trends) ? data.workOrders.trends.slice(-7) : [];
+  if (chartData.length === 0) return;
+  
+  const maxValue = Math.max(...chartData.map((d: any) => d.completed || 0));
   const stepX = (chartWidth - 40) / (chartData.length - 1);
   const stepY = (chartHeight - 40) / maxValue;
 
@@ -832,14 +840,15 @@ const generateModernFilename = (format: string): string => {
 };
 
 const calculateDataPoints = (data: ModernStatisticsData): number => {
-  return (
-    data.profileAnalysis?.length +
-    data.productCategories?.length +
-    data.colorSizeAnalysis?.colors.length +
-    data.colorSizeAnalysis?.sizes.length +
-    data.colorSizeAnalysis?.combinations.length +
-    data.workOrders?.trends.length
-  );
+  const profileLength = Array.isArray(data.profileAnalysis) ? data.profileAnalysis.length : 0;
+  const categoriesLength = Array.isArray(data.productCategories) ? data.productCategories.length : 0;
+  const colorsLength = Array.isArray(data.colorSizeAnalysis?.colors) ? data.colorSizeAnalysis.colors.length : 0;
+  const sizesLength = Array.isArray(data.colorSizeAnalysis?.sizes) ? data.colorSizeAnalysis.sizes.length : 0;
+  const combinationsLength = Array.isArray(data.colorSizeAnalysis?.combinations) ? data.colorSizeAnalysis.combinations.length : 0;
+  const trendsLength = Array.isArray(data.workOrders?.trends) ? data.workOrders.trends.length : 0;
+  
+  return profileLength + categoriesLength + colorsLength + sizesLength + combinationsLength + trendsLength;
+};
 };
 
 const interpolateColor = (

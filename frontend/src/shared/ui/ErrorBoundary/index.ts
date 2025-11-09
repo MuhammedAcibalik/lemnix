@@ -6,7 +6,7 @@
  */
 
 // App-level error boundary (full-page errors)
-export { ErrorBoundary, useErrorHandler } from "./ErrorBoundary";
+export { ErrorBoundary } from "./ErrorBoundary";
 
 // Widget-level error boundary (component-level isolation)
 export {
