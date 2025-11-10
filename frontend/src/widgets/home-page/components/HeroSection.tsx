@@ -1,11 +1,11 @@
 /**
- * @fileoverview Hero Section v2.0 - Modern Industrial
- * @description Stunning hero with glassmorphism and animations
- * @version 2.0.0 - Full Transform
+ * @fileoverview Hero Section v3.0 - Modern Industrial with Shimmer
+ * @description Stunning hero with glassmorphism, animations, and shimmer effect
+ * @version 3.0.0 - UI/UX v3.0 Enhancement
  */
 
 import React from "react";
-import { Box, Typography, Container, Grid, Stack, alpha } from "@mui/material";
+import { Box, Typography, Container, Grid, Stack, alpha, keyframes } from "@mui/material";
 import {
   TrendingUp,
   Speed,
@@ -24,6 +24,18 @@ import {
   GradientButton,
   SecondaryButtonV2,
 } from "@/shared";
+
+/**
+ * Shimmer animation for gradient text
+ */
+const shimmerAnimation = keyframes`
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+`;
 
 interface HeroSectionProps {
   onDemoStart?: () => void;
@@ -117,7 +129,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               </Badge>
             </ScaleIn>
 
-            {/* Main Headline - KOMPAKT */}
+            {/* Main Headline - KOMPAKT with Shimmer Effect */}
             <Box sx={{ textAlign: "center" }}>
               <Typography
                 sx={{
@@ -128,10 +140,17 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                     lg: "3.25rem",
                   },
                   fontWeight: 800,
-                  background: ds.gradients.premium,
+                  background: `linear-gradient(90deg, 
+                    ${ds.colors.primary[600]} 0%, 
+                    ${ds.colors.accent[500]} 25%, 
+                    ${ds.colors.primary[400]} 50%, 
+                    ${ds.colors.accent[500]} 75%, 
+                    ${ds.colors.primary[600]} 100%)`,
+                  backgroundSize: "200% auto",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
+                  animation: `${shimmerAnimation} 3s linear infinite`,
                   mb: ds.spacing["3"],
                   lineHeight: 1.1,
                 }}

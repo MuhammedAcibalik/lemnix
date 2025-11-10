@@ -135,9 +135,19 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ className }) => {
                     height: "100%",
                     cursor: "pointer",
                     borderRadius: `${ds.borderRadius.lg}px`,
+                    transition: `all ${ds.transitions.base}`,
+
+                    "&:hover": {
+                      transform: "scale(1.02) translateY(-4px)",
+                      boxShadow: `
+                        ${ds.shadows.soft.xl},
+                        0 0 40px ${alpha(ds.colors.primary.main, 0.15)}
+                      `,
+                    },
 
                     "&:hover .feature-icon": {
                       transform: "scale(1.08) rotate(-3deg)",
+                      boxShadow: `0 0 20px ${alpha(ds.colors.primary.main, 0.3)}`,
                     },
                   }}
                 >

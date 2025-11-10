@@ -3,11 +3,11 @@
  * Shows individual active optimization operation
  *
  * @module widgets/dashboard-v2/active-operations
- * @version 1.0.0 - Design System v2.0 Compliant
+ * @version 3.0.0 - With Pulse Animation
  */
 
 import React from "react";
-import { Box, Typography, LinearProgress, Chip, alpha } from "@mui/material";
+import { Box, Typography, LinearProgress, Chip, alpha, keyframes } from "@mui/material";
 import {
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
@@ -19,6 +19,18 @@ import type {
   ActiveOperation,
   ActiveOperationStatus,
 } from "@/entities/dashboard";
+
+/**
+ * Pulse animation for active items
+ */
+const pulseAnimation = keyframes`
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+  }
+`;
 
 /**
  * Props
@@ -102,14 +114,21 @@ export const OperationCard: React.FC<OperationCardProps> = ({
       sx={{
         p: ds.spacing["3"],
         borderRadius: `${ds.borderRadius.md}px`,
-        border: `1px solid ${ds.colors.neutral[200]}`,
-        backgroundColor: alpha(ds.colors.neutral[50], 0.5),
+        border: `1px solid ${operation.status === "processing" ? ds.colors.primary.main : ds.colors.neutral[200]}`,
+        backgroundColor: alpha(
+          operation.status === "processing" ? ds.colors.primary.main : ds.colors.neutral[50],
+          operation.status === "processing" ? 0.05 : 0.5
+        ),
         transition: ds.transitions.base,
         cursor: onClick ? "pointer" : "default",
+        // Pulse animation for processing items
+        ...(operation.status === "processing" && {
+          animation: `${pulseAnimation} 2s ease-in-out infinite`,
+        }),
         "&:hover": onClick
           ? {
               borderColor: ds.colors.primary.main,
-              backgroundColor: alpha(ds.colors.primary.main, 0.02),
+              backgroundColor: alpha(ds.colors.primary.main, 0.08),
               transform: "translateX(4px)",
             }
           : undefined,

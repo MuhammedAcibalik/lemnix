@@ -60,6 +60,10 @@ export {
   breakpoints,
   componentSizes,
   
+  // Backward compatibility
+  componentSizesCompat,
+  spacingCompat,
+  
   // Modern UI effects
   glass,
   focus,
