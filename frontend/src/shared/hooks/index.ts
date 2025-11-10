@@ -59,3 +59,6 @@ export {
   UserRole,
 } from "./usePermissions";
 export type { User, UsePermissionsReturn } from "./usePermissions";
+
+// Export animation hooks
+export { useReducedMotion } from "./useReducedMotion";
