@@ -3,5 +3,7 @@
  * @module shared/ui/TextField
  */
 
-export { TextField } from "./TextField";
+// Export v3.0 as primary
+export { TextField, SearchField, PasswordField } from "./TextField";
 export type { TextFieldProps } from "./TextField";
+

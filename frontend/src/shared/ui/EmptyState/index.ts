@@ -1,15 +1,15 @@
 /**
  * @fileoverview EmptyState Component - Barrel Export
  * @module shared/ui/EmptyState
+ * @version 3.0.0
  */
 
-// Export v3 as primary
 export {
-  EmptyStateV3 as EmptyState,
-  EmptyStateV3,
+  EmptyState,
   NoDataEmptyState,
   SearchEmptyState,
   ErrorEmptyState,
   OfflineEmptyState,
-} from "./EmptyState.v3";
-export type { EmptyStateV3Props as EmptyStateProps } from "./EmptyState.v3";
+} from "./EmptyState";
+export type { EmptyStateProps } from "./EmptyState";
+
