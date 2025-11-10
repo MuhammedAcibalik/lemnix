@@ -253,11 +253,11 @@ export const useDesignSystem = () => {
   };
 
   return {
-    // Raw token values (direct access)
+    // Raw token values (direct access) with backward compatibility
     colors: tokens.colors,
-    spacing: { ...tokens.spacing, ...tokens.spacingScale },
+    spacing: { ...tokens.spacing, ...tokens.spacingScale, ...tokens.spacingCompat },
     typography: tokens.typography,
-    componentSizes: tokens.componentSizes,
+    componentSizes: tokens.componentSizesCompat,
     shadows: tokens.shadows,
     borderRadius: tokens.borderRadius,
     gradients: tokens.gradients,

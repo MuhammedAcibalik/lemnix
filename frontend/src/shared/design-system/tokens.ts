@@ -983,7 +983,53 @@ export const componentSizes = {
     lg: 24,
     xl: 32,
     "2xl": 40,
+    // Backward compatibility aliases
+    small: 16,    // maps to sm
+    medium: 20,   // maps to md  
+    large: 24,    // maps to lg
   },
+} as const;
+
+// ============================================================================
+// BACKWARD COMPATIBILITY LAYER
+// ============================================================================
+
+/**
+ * Backward compatibility object for legacy code using .small, .medium, .large
+ * This allows existing code to work while we migrate to the new size scale
+ */
+export const componentSizesCompat = {
+  ...componentSizes,
+  button: {
+    ...componentSizes.button,
+    // Backward compatibility: map old names to new sizes
+    small: componentSizes.button.sm,
+    medium: componentSizes.button.md,
+    large: componentSizes.button.lg,
+  },
+  input: {
+    ...componentSizes.input,
+    small: componentSizes.input.sm,
+    medium: componentSizes.input.md,
+    large: componentSizes.input.lg,
+  },
+  avatar: {
+    ...componentSizes.avatar,
+    small: componentSizes.avatar.sm,
+    medium: componentSizes.avatar.md,
+    large: componentSizes.avatar.lg,
+  },
+  icon: componentSizes.icon,
+} as const;
+
+/**
+ * Backward compatibility for spacing scale
+ */
+export const spacingCompat = {
+  ...spacing,
+  small: spacing["4"],   // 16px
+  medium: spacing["6"],  // 24px
+  large: spacing["8"],   // 32px
 } as const;
 
 // ============================================================================
@@ -1019,6 +1065,11 @@ export const glass = {
     backdropFilter: "blur(20px) saturate(180%)",
     boxShadow: shadows.crisp.lg,
   },
+  // Backward compatibility: direct access to properties (defaults to medium)
+  background: "rgba(255, 255, 255, 0.7)",
+  border: `1px solid rgba(255, 255, 255, 0.2)`,
+  backdropFilter: "blur(16px) saturate(160%)",
+  boxShadow: shadows.soft.lg,
 } as const;
 
 // ============================================================================
