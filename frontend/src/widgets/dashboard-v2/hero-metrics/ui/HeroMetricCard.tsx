@@ -3,10 +3,10 @@
  * Glassmorphism card for top-level KPI display
  *
  * @module widgets/dashboard-v2/hero-metrics
- * @version 1.0.0 - Design System v2.0 Compliant
+ * @version 3.0.0 - With Animated Counters
  */
 
-import React from "react";
+import React, { useMemo } from "react";
 import { Box, Typography, alpha } from "@mui/material";
 import {
   TrendingUp as TrendingUpIcon,
@@ -14,6 +14,7 @@ import {
 } from "@mui/icons-material";
 import { CardV2 } from "@/shared";
 import { useDesignSystem } from "@/shared/hooks";
+import { useAnimatedCounter } from "../hooks/useAnimatedCounter";
 
 /**
  * Hero metric card props
@@ -31,7 +32,7 @@ export interface HeroMetricCardProps {
 
 /**
  * Hero Metric Card
- * Large glassmorphism card showing key metric
+ * Large glassmorphism card showing key metric with animated counter
  */
 export const HeroMetricCard: React.FC<HeroMetricCardProps> = ({
   label,
@@ -44,6 +45,46 @@ export const HeroMetricCard: React.FC<HeroMetricCardProps> = ({
   loading = false,
 }) => {
   const ds = useDesignSystem();
+
+  // Parse numeric value for animation
+  const numericValue = useMemo(() => {
+    if (typeof value === "number") {
+      return value;
+    }
+    // Try to parse string value (remove % and other non-numeric characters)
+    const parsed = parseFloat(String(value).replace(/[^0-9.-]/g, ""));
+    return isNaN(parsed) ? 0 : parsed;
+  }, [value]);
+
+  // Determine decimal places
+  const decimals = useMemo(() => {
+    if (typeof value === "string" && value.includes(".")) {
+      const decimalPart = value.split(".")[1];
+      return decimalPart ? decimalPart.length : 0;
+    }
+    return 0;
+  }, [value]);
+
+  // Animated value
+  const animatedValue = useAnimatedCounter(numericValue, {
+    duration: 1200,
+    easing: "easeOutQuart",
+    decimals,
+  });
+
+  // Format animated value back to string with original formatting
+  const displayValue = useMemo(() => {
+    if (loading) return "...";
+    if (typeof value === "number") {
+      return decimals > 0 ? animatedValue.toFixed(decimals) : Math.round(animatedValue);
+    }
+    // Preserve string formatting (e.g., % sign, currency)
+    const valueStr = String(value);
+    const suffix = valueStr.replace(/[0-9.-]/g, "");
+    return decimals > 0
+      ? animatedValue.toFixed(decimals) + suffix
+      : Math.round(animatedValue) + suffix;
+  }, [animatedValue, value, loading, decimals]);
 
   const colorScheme = ds.colors[color];
   const hasTrend = trend !== undefined;
@@ -111,7 +152,7 @@ export const HeroMetricCard: React.FC<HeroMetricCardProps> = ({
               lineHeight: 1,
             }}
           >
-            {loading ? "..." : value}
+            {displayValue}
           </Typography>
 
           {unit && (
