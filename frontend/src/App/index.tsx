@@ -9,6 +9,7 @@ import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import { AppRouter } from "./components/AppRouter";
 import { ErrorBoundary } from "@/shared/ui/ErrorBoundary";
+import { SkipLink } from "@/shared/ui/SkipLink";
 import { QueryProvider } from "./providers";
 import { theme, globalStyles } from "./theme";
 import { AppProps } from "./types";
@@ -37,6 +38,7 @@ const AppComponent: React.FC<AppProps> = () => {
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <style>{globalStyles}</style>
+            <SkipLink />
             <AppRouter />
           </ThemeProvider>
         </BrowserRouter>

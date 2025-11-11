@@ -62,3 +62,45 @@ export type { User, UsePermissionsReturn } from "./usePermissions";
 
 // Export animation hooks
 export { useReducedMotion } from "./useReducedMotion";
+
+// Export performance hooks
+export {
+  debounce,
+  throttle,
+  measureRenderTime,
+  scheduleIdleTask,
+  cancelIdleTask,
+  useDebounce,
+  useDebouncedCallback,
+  useThrottledCallback,
+  useRenderPerformance,
+  useIdleTask,
+} from "./usePerformance";
+
+// Export responsive hooks
+export {
+  useResponsive,
+  useBreakpoint,
+  useBreakpointDown,
+  useBreakpointBetween,
+} from "./useResponsive";
+export type { ResponsiveState } from "./useResponsive";
+
+// Export keyboard navigation hooks
+export {
+  useKeyboardNavigation,
+  useArrowNavigation,
+} from "./useKeyboardNavigation";
+export type {
+  KeyboardNavigationOptions,
+  KeyboardNavigationResult,
+} from "./useKeyboardNavigation";
+
+// Export focus trap hooks
+export {
+  useFocusTrap,
+  useFocusOnMount,
+  useFocusWhen,
+  useFocusManagement,
+} from "./useFocusTrap";
+export type { FocusTrapOptions } from "./useFocusTrap";

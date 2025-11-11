@@ -78,6 +78,13 @@ export type {
 export { ErrorBoundary } from "./ErrorBoundary";
 
 // ============================================================================
+// ACCESSIBILITY COMPONENTS
+// ============================================================================
+
+export { SkipLink } from "./SkipLink";
+export type { SkipLinkProps } from "./SkipLink";
+
+// ============================================================================
 // LEGACY COMPONENTS (For backward compatibility)
 // ============================================================================
 
