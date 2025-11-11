@@ -27,6 +27,8 @@ import { navigationConfig } from "../constants";
 export const PageContent: React.FC = () => {
   return (
     <Box
+      id="main-content"
+      component="main"
       sx={{
         flexGrow: 1,
         width: "100%",
