@@ -114,13 +114,7 @@ Tooltip.displayName = "Tooltip";
  */
 export const InfoTooltip = forwardRef<HTMLDivElement, TooltipProps>(
   (props, ref) => (
-    <Tooltip
-      ref={ref}
-      placement="top"
-      arrow
-      delay={300}
-      {...props}
-    />
+    <Tooltip ref={ref} placement="top" arrow delay={300} {...props} />
   ),
 );
 
@@ -131,13 +125,7 @@ InfoTooltip.displayName = "InfoTooltip";
  */
 export const HelpTooltip = forwardRef<HTMLDivElement, TooltipProps>(
   (props, ref) => (
-    <Tooltip
-      ref={ref}
-      placement="right"
-      arrow
-      delay={100}
-      {...props}
-    />
+    <Tooltip ref={ref} placement="right" arrow delay={100} {...props} />
   ),
 );
 

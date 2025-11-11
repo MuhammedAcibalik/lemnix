@@ -10,7 +10,14 @@ import { Box, BoxProps, alpha } from "@mui/material";
 import { useDesignSystem } from "@/shared/hooks";
 
 type BadgeVariant = "solid" | "soft" | "outline" | "gradient" | "glass";
-type BadgeColor = "primary" | "secondary" | "success" | "warning" | "error" | "info" | "neutral";
+type BadgeColor =
+  | "primary"
+  | "secondary"
+  | "success"
+  | "warning"
+  | "error"
+  | "info"
+  | "neutral";
 type BadgeSize = "xs" | "sm" | "md" | "lg";
 
 export interface BadgeV3Props extends Omit<BoxProps, "color"> {
@@ -198,7 +205,9 @@ BadgeV3.displayName = "BadgeV3";
  */
 export const StatusBadge = forwardRef<
   HTMLDivElement,
-  Omit<BadgeV3Props, "dot"> & { status: "active" | "inactive" | "pending" | "error" }
+  Omit<BadgeV3Props, "dot"> & {
+    status: "active" | "inactive" | "pending" | "error";
+  }
 >(({ status, ...props }, ref) => {
   const statusMap = {
     active: { color: "success" as const, text: "Active" },
@@ -210,12 +219,7 @@ export const StatusBadge = forwardRef<
   const config = statusMap[status];
 
   return (
-    <BadgeV3
-      ref={ref}
-      color={config.color}
-      dot
-      {...props}
-    >
+    <BadgeV3 ref={ref} color={config.color} dot {...props}>
       {props.children || config.text}
     </BadgeV3>
   );
@@ -228,13 +232,7 @@ StatusBadge.displayName = "StatusBadge";
  */
 export const MetricBadge = forwardRef<HTMLDivElement, BadgeV3Props>(
   (props, ref) => (
-    <BadgeV3
-      ref={ref}
-      variant="gradient"
-      size="md"
-      glow
-      {...props}
-    />
+    <BadgeV3 ref={ref} variant="gradient" size="md" glow {...props} />
   ),
 );
 

@@ -26,7 +26,8 @@ import { useDesignSystem } from "@/shared/hooks";
 type TextFieldVariant = "standard" | "outlined" | "filled" | "modern";
 type TextFieldSize = "sm" | "md" | "lg";
 
-export interface TextFieldProps extends Omit<MuiTextFieldProps, "variant" | "size"> {
+export interface TextFieldProps
+  extends Omit<MuiTextFieldProps, "variant" | "size"> {
   readonly variant?: TextFieldVariant;
   readonly size?: TextFieldSize;
   readonly success?: boolean;
@@ -221,7 +222,9 @@ export const TextField = forwardRef<HTMLDivElement, TextFieldProps>(
             sx={{
               display: "flex",
               alignItems: "center",
-              color: focused ? ds.colors.primary.main : ds.colors.text.secondary,
+              color: focused
+                ? ds.colors.primary.main
+                : ds.colors.text.secondary,
               transition: `color ${ds.duration.fast}ms ${ds.easing.easeOut}`,
             }}
           >
@@ -295,7 +298,14 @@ export const TextField = forwardRef<HTMLDivElement, TextFieldProps>(
             }}
           >
             {helperText && (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flex: 1 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  flex: 1,
+                }}
+              >
                 {helperIcon && (
                   <Box
                     sx={{
@@ -356,32 +366,24 @@ TextField.displayName = "TextField";
 /**
  * SearchField - Pre-configured for search inputs
  */
-export const SearchField = forwardRef<HTMLDivElement, Omit<TextFieldProps, "type">>(
-  (props, ref) => (
-    <TextField
-      ref={ref}
-      type="search"
-      placeholder="Search..."
-      {...props}
-    />
-  ),
-);
+export const SearchField = forwardRef<
+  HTMLDivElement,
+  Omit<TextFieldProps, "type">
+>((props, ref) => (
+  <TextField ref={ref} type="search" placeholder="Search..." {...props} />
+));
 
 SearchField.displayName = "SearchField";
 
 /**
  * PasswordField - Pre-configured for password inputs
  */
-export const PasswordField = forwardRef<HTMLDivElement, Omit<TextFieldProps, "type">>(
-  (props, ref) => (
-    <TextField
-      ref={ref}
-      type="password"
-      showPasswordToggle
-      {...props}
-    />
-  ),
-);
+export const PasswordField = forwardRef<
+  HTMLDivElement,
+  Omit<TextFieldProps, "type">
+>((props, ref) => (
+  <TextField ref={ref} type="password" showPasswordToggle {...props} />
+));
 
 PasswordField.displayName = "PasswordField";
 

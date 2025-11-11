@@ -6,7 +6,13 @@
  */
 
 import React, { forwardRef } from "react";
-import { Box, BoxProps, Skeleton as MuiSkeleton, Stack, alpha } from "@mui/material";
+import {
+  Box,
+  BoxProps,
+  Skeleton as MuiSkeleton,
+  Stack,
+  alpha,
+} from "@mui/material";
 import { useDesignSystem } from "@/shared/hooks";
 
 type SkeletonVariant = "text" | "circular" | "rectangular" | "rounded";
@@ -41,34 +47,38 @@ export const SkeletonV3 = forwardRef<HTMLDivElement, SkeletonV3Props>(
     const ds = useDesignSystem();
 
     // Custom shimmer animation
-    const shimmerAnimation = animation === "shimmer" ? {
-      "@keyframes shimmer": {
-        "0%": {
-          backgroundPosition: "-1000px 0",
-        },
-        "100%": {
-          backgroundPosition: "1000px 0",
-        },
-      },
-      animation: "shimmer 2s infinite linear",
-      backgroundImage: `linear-gradient(
+    const shimmerAnimation =
+      animation === "shimmer"
+        ? {
+            "@keyframes shimmer": {
+              "0%": {
+                backgroundPosition: "-1000px 0",
+              },
+              "100%": {
+                backgroundPosition: "1000px 0",
+              },
+            },
+            animation: "shimmer 2s infinite linear",
+            backgroundImage: `linear-gradient(
         90deg,
         ${ds.colors.neutral[200]} 0px,
         ${alpha(ds.colors.neutral[100], 0.5)} 40px,
         ${ds.colors.neutral[200]} 80px
       )`,
-      backgroundSize: "1000px 100%",
-    } : {};
+            backgroundSize: "1000px 100%",
+          }
+        : {};
 
     const baseStyles = {
       backgroundColor: ds.colors.neutral[200],
-      borderRadius: variant === "circular"
-        ? "50%"
-        : variant === "rounded"
-          ? `${ds.borderRadius.lg}px`
-          : variant === "text"
-            ? `${ds.borderRadius.sm}px`
-            : `${ds.borderRadius.md}px`,
+      borderRadius:
+        variant === "circular"
+          ? "50%"
+          : variant === "rounded"
+            ? `${ds.borderRadius.lg}px`
+            : variant === "text"
+              ? `${ds.borderRadius.sm}px`
+              : `${ds.borderRadius.md}px`,
       ...(glow && {
         boxShadow: `0 0 20px ${alpha(ds.colors.neutral[300], 0.5)}`,
       }),
@@ -81,7 +91,9 @@ export const SkeletonV3 = forwardRef<HTMLDivElement, SkeletonV3Props>(
           ref={ref}
           sx={{
             width,
-            height: height || (variant === "text" ? 24 : variant === "circular" ? 40 : 120),
+            height:
+              height ||
+              (variant === "text" ? 24 : variant === "circular" ? 40 : 120),
             ...baseStyles,
             ...sx,
           }}

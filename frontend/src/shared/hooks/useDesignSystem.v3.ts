@@ -66,9 +66,9 @@ export const useDesignSystem = () => {
   /**
    * Get component size
    */
-  const getComponentSize = (
-    component: keyof typeof DS.componentSizes,
-    size: "xs" | "sm" | "md" | "lg" | "xl",
+  const getComponentSize = <T extends keyof typeof DS.componentSizes>(
+    component: T,
+    size: keyof (typeof DS.componentSizes)[T],
   ) => {
     return DS.componentSizes[component][size];
   };
@@ -182,7 +182,9 @@ export const useDesignSystem = () => {
   /**
    * Get glass morphism style
    */
-  const getGlassStyle = (variant: "light" | "medium" | "strong" | "dark" = "light") => {
+  const getGlassStyle = (
+    variant: "light" | "medium" | "strong" | "dark" = "light",
+  ) => {
     return {
       background: DS.glass[variant].background,
       border: DS.glass[variant].border,
@@ -195,7 +197,13 @@ export const useDesignSystem = () => {
    * Get focus ring style
    */
   const getFocusRing = (
-    variant: "default" | "primary" | "secondary" | "success" | "warning" | "error" = "default",
+    variant:
+      | "default"
+      | "primary"
+      | "secondary"
+      | "success"
+      | "warning"
+      | "error" = "default",
   ) => {
     return {
       outline: "none",

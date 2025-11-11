@@ -300,52 +300,55 @@ export function useProgressiveRetrieval() {
     };
   }, []);
 
-  const retrieveData = useCallback(async (filters: Record<string, unknown> = {}) => {
-    try {
-      setProgress((prev) => ({
-        ...prev,
-        isActive: true,
-        stage: "starting",
-        percentage: 0,
-        message: "Veriler yükleniyor...",
-        startTime: Date.now(),
-      }));
+  const retrieveData = useCallback(
+    async (filters: Record<string, unknown> = {}) => {
+      try {
+        setProgress((prev) => ({
+          ...prev,
+          isActive: true,
+          stage: "starting",
+          percentage: 0,
+          message: "Veriler yükleniyor...",
+          startTime: Date.now(),
+        }));
 
-      const response = await fetch("/api/production-plan/progressive", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || "mock-dev-token-lemnix-2025"}`,
-          "Content-Type": "application/json",
-        },
-      });
+        const response = await fetch("/api/production-plan/progressive", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || "mock-dev-token-lemnix-2025"}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-      if (!response.ok) {
-        throw new Error("Data retrieval failed");
+        if (!response.ok) {
+          throw new Error("Data retrieval failed");
+        }
+
+        const data = await response.json();
+
+        setProgress((prev) => ({
+          ...prev,
+          isActive: false,
+          stage: "complete",
+          percentage: 100,
+          message: "Veriler yüklendi!",
+          duration: Date.now() - prev.startTime,
+        }));
+
+        return data;
+      } catch (error) {
+        setProgress((prev) => ({
+          ...prev,
+          isActive: false,
+          stage: "error",
+          message: `Hata: ${(error as Error).message}`,
+          duration: Date.now() - prev.startTime,
+        }));
+        throw error;
       }
-
-      const data = await response.json();
-
-      setProgress((prev) => ({
-        ...prev,
-        isActive: false,
-        stage: "complete",
-        percentage: 100,
-        message: "Veriler yüklendi!",
-        duration: Date.now() - prev.startTime,
-      }));
-
-      return data;
-    } catch (error) {
-      setProgress((prev) => ({
-        ...prev,
-        isActive: false,
-        stage: "error",
-        message: `Hata: ${(error as Error).message}`,
-        duration: Date.now() - prev.startTime,
-      }));
-      throw error;
-    }
-  }, []);
+    },
+    [],
+  );
 
   return {
     retrieveData,

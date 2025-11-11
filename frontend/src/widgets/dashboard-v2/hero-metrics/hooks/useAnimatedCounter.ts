@@ -43,13 +43,9 @@ const easingFunctions = {
  */
 export const useAnimatedCounter = (
   targetValue: number,
-  options: UseAnimatedCounterOptions = {}
+  options: UseAnimatedCounterOptions = {},
 ): number => {
-  const {
-    duration = 1000,
-    easing = "easeOutQuart",
-    decimals = 0,
-  } = options;
+  const { duration = 1000, easing = "easeOutQuart", decimals = 0 } = options;
 
   const [displayValue, setDisplayValue] = useState(targetValue);
   const startValueRef = useRef(targetValue);
@@ -78,9 +74,7 @@ export const useAnimatedCounter = (
         startValueRef.current +
         (targetValue - startValueRef.current) * easedProgress;
 
-      setDisplayValue(
-        Number(currentValue.toFixed(decimals))
-      );
+      setDisplayValue(Number(currentValue.toFixed(decimals)));
 
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(animate);

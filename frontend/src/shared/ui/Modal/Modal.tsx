@@ -123,7 +123,9 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
         alignItems: "center",
         justifyContent: "space-between",
         padding: `${ds.spacing["6"]}px`,
-        paddingBottom: headerDivider ? `${ds.spacing["4"]}px` : `${ds.spacing["6"]}px`,
+        paddingBottom: headerDivider
+          ? `${ds.spacing["4"]}px`
+          : `${ds.spacing["6"]}px`,
       }),
       [ds, headerDivider],
     );
@@ -144,7 +146,9 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
         justifyContent: "flex-end",
         gap: `${ds.spacing["3"]}px`,
         padding: `${ds.spacing["6"]}px`,
-        paddingTop: footerDivider ? `${ds.spacing["4"]}px` : `${ds.spacing["6"]}px`,
+        paddingTop: footerDivider
+          ? `${ds.spacing["4"]}px`
+          : `${ds.spacing["6"]}px`,
       }),
       [ds, footerDivider],
     );
@@ -234,13 +238,7 @@ Modal.displayName = "Modal";
  */
 export const ConfirmModal = forwardRef<HTMLDivElement, ModalProps>(
   (props, ref) => (
-    <Modal
-      ref={ref}
-      size="sm"
-      headerDivider
-      footerDivider
-      {...props}
-    />
+    <Modal ref={ref} size="sm" headerDivider footerDivider {...props} />
   ),
 );
 

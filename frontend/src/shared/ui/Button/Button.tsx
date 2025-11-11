@@ -29,8 +29,7 @@ type ButtonVariant =
   | "warning"
   | "glass";
 
-export interface ButtonProps
-  extends Omit<MuiButtonProps, "variant" | "size"> {
+export interface ButtonProps extends Omit<MuiButtonProps, "variant" | "size"> {
   readonly variant?: ButtonVariant;
   readonly size?: ButtonSize;
   readonly loading?: boolean;
@@ -62,7 +61,7 @@ const buildVariantStyles = (
     letterSpacing: ds.letterSpacing.wide,
     position: "relative" as const,
     overflow: "hidden" as const,
-    
+
     // Shimmer effect on hover
     "&::before": {
       content: '""',
@@ -77,7 +76,7 @@ const buildVariantStyles = (
     "&:hover::before": {
       left: "100%",
     },
-    
+
     "&:disabled": {
       opacity: 0.5,
       cursor: "not-allowed",
@@ -106,7 +105,7 @@ const buildVariantStyles = (
         boxShadow: ds.shadows.button.active,
       },
     },
-    
+
     secondary: {
       background: ds.gradients.secondary.default,
       color: ds.colors.secondary.contrast,
@@ -122,7 +121,7 @@ const buildVariantStyles = (
         boxShadow: ds.shadows.button.active,
       },
     },
-    
+
     tertiary: {
       background: ds.colors.surface.base,
       color: ds.colors.text.primary,
@@ -135,7 +134,7 @@ const buildVariantStyles = (
         transform: "translateY(-1px)",
       },
     },
-    
+
     ghost: {
       background: "transparent",
       color: ds.colors.primary.main,
@@ -149,7 +148,7 @@ const buildVariantStyles = (
         backgroundColor: alpha(ds.colors.primary.main, 0.12),
       },
     },
-    
+
     gradient: {
       background: ds.gradients.primary.default,
       color: ds.colors.primary.contrast,
@@ -161,7 +160,7 @@ const buildVariantStyles = (
         transform: "translateY(-2px) scale(1.02)",
       },
     },
-    
+
     soft: {
       background: ds.gradients.primary.subtle,
       color: ds.colors.primary.dark,
@@ -173,7 +172,7 @@ const buildVariantStyles = (
         boxShadow: ds.shadows.soft.sm,
       },
     },
-    
+
     link: {
       background: "transparent",
       color: ds.colors.text.link,
@@ -193,7 +192,7 @@ const buildVariantStyles = (
         display: "none",
       },
     },
-    
+
     danger: {
       background: ds.gradients.error,
       color: "#ffffff",
@@ -205,7 +204,7 @@ const buildVariantStyles = (
         transform: "translateY(-2px)",
       },
     },
-    
+
     success: {
       background: ds.gradients.success,
       color: "#ffffff",
@@ -217,7 +216,7 @@ const buildVariantStyles = (
         transform: "translateY(-2px)",
       },
     },
-    
+
     warning: {
       background: ds.gradients.warning,
       color: ds.colors.text.primary,
@@ -229,7 +228,7 @@ const buildVariantStyles = (
         transform: "translateY(-2px)",
       },
     },
-    
+
     glass: {
       ...ds.getGlassStyle("light"),
       color: ds.colors.text.primary,

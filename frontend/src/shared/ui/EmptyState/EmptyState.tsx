@@ -19,7 +19,13 @@ import {
 import { useDesignSystem } from "@/shared/hooks";
 import { ButtonV3 } from "../Button/Button.v3";
 
-type EmptyStateVariant = "default" | "search" | "error" | "offline" | "noData" | "noResults";
+type EmptyStateVariant =
+  | "default"
+  | "search"
+  | "error"
+  | "offline"
+  | "noData"
+  | "noResults";
 type EmptyStateSize = "sm" | "md" | "lg";
 
 export interface EmptyStateV3Props extends BoxProps {
@@ -131,7 +137,11 @@ export const EmptyStateV3 = forwardRef<HTMLDivElement, EmptyStateV3Props>(
         }}
         {...props}
       >
-        <Stack spacing={config.spacing} alignItems="center" sx={{ maxWidth: "500px" }}>
+        <Stack
+          spacing={config.spacing}
+          alignItems="center"
+          sx={{ maxWidth: "500px" }}
+        >
           {/* Icon or Illustration */}
           {illustration ? (
             <Box
@@ -156,7 +166,7 @@ export const EmptyStateV3 = forwardRef<HTMLDivElement, EmptyStateV3Props>(
                 alignItems: "center",
                 justifyContent: "center",
                 position: "relative",
-                
+
                 // Animated pulse effect
                 "&::before": {
                   content: '""',
@@ -248,15 +258,24 @@ EmptyStateV3.displayName = "EmptyStateV3";
 export const NoDataEmptyState = forwardRef<
   HTMLDivElement,
   Omit<EmptyStateV3Props, "variant">
->(({ title = "No data available", description = "There is no data to display at this time.", ...props }, ref) => (
-  <EmptyStateV3
-    ref={ref}
-    variant="noData"
-    title={title}
-    description={description}
-    {...props}
-  />
-));
+>(
+  (
+    {
+      title = "No data available",
+      description = "There is no data to display at this time.",
+      ...props
+    },
+    ref,
+  ) => (
+    <EmptyStateV3
+      ref={ref}
+      variant="noData"
+      title={title}
+      description={description}
+      {...props}
+    />
+  ),
+);
 
 NoDataEmptyState.displayName = "NoDataEmptyState";
 

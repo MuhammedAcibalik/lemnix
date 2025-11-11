@@ -38,7 +38,8 @@ export const EnhancedWizardProgress: React.FC<EnhancedWizardProgressProps> = ({
   const ds = useDesignSystem();
 
   // Calculate overall progress percentage
-  const progressPercentage = ((activeStep + completedSteps.length) / (steps.length * 2)) * 100;
+  const progressPercentage =
+    ((activeStep + completedSteps.length) / (steps.length * 2)) * 100;
 
   return (
     <Box

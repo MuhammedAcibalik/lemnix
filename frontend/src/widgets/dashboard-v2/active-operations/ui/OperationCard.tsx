@@ -7,7 +7,14 @@
  */
 
 import React from "react";
-import { Box, Typography, LinearProgress, Chip, alpha, keyframes } from "@mui/material";
+import {
+  Box,
+  Typography,
+  LinearProgress,
+  Chip,
+  alpha,
+  keyframes,
+} from "@mui/material";
 import {
   CheckCircle as CheckCircleIcon,
   Error as ErrorIcon,
@@ -116,8 +123,10 @@ export const OperationCard: React.FC<OperationCardProps> = ({
         borderRadius: `${ds.borderRadius.md}px`,
         border: `1px solid ${operation.status === "processing" ? ds.colors.primary.main : ds.colors.neutral[200]}`,
         backgroundColor: alpha(
-          operation.status === "processing" ? ds.colors.primary.main : ds.colors.neutral[50],
-          operation.status === "processing" ? 0.05 : 0.5
+          operation.status === "processing"
+            ? ds.colors.primary.main
+            : ds.colors.neutral[50],
+          operation.status === "processing" ? 0.05 : 0.5,
         ),
         transition: ds.transitions.base,
         cursor: onClick ? "pointer" : "default",

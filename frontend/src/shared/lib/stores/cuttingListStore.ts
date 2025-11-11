@@ -414,7 +414,7 @@ export const useCuttingListStore = create<
           if (!currentList) return;
 
           const items = currentList.items.map((item) =>
-            ids.includes(item.id) ? { ...item, ...updates } : item
+            ids.includes(item.id) ? { ...item, ...updates } : item,
           );
 
           set({
@@ -449,7 +449,7 @@ export const useCuttingListStore = create<
 
           // Find items to move
           const itemsToMove = currentList.items.filter((item) =>
-            ids.includes(item.id)
+            ids.includes(item.id),
           );
 
           // Remove items from current list

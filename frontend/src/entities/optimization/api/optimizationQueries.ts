@@ -51,33 +51,31 @@ export const optimizationKeys = {
  *
  * @example
  * ```tsx
- * const { mutate, isPending } = useRunOptimization({
- *   onSuccess: (result) => {
- *     console.log('Optimization complete:', result);
- *   },
- * });
+ * const { mutate, isPending } = useRunOptimization();
  *
- * mutate({
- *   items: [...],
- *   params: { algorithm: 'genetic', ... }
- * });
+ * mutate(
+ *   {
+ *     items: [...],
+ *     params: { algorithm: 'genetic', ... }
+ *   },
+ *   {
+ *     onSuccess: (result) => {
+ *       console.log('Optimization complete:', result);
+ *     },
+ *   }
+ * );
  * ```
  */
-export function useRunOptimization(
-  options?: UseMutationOptions<OptimizationResult, Error, OptimizationRequest>,
-) {
+export function useRunOptimization() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: runOptimization,
-    onSuccess: (data, variables, context) => {
+    onSuccess: () => {
       // Invalidate history and metrics after successful optimization
       queryClient.invalidateQueries({ queryKey: optimizationKeys.history() });
       queryClient.invalidateQueries({ queryKey: optimizationKeys.metrics() });
-
-      options?.onSuccess?.(data, variables, context);
     },
-    ...options,
   });
 }
 

@@ -10,7 +10,9 @@
 // WebGPU type declarations (since they're not in TS lib yet)
 declare global {
   interface GPU {
-    requestAdapter(options?: GPURequestAdapterOptions): Promise<GPUAdapter | null>;
+    requestAdapter(
+      options?: GPURequestAdapterOptions,
+    ): Promise<GPUAdapter | null>;
   }
 
   interface GPUAdapter {
@@ -144,7 +146,9 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
       }
 
       // Request adapter
-      const adapter = await (navigator as Navigator & { gpu?: GPU }).gpu?.requestAdapter({
+      const adapter = await (
+        navigator as Navigator & { gpu?: GPU }
+      ).gpu?.requestAdapter({
         powerPreference: "high-performance",
       });
 
@@ -170,7 +174,8 @@ export const GPUStatusCard: React.FC<GPUStatusCardProps> = ({
         description: info.description || "Unknown",
         features: Array.from(adapter.features),
         limits: {
-          maxStorageBufferBindingSize: adapter.limits.maxStorageBufferBindingSize || 0,
+          maxStorageBufferBindingSize:
+            adapter.limits.maxStorageBufferBindingSize || 0,
           maxBufferSize: adapter.limits.maxComputeWorkgroupSizeX || 0,
         },
       };

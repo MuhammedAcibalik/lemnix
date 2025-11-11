@@ -13,7 +13,7 @@ import { useCallback, useEffect, useRef } from "react";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function debounce<T extends (...args: any[]) => any>(
   fn: T,
-  delay: number
+  delay: number,
 ): (...args: Parameters<T>) => void {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
@@ -33,7 +33,7 @@ export function debounce<T extends (...args: any[]) => any>(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function throttle<T extends (...args: any[]) => any>(
   fn: T,
-  limit: number
+  limit: number,
 ): (...args: Parameters<T>) => void {
   let inThrottle = false;
 
@@ -62,14 +62,15 @@ export function measureRenderTime(componentName: string): () => void {
   return () => {
     const endTime = performance.now();
     const renderTime = endTime - startTime;
-    
-    if (renderTime > 16) { // Warn if render takes longer than one frame (16ms at 60fps)
+
+    if (renderTime > 16) {
+      // Warn if render takes longer than one frame (16ms at 60fps)
       console.warn(
-        `[Performance] ${componentName} render took ${renderTime.toFixed(2)}ms`
+        `[Performance] ${componentName} render took ${renderTime.toFixed(2)}ms`,
       );
     } else {
       console.log(
-        `[Performance] ${componentName} render took ${renderTime.toFixed(2)}ms`
+        `[Performance] ${componentName} render took ${renderTime.toFixed(2)}ms`,
       );
     }
   };
@@ -81,16 +82,16 @@ export function measureRenderTime(componentName: string): () => void {
  */
 export function scheduleIdleTask(
   callback: () => void,
-  options?: { timeout?: number }
+  options?: { timeout?: number },
 ): number {
   if (typeof window === "undefined") {
     return 0; // Server-side rendering fallback
   }
-  
+
   // Use type assertion to work around TypeScript control flow narrowing
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const globalWindow = window as any;
-  
+
   if ("requestIdleCallback" in globalWindow) {
     return globalWindow.requestIdleCallback(callback, options);
   }
@@ -104,11 +105,11 @@ export function scheduleIdleTask(
  */
 export function cancelIdleTask(id: number): void {
   if (typeof window === "undefined") return;
-  
+
   // Use type assertion to work around TypeScript control flow narrowing
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const globalWindow = window as any;
-  
+
   if ("cancelIdleCallback" in globalWindow) {
     globalWindow.cancelIdleCallback(id);
   } else {
@@ -144,7 +145,7 @@ export function useDebounce<T>(value: T, delay: number): T {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useDebouncedCallback<T extends (...args: any[]) => any>(
   callback: T,
-  delay: number
+  delay: number,
 ): (...args: Parameters<T>) => void {
   const callbackRef = useRef(callback);
 
@@ -157,7 +158,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
     debounce((...args: Parameters<T>) => {
       callbackRef.current(...args);
     }, delay),
-    [delay]
+    [delay],
   );
 }
 
@@ -168,7 +169,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useThrottledCallback<T extends (...args: any[]) => any>(
   callback: T,
-  limit: number
+  limit: number,
 ): (...args: Parameters<T>) => void {
   const callbackRef = useRef(callback);
 
@@ -181,7 +182,7 @@ export function useThrottledCallback<T extends (...args: any[]) => any>(
     throttle((...args: Parameters<T>) => {
       callbackRef.current(...args);
     }, limit),
-    [limit]
+    [limit],
   );
 }
 
@@ -202,7 +203,7 @@ export function useRenderPerformance(componentName: string): void {
 export function useIdleTask(
   task: () => void,
   deps: React.DependencyList = [],
-  options?: { timeout?: number }
+  options?: { timeout?: number },
 ): void {
   useEffect(() => {
     const taskId = scheduleIdleTask(task, options);

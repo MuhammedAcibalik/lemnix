@@ -76,7 +76,9 @@ export const HeroMetricCard: React.FC<HeroMetricCardProps> = ({
   const displayValue = useMemo(() => {
     if (loading) return "...";
     if (typeof value === "number") {
-      return decimals > 0 ? animatedValue.toFixed(decimals) : Math.round(animatedValue);
+      return decimals > 0
+        ? animatedValue.toFixed(decimals)
+        : Math.round(animatedValue);
     }
     // Preserve string formatting (e.g., % sign, currency)
     const valueStr = String(value);

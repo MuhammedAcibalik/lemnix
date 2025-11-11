@@ -265,10 +265,12 @@ export const SmartAutoComplete: React.FC<SmartAutoCompleteProps> = ({
   maxSuggestions = 8,
 }) => {
   // Local state instead of incompatible hook
-  const [suggestions, setSuggestions] = useState<LocalAutoCompleteSuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<LocalAutoCompleteSuggestion[]>(
+    [],
+  );
   const [loading, setLoading] = useState(false);
   const [suggestionError, setError] = useState<string | null>(null);
-  
+
   // Stub functions for suggestion methods (to be implemented)
   const getProductSuggestions = useCallback(async (query: string) => {
     setLoading(true);
@@ -276,28 +278,28 @@ export const SmartAutoComplete: React.FC<SmartAutoCompleteProps> = ({
     setSuggestions([]);
     setLoading(false);
   }, []);
-  
+
   const getSizeSuggestions = useCallback(async (query: string) => {
     setLoading(true);
     // TODO: Implement actual API call
     setSuggestions([]);
     setLoading(false);
   }, []);
-  
+
   const getProfileSuggestions = useCallback(async (query: string) => {
     setLoading(true);
     // TODO: Implement actual API call
     setSuggestions([]);
     setLoading(false);
   }, []);
-  
+
   const getColorSuggestions = useCallback(async (query: string) => {
     setLoading(true);
     // TODO: Implement actual API call
     setSuggestions([]);
     setLoading(false);
   }, []);
-  
+
   const getMeasurementSuggestions = useCallback(async (query: string) => {
     setLoading(true);
     // TODO: Implement actual API call
