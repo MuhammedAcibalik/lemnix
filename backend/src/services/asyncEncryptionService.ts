@@ -275,7 +275,11 @@ export class AsyncEncryptionService extends EventEmitter {
     index: number,
     progress: EncryptionProgress,
     options: BatchEncryptionOptions,
-  ): Promise<{ success: boolean; data?: ProductionPlanItemWithEncryption; error?: string }> {
+  ): Promise<{
+    success: boolean;
+    data?: ProductionPlanItemWithEncryption;
+    error?: string;
+  }> {
     try {
       // ✅ PERFORMANCE: Encrypt once, use for both fields
       const encryptedAd = encryptionService.encryptString(item.ad);
@@ -338,7 +342,11 @@ export class AsyncEncryptionService extends EventEmitter {
     index: number,
     progress: EncryptionProgress,
     options: BatchEncryptionOptions,
-  ): Promise<{ success: boolean; data?: ProductionPlanItemWithEncryption; error?: string }> {
+  ): Promise<{
+    success: boolean;
+    data?: ProductionPlanItemWithEncryption;
+    error?: string;
+  }> {
     try {
       // ✅ PERFORMANCE: Check if item has encrypted fields before processing
       const hasEncryptedFields =
