@@ -145,7 +145,9 @@ function enqueueAuditEvent(
     // Log security events for sensitive operations
     if (isSensitive && res.statusCode >= 400) {
       const authReq = req as AuthenticatedRequest;
-      const responseObj = responseData as { error?: string; message?: string } | undefined;
+      const responseObj = responseData as
+        | { error?: string; message?: string }
+        | undefined;
       await auditService.logSecurityEvent(
         authReq.user?.userId || "anonymous",
         operation,
@@ -324,7 +326,10 @@ function getOldDataFromRequest(req: Request): Record<string, unknown> | null {
 /**
  * Get new data from request/response
  */
-function getNewDataFromRequest(req: Request, responseData: unknown): Record<string, unknown> | null {
+function getNewDataFromRequest(
+  req: Request,
+  responseData: unknown,
+): Record<string, unknown> | null {
   if (req.method === "POST" || req.method === "PUT" || req.method === "PATCH") {
     return {
       requestData: req.body,
@@ -489,7 +494,8 @@ async function logSecurityEvent(
       statusCode >= 400 ? AuditSeverity.HIGH : AuditSeverity.MEDIUM;
 
     await auditService.logSecurityEvent(
-      ((req as Request & { user?: { userId?: string } }).user?.userId) || "anonymous",
+      (req as Request & { user?: { userId?: string } }).user?.userId ||
+        "anonymous",
       operation,
       `Security event: ${req.method} ${req.path} - ${statusCode}`,
       severity,

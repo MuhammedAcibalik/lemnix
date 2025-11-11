@@ -6,7 +6,7 @@
  * Extracted from BFDAlgorithm to follow Single Responsibility Principle
  */
 
-import type { ILogger } from "../../../logger";
+import type { ILogger } from "../../logger";
 
 /**
  * Validation result for demand checking
@@ -51,7 +51,7 @@ export class DemandValidator {
 
   /**
    * Validate that solution exactly matches demand
-   * 
+   *
    * @param solution - Optimization solution with patterns
    * @param itemGroups - Required item groups
    * @returns Validation result with errors and warnings
@@ -75,7 +75,7 @@ export class DemandValidator {
 
     // Create required cuts map
     const requiredCuts = new Map<number, number>(
-      itemGroups.map((g) => [g.length, g.quantity])
+      itemGroups.map((g) => [g.length, g.quantity]),
     );
 
     // DEBUG: Log actual cuts
@@ -118,7 +118,7 @@ export class DemandValidator {
 
   /**
    * Calculate actual cuts from solution patterns
-   * 
+   *
    * @param solution - Optimization solution
    * @returns Map of length to actual cut count
    */
@@ -139,7 +139,7 @@ export class DemandValidator {
 
   /**
    * Check if there are any shortages
-   * 
+   *
    * @param result - Validation result
    * @returns True if there are shortages
    */
@@ -149,7 +149,7 @@ export class DemandValidator {
 
   /**
    * Check if there are any warnings (over-production)
-   * 
+   *
    * @param result - Validation result
    * @returns True if there are warnings
    */
@@ -159,7 +159,7 @@ export class DemandValidator {
 
   /**
    * Get summary of validation result
-   * 
+   *
    * @param result - Validation result
    * @returns Human-readable summary
    */

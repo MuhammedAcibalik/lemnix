@@ -155,8 +155,12 @@ export class AuditService {
     newData?: Record<string, unknown> | null,
     description?: string,
   ): Promise<void> {
-    const userId = (req as Request & { user?: { userId?: string; sessionId?: string } }).user?.userId || "anonymous";
-    const sessionId = (req as Request & { user?: { userId?: string; sessionId?: string } }).user?.sessionId || undefined;
+    const userId =
+      (req as Request & { user?: { userId?: string; sessionId?: string } }).user
+        ?.userId || "anonymous";
+    const sessionId =
+      (req as Request & { user?: { userId?: string; sessionId?: string } }).user
+        ?.sessionId || undefined;
     const ipAddress = req.ip || req.connection.remoteAddress || "unknown";
     const userAgent = req.headers["user-agent"] || "unknown";
 
@@ -220,7 +224,9 @@ export class AuditService {
   /**
    * Query audit logs
    */
-  public async queryAuditLogs(query: AuditQuery): Promise<Prisma.AuditLogGetPayload<Record<string, never>>[]> {
+  public async queryAuditLogs(
+    query: AuditQuery,
+  ): Promise<Prisma.AuditLogGetPayload<Record<string, never>>[]> {
     try {
       const where: Prisma.AuditLogWhereInput = {};
 

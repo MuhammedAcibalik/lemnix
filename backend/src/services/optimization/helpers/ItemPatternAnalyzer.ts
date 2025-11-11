@@ -6,8 +6,8 @@
  * Extracted from BFDAlgorithm to follow Single Responsibility Principle
  */
 
-import { OptimizationItem } from "../../../../types";
-import type { ILogger } from "../../../logger";
+import { OptimizationItem } from "../../../types";
+import type { ILogger } from "../../logger";
 
 /**
  * Analysis result for item patterns
@@ -35,7 +35,7 @@ export class ItemPatternAnalyzer {
 
   /**
    * Analyze item patterns and cache results
-   * 
+   *
    * @param items - Items to analyze
    * @returns Pattern analysis results
    */
@@ -79,7 +79,7 @@ export class ItemPatternAnalyzer {
 
   /**
    * Get the count for a specific length
-   * 
+   *
    * @param length - Item length to check
    * @returns Count of items with that length
    */
@@ -89,7 +89,7 @@ export class ItemPatternAnalyzer {
 
   /**
    * Check if a length exists in the pattern
-   * 
+   *
    * @param length - Item length to check
    * @returns True if length exists
    */
@@ -99,7 +99,7 @@ export class ItemPatternAnalyzer {
 
   /**
    * Get all unique lengths
-   * 
+   *
    * @returns Array of unique lengths
    */
   public getUniqueLengths(): number[] {
@@ -115,7 +115,7 @@ export class ItemPatternAnalyzer {
 
   /**
    * Get complexity score based on pattern diversity
-   * 
+   *
    * @returns Score from 0.0 to 1.0, where higher means more complex
    */
   public getComplexityScore(): number {
@@ -123,8 +123,12 @@ export class ItemPatternAnalyzer {
 
     // More unique lengths = more complex
     // Normalized by total items
-    const uniqueRatio = this.patternCache.size / 
-      Array.from(this.patternCache.values()).reduce((sum, count) => sum + count, 0);
+    const uniqueRatio =
+      this.patternCache.size /
+      Array.from(this.patternCache.values()).reduce(
+        (sum, count) => sum + count,
+        0,
+      );
 
     return Math.min(uniqueRatio * 2, 1.0); // Scale and cap at 1.0
   }

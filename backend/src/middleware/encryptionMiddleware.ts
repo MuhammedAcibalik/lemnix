@@ -101,7 +101,10 @@ export const decryptDataMiddleware = (
   }
 };
 
-function encryptPayload(payload: unknown, context: DataProtectionContext): unknown {
+function encryptPayload(
+  payload: unknown,
+  context: DataProtectionContext,
+): unknown {
   if (Array.isArray(payload)) {
     return payload.map((item) => encryptPayload(item, context));
   }
@@ -110,7 +113,9 @@ function encryptPayload(payload: unknown, context: DataProtectionContext): unkno
     return payload;
   }
 
-  const encrypted: Record<string, unknown> = { ...(payload as Record<string, unknown>) };
+  const encrypted: Record<string, unknown> = {
+    ...(payload as Record<string, unknown>),
+  };
 
   for (const field of context.sensitiveFields) {
     if (typeof encrypted[field] === "string") {
@@ -127,7 +132,10 @@ function encryptPayload(payload: unknown, context: DataProtectionContext): unkno
   return encrypted;
 }
 
-function decryptPayload(payload: unknown, context: DataProtectionContext): unknown {
+function decryptPayload(
+  payload: unknown,
+  context: DataProtectionContext,
+): unknown {
   if (Array.isArray(payload)) {
     return payload.map((item) => decryptPayload(item, context));
   }
@@ -136,7 +144,9 @@ function decryptPayload(payload: unknown, context: DataProtectionContext): unkno
     return payload;
   }
 
-  const decrypted: Record<string, unknown> = { ...(payload as Record<string, unknown>) };
+  const decrypted: Record<string, unknown> = {
+    ...(payload as Record<string, unknown>),
+  };
 
   for (const field of context.sensitiveFields) {
     if (typeof decrypted[field] === "string") {

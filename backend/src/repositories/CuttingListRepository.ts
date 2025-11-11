@@ -923,7 +923,10 @@ export class CuttingListRepository {
 
       // Update item with new data
       const now = new Date();
-      const currentItem = targetSection.items[itemIndex] as Record<string, unknown>; // JSON data, not typed
+      const currentItem = targetSection.items[itemIndex] as Record<
+        string,
+        unknown
+      >; // JSON data, not typed
 
       // Safe property access with fallbacks
       const safeCurrentItem = {
@@ -1034,7 +1037,7 @@ export class CuttingListRepository {
           workOrderId: itemData.workOrderId || safeCurrentItem.workOrderId,
         },
         orderBy: {
-          createdAt: 'asc',
+          createdAt: "asc",
         },
       });
 

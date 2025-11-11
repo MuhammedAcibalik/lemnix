@@ -589,15 +589,23 @@ export class CuttingListController {
 
                   return acc;
                 },
-                {} as Record<string, Omit<CuttingListItem, 'profiles'> & { profiles: ProfileItem[] }>,
+                {} as Record<
+                  string,
+                  Omit<CuttingListItem, "profiles"> & {
+                    profiles: ProfileItem[];
+                  }
+                >,
               );
 
               // Convert to readonly structure
               const itemsByWorkOrder = Object.fromEntries(
                 Object.entries(mutableItemsByWorkOrder).map(([key, value]) => [
                   key,
-                  { ...value, profiles: value.profiles as ReadonlyArray<ProfileItem> } as CuttingListItem,
-                ])
+                  {
+                    ...value,
+                    profiles: value.profiles as ReadonlyArray<ProfileItem>,
+                  } as CuttingListItem,
+                ]),
               ) as Record<string, CuttingListItem>;
 
               // Add items to existing sections
@@ -709,15 +717,21 @@ export class CuttingListController {
 
                 return acc;
               },
-              {} as Record<string, Omit<CuttingListItem, 'profiles'> & { profiles: ProfileItem[] }>,
+              {} as Record<
+                string,
+                Omit<CuttingListItem, "profiles"> & { profiles: ProfileItem[] }
+              >,
             );
 
             // Convert to readonly structure
             const itemsByWorkOrder = Object.fromEntries(
               Object.entries(mutableItemsByWorkOrder).map(([key, value]) => [
                 key,
-                { ...value, profiles: value.profiles as ReadonlyArray<ProfileItem> } as CuttingListItem,
-              ])
+                {
+                  ...value,
+                  profiles: value.profiles as ReadonlyArray<ProfileItem>,
+                } as CuttingListItem,
+              ]),
             ) as Record<string, CuttingListItem>;
 
             // Convert grouped items to sections by profileType
@@ -899,15 +913,21 @@ export class CuttingListController {
 
             return acc;
           },
-          {} as Record<string, Omit<CuttingListItem, 'profiles'> & { profiles: ProfileItem[] }>,
+          {} as Record<
+            string,
+            Omit<CuttingListItem, "profiles"> & { profiles: ProfileItem[] }
+          >,
         );
 
         // Convert to readonly structure
         const itemsByWorkOrder = Object.fromEntries(
           Object.entries(mutableItemsByWorkOrder).map(([key, value]) => [
             key,
-            { ...value, profiles: value.profiles as ReadonlyArray<ProfileItem> } as CuttingListItem,
-          ])
+            {
+              ...value,
+              profiles: value.profiles as ReadonlyArray<ProfileItem>,
+            } as CuttingListItem,
+          ]),
         ) as Record<string, CuttingListItem>;
 
         // Convert grouped items to sections by profileType

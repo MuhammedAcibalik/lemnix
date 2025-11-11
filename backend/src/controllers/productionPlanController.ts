@@ -392,7 +392,8 @@ export class ProductionPlanController {
   async createCuttingListFromPlan(req: Request, res: Response): Promise<void> {
     try {
       const { productionPlanItems, cuttingListMetadata } = req.body;
-      const userId = (req as { user?: { userId?: string } }).user?.userId || "dev-user-123"; // Development fallback
+      const userId =
+        (req as { user?: { userId?: string } }).user?.userId || "dev-user-123"; // Development fallback
 
       // Validation
       if (

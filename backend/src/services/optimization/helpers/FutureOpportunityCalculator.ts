@@ -6,9 +6,9 @@
  * Extracted from BFDAlgorithm to follow Single Responsibility Principle
  */
 
-import { OptimizationItem } from "../../../../types";
-import { OptimizationContext } from "../../core/OptimizationContext";
-import type { ILogger } from "../../../logger";
+import { OptimizationItem } from "../../../types";
+import { OptimizationContext } from "../core/OptimizationContext";
+import type { ILogger } from "../../logger";
 
 /**
  * Service for calculating future opportunity scores in BFD algorithm
@@ -24,10 +24,10 @@ export class FutureOpportunityCalculator {
 
   /**
    * Calculate future opportunity score based on upcoming items
-   * 
+   *
    * The score represents the fraction of upcoming items that could fit
    * in the remaining space. Higher score means more future opportunities.
-   * 
+   *
    * @param remainingSpace - Available space after current placement
    * @param upcomingItems - Next items to be placed
    * @param context - Optimization context with constraints
@@ -65,7 +65,7 @@ export class FutureOpportunityCalculator {
 
   /**
    * Get the number of upcoming items that would fit in remaining space
-   * 
+   *
    * @param remainingSpace - Available space
    * @param upcomingItems - Next items to be placed
    * @param kerfWidth - Saw blade width
@@ -90,7 +90,7 @@ export class FutureOpportunityCalculator {
 
   /**
    * Check if a specific item would fit in remaining space
-   * 
+   *
    * @param remainingSpace - Available space
    * @param item - Item to check
    * @param kerfWidth - Saw blade width

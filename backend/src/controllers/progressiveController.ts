@@ -105,10 +105,11 @@ export class ProgressiveController {
         );
 
       if (result.success) {
-        const planId = result.data && typeof result.data === 'object' && 'id' in result.data 
-          ? (result.data as { id: string }).id 
-          : undefined;
-        
+        const planId =
+          result.data && typeof result.data === "object" && "id" in result.data
+            ? (result.data as { id: string }).id
+            : undefined;
+
         logger.info("Progressive upload completed successfully", {
           sessionId,
           planId,
