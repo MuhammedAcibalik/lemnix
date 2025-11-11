@@ -139,9 +139,56 @@ export type {
 export { GPUStatusBadge } from "./ui/GPUStatusBadge";
 export type { GPUStatusBadgeProps } from "./ui/GPUStatusBadge";
 
-// Motion Components (FAZ 2 - Animations)
-export { FadeIn, ScaleIn, Stagger } from "./ui/Motion";
-export type { FadeInProps, ScaleInProps, StaggerProps } from "./ui/Motion";
+// Motion Components v3.0 (Animations System)
+export {
+  FadeIn,
+  ScaleIn,
+  SlideIn,
+  Stagger,
+  AnimatedCounter,
+  Shimmer,
+  Pulse,
+  PageTransition,
+  HoverScale,
+  HoverLift,
+  TapShrink,
+} from "./ui/Motion";
+export type {
+  FadeInProps,
+  ScaleInProps,
+  SlideInProps,
+  StaggerProps,
+  AnimatedCounterProps,
+  ShimmerProps,
+  PulseProps,
+  PageTransitionProps,
+  HoverScaleProps,
+  HoverLiftProps,
+  TapShrinkProps,
+} from "./ui/Motion";
+export {
+  fadeInVariants,
+  fadeInUpVariants,
+  fadeInDownVariants,
+  fadeInLeftVariants,
+  fadeInRightVariants,
+  scaleVariants,
+  scaleInVariants,
+  scaleOutVariants,
+  slideUpVariants,
+  slideDownVariants,
+  slideLeftVariants,
+  slideRightVariants,
+  staggerContainerVariants,
+  staggerItemVariants,
+  fadeScaleVariants,
+  slideScaleVariants,
+  easings,
+  defaultAnimationConfig,
+} from "./ui/Motion";
+
+// Animation Hooks
+export { useReducedMotion } from "./hooks";
 
 // Modern Components v2.0 (FAZ 3)
 export {

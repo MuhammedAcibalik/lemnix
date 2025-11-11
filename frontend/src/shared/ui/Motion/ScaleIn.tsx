@@ -2,7 +2,7 @@
  * ScaleIn Animation Component
  *
  * @module shared/ui/Motion
- * @version 2.0.0
+ * @version 3.0.0
  */
 
 import React from "react";
@@ -13,23 +13,28 @@ export interface ScaleInProps {
   readonly delay?: number;
   readonly duration?: number;
   readonly scale?: number;
+  readonly spring?: boolean;
+  readonly origin?: string;
 }
 
 export const ScaleIn: React.FC<ScaleInProps> = ({
   children,
   delay = 0,
-  duration = 0.3,
-  scale = 0.9,
+  duration = 0.5,
+  scale = 0.95,
+  spring = false,
+  origin = "center",
 }) => {
+  const transition = spring
+    ? ({ type: "spring", stiffness: 300, damping: 20, delay } as const)
+    : ({ duration, delay, ease: [0.4, 0, 0.2, 1] } as const);
+
   return (
     <motion.div
       initial={{ opacity: 0, scale }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{
-        duration,
-        delay,
-        ease: [0.34, 1.56, 0.64, 1], // Spring
-      }}
+      transition={transition}
+      style={{ transformOrigin: origin }}
     >
       {children}
     </motion.div>
