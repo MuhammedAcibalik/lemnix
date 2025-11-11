@@ -22,7 +22,13 @@ export { Select } from "./Select";
 export type { SelectProps, SelectOption } from "./Select";
 
 // LAYOUT COMPONENTS
-export { Card, MetricCard, DashboardCard, FeatureCard, GlassCard } from "./Card";
+export {
+  Card,
+  MetricCard,
+  DashboardCard,
+  FeatureCard,
+  GlassCard,
+} from "./Card";
 export type { CardProps } from "./Card";
 
 // FEEDBACK COMPONENTS
@@ -90,4 +96,3 @@ export type { SkipLinkProps } from "./SkipLink";
 
 export { ConfirmationDialog } from "./ConfirmationDialog";
 export { YearWeekPicker } from "./YearWeekPicker";
-

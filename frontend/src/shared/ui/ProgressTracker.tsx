@@ -164,7 +164,16 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({
             </Typography>
             <Chip
               label={stageInfo.label}
-              color={stageInfo.color as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
+              color={
+                stageInfo.color as
+                  | "default"
+                  | "primary"
+                  | "secondary"
+                  | "error"
+                  | "info"
+                  | "success"
+                  | "warning"
+              }
               size="small"
               icon={stageInfo.icon}
             />
@@ -284,7 +293,7 @@ export const CompactProgressTracker: React.FC<{
   variant?: "upload" | "retrieve" | "processing";
 }> = ({ progress, variant = "processing" }) => {
   const theme = useTheme();
-  
+
   const getStageInfo = (stage: string) => {
     const stageMap: Record<
       string,
@@ -311,7 +320,7 @@ export const CompactProgressTracker: React.FC<{
       stageMap[stage] || { label: stage, color: "default", icon: <SpeedIcon /> }
     );
   };
-  
+
   const stageInfo = getStageInfo(progress.stage);
   const isComplete = progress.stage === "complete";
   const hasError = progress.stage === "error";
@@ -338,7 +347,16 @@ export const CompactProgressTracker: React.FC<{
       </Typography>
       <Chip
         label={stageInfo.label}
-        color={stageInfo.color as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
+        color={
+          stageInfo.color as
+            | "default"
+            | "primary"
+            | "secondary"
+            | "error"
+            | "info"
+            | "success"
+            | "warning"
+        }
         size="small"
         icon={stageInfo.icon}
       />

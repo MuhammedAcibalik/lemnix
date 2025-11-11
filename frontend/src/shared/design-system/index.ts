@@ -32,11 +32,11 @@ export {
   neutralColors,
   slateColors,
   functionalColors,
-  
+
   // Spacing system
   spacing,
   spacingScale,
-  
+
   // Typography system
   typography,
   fontFamily,
@@ -44,35 +44,35 @@ export {
   fontWeight,
   lineHeight,
   letterSpacing,
-  
+
   // Visual tokens
   borderRadius,
   shadows,
   gradients,
-  
+
   // Animation tokens
   transitions,
   duration,
   easing,
-  
+
   // Layout tokens
   zIndex,
   breakpoints,
   componentSizes,
-  
+
   // Backward compatibility
   componentSizesCompat,
   spacingCompat,
-  
+
   // Modern UI effects
   glass,
   focus,
-  
+
   // Utility functions
   withOpacity,
   createGradient,
   createGlow,
-  
+
   // Complete token set
   designTokens,
 } from "./tokens";

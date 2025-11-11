@@ -116,7 +116,11 @@ export const useKeyboardShortcuts = (
 
   // Get shortcut description for a given key combination
   const getShortcutDescription = useCallback((key: string): string => {
-    return (keyboardShortcuts as unknown as Record<string, { description?: string }>)[key]?.description || "";
+    return (
+      (
+        keyboardShortcuts as unknown as Record<string, { description?: string }>
+      )[key]?.description || ""
+    );
   }, []);
 
   // Check if a shortcut is available

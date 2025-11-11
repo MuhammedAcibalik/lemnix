@@ -60,14 +60,14 @@ const buildVariantStyles = (
     transition: `all ${ds.duration.base}ms ${ds.easing.easeOut}`,
     overflow: "hidden" as const,
     position: "relative" as const,
-    
+
     ...(hoverable && {
       cursor: "pointer",
       "&:hover": {
         transform: "translateY(-4px)",
       },
     }),
-    
+
     ...(interactive && {
       cursor: "pointer",
       "&:active": {
@@ -90,28 +90,32 @@ const buildVariantStyles = (
         borderColor: ds.colors.border.default,
       },
     },
-    
+
     outlined: {
       background: ds.colors.surface.base,
       border: `2px solid ${ds.colors.border.default}`,
       boxShadow: ds.shadows.none,
       "&:hover": {
-        borderColor: hoverable ? ds.colors.border.strong : ds.colors.border.default,
+        borderColor: hoverable
+          ? ds.colors.border.strong
+          : ds.colors.border.default,
         backgroundColor: ds.colors.surface.elevated1,
         boxShadow: hoverable ? ds.shadows.soft.sm : ds.shadows.none,
       },
     },
-    
+
     filled: {
       background: ds.colors.surface.elevated2,
       border: `1px solid ${ds.colors.border.muted}`,
       boxShadow: ds.shadows.none,
       "&:hover": {
-        backgroundColor: hoverable ? ds.colors.surface.elevated3 : ds.colors.surface.elevated2,
+        backgroundColor: hoverable
+          ? ds.colors.surface.elevated3
+          : ds.colors.surface.elevated2,
         boxShadow: hoverable ? ds.shadows.soft.sm : ds.shadows.none,
       },
     },
-    
+
     gradient: {
       background: ds.gradients.primary.subtle,
       border: `1px solid ${alpha(ds.colors.primary.main, 0.2)}`,
@@ -128,14 +132,14 @@ const buildVariantStyles = (
         borderColor: alpha(ds.colors.primary.main, 0.3),
       },
     },
-    
+
     glass: {
       ...ds.getGlassStyle("light"),
       "&:hover": {
         ...ds.getGlassStyle(hoverable ? "medium" : "light"),
       },
     },
-    
+
     soft: {
       background: `linear-gradient(135deg, ${ds.colors.surface.base} 0%, ${ds.colors.surface.elevated1} 100%)`,
       border: `1px solid ${ds.colors.border.subtle}`,
@@ -167,7 +171,7 @@ const getSizePadding = (
     md: ds.spacing["6"],
     lg: ds.spacing["8"],
   };
-  
+
   return sizeMap[size];
 };
 
@@ -251,7 +255,9 @@ export const CardV3 = forwardRef<HTMLDivElement, CardV3Props>(
               action={action}
               sx={{
                 padding: `${padding}px`,
-                paddingBottom: headerDivider ? `${padding}px` : `${padding / 2}px`,
+                paddingBottom: headerDivider
+                  ? `${padding}px`
+                  : `${padding / 2}px`,
               }}
             />
             {headerDivider && (
@@ -268,8 +274,10 @@ export const CardV3 = forwardRef<HTMLDivElement, CardV3Props>(
         <CardContent
           sx={{
             padding: `${padding}px`,
-            paddingTop: hasHeader && !headerDivider ? `${padding / 2}px` : `${padding}px`,
-            paddingBottom: hasFooter && !footerDivider ? `${padding / 2}px` : `${padding}px`,
+            paddingTop:
+              hasHeader && !headerDivider ? `${padding / 2}px` : `${padding}px`,
+            paddingBottom:
+              hasFooter && !footerDivider ? `${padding / 2}px` : `${padding}px`,
             "&:last-child": {
               paddingBottom: `${padding}px`,
             },
@@ -292,7 +300,10 @@ export const CardV3 = forwardRef<HTMLDivElement, CardV3Props>(
               sx={{
                 padding: `${padding}px`,
                 paddingTop: footerDivider ? `${padding}px` : `${padding / 2}px`,
-                backgroundColor: variant === "filled" ? ds.colors.surface.elevated1 : "transparent",
+                backgroundColor:
+                  variant === "filled"
+                    ? ds.colors.surface.elevated1
+                    : "transparent",
               }}
             >
               {footer}
@@ -312,14 +323,7 @@ CardV3.displayName = "CardV3";
 
 export const MetricCard = forwardRef<HTMLDivElement, CardV3Props>(
   (props, ref) => (
-    <CardV3
-      ref={ref}
-      variant="gradient"
-      size="sm"
-      hoverable
-      glow
-      {...props}
-    />
+    <CardV3 ref={ref} variant="gradient" size="sm" hoverable glow {...props} />
   ),
 );
 
@@ -357,13 +361,7 @@ FeatureCard.displayName = "FeatureCard";
 
 export const GlassCard = forwardRef<HTMLDivElement, CardV3Props>(
   (props, ref) => (
-    <CardV3
-      ref={ref}
-      variant="glass"
-      size="md"
-      hoverable
-      {...props}
-    />
+    <CardV3 ref={ref} variant="glass" size="md" hoverable {...props} />
   ),
 );
 

@@ -12,24 +12,24 @@ export interface FocusTrapOptions {
    * @default true
    */
   enabled?: boolean;
-  
+
   /**
    * Restore focus to previously focused element on unmount
    * @default true
    */
   restoreFocus?: boolean;
-  
+
   /**
    * Auto-focus first focusable element on mount
    * @default true
    */
   autoFocus?: boolean;
-  
+
   /**
    * Callback when focus trap is activated
    */
   onActivate?: () => void;
-  
+
   /**
    * Callback when focus trap is deactivated
    */
@@ -40,27 +40,27 @@ export interface FocusTrapOptions {
  * CSS selector for focusable elements
  */
 const FOCUSABLE_ELEMENTS = [
-  'a[href]',
-  'area[href]',
+  "a[href]",
+  "area[href]",
   'input:not([disabled]):not([type="hidden"])',
-  'select:not([disabled])',
-  'textarea:not([disabled])',
-  'button:not([disabled])',
-  'iframe',
-  'object',
-  'embed',
-  '[contenteditable]',
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "button:not([disabled])",
+  "iframe",
+  "object",
+  "embed",
+  "[contenteditable]",
   '[tabindex]:not([tabindex="-1"])',
-].join(',');
+].join(",");
 
 /**
  * Get all focusable elements within a container
  */
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
   const elements = Array.from(
-    container.querySelectorAll<HTMLElement>(FOCUSABLE_ELEMENTS)
+    container.querySelectorAll<HTMLElement>(FOCUSABLE_ELEMENTS),
   );
-  
+
   return elements.filter((el) => {
     // Filter out hidden elements
     return (
@@ -73,16 +73,16 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
 
 /**
  * useFocusTrap Hook
- * 
+ *
  * Traps focus within a container element, ensuring keyboard navigation
  * stays within the trapped area. Useful for modals, dialogs, and popups.
- * 
+ *
  * Features:
  * - Traps Tab and Shift+Tab navigation
  * - Preserves previously focused element
  * - Restores focus on unmount
  * - Auto-focuses first element on mount
- * 
+ *
  * @example
  * ```tsx
  * function Modal({ isOpen, onClose }) {
@@ -90,9 +90,9 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
  *     enabled: isOpen,
  *     onDeactivate: onClose,
  *   });
- *   
+ *
  *   if (!isOpen) return null;
- *   
+ *
  *   return (
  *     <div ref={modalRef}>
  *       <h2>Modal Title</h2>
@@ -103,7 +103,7 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
  * ```
  */
 export function useFocusTrap(
-  options: FocusTrapOptions = {}
+  options: FocusTrapOptions = {},
 ): React.RefObject<HTMLElement> {
   const {
     enabled = true,
@@ -112,23 +112,24 @@ export function useFocusTrap(
     onActivate,
     onDeactivate,
   } = options;
-  
+
   const containerRef = useRef<HTMLElement>(null);
   const previouslyFocusedElementRef = useRef<HTMLElement | null>(null);
-  
+
   // Store previously focused element
   useEffect(() => {
     if (enabled && restoreFocus) {
-      previouslyFocusedElementRef.current = document.activeElement as HTMLElement;
+      previouslyFocusedElementRef.current =
+        document.activeElement as HTMLElement;
     }
   }, [enabled, restoreFocus]);
-  
+
   // Handle focus trap
   useEffect(() => {
     if (!enabled || !containerRef.current) return;
-    
+
     const container = containerRef.current;
-    
+
     // Auto-focus first element
     if (autoFocus) {
       const focusableElements = getFocusableElements(container);
@@ -136,24 +137,24 @@ export function useFocusTrap(
         focusableElements[0].focus();
       }
     }
-    
+
     // Call onActivate callback
     onActivate?.();
-    
+
     // Handle Tab and Shift+Tab
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Tab") return;
-      
+
       const focusableElements = getFocusableElements(container);
-      
+
       if (focusableElements.length === 0) {
         event.preventDefault();
         return;
       }
-      
+
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
-      
+
       // Shift+Tab on first element -> focus last element
       if (event.shiftKey && document.activeElement === firstElement) {
         event.preventDefault();
@@ -165,15 +166,15 @@ export function useFocusTrap(
         firstElement.focus();
       }
     };
-    
+
     // Handle focus leaving container
     const handleFocusOut = (event: FocusEvent) => {
       const relatedTarget = event.relatedTarget as Node;
-      
+
       // Check if focus is moving outside the container
       if (relatedTarget && !container.contains(relatedTarget)) {
         event.preventDefault();
-        
+
         // Return focus to first focusable element
         const focusableElements = getFocusableElements(container);
         if (focusableElements.length > 0) {
@@ -181,30 +182,30 @@ export function useFocusTrap(
         }
       }
     };
-    
+
     container.addEventListener("keydown", handleKeyDown);
     container.addEventListener("focusout", handleFocusOut);
-    
+
     return () => {
       container.removeEventListener("keydown", handleKeyDown);
       container.removeEventListener("focusout", handleFocusOut);
-      
+
       // Restore focus to previously focused element
       if (restoreFocus && previouslyFocusedElementRef.current) {
         previouslyFocusedElementRef.current.focus();
       }
-      
+
       // Call onDeactivate callback
       onDeactivate?.();
     };
   }, [enabled, autoFocus, restoreFocus, onActivate, onDeactivate]);
-  
+
   return containerRef;
 }
 
 /**
  * Hook to focus an element on mount
- * 
+ *
  * @example
  * ```tsx
  * const inputRef = useFocusOnMount<HTMLInputElement>();
@@ -213,35 +214,35 @@ export function useFocusTrap(
  */
 export function useFocusOnMount<T extends HTMLElement>(): React.RefObject<T> {
   const elementRef = useRef<T>(null);
-  
+
   useEffect(() => {
     if (elementRef.current) {
       elementRef.current.focus();
     }
   }, []);
-  
+
   return elementRef;
 }
 
 /**
  * Hook to focus an element when a condition becomes true
- * 
+ *
  * @example
  * ```tsx
  * const inputRef = useFocusWhen<HTMLInputElement>(isEditing);
  * ```
  */
 export function useFocusWhen<T extends HTMLElement>(
-  condition: boolean
+  condition: boolean,
 ): React.RefObject<T> {
   const elementRef = useRef<T>(null);
-  
+
   useEffect(() => {
     if (condition && elementRef.current) {
       elementRef.current.focus();
     }
   }, [condition]);
-  
+
   return elementRef;
 }
 
@@ -259,7 +260,7 @@ export function useFocusManagement() {
       focusableElements[0].focus();
     }
   }, []);
-  
+
   /**
    * Focus last focusable element in container
    */
@@ -269,21 +270,21 @@ export function useFocusManagement() {
       focusableElements[focusableElements.length - 1].focus();
     }
   }, []);
-  
+
   /**
    * Check if element is focusable
    */
   const isFocusable = useCallback((element: HTMLElement): boolean => {
     return element.matches(FOCUSABLE_ELEMENTS);
   }, []);
-  
+
   /**
    * Get all focusable elements in container
    */
   const getFocusable = useCallback((container: HTMLElement) => {
     return getFocusableElements(container);
   }, []);
-  
+
   return {
     focusFirst,
     focusLast,

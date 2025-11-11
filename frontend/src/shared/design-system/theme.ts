@@ -63,7 +63,7 @@ const createMuiShadows = (): [
   string,
   string,
   string,
-  string
+  string,
 ] => {
   return [
     tokens.shadows.none,

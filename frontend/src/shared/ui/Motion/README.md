@@ -5,6 +5,7 @@ A comprehensive, performant animation system built with Framer Motion for smooth
 ## 📦 Installation
 
 Framer Motion is already installed as a dependency:
+
 ```json
 "framer-motion": "^12.23.22"
 ```
@@ -12,7 +13,7 @@ Framer Motion is already installed as a dependency:
 ## 🚀 Quick Start
 
 ```tsx
-import { FadeIn, HoverScale, AnimatedCounter } from '@/shared';
+import { FadeIn, HoverScale, AnimatedCounter } from "@/shared";
 
 function MyComponent() {
   return (
@@ -33,16 +34,17 @@ function MyComponent() {
 ### Core Animation Components
 
 #### FadeIn
+
 Fade in animation with optional directional movement.
 
 ```tsx
 <FadeIn
-  direction="up"        // 'up' | 'down' | 'left' | 'right' | 'none'
-  duration={0.5}        // seconds
-  delay={0}             // seconds
-  distance={20}         // pixels
-  once={true}           // animate only once
-  viewport={true}       // animate when in viewport
+  direction="up" // 'up' | 'down' | 'left' | 'right' | 'none'
+  duration={0.5} // seconds
+  delay={0} // seconds
+  distance={20} // pixels
+  once={true} // animate only once
+  viewport={true} // animate when in viewport
 >
   <YourContent />
 </FadeIn>
@@ -51,15 +53,16 @@ Fade in animation with optional directional movement.
 **Use cases:** Hero sections, cards, content reveals
 
 #### ScaleIn
+
 Scale animation from small to normal size.
 
 ```tsx
 <ScaleIn
-  scale={0.95}          // initial scale
-  duration={0.5}        // seconds
-  delay={0}             // seconds
-  spring={false}        // use spring animation
-  origin="center"       // transform-origin
+  scale={0.95} // initial scale
+  duration={0.5} // seconds
+  delay={0} // seconds
+  spring={false} // use spring animation
+  origin="center" // transform-origin
 >
   <YourContent />
 </ScaleIn>
@@ -68,16 +71,17 @@ Scale animation from small to normal size.
 **Use cases:** Modal entrances, popups, emphasis
 
 #### SlideIn
+
 Slide in from any direction.
 
 ```tsx
 <SlideIn
-  direction="left"      // 'up' | 'down' | 'left' | 'right'
-  distance={100}        // pixels
-  duration={0.5}        // seconds
-  delay={0}             // seconds
-  once={true}           // animate only once
-  viewport={true}       // animate when in viewport
+  direction="left" // 'up' | 'down' | 'left' | 'right'
+  distance={100} // pixels
+  duration={0.5} // seconds
+  delay={0} // seconds
+  once={true} // animate only once
+  viewport={true} // animate when in viewport
 >
   <YourContent />
 </SlideIn>
@@ -86,13 +90,14 @@ Slide in from any direction.
 **Use cases:** Sidebars, panels, cards entering from side
 
 #### Stagger
+
 Stagger animation for child elements.
 
 ```tsx
 <Stagger
-  staggerDelay={0.1}    // delay between children (seconds)
-  duration={0.5}        // duration per child
-  direction="forward"   // 'forward' | 'reverse'
+  staggerDelay={0.1} // delay between children (seconds)
+  duration={0.5} // duration per child
+  direction="forward" // 'forward' | 'reverse'
 >
   <Item1 />
   <Item2 />
@@ -105,26 +110,28 @@ Stagger animation for child elements.
 ### Specialized Components
 
 #### AnimatedCounter
+
 Count up animation with formatting support.
 
 ```tsx
 <AnimatedCounter
-  value={1234.56}       // target value
-  duration={2}          // seconds
-  decimals={2}          // decimal places
-  prefix="₺"            // prefix text
-  suffix="K"            // suffix text
+  value={1234.56} // target value
+  duration={2} // seconds
+  decimals={2} // decimal places
+  prefix="₺" // prefix text
+  suffix="K" // suffix text
 />
 ```
 
 **Use cases:** Statistics, KPIs, dashboards
 
 #### Shimmer
+
 Shimmer/shine effect overlay.
 
 ```tsx
 <Shimmer
-  duration={2}          // seconds
+  duration={2} // seconds
   direction="horizontal" // 'horizontal' | 'vertical'
 >
   <YourContent />
@@ -134,13 +141,14 @@ Shimmer/shine effect overlay.
 **Use cases:** Loading skeletons, premium effects, buttons
 
 #### Pulse
+
 Pulse/heartbeat animation.
 
 ```tsx
 <Pulse
-  intensity="medium"    // 'low' | 'medium' | 'high'
-  speed="normal"        // 'slow' | 'normal' | 'fast'
-  glow={false}          // add glow effect
+  intensity="medium" // 'low' | 'medium' | 'high'
+  speed="normal" // 'slow' | 'normal' | 'fast'
+  glow={false} // add glow effect
 >
   <StatusBadge />
 </Pulse>
@@ -149,6 +157,7 @@ Pulse/heartbeat animation.
 **Use cases:** Status indicators, badges, live indicators
 
 #### PageTransition
+
 Smooth page transitions.
 
 ```tsx
@@ -162,13 +171,14 @@ Smooth page transitions.
 ### Hover & Interaction Components
 
 #### HoverScale
+
 Scale effect on hover.
 
 ```tsx
 <HoverScale
-  scale={1.05}          // scale amount
-  glow={false}          // add glow on hover
-  duration={0.2}        // seconds
+  scale={1.05} // scale amount
+  glow={false} // add glow on hover
+  duration={0.2} // seconds
 >
   <Button />
 </HoverScale>
@@ -177,12 +187,13 @@ Scale effect on hover.
 **Use cases:** Buttons, cards, clickable items
 
 #### HoverLift
+
 Lift effect with shadow on hover.
 
 ```tsx
 <HoverLift
-  liftAmount={-8}       // pixels (negative = up)
-  duration={0.2}        // seconds
+  liftAmount={-8} // pixels (negative = up)
+  duration={0.2} // seconds
 >
   <Card />
 </HoverLift>
@@ -191,6 +202,7 @@ Lift effect with shadow on hover.
 **Use cases:** Cards, tiles, product cards
 
 #### TapShrink
+
 Shrink effect on tap/click.
 
 ```tsx
@@ -213,13 +225,14 @@ import {
   slideUpVariants,
   staggerContainerVariants,
   easings,
-} from '@/shared';
+} from "@/shared";
 
 // Use with motion components
-<motion.div variants={fadeInUpVariants} />
+<motion.div variants={fadeInUpVariants} />;
 ```
 
 Available variants:
+
 - `fadeInVariants`, `fadeInUpVariants`, `fadeInDownVariants`, `fadeInLeftVariants`, `fadeInRightVariants`
 - `scaleVariants`, `scaleInVariants`, `scaleOutVariants`
 - `slideUpVariants`, `slideDownVariants`, `slideLeftVariants`, `slideRightVariants`
@@ -229,15 +242,15 @@ Available variants:
 ## 🎯 Easing Functions
 
 ```tsx
-import { easings } from '@/shared';
+import { easings } from "@/shared";
 
 // Available easings
-easings.easeInOut       // [0.4, 0, 0.2, 1]
-easings.easeOut         // [0, 0, 0.2, 1]
-easings.easeIn          // [0.4, 0, 1, 1]
-easings.spring          // { type: 'spring', stiffness: 300, damping: 20 }
-easings.springBouncy    // { type: 'spring', stiffness: 400, damping: 10 }
-easings.springGentle    // { type: 'spring', stiffness: 200, damping: 25 }
+easings.easeInOut; // [0.4, 0, 0.2, 1]
+easings.easeOut; // [0, 0, 0.2, 1]
+easings.easeIn; // [0.4, 0, 1, 1]
+easings.spring; // { type: 'spring', stiffness: 300, damping: 20 }
+easings.springBouncy; // { type: 'spring', stiffness: 400, damping: 10 }
+easings.springGentle; // { type: 'spring', stiffness: 200, damping: 25 }
 ```
 
 ## ♿ Accessibility
@@ -247,7 +260,7 @@ easings.springGentle    // { type: 'spring', stiffness: 200, damping: 25 }
 Respect user's motion preferences:
 
 ```tsx
-import { useReducedMotion } from '@/shared';
+import { useReducedMotion } from "@/shared";
 
 function MyComponent() {
   const shouldReduceMotion = useReducedMotion();
@@ -269,10 +282,11 @@ The hook automatically detects the `prefers-reduced-motion` media query.
 ### Performance
 
 1. **Use GPU-accelerated properties** ✅
+
    ```tsx
    // Good - GPU accelerated
    <motion.div animate={{ x: 100, opacity: 0.5 }} />
-   
+
    // Bad - Causes reflow
    <motion.div animate={{ width: '100%', marginLeft: 20 }} />
    ```
@@ -283,6 +297,7 @@ The hook automatically detects the `prefers-reduced-motion` media query.
    - Special effects: 1s - 2s (counters, etc.)
 
 3. **Enable viewport detection** 👁️
+
    ```tsx
    <FadeIn viewport={true}>  {/* Animates on scroll */}
    ```
@@ -305,17 +320,18 @@ The hook automatically detects the `prefers-reduced-motion` media query.
 Default animation configuration:
 
 ```tsx
-import { defaultAnimationConfig } from '@/shared';
+import { defaultAnimationConfig } from "@/shared";
 
-defaultAnimationConfig.duration      // 0.3s
-defaultAnimationConfig.staggerDelay  // 0.1s
-defaultAnimationConfig.distance      // 20px
-defaultAnimationConfig.scale         // 0.95
+defaultAnimationConfig.duration; // 0.3s
+defaultAnimationConfig.staggerDelay; // 0.1s
+defaultAnimationConfig.distance; // 20px
+defaultAnimationConfig.scale; // 0.95
 ```
 
 ## 📖 Examples
 
 See `examples.tsx` for comprehensive usage examples including:
+
 - Real-world card grids
 - Loading skeletons
 - Status badges
@@ -325,9 +341,10 @@ See `examples.tsx` for comprehensive usage examples including:
 ## 🎯 Common Patterns
 
 ### Card Grid with Stagger
+
 ```tsx
 <Stagger staggerDelay={0.1}>
-  {cards.map(card => (
+  {cards.map((card) => (
     <FadeIn key={card.id} direction="up">
       <HoverLift>
         <Card>{card.content}</Card>
@@ -338,6 +355,7 @@ See `examples.tsx` for comprehensive usage examples including:
 ```
 
 ### Interactive Button
+
 ```tsx
 <HoverScale scale={1.05} glow>
   <TapShrink>
@@ -347,9 +365,10 @@ See `examples.tsx` for comprehensive usage examples including:
 ```
 
 ### Loading Skeleton
+
 ```tsx
 <Shimmer duration={1.5}>
-  <div style={{ height: 20, background: '#e5e7eb' }} />
+  <div style={{ height: 20, background: "#e5e7eb" }} />
 </Shimmer>
 ```
 
@@ -369,6 +388,7 @@ See `examples.tsx` for comprehensive usage examples including:
 ## 📝 Version History
 
 ### v3.0.0 (Current)
+
 - ✅ All core animation components
 - ✅ Specialized animations (Counter, Shimmer, Pulse)
 - ✅ Hover & interaction components

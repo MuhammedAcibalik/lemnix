@@ -25,13 +25,13 @@ const StyledSkipLink = styled("a")(({ theme }) => ({
   borderRadius: "0 0 4px 0",
   boxShadow: theme.shadows[3],
   transition: "top 0.2s ease-in-out",
-  
+
   "&:focus": {
     top: 0,
     outline: `3px solid ${theme.palette.secondary.main}`,
     outlineOffset: "2px",
   },
-  
+
   "&:hover": {
     backgroundColor: theme.palette.primary.dark,
   },
@@ -43,13 +43,13 @@ export interface SkipLinkProps {
    * @default "main-content"
    */
   targetId?: string;
-  
+
   /**
    * Link text
    * @default "Ana içeriğe atla"
    */
   children?: React.ReactNode;
-  
+
   /**
    * Additional class name
    */
@@ -58,11 +58,11 @@ export interface SkipLinkProps {
 
 /**
  * SkipLink Component
- * 
+ *
  * Provides a hidden link that becomes visible when focused via keyboard.
  * Allows users to skip repetitive navigation and jump directly to main content.
  * Essential for accessibility and WCAG 2.1 compliance.
- * 
+ *
  * @example
  * ```tsx
  * // In App component
@@ -77,7 +77,7 @@ export interface SkipLinkProps {
  *     </>
  *   );
  * }
- * 
+ *
  * // With custom target
  * <SkipLink targetId="custom-content">
  *   İçeriğe geç
@@ -91,34 +91,34 @@ export const SkipLink: React.FC<SkipLinkProps> = ({
 }) => {
   const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
-    
+
     const target = document.getElementById(targetId);
     if (target) {
       // Move focus to target element
       target.focus();
-      
+
       // Smooth scroll to target
       target.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
-      
+
       // Ensure target is focusable
       if (!target.hasAttribute("tabindex")) {
         target.setAttribute("tabindex", "-1");
-        
+
         // Remove tabindex after focus for normal tab order
         target.addEventListener(
           "blur",
           () => {
             target.removeAttribute("tabindex");
           },
-          { once: true }
+          { once: true },
         );
       }
     }
   };
-  
+
   return (
     <StyledSkipLink
       href={`#${targetId}`}

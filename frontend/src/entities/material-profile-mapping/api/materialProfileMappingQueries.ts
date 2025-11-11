@@ -34,7 +34,7 @@ export const useProfileSuggestions = (malzemeNo: string) => {
     staleTime: 5 * 60 * 1000, // 5 dakika
     retry: (failureCount, error) => {
       // 404 hatalarında retry yapma (öneri yok demektir)
-      if (error && typeof error === 'object' && 'response' in error) {
+      if (error && typeof error === "object" && "response" in error) {
         const axiosError = error as { response?: { status?: number } };
         if (axiosError.response?.status === 404) {
           return false;

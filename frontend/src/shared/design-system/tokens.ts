@@ -684,8 +684,10 @@ export const shadows = {
     md: "0 6px 12px rgba(15, 23, 42, 0.10), 0 4px 6px rgba(15, 23, 42, 0.06)",
     lg: "0 10px 20px rgba(15, 23, 42, 0.12), 0 6px 12px rgba(15, 23, 42, 0.08)",
     xl: "0 20px 30px rgba(15, 23, 42, 0.15), 0 10px 20px rgba(15, 23, 42, 0.10)",
-    "2xl": "0 30px 50px rgba(15, 23, 42, 0.18), 0 20px 30px rgba(15, 23, 42, 0.12)",
-    "3xl": "0 40px 60px rgba(15, 23, 42, 0.20), 0 25px 35px rgba(15, 23, 42, 0.14)",
+    "2xl":
+      "0 30px 50px rgba(15, 23, 42, 0.18), 0 20px 30px rgba(15, 23, 42, 0.12)",
+    "3xl":
+      "0 40px 60px rgba(15, 23, 42, 0.20), 0 25px 35px rgba(15, 23, 42, 0.14)",
   },
 
   // Crisp shadows - Defined elevation
@@ -702,11 +704,16 @@ export const shadows = {
 
   // Colored shadows - Brand glow
   glow: {
-    primary: "0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(59, 130, 246, 0.2)",
-    secondary: "0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(16, 185, 129, 0.2)",
-    accent: "0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.2)",
-    success: "0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(16, 185, 129, 0.2)",
-    warning: "0 0 20px rgba(245, 158, 11, 0.4), 0 0 40px rgba(245, 158, 11, 0.2)",
+    primary:
+      "0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(59, 130, 246, 0.2)",
+    secondary:
+      "0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(16, 185, 129, 0.2)",
+    accent:
+      "0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.2)",
+    success:
+      "0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(16, 185, 129, 0.2)",
+    warning:
+      "0 0 20px rgba(245, 158, 11, 0.4), 0 0 40px rgba(245, 158, 11, 0.2)",
     error: "0 0 20px rgba(239, 68, 68, 0.4), 0 0 40px rgba(239, 68, 68, 0.2)",
   },
 
@@ -719,16 +726,21 @@ export const shadows = {
 
   // Semantic shadows for components
   button: {
-    default: "0 1px 3px rgba(15, 23, 42, 0.12), 0 1px 2px rgba(15, 23, 42, 0.08)",
+    default:
+      "0 1px 3px rgba(15, 23, 42, 0.12), 0 1px 2px rgba(15, 23, 42, 0.08)",
     hover: "0 4px 8px rgba(15, 23, 42, 0.16), 0 2px 4px rgba(15, 23, 42, 0.12)",
     active: "0 1px 2px rgba(15, 23, 42, 0.12)",
   },
   card: {
-    default: "0 2px 4px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04)",
-    hover: "0 8px 16px rgba(15, 23, 42, 0.12), 0 4px 8px rgba(15, 23, 42, 0.08)",
+    default:
+      "0 2px 4px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04)",
+    hover:
+      "0 8px 16px rgba(15, 23, 42, 0.12), 0 4px 8px rgba(15, 23, 42, 0.08)",
   },
-  dropdown: "0 8px 20px rgba(15, 23, 42, 0.16), 0 4px 10px rgba(15, 23, 42, 0.12)",
-  modal: "0 24px 48px rgba(15, 23, 42, 0.20), 0 12px 24px rgba(15, 23, 42, 0.16)",
+  dropdown:
+    "0 8px 20px rgba(15, 23, 42, 0.16), 0 4px 10px rgba(15, 23, 42, 0.12)",
+  modal:
+    "0 24px 48px rgba(15, 23, 42, 0.20), 0 12px 24px rgba(15, 23, 42, 0.16)",
 } as const;
 
 // ============================================================================
@@ -984,9 +996,9 @@ export const componentSizes = {
     xl: 32,
     "2xl": 40,
     // Backward compatibility aliases
-    small: 16,    // maps to sm
-    medium: 20,   // maps to md  
-    large: 24,    // maps to lg
+    small: 16, // maps to sm
+    medium: 20, // maps to md
+    large: 24, // maps to lg
   },
 } as const;
 
@@ -1027,9 +1039,9 @@ export const componentSizesCompat = {
  */
 export const spacingCompat = {
   ...spacing,
-  small: spacing["4"],   // 16px
-  medium: spacing["6"],  // 24px
-  large: spacing["8"],   // 32px
+  small: spacing["4"], // 16px
+  medium: spacing["6"], // 24px
+  large: spacing["8"], // 32px
 } as const;
 
 // ============================================================================
@@ -1119,7 +1131,7 @@ export const withOpacity = (color: string, opacity: number): string => {
 export const createGradient = (
   color1: string,
   color2: string,
-  angle: number = 135
+  angle: number = 135,
 ): string => {
   return `linear-gradient(${angle}deg, ${color1} 0%, ${color2} 100%)`;
 };

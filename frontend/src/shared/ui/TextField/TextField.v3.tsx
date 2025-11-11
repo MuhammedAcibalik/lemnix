@@ -27,7 +27,8 @@ import { useDesignSystem } from "@/shared/hooks";
 type TextFieldVariant = "standard" | "outlined" | "filled" | "modern";
 type TextFieldSize = "sm" | "md" | "lg";
 
-export interface TextFieldV3Props extends Omit<MuiTextFieldProps, "variant" | "size"> {
+export interface TextFieldV3Props
+  extends Omit<MuiTextFieldProps, "variant" | "size"> {
   readonly variant?: TextFieldVariant;
   readonly size?: TextFieldSize;
   readonly success?: boolean;
@@ -222,7 +223,9 @@ export const TextFieldV3 = forwardRef<HTMLDivElement, TextFieldV3Props>(
             sx={{
               display: "flex",
               alignItems: "center",
-              color: focused ? ds.colors.primary.main : ds.colors.text.secondary,
+              color: focused
+                ? ds.colors.primary.main
+                : ds.colors.text.secondary,
               transition: `color ${ds.duration.fast}ms ${ds.easing.easeOut}`,
             }}
           >
@@ -296,7 +299,14 @@ export const TextFieldV3 = forwardRef<HTMLDivElement, TextFieldV3Props>(
             }}
           >
             {helperText && (
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, flex: 1 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  flex: 1,
+                }}
+              >
                 {helperIcon && (
                   <Box
                     sx={{
@@ -357,32 +367,24 @@ TextFieldV3.displayName = "TextFieldV3";
 /**
  * SearchField - Pre-configured for search inputs
  */
-export const SearchField = forwardRef<HTMLDivElement, Omit<TextFieldV3Props, "type">>(
-  (props, ref) => (
-    <TextFieldV3
-      ref={ref}
-      type="search"
-      placeholder="Search..."
-      {...props}
-    />
-  ),
-);
+export const SearchField = forwardRef<
+  HTMLDivElement,
+  Omit<TextFieldV3Props, "type">
+>((props, ref) => (
+  <TextFieldV3 ref={ref} type="search" placeholder="Search..." {...props} />
+));
 
 SearchField.displayName = "SearchField";
 
 /**
  * PasswordField - Pre-configured for password inputs
  */
-export const PasswordField = forwardRef<HTMLDivElement, Omit<TextFieldV3Props, "type">>(
-  (props, ref) => (
-    <TextFieldV3
-      ref={ref}
-      type="password"
-      showPasswordToggle
-      {...props}
-    />
-  ),
-);
+export const PasswordField = forwardRef<
+  HTMLDivElement,
+  Omit<TextFieldV3Props, "type">
+>((props, ref) => (
+  <TextFieldV3 ref={ref} type="password" showPasswordToggle {...props} />
+));
 
 PasswordField.displayName = "PasswordField";
 

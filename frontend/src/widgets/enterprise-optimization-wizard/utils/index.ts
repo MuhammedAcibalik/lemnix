@@ -101,9 +101,9 @@ export const buildOptimizationRequest = (
   items: OptimizationItem[],
   params: {
     algorithm: string;
-    objectives: Array<{ 
-      type: string; 
-      weight: number; 
+    objectives: Array<{
+      type: string;
+      weight: number;
       priority: string;
       target?: number;
       tolerance?: number;

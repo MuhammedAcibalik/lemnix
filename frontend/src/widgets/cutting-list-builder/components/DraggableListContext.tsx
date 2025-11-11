@@ -28,7 +28,9 @@ import { useDesignSystem } from "@/shared/hooks";
 interface DraggableListContextProps {
   items: Array<{ id: string; [key: string]: unknown }>;
   onReorder: (items: Array<{ id: string; [key: string]: unknown }>) => void;
-  children: (items: Array<{ id: string; [key: string]: unknown }>) => React.ReactNode;
+  children: (
+    items: Array<{ id: string; [key: string]: unknown }>,
+  ) => React.ReactNode;
   renderDragOverlay?: (activeId: string | null) => React.ReactNode;
 }
 
@@ -54,7 +56,7 @@ export const DraggableListContext: React.FC<DraggableListContextProps> = ({
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const handleDragStart = (event: DragStartEvent) => {

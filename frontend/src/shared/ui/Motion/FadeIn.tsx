@@ -31,7 +31,8 @@ export const FadeIn: React.FC<FadeInProps> = ({
     hidden: {
       opacity: 0,
       y: direction === "up" ? distance : direction === "down" ? -distance : 0,
-      x: direction === "left" ? distance : direction === "right" ? -distance : 0,
+      x:
+        direction === "left" ? distance : direction === "right" ? -distance : 0,
     },
     visible: {
       opacity: 1,

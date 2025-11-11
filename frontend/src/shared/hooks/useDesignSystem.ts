@@ -78,7 +78,7 @@ export const useDesignSystem = () => {
    */
   const getComponentSize = (
     component: keyof typeof tokens.componentSizes,
-    size: "xs" | "sm" | "md" | "lg" | "xl"
+    size: "xs" | "sm" | "md" | "lg" | "xl",
   ) => {
     return tokens.componentSizes[component][size];
   };
@@ -149,7 +149,7 @@ export const useDesignSystem = () => {
    * @returns Typography style object or value
    */
   const getTypography = (
-    path: string
+    path: string,
   ): Record<string, unknown> | string | number => {
     const keys = path.split(".");
     let value: NestedObject | string | number = tokens.typography;
@@ -171,7 +171,7 @@ export const useDesignSystem = () => {
    * @returns Transition value as string or object
    */
   const getTransition = (
-    type: keyof typeof tokens.transitions
+    type: keyof typeof tokens.transitions,
   ): string | Record<string, unknown> => {
     return tokens.transitions[type] as string | Record<string, unknown>;
   };
@@ -198,7 +198,7 @@ export const useDesignSystem = () => {
   const createGradient = (
     color1: string,
     color2: string,
-    angle?: number
+    angle?: number,
   ): string => {
     return tokens.createGradient(color1, color2, angle);
   };
@@ -221,7 +221,7 @@ export const useDesignSystem = () => {
    * @example getGlassStyle('light') → { background: '...', border: '...', ... }
    */
   const getGlassStyle = (
-    variant: "light" | "medium" | "strong" | "dark" = "light"
+    variant: "light" | "medium" | "strong" | "dark" = "light",
   ) => {
     return {
       background: tokens.glass[variant].background,
@@ -244,7 +244,7 @@ export const useDesignSystem = () => {
       | "secondary"
       | "success"
       | "warning"
-      | "error" = "default"
+      | "error" = "default",
   ) => {
     return {
       outline: "none",
@@ -255,7 +255,11 @@ export const useDesignSystem = () => {
   return {
     // Raw token values (direct access) with backward compatibility
     colors: tokens.colors,
-    spacing: { ...tokens.spacing, ...tokens.spacingScale, ...tokens.spacingCompat },
+    spacing: {
+      ...tokens.spacing,
+      ...tokens.spacingScale,
+      ...tokens.spacingCompat,
+    },
     typography: tokens.typography,
     componentSizes: tokens.componentSizesCompat,
     shadows: tokens.shadows,

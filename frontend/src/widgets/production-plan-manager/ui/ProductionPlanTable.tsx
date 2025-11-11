@@ -120,7 +120,16 @@ export const ProductionPlanTable: React.FC<ProductionPlanTableProps> = ({
     return (
       <Chip
         label={label}
-        color={color as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
+        color={
+          color as
+            | "default"
+            | "primary"
+            | "secondary"
+            | "error"
+            | "info"
+            | "success"
+            | "warning"
+        }
         size="small"
         variant="outlined"
         sx={{

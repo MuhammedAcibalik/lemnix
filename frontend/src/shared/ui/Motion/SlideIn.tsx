@@ -29,7 +29,8 @@ export const SlideIn: React.FC<SlideInProps> = ({
 }) => {
   const variants: Variants = {
     hidden: {
-      x: direction === "left" ? -distance : direction === "right" ? distance : 0,
+      x:
+        direction === "left" ? -distance : direction === "right" ? distance : 0,
       y: direction === "up" ? distance : direction === "down" ? -distance : 0,
     },
     visible: {

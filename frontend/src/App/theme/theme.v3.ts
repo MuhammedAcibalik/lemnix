@@ -40,7 +40,7 @@ const createMuiShadows = (): [
   string,
   string,
   string,
-  string
+  string,
 ] => {
   return [
     DS.shadows.none,
@@ -309,7 +309,7 @@ export const theme = createTheme({
     fontWeightRegular: DS.fontWeight.normal,
     fontWeightMedium: DS.fontWeight.medium,
     fontWeightBold: DS.fontWeight.bold,
-    
+
     h1: {
       ...DS.typography.heading.h1,
       fontFamily: DS.fontFamily.display,
@@ -394,7 +394,7 @@ export const theme = createTheme({
           textTransform: "none",
           transition: DS.transitions.all,
           letterSpacing: DS.letterSpacing.wide,
-          
+
           "&:focus-visible": {
             outline: `2px solid ${DS.colors.primary.main}`,
             outlineOffset: 2,
@@ -413,7 +413,7 @@ export const theme = createTheme({
           boxShadow: DS.shadows.button.default,
           background: DS.gradients.primary.default,
           color: DS.colors.primary.contrast,
-          
+
           "&:hover": {
             boxShadow: DS.shadows.button.hover,
             background: DS.gradients.primary.soft,
@@ -431,7 +431,7 @@ export const theme = createTheme({
         },
         containedSecondary: {
           background: DS.gradients.secondary.default,
-          
+
           "&:hover": {
             background: DS.gradients.secondary.soft,
           },
@@ -440,7 +440,7 @@ export const theme = createTheme({
           borderWidth: 2,
           borderColor: DS.colors.primary.main,
           backgroundColor: "transparent",
-          
+
           "&:hover": {
             borderWidth: 2,
             borderColor: DS.colors.primary.dark,
@@ -471,7 +471,7 @@ export const theme = createTheme({
           boxShadow: DS.shadows.card.default,
           transition: DS.transitions.all,
           overflow: "hidden",
-          
+
           "&:hover": {
             boxShadow: DS.shadows.card.hover,
             transform: "translateY(-2px)",
@@ -527,7 +527,7 @@ export const theme = createTheme({
             borderRadius: DS.borderRadius.input,
             transition: DS.transitions.all,
             backgroundColor: DS.colors.background.paper,
-            
+
             "& fieldset": {
               borderColor: DS.colors.border.default,
               borderWidth: 1,
@@ -547,7 +547,7 @@ export const theme = createTheme({
           "& .MuiInputLabel-root": {
             color: DS.colors.text.secondary,
             fontWeight: DS.fontWeight.medium,
-            
+
             "&.Mui-focused": {
               color: DS.colors.primary.main,
             },
@@ -642,13 +642,13 @@ export const theme = createTheme({
           margin: `${DS.spacing["1"]}px 0`,
           padding: `${DS.spacing["2"]}px ${DS.spacing["3"]}px`,
           transition: DS.transitions.fast,
-          
+
           "&:hover": {
             backgroundColor: alpha(DS.colors.primary.main, 0.08),
           },
           "&.Mui-selected": {
             backgroundColor: alpha(DS.colors.primary.main, 0.12),
-            
+
             "&:hover": {
               backgroundColor: alpha(DS.colors.primary.main, 0.16),
             },
@@ -759,7 +759,7 @@ export const theme = createTheme({
           fontSize: DS.fontSize.sm,
           minHeight: 48,
           transition: DS.transitions.fast,
-          
+
           "&:hover": {
             color: DS.colors.primary.main,
             backgroundColor: alpha(DS.colors.primary.main, 0.04),
@@ -831,7 +831,7 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: DS.borderRadius.sm,
-          
+
           "&:hover": {
             backgroundColor: alpha(DS.colors.primary.main, 0.08),
           },

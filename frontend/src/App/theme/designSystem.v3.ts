@@ -257,6 +257,12 @@ export const colors = {
     light: semanticColors.info[400],
     dark: semanticColors.info[800],
   },
+  support: {
+    ...semanticColors.info,
+    main: semanticColors.info[600],
+    light: semanticColors.info[400],
+    dark: semanticColors.info[800],
+  },
 
   // Neutrals
   neutral: neutralColors,
@@ -481,6 +487,11 @@ export const typography = {
     },
     xs: {
       fontSize: fontSize.xs,
+      fontWeight: fontWeight.normal,
+      lineHeight: lineHeight.normal,
+    },
+    small: {
+      fontSize: fontSize.sm,
       fontWeight: fontWeight.normal,
       lineHeight: lineHeight.normal,
     },
@@ -896,6 +907,10 @@ export const componentSizes = {
     lg: 24,
     xl: 32,
     "2xl": 40,
+    small: 16,
+    medium: 20,
+    large: 24,
+    xlarge: 32,
   },
 } as const;
 

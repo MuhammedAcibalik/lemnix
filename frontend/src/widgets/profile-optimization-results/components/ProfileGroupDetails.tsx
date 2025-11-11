@@ -60,8 +60,7 @@ export const ProfileGroupDetails: React.FC<ProfileGroupDetailsProps> = ({
                       ),
                     )
                     ?.reduce(
-                      (sum: number, cut: Cut) =>
-                        sum + (cut.usedLength || 0),
+                      (sum: number, cut: Cut) => sum + (cut.usedLength || 0),
                       0,
                     ) || 0,
                 waste:
@@ -92,8 +91,7 @@ export const ProfileGroupDetails: React.FC<ProfileGroupDetailsProps> = ({
                       ),
                     )
                     ?.reduce(
-                      (sum: number, cut: Cut) =>
-                        sum + (cut.segmentCount || 0),
+                      (sum: number, cut: Cut) => sum + (cut.segmentCount || 0),
                       0,
                     ) || 0,
                 efficiency: group.efficiency

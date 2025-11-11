@@ -12,4 +12,3 @@ export {
   OfflineEmptyState,
 } from "./EmptyState";
 export type { EmptyStateProps } from "./EmptyState";
-
