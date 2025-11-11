@@ -10,6 +10,7 @@ import { useCallback, useEffect, useRef } from "react";
  * Debounce function - delays execution until after wait milliseconds
  * have elapsed since the last invocation
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function debounce<T extends (...args: any[]) => any>(
   fn: T,
   delay: number
@@ -29,6 +30,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttle function - ensures function is called at most once per limit milliseconds
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function throttle<T extends (...args: any[]) => any>(
   fn: T,
   limit: number
@@ -86,6 +88,7 @@ export function scheduleIdleTask(
   }
   
   // Use type assertion to work around TypeScript control flow narrowing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const globalWindow = window as any;
   
   if ("requestIdleCallback" in globalWindow) {
@@ -103,6 +106,7 @@ export function cancelIdleTask(id: number): void {
   if (typeof window === "undefined") return;
   
   // Use type assertion to work around TypeScript control flow narrowing
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const globalWindow = window as any;
   
   if ("cancelIdleCallback" in globalWindow) {
@@ -137,6 +141,7 @@ export function useDebounce<T>(value: T, delay: number): T {
  * Hook for debounced callbacks
  * Returns a memoized debounced version of the callback
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useDebouncedCallback<T extends (...args: any[]) => any>(
   callback: T,
   delay: number
@@ -147,6 +152,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
     callbackRef.current = callback;
   }, [callback]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useCallback(
     debounce((...args: Parameters<T>) => {
       callbackRef.current(...args);
@@ -159,6 +165,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
  * Hook for throttled callbacks
  * Returns a memoized throttled version of the callback
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useThrottledCallback<T extends (...args: any[]) => any>(
   callback: T,
   limit: number
@@ -169,6 +176,7 @@ export function useThrottledCallback<T extends (...args: any[]) => any>(
     callbackRef.current = callback;
   }, [callback]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useCallback(
     throttle((...args: Parameters<T>) => {
       callbackRef.current(...args);
