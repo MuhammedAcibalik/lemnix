@@ -1,6 +1,7 @@
 {
   "name": "lemnix-frontend",
   "version": "1.0.0",
+  "type": "module",
   "description": "LEMNİX Frontend - Alüminyum Kesim Optimizasyonu",
   "private": true,
   "engines": {

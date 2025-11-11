@@ -231,7 +231,7 @@ export const colors = {
     dark: brandColors.accent[800],
     contrast: "#ffffff",
   },
-  
+
   // Semantic
   success: {
     ...semanticColors.success,
@@ -257,12 +257,12 @@ export const colors = {
     light: semanticColors.info[400],
     dark: semanticColors.info[800],
   },
-  
+
   // Neutrals
   neutral: neutralColors,
   slate: slateColors,
   grey: slateColors, // Alias for Material-UI
-  
+
   // Surfaces
   surface: {
     base: "#ffffff",
@@ -272,7 +272,7 @@ export const colors = {
     overlay: "rgba(15, 23, 42, 0.5)",
     inverse: slateColors[900],
   },
-  
+
   // Backgrounds
   background: {
     default: slateColors[50],
@@ -280,7 +280,7 @@ export const colors = {
     subtle: slateColors[100],
     muted: slateColors[200],
   },
-  
+
   // Text
   text: {
     primary: slateColors[900],
@@ -291,7 +291,7 @@ export const colors = {
     link: brandColors.primary[600],
     linkHover: brandColors.primary[800],
   },
-  
+
   // Borders
   border: {
     default: slateColors[200],
@@ -299,7 +299,7 @@ export const colors = {
     subtle: slateColors[50],
     strong: slateColors[300],
   },
-  
+
   // Functional
   functional: functionalColors,
 } as const;
@@ -376,7 +376,7 @@ export const typography = {
   fontWeight,
   lineHeight,
   letterSpacing,
-  
+
   // Display styles - Hero text
   display: {
     "2xl": {
@@ -416,7 +416,7 @@ export const typography = {
       letterSpacing: letterSpacing.normal,
     },
   },
-  
+
   // Heading styles
   heading: {
     h1: {
@@ -456,7 +456,7 @@ export const typography = {
       letterSpacing: letterSpacing.normal,
     },
   },
-  
+
   // Body styles
   body: {
     xl: {
@@ -485,7 +485,7 @@ export const typography = {
       lineHeight: lineHeight.normal,
     },
   },
-  
+
   // Label styles
   label: {
     lg: {
@@ -507,7 +507,7 @@ export const typography = {
       textTransform: "uppercase" as const,
     },
   },
-  
+
   // Legacy Material-UI compatibility
   h1: {
     fontSize: fontSize["4xl"],
@@ -601,7 +601,7 @@ export const borderRadius = {
 
 export const shadows = {
   none: "none",
-  
+
   // Soft shadows - Subtle elevation
   soft: {
     xs: "0 1px 2px rgba(15, 23, 42, 0.04)",
@@ -610,9 +610,10 @@ export const shadows = {
     md: "0 6px 12px rgba(15, 23, 42, 0.10), 0 4px 6px rgba(15, 23, 42, 0.06)",
     lg: "0 10px 20px rgba(15, 23, 42, 0.12), 0 6px 12px rgba(15, 23, 42, 0.08)",
     xl: "0 20px 30px rgba(15, 23, 42, 0.15), 0 10px 20px rgba(15, 23, 42, 0.10)",
-    "2xl": "0 30px 50px rgba(15, 23, 42, 0.18), 0 20px 30px rgba(15, 23, 42, 0.12)",
+    "2xl":
+      "0 30px 50px rgba(15, 23, 42, 0.18), 0 20px 30px rgba(15, 23, 42, 0.12)",
   },
-  
+
   // Crisp shadows - Defined elevation
   crisp: {
     xs: "0 1px 3px rgba(15, 23, 42, 0.12)",
@@ -623,36 +624,57 @@ export const shadows = {
     xl: "0 16px 32px rgba(15, 23, 42, 0.32)",
     "2xl": "0 24px 48px rgba(15, 23, 42, 0.36)",
   },
-  
+
   // Colored shadows - Brand glow
   glow: {
-    primary: "0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(59, 130, 246, 0.2)",
-    secondary: "0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(16, 185, 129, 0.2)",
-    accent: "0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.2)",
-    success: "0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(16, 185, 129, 0.2)",
-    warning: "0 0 20px rgba(245, 158, 11, 0.4), 0 0 40px rgba(245, 158, 11, 0.2)",
+    primary:
+      "0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(59, 130, 246, 0.2)",
+    secondary:
+      "0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(16, 185, 129, 0.2)",
+    accent:
+      "0 0 20px rgba(168, 85, 247, 0.4), 0 0 40px rgba(168, 85, 247, 0.2)",
+    success:
+      "0 0 20px rgba(16, 185, 129, 0.4), 0 0 40px rgba(16, 185, 129, 0.2)",
+    warning:
+      "0 0 20px rgba(245, 158, 11, 0.4), 0 0 40px rgba(245, 158, 11, 0.2)",
     error: "0 0 20px rgba(239, 68, 68, 0.4), 0 0 40px rgba(239, 68, 68, 0.2)",
   },
-  
+
   // Inner shadows
   inner: {
     xs: "inset 0 1px 2px rgba(15, 23, 42, 0.08)",
     sm: "inset 0 2px 4px rgba(15, 23, 42, 0.12)",
     base: "inset 0 3px 6px rgba(15, 23, 42, 0.16)",
   },
-  
+
   // Semantic shadows
   button: {
-    default: "0 1px 3px rgba(15, 23, 42, 0.12), 0 1px 2px rgba(15, 23, 42, 0.08)",
+    default:
+      "0 1px 3px rgba(15, 23, 42, 0.12), 0 1px 2px rgba(15, 23, 42, 0.08)",
     hover: "0 4px 8px rgba(15, 23, 42, 0.16), 0 2px 4px rgba(15, 23, 42, 0.12)",
     active: "0 1px 2px rgba(15, 23, 42, 0.12)",
   },
   card: {
-    default: "0 2px 4px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04)",
-    hover: "0 8px 16px rgba(15, 23, 42, 0.12), 0 4px 8px rgba(15, 23, 42, 0.08)",
+    default:
+      "0 2px 4px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04)",
+    hover:
+      "0 8px 16px rgba(15, 23, 42, 0.12), 0 4px 8px rgba(15, 23, 42, 0.08)",
   },
-  dropdown: "0 8px 20px rgba(15, 23, 42, 0.16), 0 4px 10px rgba(15, 23, 42, 0.12)",
-  modal: "0 24px 48px rgba(15, 23, 42, 0.20), 0 12px 24px rgba(15, 23, 42, 0.16)",
+  dropdown:
+    "0 8px 20px rgba(15, 23, 42, 0.16), 0 4px 10px rgba(15, 23, 42, 0.12)",
+  modal:
+    "0 24px 48px rgba(15, 23, 42, 0.20), 0 12px 24px rgba(15, 23, 42, 0.16)",
+
+  // Shorthand aliases for common usage
+  xs: "0 1px 2px rgba(15, 23, 42, 0.04)",
+  sm: "0 2px 4px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04)",
+  md: "0 6px 12px rgba(15, 23, 42, 0.10), 0 4px 6px rgba(15, 23, 42, 0.06)",
+  lg: "0 10px 20px rgba(15, 23, 42, 0.12), 0 6px 12px rgba(15, 23, 42, 0.08)",
+  xl: "0 20px 30px rgba(15, 23, 42, 0.15), 0 10px 20px rgba(15, 23, 42, 0.10)",
+  "2xl":
+    "0 30px 50px rgba(15, 23, 42, 0.18), 0 20px 30px rgba(15, 23, 42, 0.12)",
+  "3xl":
+    "0 40px 60px rgba(15, 23, 42, 0.20), 0 30px 50px rgba(15, 23, 42, 0.15)",
 } as const;
 
 // ============================================================================
@@ -679,7 +701,7 @@ export const gradients = {
     soft: `linear-gradient(135deg, ${brandColors.accent[400]} 0%, ${brandColors.accent[500]} 100%)`,
     subtle: `linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%)`,
   },
-  
+
   // Mesh gradients - Background overlays
   mesh: {
     primary: `
@@ -697,20 +719,20 @@ export const gradients = {
       radial-gradient(ellipse at 100% 100%, ${brandColors.accent[500]}15 0px, transparent 50%)
     `,
   },
-  
+
   // Surface gradients
   surface: {
     white: `linear-gradient(180deg, #ffffff 0%, ${slateColors[50]} 100%)`,
     elevated: `linear-gradient(180deg, ${slateColors[50]} 0%, ${slateColors[100]} 100%)`,
     subtle: `linear-gradient(180deg, ${slateColors[100]} 0%, ${slateColors[200]} 100%)`,
   },
-  
+
   // Semantic gradients
   success: `linear-gradient(135deg, ${semanticColors.success[600]} 0%, ${semanticColors.success[500]} 100%)`,
   warning: `linear-gradient(135deg, ${semanticColors.warning[500]} 0%, ${semanticColors.warning[400]} 100%)`,
   error: `linear-gradient(135deg, ${semanticColors.error[500]} 0%, ${semanticColors.error[600]} 100%)`,
   info: `linear-gradient(135deg, ${semanticColors.info[600]} 0%, ${semanticColors.info[500]} 100%)`,
-  
+
   // Special gradients
   glass: `linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)`,
   shimmer: `linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.6) 50%, transparent 100%)`,
@@ -720,6 +742,11 @@ export const gradients = {
     ${semanticColors.warning[500]} 50%, 
     ${brandColors.secondary[500]} 75%, 
     ${brandColors.primary[500]} 100%)`,
+
+  // Additional hover and premium gradients
+  primaryHover: `linear-gradient(135deg, ${brandColors.primary[600]} 0%, ${brandColors.accent[500]} 100%)`,
+  secondaryReverse: `linear-gradient(135deg, ${brandColors.secondary[500]} 0%, ${brandColors.secondary[600]} 100%)`,
+  premium: `linear-gradient(135deg, ${brandColors.accent[600]} 0%, ${brandColors.primary[600]} 50%, ${brandColors.secondary[600]} 100%)`,
 } as const;
 
 // ============================================================================
@@ -750,13 +777,13 @@ export const easing = {
 export const transitions = {
   duration,
   easing,
-  
+
   // Preset transitions
   fast: `${duration.fast}ms ${easing.easeOut}`,
   base: `${duration.base}ms ${easing.easeInOut}`,
   slow: `${duration.slow}ms ${easing.easeInOut}`,
   spring: `${duration.moderate}ms ${easing.spring}`,
-  
+
   // Property-specific
   all: `all ${duration.base}ms ${easing.easeInOut}`,
   transform: `transform ${duration.base}ms ${easing.easeOut}`,
@@ -933,7 +960,7 @@ export const withOpacity = (color: string, opacity: number): string => {
 export const createGradient = (
   color1: string,
   color2: string,
-  angle: number = 135
+  angle: number = 135,
 ): string => {
   return `linear-gradient(${angle}deg, ${color1} 0%, ${color2} 100%)`;
 };
