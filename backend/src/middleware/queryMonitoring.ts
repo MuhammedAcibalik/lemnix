@@ -8,6 +8,8 @@
 import { prisma } from "../config/database";
 import { logger } from "../services/logger";
 
+let hasLoggedMonitoringSkip = false;
+
 interface SlowQuery {
   readonly query: string;
   readonly mean_exec_time: number;
@@ -109,14 +111,82 @@ export async function getDatabaseStats(): Promise<{
  * Start query monitoring
  * Runs every 5 minutes
  */
-export function startQueryMonitoring(): void {
-  // Run immediately
-  logSlowQueries();
+function logMonitoringSkip(reason: string): void {
+  if (!hasLoggedMonitoringSkip) {
+    logger.info("Query monitoring skipped", { reason });
+    hasLoggedMonitoringSkip = true;
+  }
+}
 
-  // Run every 5 minutes
-  setInterval(logSlowQueries, 5 * 60 * 1000);
+function isPostgresDatabase(databaseUrl: string | undefined): boolean {
+  if (!databaseUrl) {
+    return false;
+  }
+
+  try {
+    const parsedUrl = new URL(databaseUrl);
+    return (
+      parsedUrl.protocol === "postgres:" || parsedUrl.protocol === "postgresql:"
+    );
+  } catch (error) {
+    logger.debug("Failed to parse DATABASE_URL for query monitoring", {
+      error,
+    });
+    return false;
+  }
+}
+
+async function hasPgStatStatementsExtension(): Promise<boolean> {
+  try {
+    const [result] = await prisma.$queryRaw<Array<{ enabled: boolean }>>`
+      SELECT EXISTS (
+        SELECT 1 FROM pg_extension WHERE extname = 'pg_stat_statements'
+      ) as enabled;
+    `;
+
+    return Boolean(result?.enabled);
+  } catch (error) {
+    logger.debug("Failed to verify pg_stat_statements availability", { error });
+    return false;
+  }
+}
+
+function isQueryMonitoringExplicitlyDisabled(): boolean {
+  const flag = process.env.ENABLE_QUERY_MONITORING;
+  if (!flag) {
+    return false;
+  }
+
+  return ["false", "0", "off"].includes(flag.toLowerCase());
+}
+
+export async function startQueryMonitoring(): Promise<boolean> {
+  if (isQueryMonitoringExplicitlyDisabled()) {
+    logMonitoringSkip("disabled via ENABLE_QUERY_MONITORING environment flag");
+    return false;
+  }
+
+  if (!isPostgresDatabase(process.env.DATABASE_URL)) {
+    logMonitoringSkip("non-PostgreSQL database detected");
+    return false;
+  }
+
+  if (!(await hasPgStatStatementsExtension())) {
+    logMonitoringSkip("pg_stat_statements extension is not available");
+    return false;
+  }
+
+  await logSlowQueries();
+
+  setInterval(
+    () => {
+      void logSlowQueries();
+    },
+    5 * 60 * 1000,
+  );
 
   logger.info("Query monitoring started (interval: 5 minutes)");
+  return true;
 }
 
 /**

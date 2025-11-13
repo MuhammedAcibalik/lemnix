@@ -1,11 +1,11 @@
-import dotenv from 'dotenv';
-import { createServer } from 'http';
-import { Server as SocketIOServer } from 'socket.io';
-import { createApp } from './server/createApp';
-import { env } from './config/env';
-import { databaseManager } from './config/database';
-import { logger } from './services/logger';
-import { startQueryMonitoring } from './middleware/queryMonitoring';
+import dotenv from "dotenv";
+import { createServer } from "http";
+import { Server as SocketIOServer } from "socket.io";
+import { createApp } from "./server/createApp";
+import { env } from "./config/env";
+import { databaseManager } from "./config/database";
+import { logger } from "./services/logger";
+import { startQueryMonitoring } from "./middleware/queryMonitoring";
 
 dotenv.config();
 
@@ -14,57 +14,65 @@ async function bootstrap(): Promise<void> {
   const io = createSocketServer(httpServer);
   const app = createApp({ io });
 
-  httpServer.on('request', app);
+  httpServer.on("request", app);
 
   httpServer.listen(env.PORT, async () => {
     try {
       await databaseManager.connect();
       await databaseManager.initialize();
-      startQueryMonitoring();
+      await startQueryMonitoring();
 
-      logger.info('LEMNİX Backend API running', {
+      logger.info("LEMNİX Backend API running", {
         url: `http://localhost:${env.PORT}`,
         environment: env.NODE_ENV,
-        frontendUrl: env.FRONTEND_URL
+        frontendUrl: env.FRONTEND_URL,
       });
     } catch (error) {
-      logger.error('Failed to start server', error as Error);
+      logger.error("Failed to start server", error as Error);
       process.exit(1);
     }
   });
 
-  httpServer.on('error', (error: NodeJS.ErrnoException) => {
-    if (error.syscall !== 'listen') {
+  httpServer.on("error", (error: NodeJS.ErrnoException) => {
+    if (error.syscall !== "listen") {
       throw error;
     }
 
     switch (error.code) {
-      case 'EACCES':
-        logger.error('Port requires elevated privileges', error, { port: env.PORT });
+      case "EACCES":
+        logger.error("Port requires elevated privileges", error, {
+          port: env.PORT,
+        });
         process.exit(1);
-      case 'EADDRINUSE':
-        logger.error('Port is already in use', error, { port: env.PORT });
+        return;
+      case "EADDRINUSE":
+        logger.error("Port is already in use", error, { port: env.PORT });
         process.exit(1);
+        return;
       default:
         throw error;
     }
   });
 
-  process.on('SIGTERM', handleShutdown);
-  process.on('SIGINT', handleShutdown);
+  process.on("SIGTERM", handleShutdown);
+  process.on("SIGINT", handleShutdown);
 }
 
-function createSocketServer(server: ReturnType<typeof createServer>): SocketIOServer {
+function createSocketServer(
+  server: ReturnType<typeof createServer>,
+): SocketIOServer {
   return new SocketIOServer(server, {
     cors: {
       origin: env.FRONTEND_URL,
-      methods: ['GET', 'POST']
-    }
+      methods: ["GET", "POST"],
+    },
   });
 }
 
 function handleShutdown(signal: NodeJS.Signals): void {
-  logger.info(`${signal} signal received`, { action: 'shutting_down_gracefully' });
+  logger.info(`${signal} signal received`, {
+    action: "shutting_down_gracefully",
+  });
   process.exit(0);
 }
 
