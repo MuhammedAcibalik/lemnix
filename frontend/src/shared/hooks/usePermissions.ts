@@ -11,6 +11,8 @@
 
 import { useState, useEffect, useMemo } from "react";
 
+import { api } from "@/shared/api/client";
+
 /**
  * Permission enum (aligned with backend)
  */
@@ -91,14 +93,66 @@ export interface UsePermissionsReturn {
 /**
  * Get mock user for development
  */
-function getMockUser(): User {
-  // In development, return admin user with all permissions
+export function getMockUser(): User {
+  // Mirrors backend development token (planner role with limited permissions)
   return {
     userId: "dev-user",
-    role: UserRole.ADMIN,
-    permissions: Object.values(Permission),
+    role: UserRole.PLANNER,
+    permissions: [
+      Permission.VIEW_CUTTING_PLANS,
+      Permission.VIEW_OPTIMIZATION_RESULTS,
+    ],
     sessionId: "dev-session",
   };
+}
+
+interface AuthMeResponse {
+  readonly userId?: string;
+  readonly role?: string;
+  readonly permissions?: ReadonlyArray<string>;
+  readonly sessionId?: string;
+}
+
+function isValidRole(role: string | undefined): role is UserRole {
+  return Object.values(UserRole).includes(role as UserRole);
+}
+
+function isValidPermission(
+  permission: string | undefined,
+): permission is Permission {
+  return (
+    typeof permission === "string" &&
+    Object.values(Permission).includes(permission as Permission)
+  );
+}
+
+function normalizeUser(response: AuthMeResponse): User {
+  const role = isValidRole(response.role) ? response.role : UserRole.VIEWER;
+  const permissions = Array.isArray(response.permissions)
+    ? response.permissions.filter(isValidPermission)
+    : [];
+
+  return {
+    userId: response.userId ?? "anonymous",
+    role,
+    permissions: permissions.length > 0 ? permissions : ROLE_PERMISSIONS[role],
+    sessionId: response.sessionId,
+  };
+}
+
+async function requestUserFromAuthEndpoint(): Promise<User | null> {
+  try {
+    const { data } = await api.get<AuthMeResponse>("/auth/me");
+    return normalizeUser(data);
+  } catch (error) {
+    if (import.meta.env.DEV) {
+      console.warn(
+        "[PERMISSIONS] /auth/me request failed, using fallback",
+        error,
+      );
+    }
+    return null;
+  }
 }
 
 /**
@@ -106,26 +160,21 @@ function getMockUser(): User {
  * TODO: Implement actual API call when auth is ready
  */
 async function fetchUserPermissions(): Promise<User | null> {
-  try {
-    // Development mode: Return mock user
-    if (import.meta.env.MODE === "development") {
-      return getMockUser();
-    }
+  const userFromApi = await requestUserFromAuthEndpoint();
 
-    // Production: Fetch from backend
-    // const response = await api.get<User>('/auth/me');
-    // return response.data;
-
-    // Fallback: Return viewer role
-    return {
-      userId: "anonymous",
-      role: UserRole.VIEWER,
-      permissions: ROLE_PERMISSIONS[UserRole.VIEWER],
-    };
-  } catch (error) {
-    console.error("[PERMISSIONS] Failed to fetch user permissions:", error);
-    return null;
+  if (userFromApi) {
+    return userFromApi;
   }
+
+  if (import.meta.env.MODE === "development") {
+    return getMockUser();
+  }
+
+  return {
+    userId: "anonymous",
+    role: UserRole.VIEWER,
+    permissions: ROLE_PERMISSIONS[UserRole.VIEWER],
+  };
 }
 
 /**
