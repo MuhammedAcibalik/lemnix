@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import { apiClient } from "@/shared/api/client";
+import { api, apiClient } from "@/shared/api/client";
 import type {
   ProductionPlan,
   ProductionPlanItem,
@@ -38,6 +38,23 @@ export class ProductionPlanApi {
 
     const response = await apiClient.post<UploadProductionPlanResponse>(
       `${this.baseUrl}/upload`,
+      formData,
+    );
+
+    return response.data;
+  }
+
+  /**
+   * Upload production plan with progressive processing support
+   */
+  async uploadProductionPlanProgressive(
+    file: File,
+  ): Promise<UploadProductionPlanResponse> {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await api.post<UploadProductionPlanResponse>(
+      `${this.baseUrl}/upload-progressive`,
       formData,
     );
 

@@ -14,6 +14,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { io, Socket } from "socket.io-client";
 import { productionPlanApi } from "@/entities/production-plan/api/productionPlanApi";
+import type { UploadProductionPlanResponse } from "@/entities/production-plan/model/types";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -50,7 +51,7 @@ export interface UseProgressiveUploadReturn {
   progress: UploadProgress;
   isUploading: boolean;
   error: string | null;
-  result: unknown | null;
+  result: UploadProductionPlanResponse | null;
   reset: () => void;
 }
 
@@ -75,7 +76,9 @@ export function useProgressiveUpload(): UseProgressiveUploadReturn {
 
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<unknown | null>(null);
+  const [result, setResult] = useState<UploadProductionPlanResponse | null>(
+    null,
+  );
 
   // Initialize WebSocket connection
   useEffect(() => {
@@ -129,71 +132,58 @@ export function useProgressiveUpload(): UseProgressiveUploadReturn {
   }, []);
 
   // Upload mutation
-  const uploadMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("file", file);
+  const uploadMutation = useMutation<UploadProductionPlanResponse, Error, File>(
+    {
+      mutationFn: (file: File) =>
+        productionPlanApi.uploadProductionPlanProgressive(file),
+      onMutate: () => {
+        setError(null);
+        setResult(null);
+        setIsUploading(true);
+        setProgress((prev) => ({
+          ...prev,
+          isActive: true,
+          stage: "starting",
+          percentage: 0,
+          message: "Yükleme başlıyor...",
+          startTime: Date.now(),
+        }));
+      },
+      onSuccess: (data) => {
+        setResult(data);
+        setProgress((prev) => ({
+          ...prev,
+          isActive: false,
+          stage: "complete",
+          percentage: 100,
+          message: "Yükleme tamamlandı!",
+          duration: Date.now() - prev.startTime,
+        }));
 
-      const response = await fetch("/api/production-plan/upload-progressive", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || "mock-dev-token-lemnix-2025"}`,
-        },
-        body: formData,
-      });
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ["production-plan"] });
+        queryClient.invalidateQueries({
+          queryKey: ["production-plan-metrics"],
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Upload failed");
-      }
-
-      return response.json();
+        console.log("✅ Progressive upload completed", data);
+      },
+      onError: (error) => {
+        setError(error.message);
+        setProgress((prev) => ({
+          ...prev,
+          isActive: false,
+          stage: "error",
+          message: `Hata: ${error.message}`,
+          duration: Date.now() - prev.startTime,
+        }));
+        console.error("❌ Progressive upload failed", error);
+      },
+      onSettled: () => {
+        setIsUploading(false);
+      },
     },
-    onMutate: () => {
-      setError(null);
-      setResult(null);
-      setIsUploading(true);
-      setProgress((prev) => ({
-        ...prev,
-        isActive: true,
-        stage: "starting",
-        percentage: 0,
-        message: "Yükleme başlıyor...",
-        startTime: Date.now(),
-      }));
-    },
-    onSuccess: (data) => {
-      setResult(data);
-      setProgress((prev) => ({
-        ...prev,
-        isActive: false,
-        stage: "complete",
-        percentage: 100,
-        message: "Yükleme tamamlandı!",
-        duration: Date.now() - prev.startTime,
-      }));
-
-      // Invalidate queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["production-plan"] });
-      queryClient.invalidateQueries({ queryKey: ["production-plan-metrics"] });
-
-      console.log("✅ Progressive upload completed", data);
-    },
-    onError: (error) => {
-      setError(error.message);
-      setProgress((prev) => ({
-        ...prev,
-        isActive: false,
-        stage: "error",
-        message: `Hata: ${error.message}`,
-        duration: Date.now() - prev.startTime,
-      }));
-      console.error("❌ Progressive upload failed", error);
-    },
-    onSettled: () => {
-      setIsUploading(false);
-    },
-  });
+  );
 
   // Upload file function
   const uploadFile = useCallback(
