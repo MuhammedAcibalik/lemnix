@@ -129,6 +129,7 @@ export class CuttingListController {
   private readonly profileSuggestionService: ProfileSuggestionService;
   private readonly quantityCalculationService: QuantityCalculationService;
   // ⚠️ DEPRECATED: private readonly enterpriseProfileService: EnterpriseProfileSuggestionService;
+  private static processListenersRegistered = false;
 
   constructor() {
     // Create storage directory if it doesn't exist
@@ -154,18 +155,24 @@ export class CuttingListController {
     }
     this.pdfExportService = PDFExportService.getInstance();
 
-    // Graceful shutdown için cleanup handler
-    process.on("SIGINT", async () => {
-      console.log("PDF Export Service cleanup...");
-      await this.pdfExportService.cleanup();
-      process.exit(0);
-    });
+    if (!CuttingListController.processListenersRegistered) {
+      const pdfExportService = this.pdfExportService;
 
-    process.on("SIGTERM", async () => {
-      console.log("PDF Export Service cleanup...");
-      await this.pdfExportService.cleanup();
-      process.exit(0);
-    });
+      // Graceful shutdown için cleanup handler
+      process.on("SIGINT", async () => {
+        console.log("PDF Export Service cleanup...");
+        await pdfExportService.cleanup();
+        process.exit(0);
+      });
+
+      process.on("SIGTERM", async () => {
+        console.log("PDF Export Service cleanup...");
+        await pdfExportService.cleanup();
+        process.exit(0);
+      });
+
+      CuttingListController.processListenersRegistered = true;
+    }
     this.excelExportService = new ExcelExportService();
     this.profileSuggestionService = new ProfileSuggestionService();
     this.quantityCalculationService = new QuantityCalculationService();
@@ -3003,6 +3010,16 @@ export class CuttingListController {
 /**
  * Global error handler for cutting list routes
  */
+let cuttingListControllerSingleton: CuttingListController | null = null;
+
+export const getCuttingListController = (): CuttingListController => {
+  if (!cuttingListControllerSingleton) {
+    cuttingListControllerSingleton = new CuttingListController();
+  }
+
+  return cuttingListControllerSingleton;
+};
+
 export const cuttingListErrorHandler = (
   error: Error,
   _req: Request,
@@ -3796,7 +3813,7 @@ export const getAvailableSizes = async (req: Request, res: Response) => {
     }
 
     // Get all cutting lists from the controller instance
-    const controller = new CuttingListController();
+    const controller = getCuttingListController();
     const cuttingLists = controller.getAllCuttingListsData();
 
     console.log("📊 Backend: Found cutting lists:", cuttingLists.length);
@@ -3865,7 +3882,7 @@ export const getProfileCombinations = async (req: Request, res: Response) => {
     }
 
     // Get all cutting lists from the controller instance
-    const controller = new CuttingListController();
+    const controller = getCuttingListController();
     const cuttingLists = controller.getAllCuttingListsData();
 
     // Find matching items
