@@ -224,6 +224,8 @@ function registerRoutes(app: Express, io: SocketIOServer): void {
   app.use("/api/suggestions", suggestionRoutes);
   app.use("/api/production-plan", productionPlanRoutes);
   app.use("/api/production-plan", createProgressiveRoutes(io));
+  app.use("/api/production-plans", productionPlanRoutes);
+  app.use("/api/production-plans", createProgressiveRoutes(io));
   app.use("/api/material-profile-mappings", materialProfileMappingRoutes);
   app.use("/api/profile-management", profileManagementRoutes);
 }

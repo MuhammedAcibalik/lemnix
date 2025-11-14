@@ -11,7 +11,11 @@ import {
   NextFunction,
   RequestHandler,
 } from "express";
-import { EnterpriseOptimizationController } from "../controllers/enterpriseOptimizationController";
+import {
+  EnterpriseOptimizationController,
+  SUPPORTED_OPTIMIZATION_ALGORITHMS,
+  SupportedOptimizationAlgorithm,
+} from "../controllers/enterpriseOptimizationController";
 import { createRateLimit } from "../middleware/rateLimiting";
 import {
   verifyToken,
@@ -36,17 +40,6 @@ type ControllerHandler = (
 type FnKeys<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
 
 const VERSION = "5.0.0" as const;
-
-const OPTIMIZATION_ALGORITHMS = [
-  "ffd",
-  "bfd",
-  "genetic",
-  "pooling",
-  "nsga-ii",
-  "pattern-exact",
-] as const;
-
-type OptimizationAlgorithm = (typeof OPTIMIZATION_ALGORITHMS)[number];
 
 interface RouteConfig {
   readonly path: string;
@@ -192,7 +185,7 @@ class RouteRegistry implements IRouteRegistry {
 }
 
 const createAlgorithmHandler = (
-  algorithm: OptimizationAlgorithm,
+  algorithm: SupportedOptimizationAlgorithm,
 ): ControllerHandler => {
   return (req: Request, res: Response, next: NextFunction): void => {
     req.body = {
@@ -208,15 +201,17 @@ class EnterpriseOptimizationRouterFactory {
   private readonly mainRoutes: ReadonlyArray<RouteConfig>;
 
   constructor(private readonly controller: EnterpriseOptimizationController) {
-    this.algorithmRoutes = OPTIMIZATION_ALGORITHMS.map((algorithm) => ({
-      path: `/${algorithm}`,
-      method: "post" as const,
-      handler: "optimize",
-      middleware: [createAlgorithmHandler(algorithm)],
-      requiresAuth: true,
-      permission: Permission.START_OPTIMIZATION,
-      rateLimit: "optimization" as const,
-    }));
+    this.algorithmRoutes = SUPPORTED_OPTIMIZATION_ALGORITHMS.map(
+      (algorithm) => ({
+        path: `/${algorithm}`,
+        method: "post" as const,
+        handler: "optimize",
+        middleware: [createAlgorithmHandler(algorithm)],
+        requiresAuth: true,
+        permission: Permission.START_OPTIMIZATION,
+        rateLimit: "optimization" as const,
+      }),
+    );
 
     this.mainRoutes = [
       {
@@ -250,6 +245,20 @@ class EnterpriseOptimizationRouterFactory {
         requiresAuth: true,
         permission: Permission.START_OPTIMIZATION,
         rateLimit: "optimization",
+      },
+      {
+        path: "/validate",
+        method: "post",
+        handler: "validateOptimizationData",
+        requiresAuth: false,
+        rateLimit: "default",
+      },
+      {
+        path: "/algorithms",
+        method: "get",
+        handler: "getSupportedAlgorithms",
+        requiresAuth: false,
+        rateLimit: "default",
       },
       {
         path: "/health",
