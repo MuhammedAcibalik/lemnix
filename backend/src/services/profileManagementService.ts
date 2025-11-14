@@ -5,7 +5,7 @@
  * @description CRUD and query operations for profile management
  */
 
-import { PrismaClient, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { profileExcelParserService } from "./profileExcelParserService";
 import {
   ProfileDefinition,
@@ -15,9 +15,17 @@ import {
   ProfileMapping,
 } from "../types";
 import { logger } from "../utils/logger";
+import {
+  ProfileManagementRepository,
+  profileManagementRepository,
+} from "../repositories/ProfileManagementRepository";
 
 export class ProfileManagementService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly repository: ProfileManagementRepository) {}
+
+  private get prisma() {
+    return this.repository.prisma;
+  }
 
   // Type-safe Prisma client access helpers
   private get profileDefinition() {
@@ -677,5 +685,5 @@ export class ProfileManagementService {
 
 // Singleton instance
 export const profileManagementService = new ProfileManagementService(
-  new PrismaClient(),
+  profileManagementRepository,
 );

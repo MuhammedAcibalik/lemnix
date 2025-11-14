@@ -4,11 +4,14 @@
  * @version 1.0.0
  */
 
-import { PrismaClient } from "@prisma/client";
 import {
   productionPlanService,
   ProductionPlanFilters,
 } from "./productionPlanService";
+import {
+  ProductionPlanRepository,
+  productionPlanRepository,
+} from "../repositories/ProductionPlanRepository";
 
 export interface ProductionPlanStatistics {
   overview: {
@@ -44,7 +47,11 @@ export interface ProductionPlanStatistics {
 }
 
 export class StatisticsService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly repository: ProductionPlanRepository) {}
+
+  private get prisma() {
+    return this.repository.prisma;
+  }
 
   /**
    * Get comprehensive production plan statistics
@@ -323,4 +330,6 @@ export class StatisticsService {
   }
 }
 
-export const statisticsService = new StatisticsService(new PrismaClient());
+export const statisticsService = new StatisticsService(
+  productionPlanRepository,
+);

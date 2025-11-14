@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import { logger } from '../logger';
+import { logger } from "../logger";
 
 interface QueryMetrics {
   query: string;
@@ -49,7 +49,7 @@ export class QueryPerformanceMonitor {
   /**
    * Record a query execution
    */
-  recordQuery(metrics: Omit<QueryMetrics, 'timestamp'>): void {
+  recordQuery(metrics: Omit<QueryMetrics, "timestamp">): void {
     const fullMetrics: QueryMetrics = {
       ...metrics,
       timestamp: Date.now(),
@@ -61,8 +61,8 @@ export class QueryPerformanceMonitor {
     // Track slow queries separately
     if (metrics.duration > this.slowQueryThreshold) {
       this.slowQueries.push(fullMetrics);
-      
-      logger.warn('[QueryMonitor] Slow query detected', {
+
+      logger.warn("[QueryMonitor] Slow query detected", {
         duration: `${metrics.duration}ms`,
         query: metrics.query.substring(0, 200),
       });
@@ -84,9 +84,9 @@ export class QueryPerformanceMonitor {
   getStats(timeRangeMs?: number): PerformanceStats {
     const now = Date.now();
     const cutoff = timeRangeMs ? now - timeRangeMs : 0;
-    
-    const recentQueries = this.queryMetrics.filter(m => m.timestamp > cutoff);
-    
+
+    const recentQueries = this.queryMetrics.filter((m) => m.timestamp > cutoff);
+
     if (recentQueries.length === 0) {
       return {
         totalQueries: 0,
@@ -99,16 +99,22 @@ export class QueryPerformanceMonitor {
       };
     }
 
-    const durations = recentQueries.map(m => m.duration).sort((a, b) => a - b);
+    const durations = recentQueries
+      .map((m) => m.duration)
+      .sort((a, b) => a - b);
     const total = recentQueries.length;
 
     return {
       totalQueries: total,
-      slowQueries: recentQueries.filter(m => m.duration > this.slowQueryThreshold).length,
+      slowQueries: recentQueries.filter(
+        (m) => m.duration > this.slowQueryThreshold,
+      ).length,
       p50: this.percentile(durations, 0.5),
       p95: this.percentile(durations, 0.95),
       p99: this.percentile(durations, 0.99),
-      avgDuration: Number((durations.reduce((a, b) => a + b, 0) / total).toFixed(2)),
+      avgDuration: Number(
+        (durations.reduce((a, b) => a + b, 0) / total).toFixed(2),
+      ),
       maxDuration: durations[durations.length - 1] ?? 0,
     };
   }
@@ -125,13 +131,16 @@ export class QueryPerformanceMonitor {
   /**
    * Get query patterns (aggregated by query signature)
    */
-  getQueryPatterns(): Map<string, { count: number; avgDuration: number; maxDuration: number }> {
+  getQueryPatterns(): Map<
+    string,
+    { count: number; avgDuration: number; maxDuration: number }
+  > {
     const patterns = new Map<string, { durations: number[]; count: number }>();
 
     for (const metric of this.queryMetrics) {
       // Extract query signature (remove parameter values)
       const signature = this.extractQuerySignature(metric.query);
-      
+
       const existing = patterns.get(signature);
       if (existing) {
         existing.durations.push(metric.duration);
@@ -145,12 +154,16 @@ export class QueryPerformanceMonitor {
     }
 
     // Convert to final format
-    const result = new Map<string, { count: number; avgDuration: number; maxDuration: number }>();
-    
+    const result = new Map<
+      string,
+      { count: number; avgDuration: number; maxDuration: number }
+    >();
+
     for (const [signature, data] of patterns.entries()) {
-      const avg = data.durations.reduce((a, b) => a + b, 0) / data.durations.length;
+      const avg =
+        data.durations.reduce((a, b) => a + b, 0) / data.durations.length;
       const max = Math.max(...data.durations);
-      
+
       result.set(signature, {
         count: data.count,
         avgDuration: Number(avg.toFixed(2)),
@@ -167,7 +180,7 @@ export class QueryPerformanceMonitor {
   clear(): void {
     this.queryMetrics = [];
     this.slowQueries = [];
-    logger.info('[QueryMonitor] Metrics cleared');
+    logger.info("[QueryMonitor] Metrics cleared");
   }
 
   /**
@@ -175,7 +188,16 @@ export class QueryPerformanceMonitor {
    */
   setSlowQueryThreshold(ms: number): void {
     this.slowQueryThreshold = ms;
-    logger.info('[QueryMonitor] Slow query threshold updated', { threshold: ms });
+    logger.info("[QueryMonitor] Slow query threshold updated", {
+      threshold: ms,
+    });
+  }
+
+  /**
+   * Get the configured slow query threshold.
+   */
+  getSlowQueryThreshold(): number {
+    return this.slowQueryThreshold;
   }
 
   /**
@@ -192,13 +214,13 @@ export class QueryPerformanceMonitor {
   private extractQuerySignature(query: string): string {
     // Remove WHERE clause parameter values
     let signature = query
-      .replace(/\$\d+/g, '$?')  // $1, $2 -> $?
-      .replace(/= '[^']*'/g, "= '?'")  // = 'value' -> = '?'
-      .replace(/= \d+/g, '= ?')  // = 123 -> = ?
-      .replace(/IN \([^)]+\)/g, 'IN (?)');  // IN (...) -> IN (?)
+      .replace(/\$\d+/g, "$?") // $1, $2 -> $?
+      .replace(/= '[^']*'/g, "= '?'") // = 'value' -> = '?'
+      .replace(/= \d+/g, "= ?") // = 123 -> = ?
+      .replace(/IN \([^)]+\)/g, "IN (?)"); // IN (...) -> IN (?)
 
     // Normalize whitespace
-    signature = signature.replace(/\s+/g, ' ').trim();
+    signature = signature.replace(/\s+/g, " ").trim();
 
     return signature;
   }
@@ -207,15 +229,17 @@ export class QueryPerformanceMonitor {
    * Cleanup old metrics
    */
   private cleanup(): void {
-    const oneHourAgo = Date.now() - (60 * 60 * 1000);
-    
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+
     const beforeCount = this.queryMetrics.length;
-    this.queryMetrics = this.queryMetrics.filter(m => m.timestamp > oneHourAgo);
-    this.slowQueries = this.slowQueries.filter(m => m.timestamp > oneHourAgo);
-    
+    this.queryMetrics = this.queryMetrics.filter(
+      (m) => m.timestamp > oneHourAgo,
+    );
+    this.slowQueries = this.slowQueries.filter((m) => m.timestamp > oneHourAgo);
+
     const removed = beforeCount - this.queryMetrics.length;
     if (removed > 0) {
-      logger.debug('[QueryMonitor] Cleaned up old metrics', { removed });
+      logger.debug("[QueryMonitor] Cleaned up old metrics", { removed });
     }
   }
 }
@@ -224,4 +248,3 @@ export class QueryPerformanceMonitor {
  * Export singleton instance
  */
 export const queryPerformanceMonitor = QueryPerformanceMonitor.getInstance();
-

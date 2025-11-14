@@ -4,9 +4,11 @@
  * @version 1.0.0
  */
 
-import { PrismaClient, MaterialProfileMapping } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { MaterialProfileMapping } from "@prisma/client";
+import {
+  MaterialProfileMappingRepository,
+  materialProfileMappingRepository,
+} from "../repositories/MaterialProfileMappingRepository";
 
 export interface ProfileSuggestion {
   readonly profileType: string;
@@ -25,21 +27,19 @@ export interface SaveMappingRequest {
 }
 
 export class MaterialProfileMappingService {
+  constructor(private readonly repository: MaterialProfileMappingRepository) {}
+
+  private get prisma() {
+    return this.repository.prisma;
+  }
+
   /**
    * Malzeme numarası için profil önerileri getir
    */
   async getSuggestions(malzemeNo: string): Promise<ProfileSuggestion[]> {
     try {
-      const mappings = await prisma.materialProfileMapping.findMany({
-        where: {
-          malzemeNo: {
-            contains: malzemeNo,
-            mode: "insensitive",
-          },
-        },
-        orderBy: [{ usageCount: "desc" }, { lastUsed: "desc" }],
-        take: 10,
-      });
+      const mappings =
+        await this.repository.findSuggestionsByMalzemeNo(malzemeNo);
 
       return mappings.map((mapping: MaterialProfileMapping) => ({
         profileType: mapping.profileType,
@@ -59,7 +59,7 @@ export class MaterialProfileMappingService {
    */
   async saveMappingFromUserInput(data: SaveMappingRequest): Promise<void> {
     try {
-      await prisma.materialProfileMapping.upsert({
+      await this.repository.upsertMapping({
         where: {
           malzemeNo_profileType_length: {
             malzemeNo: data.malzemeNo,
@@ -99,18 +99,10 @@ export class MaterialProfileMappingService {
     length: number,
   ): Promise<void> {
     try {
-      await prisma.materialProfileMapping.updateMany({
-        where: {
-          malzemeNo,
-          profileType,
-          length,
-        },
-        data: {
-          usageCount: {
-            increment: 1,
-          },
-          lastUsed: new Date(),
-        },
+      await this.repository.incrementUsageCount({
+        malzemeNo,
+        profileType,
+        length,
       });
     } catch (error) {
       console.error("Error incrementing usage count:", error);
@@ -134,7 +126,7 @@ export class MaterialProfileMappingService {
     malzemeNo: string,
   ): Promise<ProfileSuggestion | null> {
     try {
-      const mapping = await prisma.materialProfileMapping.findFirst({
+      const mapping = await this.prisma.materialProfileMapping.findFirst({
         where: {
           malzemeNo: {
             contains: malzemeNo,
@@ -167,7 +159,7 @@ export class MaterialProfileMappingService {
       // Malzeme numarasının ilk kısmını al (prefix matching)
       const prefix = malzemeNo.substring(0, 6);
 
-      const mappings = await prisma.materialProfileMapping.findMany({
+      const mappings = await this.prisma.materialProfileMapping.findMany({
         where: {
           malzemeNo: {
             startsWith: prefix,
@@ -192,5 +184,6 @@ export class MaterialProfileMappingService {
   }
 }
 
-export const materialProfileMappingService =
-  new MaterialProfileMappingService();
+export const materialProfileMappingService = new MaterialProfileMappingService(
+  materialProfileMappingRepository,
+);

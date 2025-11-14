@@ -4,11 +4,7 @@
  * @version 1.0.0
  */
 
-import {
-  PrismaClient,
-  ProductionPlan,
-  ProductionPlanItem,
-} from "@prisma/client";
+import { ProductionPlan, ProductionPlanItem } from "@prisma/client";
 import { excelParserService, ExcelParseResult } from "./excelParserService";
 import {
   encryptionService,
@@ -16,6 +12,10 @@ import {
   decryptField,
 } from "./encryptionService";
 import { logger } from "./logger";
+import {
+  ProductionPlanRepository,
+  productionPlanRepository,
+} from "../repositories/ProductionPlanRepository";
 
 export interface ProductionPlanWithItems extends ProductionPlan {
   items: ProductionPlanItem[];
@@ -40,7 +40,11 @@ export interface ProductionPlanMetrics {
 }
 
 export class ProductionPlanService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly repository: ProductionPlanRepository) {}
+
+  private get prisma() {
+    return this.repository.prisma;
+  }
 
   /**
    * Upload and parse Excel file to create production plan
@@ -596,5 +600,5 @@ function decryptProductionPlanItem(
 }
 
 export const productionPlanService = new ProductionPlanService(
-  new PrismaClient(),
+  productionPlanRepository,
 );

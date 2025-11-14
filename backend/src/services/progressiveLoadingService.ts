@@ -11,13 +11,17 @@
  */
 
 import { EventEmitter } from "events";
-import { PrismaClient, ProductionPlanItem, Prisma } from "@prisma/client";
+import { ProductionPlanItem, Prisma } from "@prisma/client";
 import {
   asyncEncryptionService,
   EncryptionProgress,
   ProductionPlanItemWithEncryption,
 } from "./asyncEncryptionService";
 import { logger } from "./logger";
+import {
+  ProductionPlanRepository,
+  productionPlanRepository,
+} from "../repositories/ProductionPlanRepository";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -59,13 +63,15 @@ export interface ProgressiveLoadOptions {
 // ============================================================================
 
 export class ProgressiveLoadingService extends EventEmitter {
-  private readonly prisma: PrismaClient;
   private readonly defaultBatchSize = 50;
   private readonly defaultConcurrency = 2;
 
-  constructor(prisma: PrismaClient) {
+  constructor(private readonly repository: ProductionPlanRepository) {
     super();
-    this.prisma = prisma;
+  }
+
+  private get prisma() {
+    return this.repository.prisma;
   }
 
   /**
@@ -410,5 +416,5 @@ export class ProgressiveLoadingService extends EventEmitter {
 // ============================================================================
 
 export const progressiveLoadingService = new ProgressiveLoadingService(
-  new PrismaClient(),
+  productionPlanRepository,
 );

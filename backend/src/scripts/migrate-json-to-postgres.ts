@@ -5,11 +5,10 @@
  * Usage: ts-node src/scripts/migrate-json-to-postgres.ts
  */
 
-import { PrismaClient, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import * as fs from "fs";
 import * as path from "path";
-
-const prisma = new PrismaClient();
+import { prisma } from "../config/database";
 
 interface JsonCuttingList {
   id: string;
