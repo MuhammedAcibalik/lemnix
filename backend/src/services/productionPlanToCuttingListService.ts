@@ -5,8 +5,7 @@
  */
 
 import { PrismaClient, ItemPriority } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma as prismaClient } from "../config/database";
 
 export interface CreateCuttingListFromPlanRequest {
   readonly productionPlanItems: Array<{
@@ -33,6 +32,8 @@ export interface CuttingListFromPlanResult {
 }
 
 export class ProductionPlanToCuttingListService {
+  constructor(private readonly prisma: PrismaClient = prismaClient) {}
+
   /**
    * Plan itemlarından kesim listesi oluştur
    */
@@ -49,7 +50,7 @@ export class ProductionPlanToCuttingListService {
       }
 
       // Kesim listesi oluştur
-      const cuttingList = await prisma.cuttingList.create({
+      const cuttingList = await this.prisma.cuttingList.create({
         data: {
           name: request.cuttingListMetadata.name,
           description: request.cuttingListMetadata.description || "",
@@ -98,7 +99,7 @@ export class ProductionPlanToCuttingListService {
    */
   private async validatePlanItems(planItemIds: Array<{ planItemId: string }>) {
     try {
-      const items = await prisma.productionPlanItem.findMany({
+      const items = await this.prisma.productionPlanItem.findMany({
         where: {
           id: {
             in: planItemIds.map((item) => item.planItemId),
@@ -168,7 +169,7 @@ export class ProductionPlanToCuttingListService {
       };
     });
 
-    const result = await prisma.cuttingListItem.createMany({
+    const result = await this.prisma.cuttingListItem.createMany({
       data: itemsToCreate,
     });
     return result.count;
@@ -181,7 +182,7 @@ export class ProductionPlanToCuttingListService {
     planItemIds: string[],
     cuttingListId: string,
   ) {
-    await prisma.productionPlanItem.updateMany({
+    await this.prisma.productionPlanItem.updateMany({
       where: {
         id: {
           in: planItemIds,
@@ -219,7 +220,7 @@ export class ProductionPlanToCuttingListService {
     cuttingListId: string,
   ): Promise<void> {
     try {
-      await prisma.productionPlanItem.update({
+      await this.prisma.productionPlanItem.update({
         where: { id: planItemId },
         data: { linkedCuttingListId: cuttingListId },
       });
@@ -234,7 +235,7 @@ export class ProductionPlanToCuttingListService {
    */
   async getLinkedCuttingList(planItemId: string) {
     try {
-      const planItem = await prisma.productionPlanItem.findUnique({
+      const planItem = await this.prisma.productionPlanItem.findUnique({
         where: { id: planItemId },
         include: {
           linkedCuttingList: {
@@ -257,7 +258,7 @@ export class ProductionPlanToCuttingListService {
    */
   async unlinkPlanItemFromCuttingList(planItemId: string): Promise<void> {
     try {
-      await prisma.productionPlanItem.update({
+      await this.prisma.productionPlanItem.update({
         where: { id: planItemId },
         data: { linkedCuttingListId: null },
       });
@@ -272,7 +273,7 @@ export class ProductionPlanToCuttingListService {
    */
   async getLinkedPlanItems(cuttingListId: string) {
     try {
-      return await prisma.productionPlanItem.findMany({
+      return await this.prisma.productionPlanItem.findMany({
         where: { linkedCuttingListId: cuttingListId },
         include: {
           plan: true,
