@@ -30,7 +30,7 @@ function generateCorrelationId(): string {
  * Get auth token from storage
  * TODO: Implement actual auth token retrieval
  */
-function getAuthToken(): string | null {
+export function getAuthToken(): string | null {
   if (typeof window === "undefined" || typeof localStorage === "undefined") {
     return null;
   }
