@@ -22,6 +22,8 @@ import {
 import { cuttingListRepository } from "../repositories/CuttingListRepository";
 import { logger } from "../services/logger";
 import { MeasurementConverter } from "../utils/measurementConverter";
+import { resolveRequestUserContext } from "../utils/requestUserContext";
+import { RepositoryError } from "../errors/RepositoryError";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -364,6 +366,7 @@ export class CuttingListController {
     async (req: Request, res: Response): Promise<void> => {
       const requestId = this.generateRequestId();
       const { name, title, weekNumber } = req.body;
+      const { userId, anonymousUserId } = resolveRequestUserContext(req);
 
       // Support both 'name' and 'title' for backward compatibility
       const cuttingListTitle = name || title;
@@ -422,16 +425,17 @@ export class CuttingListController {
         const cuttingList = await cuttingListRepository.create({
           name: cuttingListTitle.trim(),
           weekNumber: weekNumber,
-          sections: [],
-          user: {
-            connect: { id: "system-user" }, // Temporary system user ID
-          },
+          sections: [] as Prisma.InputJsonValue,
+          userId,
+          anonymousOwnerId: anonymousUserId,
         });
 
         logger.info(`[${requestId}] ✅ Cutting list created in PostgreSQL`, {
           id: cuttingList.id,
           weekNumber,
           title: cuttingListTitle.trim(),
+          userId: userId ?? "anonymous",
+          anonymousUserId,
         });
 
         // Map Prisma model to API response format
@@ -446,6 +450,22 @@ export class CuttingListController {
 
         res.json(this.createResponse(true, response));
       } catch (error) {
+        if (error instanceof RepositoryError) {
+          logger.warn(
+            `[${requestId}] Repository error during cutting list create`,
+            {
+              error: error.message,
+              statusCode: error.statusCode,
+              details: error.details,
+            },
+          );
+
+          res
+            .status(error.statusCode)
+            .json(this.createResponse(false, undefined, error.message));
+          return;
+        }
+
         console.error(`[${requestId}] Error creating cutting list:`, error);
 
         const errorMessage =

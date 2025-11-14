@@ -68,6 +68,7 @@ export interface CuttingList {
 export interface CreateCuttingListRequest {
   readonly name: string; // Backend expects 'name', not 'title'
   readonly weekNumber: number;
+  readonly anonymousUserId?: string;
 }
 
 /**

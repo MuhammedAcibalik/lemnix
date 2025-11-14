@@ -4,9 +4,11 @@
  * @version 1.0.0
  */
 
-import { PrismaClient, ItemPriority } from "@prisma/client";
+import { ItemPriority, CuttingListStatus } from "@prisma/client";
 
-const prisma = new PrismaClient();
+import { prisma } from "../config/database";
+import { cuttingListRepository } from "../repositories/CuttingListRepository";
+import { RepositoryError } from "../errors/RepositoryError";
 
 export interface CreateCuttingListFromPlanRequest {
   readonly productionPlanItems: Array<{
@@ -19,7 +21,8 @@ export interface CreateCuttingListFromPlanRequest {
     readonly name: string;
     readonly description?: string;
   };
-  readonly userId: string;
+  readonly userId?: string;
+  readonly anonymousUserId?: string;
 }
 
 export interface CuttingListFromPlanResult {
@@ -30,6 +33,7 @@ export interface CuttingListFromPlanResult {
     readonly itemCount: number;
   };
   readonly error?: string;
+  readonly statusCode?: number;
 }
 
 export class ProductionPlanToCuttingListService {
@@ -45,21 +49,20 @@ export class ProductionPlanToCuttingListService {
         request.productionPlanItems,
       );
       if (!planItems.success) {
-        return { success: false, error: planItems.error };
+        return { success: false, error: planItems.error, statusCode: 400 };
       }
 
       // Kesim listesi oluştur
-      const cuttingList = await prisma.cuttingList.create({
-        data: {
-          name: request.cuttingListMetadata.name,
-          description: request.cuttingListMetadata.description || "",
-          status: "DRAFT",
-          userId: request.userId,
-          metadata: {
-            source: "production-plan",
-            createdFromPlan: true,
-            planItemCount: request.productionPlanItems.length,
-          },
+      const cuttingList = await cuttingListRepository.create({
+        name: request.cuttingListMetadata.name,
+        description: request.cuttingListMetadata.description || "",
+        status: CuttingListStatus.DRAFT,
+        userId: request.userId,
+        anonymousOwnerId: request.anonymousUserId,
+        metadata: {
+          source: "production-plan",
+          createdFromPlan: true,
+          planItemCount: request.productionPlanItems.length,
         },
       });
 
@@ -85,6 +88,14 @@ export class ProductionPlanToCuttingListService {
         },
       };
     } catch (error) {
+      if (error instanceof RepositoryError) {
+        return {
+          success: false,
+          error: error.message,
+          statusCode: error.statusCode,
+        };
+      }
+
       console.error("Error creating cutting list from plan:", error);
       return {
         success: false,

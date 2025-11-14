@@ -201,6 +201,7 @@ export class ProductionPlanApi {
       name: string;
       description?: string;
     };
+    anonymousUserId?: string;
   }): Promise<{
     success: boolean;
     data?: {
