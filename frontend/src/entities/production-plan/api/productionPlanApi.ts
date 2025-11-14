@@ -41,7 +41,7 @@ export class ProductionPlanApi {
       formData,
     );
 
-    return response.data;
+    return response;
   }
 
   /**
@@ -74,12 +74,12 @@ export class ProductionPlanApi {
     );
 
     console.log("📊 [API] Data fetched from database:", {
-      success: response.data.success,
-      dataLength: response.data.data?.length || 0,
+      success: response.success,
+      dataLength: response.data?.length || 0,
       source: "database-only",
     });
 
-    return response.data;
+    return response;
   }
 
   /**
@@ -91,11 +91,11 @@ export class ProductionPlanApi {
       data: ProductionPlan;
     }>(`${this.baseUrl}/${id}`);
 
-    if (!response.data.success || !response.data.data) {
+    if (!response.success || !response.data) {
       throw new Error("Production plan not found");
     }
 
-    return response.data.data;
+    return response.data;
   }
 
   /**
@@ -110,11 +110,11 @@ export class ProductionPlanApi {
       data: ProductionPlan;
     }>(`${this.baseUrl}/week/${weekNumber}/${year}`);
 
-    if (!response.data.success || !response.data.data) {
+    if (!response.success || !response.data) {
       throw new Error("Production plan not found");
     }
 
-    return response.data.data;
+    return response.data;
   }
 
   /**
@@ -128,7 +128,7 @@ export class ProductionPlanApi {
       message: string;
     }>(`${this.baseUrl}/${id}`);
 
-    return response.data;
+    return response;
   }
 
   async deleteAllProductionPlans(): Promise<{
@@ -142,7 +142,7 @@ export class ProductionPlanApi {
       count: number;
     }>(this.baseUrl);
 
-    return response.data;
+    return response;
   }
 
   /**
@@ -162,11 +162,11 @@ export class ProductionPlanApi {
       `${this.baseUrl}/metrics?${params.toString()}`,
     );
 
-    if (!response.data.success || !response.data.data) {
+    if (!response.success || !response.data) {
       throw new Error("Failed to fetch metrics");
     }
 
-    return response.data.data;
+    return response.data;
   }
 
   /**
@@ -180,11 +180,11 @@ export class ProductionPlanApi {
       data: ProductionPlan["items"];
     }>(`${this.baseUrl}/items/work-order/${workOrderId}`);
 
-    if (!response.data.success || !response.data.data) {
+    if (!response.success || !response.data) {
       throw new Error("Production plan items not found");
     }
 
-    return response.data.data;
+    return response.data;
   }
 
   /**
@@ -222,7 +222,7 @@ export class ProductionPlanApi {
       error?: string;
     }>(`${this.baseUrl}/create-cutting-list`, request);
 
-    return response.data;
+    return response;
   }
 
   /**
@@ -237,11 +237,11 @@ export class ProductionPlanApi {
       error?: string;
     }>(`${this.baseUrl}/cutting-list/${cuttingListId}/plan-items`);
 
-    if (!response.data.success || !response.data.data) {
-      throw new Error(response.data.error || "Linked plan items not found");
+    if (!response.success || !response.data) {
+      throw new Error(response.error || "Linked plan items not found");
     }
 
-    return response.data.data;
+    return response.data;
   }
 
   /**
@@ -254,8 +254,8 @@ export class ProductionPlanApi {
       error?: string;
     }>(`${this.baseUrl}/plan-item/${planItemId}/unlink`);
 
-    if (!response.data.success) {
-      throw new Error(response.data.error || "Failed to unlink plan item");
+    if (!response.success) {
+      throw new Error(response.error || "Failed to unlink plan item");
     }
   }
 
@@ -275,11 +275,11 @@ export class ProductionPlanApi {
       data: BackorderItem[];
     }>(`${this.baseUrl}/backorder?${params.toString()}`);
 
-    if (!response.data.success || !response.data.data) {
+    if (!response.success || !response.data) {
       throw new Error("Failed to fetch backorder items");
     }
 
-    return response.data.data;
+    return response.data;
   }
 
   /**
@@ -298,11 +298,11 @@ export class ProductionPlanApi {
       data: ProductionPlanStatistics;
     }>(`${this.baseUrl}/statistics?${params.toString()}`);
 
-    if (!response.data.success || !response.data.data) {
+    if (!response.success || !response.data) {
       throw new Error("Failed to fetch statistics");
     }
 
-    return response.data.data;
+    return response.data;
   }
 }
 
