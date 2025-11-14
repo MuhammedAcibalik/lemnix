@@ -113,6 +113,23 @@ interface ApiResponse<T = unknown> {
   readonly requestId?: string;
 }
 
+type NormalizedPriority = "low" | "medium" | "high" | "urgent";
+
+const normalizeItemPriority = (
+  priority: string | null | undefined,
+): NormalizedPriority => {
+  const normalized = priority?.toString().toLowerCase();
+  switch (normalized) {
+    case "low":
+    case "medium":
+    case "high":
+    case "urgent":
+      return normalized;
+    default:
+      return "medium";
+  }
+};
+
 // ============================================================================
 // CUTTING LIST CONTROLLER CLASS
 // ============================================================================
@@ -564,11 +581,7 @@ export class CuttingListController {
                       note: item.notes || "",
                       orderQuantity: item.orderQuantity || item.quantity,
                       size: item.size,
-                      priority: item.priority as
-                        | "low"
-                        | "medium"
-                        | "high"
-                        | "urgent",
+                      priority: normalizeItemPriority(item.priority),
                       status: item.status as
                         | "draft"
                         | "ready"
@@ -626,7 +639,7 @@ export class CuttingListController {
                     note: workOrder.note,
                     orderQuantity: workOrder.orderQuantity,
                     size: workOrder.size,
-                    priority: workOrder.priority,
+                    priority: normalizeItemPriority(workOrder.priority),
                     status: workOrder.status,
                     profiles: workOrder.profiles,
                     createdAt: workOrder.createdAt,
@@ -691,11 +704,7 @@ export class CuttingListController {
                     note: item.notes || "",
                     orderQuantity: item.orderQuantity || item.quantity,
                     size: item.size,
-                    priority: item.priority as
-                      | "low"
-                      | "medium"
-                      | "high"
-                      | "urgent",
+                    priority: normalizeItemPriority(item.priority),
                     status: item.status as
                       | "draft"
                       | "ready"
@@ -752,7 +761,7 @@ export class CuttingListController {
                   note: workOrder.note,
                   orderQuantity: workOrder.orderQuantity,
                   size: workOrder.size,
-                  priority: workOrder.priority,
+                  priority: normalizeItemPriority(workOrder.priority),
                   status: workOrder.status,
                   profiles: workOrder.profiles,
                   createdAt: workOrder.createdAt,
@@ -891,7 +900,7 @@ export class CuttingListController {
                 note: item.notes || "",
                 orderQuantity: item.orderQuantity || item.quantity,
                 size: item.size,
-                priority: item.priority as "low" | "medium" | "high" | "urgent",
+                priority: normalizeItemPriority(item.priority),
                 status: item.status as
                   | "draft"
                   | "ready"
@@ -949,7 +958,7 @@ export class CuttingListController {
               orderQuantity: workOrder.orderQuantity,
               size: workOrder.size,
               profiles: workOrder.profiles,
-              priority: workOrder.priority,
+              priority: normalizeItemPriority(workOrder.priority),
               status: workOrder.status,
               createdAt: workOrder.createdAt,
               updatedAt: workOrder.updatedAt,

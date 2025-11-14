@@ -13,6 +13,7 @@ import {
   ProfileFormItem,
 } from "../types";
 import { MeasurementConverter } from "@/shared/lib/utils/measurementConverter";
+import { mapPriorityToSelection } from "./priorityUtils";
 
 // ✅ CRITICAL FIX: Remove unused props interface
 // These callbacks are not used in this hook, they're in useCuttingListData
@@ -269,8 +270,7 @@ export const useCuttingListState = () => {
       setCurrentSectionId(sectionId);
       // Map backend priority values to Select options ('1' | '2')
       const rawPriority = (item as unknown as { priority?: string }).priority;
-      const normalizedPriority: "1" | "2" =
-        rawPriority === "2" || rawPriority === "high" ? "2" : "1";
+      const normalizedPriority = mapPriorityToSelection(rawPriority);
       setEditingItem({
         ...item,
         priority: normalizedPriority,

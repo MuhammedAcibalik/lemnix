@@ -201,12 +201,10 @@ export const getAutoCompleteSuggestions = async (
       case "size": {
         const productName = req.query.productName as string;
         if (!productName) {
-          res
-            .status(400)
-            .json({
-              success: false,
-              error: "Product name required for size suggestions",
-            });
+          res.status(400).json({
+            success: false,
+            error: "Product name required for size suggestions",
+          });
           return;
         }
         suggestions = await suggestionService.getSizeSuggestions(
@@ -220,12 +218,10 @@ export const getAutoCompleteSuggestions = async (
         const product = req.query.productName as string;
         const size = req.query.size as string;
         if (!product || !size) {
-          res
-            .status(400)
-            .json({
-              success: false,
-              error: "Product name and size required for profile suggestions",
-            });
+          res.status(400).json({
+            success: false,
+            error: "Product name and size required for profile suggestions",
+          });
           return;
         }
         suggestions = await suggestionService.getProfileSuggestions(

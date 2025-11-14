@@ -1,8 +1,10 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest';
 import request from 'supertest';
 import { createApp } from '../../src/server/createApp';
 import { createMockSocketIO } from '../mocks/socket.io';
 import type { Application } from 'express';
+import { cuttingListRepository } from '../../src/repositories/CuttingListRepository';
+import { mapPriorityToSelection } from '../../../frontend/src/widgets/cutting-list-builder/hooks/priorityUtils';
 
 describe('Cutting List Endpoints', () => {
   let app: Application;
@@ -11,6 +13,10 @@ describe('Cutting List Endpoints', () => {
   beforeAll(() => {
     const mockIO = createMockSocketIO();
     app = createApp({ io: mockIO as any });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe('POST /api/cutting-list', () => {
@@ -61,8 +67,57 @@ describe('Cutting List Endpoints', () => {
   describe('GET /api/cutting-list/:id', () => {
     it('should return 404 for non-existent list', async () => {
       const response = await request(app).get('/api/cutting-list/non-existent-id');
-      
+
       expect([404, 500]).toContain(response.status);
+    });
+
+    it('should normalize Prisma priority values for API to UI flow', async () => {
+      const now = new Date();
+      vi.spyOn(cuttingListRepository, 'findById').mockResolvedValue({
+        id: 'list-1',
+        name: 'Demo',
+        description: null,
+        status: 'READY',
+        createdAt: now,
+        updatedAt: now,
+        userId: 'user-1',
+        metadata: null,
+        weekNumber: 12,
+        sections: [],
+        items: [
+          {
+            id: 'item-1',
+            cuttingListId: 'list-1',
+            workOrderId: 'WO-1',
+            date: null,
+            color: 'Blue',
+            version: 'A',
+            size: 'M',
+            profileType: 'Frame',
+            length: 1200,
+            quantity: 4,
+            orderQuantity: 4,
+            cuttingPattern: null,
+            notes: null,
+            priority: 'URGENT',
+            status: 'READY',
+            createdAt: now,
+            updatedAt: now,
+            materialDescription: null,
+            materialNumber: null,
+            productionPlanItemId: null,
+          },
+        ],
+        statistics: [],
+      } as any);
+
+      const response = await request(app).get('/api/cutting-list/list-1');
+
+      expect(response.status).toBe(200);
+      const itemPriority =
+        response.body?.data?.sections?.[0]?.items?.[0]?.priority;
+      expect(itemPriority).toBe('urgent');
+      expect(mapPriorityToSelection(itemPriority)).toBe('2');
     });
   });
 
