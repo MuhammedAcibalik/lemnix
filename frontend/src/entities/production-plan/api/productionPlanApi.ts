@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import { apiClient } from "@/shared/api/client";
+import { api } from "@/shared/api/client";
 import type {
   ProductionPlan,
   ProductionPlanItem,
@@ -36,7 +36,7 @@ export class ProductionPlanApi {
       type: file.type,
     });
 
-    const response = await apiClient.post<UploadProductionPlanResponse>(
+    const response = await api.post<UploadProductionPlanResponse>(
       `${this.baseUrl}/upload`,
       formData,
     );
@@ -62,7 +62,7 @@ export class ProductionPlanApi {
     if (filters.limit) params.append("limit", filters.limit.toString());
 
     // Force fresh data from database - bypass all cache
-    const response = await apiClient.get<ProductionPlanListResponse>(
+    const response = await api.get<ProductionPlanListResponse>(
       `${this.baseUrl}?${params.toString()}`,
       {
         headers: {
@@ -86,7 +86,7 @@ export class ProductionPlanApi {
    * Get single production plan by ID
    */
   async getProductionPlanById(id: string): Promise<ProductionPlan> {
-    const response = await apiClient.get<{
+    const response = await api.get<{
       success: boolean;
       data: ProductionPlan;
     }>(`${this.baseUrl}/${id}`);
@@ -105,7 +105,7 @@ export class ProductionPlanApi {
     weekNumber: number,
     year: number,
   ): Promise<ProductionPlan> {
-    const response = await apiClient.get<{
+    const response = await api.get<{
       success: boolean;
       data: ProductionPlan;
     }>(`${this.baseUrl}/week/${weekNumber}/${year}`);
@@ -123,7 +123,7 @@ export class ProductionPlanApi {
   async deleteProductionPlan(
     id: string,
   ): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.delete<{
+    const response = await api.delete<{
       success: boolean;
       message: string;
     }>(`${this.baseUrl}/${id}`);
@@ -136,7 +136,7 @@ export class ProductionPlanApi {
     message: string;
     count: number;
   }> {
-    const response = await apiClient.delete<{
+    const response = await api.delete<{
       success: boolean;
       message: string;
       count: number;
@@ -158,7 +158,7 @@ export class ProductionPlanApi {
     if (filters.year) params.append("year", filters.year.toString());
     if (filters.status) params.append("status", filters.status);
 
-    const response = await apiClient.get<ProductionPlanMetricsResponse>(
+    const response = await api.get<ProductionPlanMetricsResponse>(
       `${this.baseUrl}/metrics?${params.toString()}`,
     );
 
@@ -175,7 +175,7 @@ export class ProductionPlanApi {
   async getProductionPlanItemsByWorkOrder(
     workOrderId: string,
   ): Promise<ProductionPlan["items"]> {
-    const response = await apiClient.get<{
+    const response = await api.get<{
       success: boolean;
       data: ProductionPlan["items"];
     }>(`${this.baseUrl}/items/work-order/${workOrderId}`);
@@ -211,10 +211,16 @@ export class ProductionPlanApi {
     };
     error?: string;
   }> {
-    const response = await apiClient.post(
-      `${this.baseUrl}/create-cutting-list`,
-      request,
-    );
+    const response = await api.post<{
+      success: boolean;
+      data?: {
+        cuttingListId: string;
+        name: string;
+        itemCount: number;
+        linkedPlanItems: string[];
+      };
+      error?: string;
+    }>(`${this.baseUrl}/create-cutting-list`, request);
 
     return response.data;
   }
@@ -225,7 +231,7 @@ export class ProductionPlanApi {
   async getLinkedPlanItems(
     cuttingListId: string,
   ): Promise<ProductionPlanItem[]> {
-    const response = await apiClient.get<{
+    const response = await api.get<{
       success: boolean;
       data: ProductionPlanItem[];
       error?: string;
@@ -242,7 +248,7 @@ export class ProductionPlanApi {
    * Plan item ile kesim listesi arasındaki linki kaldır
    */
   async unlinkPlanItemFromCuttingList(planItemId: string): Promise<void> {
-    const response = await apiClient.delete<{
+    const response = await api.delete<{
       success: boolean;
       message?: string;
       error?: string;
@@ -264,7 +270,7 @@ export class ProductionPlanApi {
     if (filters.oncelik) params.append("oncelik", filters.oncelik);
     if (filters.status) params.append("status", filters.status);
 
-    const response = await apiClient.get<{
+    const response = await api.get<{
       success: boolean;
       data: BackorderItem[];
     }>(`${this.baseUrl}/backorder?${params.toString()}`);
@@ -287,7 +293,7 @@ export class ProductionPlanApi {
     if (filters.oncelik) params.append("oncelik", filters.oncelik);
     if (filters.status) params.append("status", filters.status);
 
-    const response = await apiClient.get<{
+    const response = await api.get<{
       success: boolean;
       data: ProductionPlanStatistics;
     }>(`${this.baseUrl}/statistics?${params.toString()}`);
