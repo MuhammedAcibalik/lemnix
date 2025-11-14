@@ -19,6 +19,35 @@ import {
   optimizationCircuitBreaker,
 } from "../lib/circuitBreaker"; // ✅ P2-9
 
+function extractErrorMessage(data: unknown): string | null {
+  if (!data) return null;
+  if (typeof data === "string") {
+    return data;
+  }
+
+  if (typeof data === "object") {
+    const record = data as Record<string, unknown>;
+
+    if (typeof record.error === "string") {
+      return record.error;
+    }
+
+    if (
+      record.error &&
+      typeof record.error === "object" &&
+      typeof (record.error as { message?: unknown }).message === "string"
+    ) {
+      return (record.error as { message?: string }).message ?? null;
+    }
+
+    if (typeof record.message === "string") {
+      return record.message;
+    }
+  }
+
+  return null;
+}
+
 /**
  * Correlation ID generator for request tracing
  */
@@ -173,12 +202,16 @@ function responseErrorInterceptor(
         "Çok fazla istek gönderdiniz. Lütfen birkaç dakika bekleyin.";
     } else if (status === 404) {
       userMessage = "İstenen kaynak bulunamadı.";
+    } else if (status === 409) {
+      userMessage =
+        extractErrorMessage(data) ||
+        "Bu işlem mevcut verilerle çakışıyor. Lütfen bilgilerinizi kontrol edin.";
     } else if (status >= 500) {
       userMessage = "Sunucu hatası. Lütfen daha sonra tekrar deneyin.";
     } else if (status === 400) {
       // Use backend error message if available
       userMessage =
-        data?.error?.message ||
+        extractErrorMessage(data) ||
         "Geçersiz istek. Lütfen verilerinizi kontrol edin.";
     }
 

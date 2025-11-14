@@ -6,7 +6,7 @@
  */
 
 import { useState } from "react";
-import { useCreateCuttingList } from "@/entities/cutting-list";
+import { useCreateCuttingList, useCuttingLists } from "@/entities/cutting-list";
 import type { CreateCuttingListRequest } from "@/entities/cutting-list";
 
 export interface QuickCreateParams {
@@ -27,25 +27,41 @@ export function useQuickCreate() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { data: cuttingLists } = useCuttingLists({
+    staleTime: 0,
+    gcTime: 0,
+  });
+
   const createMutation = useCreateCuttingList({
     onSuccess: () => {
-      setIsLoading(false);
       setError(null);
     },
     onError: (error) => {
-      setIsLoading(false);
       setError(error.message || "Kesim listesi oluşturulurken bir hata oluştu");
     },
   });
 
   const createList = async (params: QuickCreateParams) => {
-    setIsLoading(true);
     setError(null);
+
+    const currentWeek = getCurrentWeekNumber();
+    const existingList = cuttingLists?.find(
+      (list) => list.weekNumber === currentWeek,
+    );
+
+    if (existingList) {
+      setError(
+        `${currentWeek}. hafta için zaten "${existingList.title}" adlı bir kesim listesi mevcut.`,
+      );
+      return null;
+    }
+
+    setIsLoading(true);
 
     try {
       const request: CreateCuttingListRequest = {
         name: params.title,
-        weekNumber: getCurrentWeekNumber(),
+        weekNumber: currentWeek,
       };
 
       const result = await createMutation.mutateAsync(request);
@@ -53,6 +69,8 @@ export function useQuickCreate() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Bilinmeyen hata");
       throw err;
+    } finally {
+      setIsLoading(false);
     }
   };
 

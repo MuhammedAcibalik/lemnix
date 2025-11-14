@@ -243,6 +243,7 @@ export const CuttingListBuilder: React.FC = () => {
     cuttingList,
     setCuttingList,
     setCuttingLists,
+    cuttingLists,
     title,
     selectedWeekNumber,
     productName,
