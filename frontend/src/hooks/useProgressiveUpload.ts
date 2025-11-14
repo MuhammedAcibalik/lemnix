@@ -54,6 +54,15 @@ export interface UseProgressiveUploadReturn {
   reset: () => void;
 }
 
+function normalizeSessionId(value?: string | null): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 // ============================================================================
 // PROGRESSIVE UPLOAD HOOK
 // ============================================================================
@@ -77,23 +86,91 @@ export function useProgressiveUpload(): UseProgressiveUploadReturn {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<unknown | null>(null);
 
+  const registerSessionRoom = useCallback((sessionId?: string | null) => {
+    const normalized = normalizeSessionId(sessionId);
+
+    if (!normalized) {
+      return;
+    }
+
+    sessionIdRef.current = normalized;
+
+    if (socketRef.current?.connected) {
+      socketRef.current.emit("join-progress", { sessionId: normalized });
+    }
+  }, []);
+
   // Initialize WebSocket connection
   useEffect(() => {
-    const initializeSocket = () => {
-      if (socketRef.current?.connected) {
+    let isMounted = true;
+
+    const fetchAuthenticatedSessionId = async (): Promise<string | null> => {
+      const token =
+        localStorage.getItem("token") || "mock-dev-token-lemnix-2025";
+
+      try {
+        const response = await fetch("/api/auth/me", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          return null;
+        }
+
+        const data: { sessionId?: string; user?: { sessionId?: string } } =
+          await response.json();
+        return (
+          normalizeSessionId(data.sessionId) ||
+          normalizeSessionId(data.user?.sessionId)
+        );
+      } catch (fetchError) {
+        console.warn("⚠️ Unable to fetch authenticated session", fetchError);
+        return null;
+      }
+    };
+
+    const initializeSocket = async () => {
+      if (socketRef.current) {
         return;
       }
 
-      const socket = io(import.meta.env.VITE_WS_URL || "ws://localhost:3001", {
+      const serverSessionId = await fetchAuthenticatedSessionId();
+
+      if (!isMounted) {
+        return;
+      }
+
+      const normalizedSessionId = normalizeSessionId(serverSessionId);
+      sessionIdRef.current = normalizedSessionId;
+
+      const socketOptions: Parameters<typeof io>[1] = {
         transports: ["websocket"],
-        query: {
-          sessionId: sessionIdRef.current || "anonymous",
-        },
-      });
+      };
+
+      if (normalizedSessionId) {
+        socketOptions.query = { sessionId: normalizedSessionId };
+      }
+
+      const socket = io(
+        import.meta.env.VITE_WS_URL || "ws://localhost:3001",
+        socketOptions,
+      );
+
+      socketRef.current = socket;
 
       socket.on("connect", () => {
-        console.log("🔌 WebSocket connected for progressive upload");
-        sessionIdRef.current = socket.id || null;
+        const activeSessionId =
+          normalizeSessionId(sessionIdRef.current) ||
+          normalizeSessionId(socket.id);
+
+        registerSessionRoom(activeSessionId);
+
+        console.log("🔌 WebSocket connected for progressive upload", {
+          sessionId: activeSessionId,
+        });
       });
 
       socket.on("disconnect", () => {
@@ -101,7 +178,10 @@ export function useProgressiveUpload(): UseProgressiveUploadReturn {
       });
 
       socket.on("progress-update", (update: ProgressUpdate) => {
-        if (update.operation === "upload") {
+        if (
+          update.operation === "upload" &&
+          (!sessionIdRef.current || update.sessionId === sessionIdRef.current)
+        ) {
           setProgress((prev) => ({
             ...prev,
             isActive: true,
@@ -115,18 +195,19 @@ export function useProgressiveUpload(): UseProgressiveUploadReturn {
         }
       });
 
-      socketRef.current = socket;
+      // socketRef.current is assigned above for event handlers
     };
 
     initializeSocket();
 
     return () => {
+      isMounted = false;
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
       }
     };
-  }, []);
+  }, [registerSessionRoom]);
 
   // Upload mutation
   const uploadMutation = useMutation({
@@ -163,6 +244,15 @@ export function useProgressiveUpload(): UseProgressiveUploadReturn {
       }));
     },
     onSuccess: (data) => {
+      const response = data as {
+        sessionId?: string | null;
+        user?: { sessionId?: string | null };
+      };
+
+      registerSessionRoom(
+        response.sessionId || response.user?.sessionId || null,
+      );
+
       setResult(data);
       setProgress((prev) => ({
         ...prev,

@@ -122,6 +122,7 @@ export class ProgressiveController {
           data: result.data,
           progress: result.progress,
           duration: result.duration,
+          sessionId,
         });
       } else {
         logger.error("Progressive upload failed", {
@@ -135,6 +136,7 @@ export class ProgressiveController {
           errors: result.errors,
           progress: result.progress,
           duration: result.duration,
+          sessionId,
         });
       }
     } catch (error) {
@@ -148,6 +150,7 @@ export class ProgressiveController {
         success: false,
         error: "Progressive upload sırasında hata oluştu",
         details: (error as Error).message,
+        sessionId: req.user?.sessionId,
       });
     }
   }
@@ -323,16 +326,21 @@ export class ProgressiveController {
 
 export function setupProgressiveWebSocket(io: SocketIOServer): void {
   io.on("connection", (socket) => {
+    const handshakeSessionId =
+      typeof socket.handshake.query.sessionId === "string"
+        ? socket.handshake.query.sessionId.trim()
+        : "";
+    const sessionRoomId = handshakeSessionId || socket.id;
+
+    socket.data.sessionRoomId = sessionRoomId;
+    socket.join(sessionRoomId);
+
     logger.info("Client connected to progressive updates", {
       socketId: socket.id,
-      sessionId: socket.handshake.query.sessionId,
+      handshakeSessionId: socket.handshake.query.sessionId,
+      activeSessionRoom: sessionRoomId,
+      usedFallback: !handshakeSessionId,
     });
-
-    // Join session room
-    const sessionId = socket.handshake.query.sessionId as string;
-    if (sessionId) {
-      socket.join(sessionId);
-    }
 
     // Join admin room for monitoring
     socket.join("admin");
@@ -340,15 +348,28 @@ export function setupProgressiveWebSocket(io: SocketIOServer): void {
     socket.on("disconnect", () => {
       logger.info("Client disconnected from progressive updates", {
         socketId: socket.id,
-        sessionId,
+        sessionId: socket.data.sessionRoomId,
       });
     });
 
-    socket.on("join-progress", (data: { sessionId: string }) => {
-      socket.join(data.sessionId);
+    socket.on("join-progress", (data: { sessionId?: string }) => {
+      const requestedSessionId =
+        typeof data?.sessionId === "string" ? data.sessionId.trim() : "";
+      const targetRoom = requestedSessionId || socket.id;
+      const previousRoom = socket.data.sessionRoomId;
+
+      if (previousRoom && previousRoom !== targetRoom) {
+        socket.leave(previousRoom);
+      }
+
+      socket.join(targetRoom);
+      socket.data.sessionRoomId = targetRoom;
+
       logger.info("Client joined progress room", {
         socketId: socket.id,
-        sessionId: data.sessionId,
+        sessionId: targetRoom,
+        previousSessionId: previousRoom,
+        usedFallback: !requestedSessionId,
       });
     });
   });
