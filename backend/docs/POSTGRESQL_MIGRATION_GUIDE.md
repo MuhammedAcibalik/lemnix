@@ -91,6 +91,12 @@ Check extensions:
 -- Should show: pg_trgm, btree_gin, pg_stat_statements
 ```
 
+Once `pg_stat_statements` appears in the list, enable the application's query monitor in `.env`:
+
+```env
+ENABLE_QUERY_MONITORING=true
+```
+
 Check indexes:
 ```sql
 \di
@@ -155,7 +161,7 @@ npm run dev
 
 ### Real-time Monitoring
 
-Query monitoring runs automatically every 5 minutes.
+With `ENABLE_QUERY_MONITORING=true` and PostgreSQL's `pg_stat_statements` extension enabled, query monitoring runs automatically every 5 minutes. Leave the flag set to `false` (the default) if you are using another database engine or do not have the extension installed to avoid unsupported queries.
 
 Check logs for slow queries:
 ```bash

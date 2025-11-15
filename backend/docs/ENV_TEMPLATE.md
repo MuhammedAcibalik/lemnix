@@ -35,6 +35,9 @@ RATE_LIMIT_MAX_REQUESTS=100
 
 # Logging
 LOG_LEVEL=info
+
+# Query monitoring (requires pg_stat_statements)
+ENABLE_QUERY_MONITORING=false
 ```
 
 ## PostgreSQL Setup Instructions
@@ -44,4 +47,9 @@ LOG_LEVEL=info
 3. Start PostgreSQL + PgBouncer: `npm run db:up`
 4. Run migrations: `npm run db:migrate:postgres`
 5. Verify connection: `npm run db:studio:postgres`
+
+## Query Monitoring
+
+- Set `ENABLE_QUERY_MONITORING=true` only when running against PostgreSQL instances where the `pg_stat_statements` extension is installed.
+- Leave the flag at `false` (default) for unsupported databases to bypass the monitoring queries.
 

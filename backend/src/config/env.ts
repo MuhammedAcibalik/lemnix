@@ -72,6 +72,13 @@ const envSchema = z.object({
     .enum(["error", "warn", "info", "debug", "verbose"])
     .default("info"),
 
+  // Query monitoring (optional)
+  ENABLE_QUERY_MONITORING: z
+    .string()
+    .transform((val) => val === "true")
+    .pipe(z.boolean())
+    .default("false"),
+
   // GPU optimization settings
   ENABLE_GPU: z
     .string()
