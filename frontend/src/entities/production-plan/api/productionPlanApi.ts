@@ -17,6 +17,16 @@ import type {
   ProductionPlanStatistics,
 } from "../model/types";
 
+type ProductionPlanResponse = {
+  success: boolean;
+  data: ProductionPlan | null;
+};
+
+type ProductionPlanItemsResponse = {
+  success: boolean;
+  data: ProductionPlan["items"] | null;
+};
+
 export class ProductionPlanApi {
   private readonly baseUrl = "/production-plan";
 
@@ -73,9 +83,12 @@ export class ProductionPlanApi {
       },
     );
 
+    const { success, data, pagination } = response;
+
     console.log("📊 [API] Data fetched from database:", {
-      success: response.success,
-      dataLength: response.data?.length || 0,
+      success,
+      dataLength: data?.length || 0,
+      pagination,
       source: "database-only",
     });
 
@@ -86,10 +99,9 @@ export class ProductionPlanApi {
    * Get single production plan by ID
    */
   async getProductionPlanById(id: string): Promise<ProductionPlan> {
-    const response = await api.get<{
-      success: boolean;
-      data: ProductionPlan;
-    }>(`${this.baseUrl}/${id}`);
+    const response = await api.get<ProductionPlanResponse>(
+      `${this.baseUrl}/${id}`,
+    );
 
     if (!response.success || !response.data) {
       throw new Error("Production plan not found");
@@ -105,10 +117,9 @@ export class ProductionPlanApi {
     weekNumber: number,
     year: number,
   ): Promise<ProductionPlan> {
-    const response = await api.get<{
-      success: boolean;
-      data: ProductionPlan;
-    }>(`${this.baseUrl}/week/${weekNumber}/${year}`);
+    const response = await api.get<ProductionPlanResponse>(
+      `${this.baseUrl}/week/${weekNumber}/${year}`,
+    );
 
     if (!response.success || !response.data) {
       throw new Error("Production plan not found");
@@ -175,10 +186,9 @@ export class ProductionPlanApi {
   async getProductionPlanItemsByWorkOrder(
     workOrderId: string,
   ): Promise<ProductionPlan["items"]> {
-    const response = await api.get<{
-      success: boolean;
-      data: ProductionPlan["items"];
-    }>(`${this.baseUrl}/items/work-order/${workOrderId}`);
+    const response = await api.get<ProductionPlanItemsResponse>(
+      `${this.baseUrl}/items/work-order/${workOrderId}`,
+    );
 
     if (!response.success || !response.data) {
       throw new Error("Production plan items not found");
