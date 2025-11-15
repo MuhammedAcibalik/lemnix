@@ -24,6 +24,7 @@ interface UseCuttingListDataProps {
   cuttingList: CuttingList | null;
   setCuttingList: (list: CuttingList | null) => void;
   setCuttingLists: (lists: CuttingList[]) => void;
+  cuttingLists: CuttingList[];
   title: string;
   selectedWeekNumber: number;
   productName: string;
@@ -45,6 +46,7 @@ export const useCuttingListData = ({
   cuttingList,
   setCuttingList,
   setCuttingLists,
+  cuttingLists,
   title,
   selectedWeekNumber,
   productName,
@@ -170,6 +172,17 @@ export const useCuttingListData = ({
       return;
     }
 
+    const conflictingList = cuttingLists.find(
+      (list) => list.weekNumber === selectedWeekNumber,
+    );
+
+    if (conflictingList) {
+      const conflictMessage = `${selectedWeekNumber}. hafta için zaten "${conflictingList.title}" adlı bir kesim listesi mevcut.`;
+      setError(conflictMessage);
+      setLoadingState(LoadingState.ERROR);
+      return;
+    }
+
     setLoadingState(LoadingState.LOADING);
 
     try {
@@ -199,11 +212,13 @@ export const useCuttingListData = ({
   }, [
     title,
     selectedWeekNumber,
+    cuttingLists,
     handleError,
     setCuttingList,
     loadCuttingListsFromBackend,
     setSuccess,
     setLoadingState,
+    setError,
   ]);
 
   const addProductSection = useCallback(
