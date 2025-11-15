@@ -332,6 +332,7 @@ export const authenticateToken = (
         permissions: [
           Permission.VIEW_CUTTING_PLANS,
           Permission.VIEW_OPTIMIZATION_RESULTS,
+          Permission.START_OPTIMIZATION,
         ], // ⚠️ Sınırlı yetkiler
         tokenId: "dev-token-123",
       };
