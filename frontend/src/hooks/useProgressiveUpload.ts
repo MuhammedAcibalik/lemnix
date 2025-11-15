@@ -14,6 +14,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { io, Socket } from "socket.io-client";
 import { productionPlanApi } from "@/entities/production-plan/api/productionPlanApi";
+import { getAuthToken } from "@/shared/api/client";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -134,11 +135,16 @@ export function useProgressiveUpload(): UseProgressiveUploadReturn {
       const formData = new FormData();
       formData.append("file", file);
 
+      const token = getAuthToken();
+      const headers: Record<string, string> = {};
+
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       const response = await fetch("/api/production-plan/upload-progressive", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || "mock-dev-token-lemnix-2025"}`,
-        },
+        headers,
         body: formData,
       });
 
@@ -312,12 +318,18 @@ export function useProgressiveRetrieval() {
           startTime: Date.now(),
         }));
 
+        const token = getAuthToken();
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+
         const response = await fetch("/api/production-plan/progressive", {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token") || "mock-dev-token-lemnix-2025"}`,
-            "Content-Type": "application/json",
-          },
+          headers,
         });
 
         if (!response.ok) {

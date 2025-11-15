@@ -30,10 +30,12 @@ function generateCorrelationId(): string {
  * Get auth token from storage
  * TODO: Implement actual auth token retrieval
  */
-function getAuthToken(): string | null {
+export function getAuthToken(): string | null {
   if (typeof window === "undefined" || typeof localStorage === "undefined") {
     return null;
   }
+
+  const mockToken = "mock-dev-token-lemnix-2025";
 
   // Check localStorage first
   const stored = localStorage.getItem("auth_token");
@@ -45,18 +47,20 @@ function getAuthToken(): string | null {
   // This will be replaced with actual authentication flow
   // ✅ SECURITY: Strict development-only check
   if (import.meta.env.MODE === "development" && import.meta.env.DEV) {
-    const mockToken = "mock-dev-token-lemnix-2025"; // ✅ FIXED: Consistent token
     localStorage.setItem("auth_token", mockToken);
     return mockToken;
   }
 
-  // ✅ SECURITY: Production mode without token - fail gracefully
+  // ✅ SECURITY: Production mode without token - fall back to mock token until auth is implemented
   if (import.meta.env.MODE === "production" || import.meta.env.PROD) {
-    console.warn("[API] No authentication token found in production");
-    return null;
+    console.warn(
+      "[API] No authentication token found in production. Falling back to mock token until auth is implemented.",
+    );
+    return mockToken;
   }
 
-  return null;
+  // Non-production environments (e.g., tests, storybook) still need a token for now
+  return mockToken;
 }
 
 /**
