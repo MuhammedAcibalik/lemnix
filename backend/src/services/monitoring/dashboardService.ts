@@ -4,10 +4,12 @@
  * @version 1.0.0 - Real Database Queries
  */
 
-import { PrismaClient } from "@prisma/client";
 import { logger } from "../logger";
-
-const prisma = new PrismaClient();
+import {
+  DashboardRepository,
+  dashboardRepository,
+} from "../../repositories/DashboardRepository";
+import { queryPerformanceMonitor } from "./QueryPerformanceMonitor";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -24,6 +26,7 @@ export interface DashboardMetrics {
   readonly optimizationSuccessRate: number;
   readonly activeUsers: number;
   readonly systemUptime: number;
+  readonly queryPerformance: QueryPerformanceSummary;
 }
 
 export interface AlgorithmPerformance {
@@ -77,6 +80,23 @@ export interface SystemHealth {
     readonly responseTime: number;
   };
   readonly lastCheck: string;
+  readonly queryPerformance: QueryPerformanceSummary;
+}
+
+export interface QueryPerformanceSummary {
+  readonly totalQueries: number;
+  readonly slowQueries: number;
+  readonly p50: number;
+  readonly p95: number;
+  readonly p99: number;
+  readonly avgDuration: number;
+  readonly maxDuration: number;
+  readonly slowQueryThreshold: number;
+  readonly recentSlowQueries: ReadonlyArray<{
+    readonly query: string;
+    readonly duration: number;
+    readonly recordedAt: string;
+  }>;
 }
 
 // ============================================================================
@@ -84,6 +104,39 @@ export interface SystemHealth {
 // ============================================================================
 
 export class DashboardService {
+  constructor(
+    private readonly repository: DashboardRepository = dashboardRepository,
+  ) {}
+
+  private get prisma() {
+    return this.repository.prisma;
+  }
+
+  public getQueryPerformanceSummary(): QueryPerformanceSummary {
+    return this.buildQueryPerformanceSummary();
+  }
+
+  private buildQueryPerformanceSummary(): QueryPerformanceSummary {
+    const stats = queryPerformanceMonitor.getStats(60 * 60 * 1000);
+    const slowQueries = queryPerformanceMonitor.getSlowQueries(5);
+
+    return {
+      totalQueries: stats.totalQueries,
+      slowQueries: stats.slowQueries,
+      p50: stats.p50,
+      p95: stats.p95,
+      p99: stats.p99,
+      avgDuration: stats.avgDuration,
+      maxDuration: stats.maxDuration,
+      slowQueryThreshold: queryPerformanceMonitor.getSlowQueryThreshold(),
+      recentSlowQueries: slowQueries.map((query) => ({
+        query: query.query.substring(0, 200),
+        duration: query.duration,
+        recordedAt: new Date(query.timestamp).toISOString(),
+      })),
+    };
+  }
+
   /**
    * Get comprehensive dashboard metrics from real database
    */
@@ -114,7 +167,7 @@ export class DashboardService {
         number,
       ] = await Promise.all([
         // Total cutting lists (not archived)
-        prisma.cuttingList.count({
+        this.prisma.cuttingList.count({
           where: { status: { not: "ARCHIVED" } },
         }),
 
@@ -122,13 +175,13 @@ export class DashboardService {
         Promise.resolve([]),
 
         // Distinct profile types
-        prisma.cuttingListItem.findMany({
+        this.prisma.cuttingListItem.findMany({
           distinct: ["profileType"],
           select: { profileType: true },
         }),
 
         // Optimization statistics (last 30 days)
-        prisma.optimizationStatistics.aggregate({
+        this.prisma.optimizationStatistics.aggregate({
           _avg: {
             averageEfficiency: true,
             wasteReductionPercent: true,
@@ -139,7 +192,7 @@ export class DashboardService {
         }),
 
         // Active users (logged in last 30 days)
-        prisma.user.count({
+        this.prisma.user.count({
           where: {
             isActive: true,
             lastLogin: { gte: thirtyDaysAgo },
@@ -172,6 +225,7 @@ export class DashboardService {
         optimizationSuccessRate: optimizationStats._avg.successRate ?? 0,
         activeUsers,
         systemUptime,
+        queryPerformance: this.buildQueryPerformanceSummary(),
       };
     } catch (error) {
       logger.error("[DashboardService] Failed to get dashboard metrics", {
@@ -193,7 +247,7 @@ export class DashboardService {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       // Try OptimizationStatistics first (preferred)
-      const statsFromTable = await prisma.optimizationStatistics.groupBy({
+      const statsFromTable = await this.prisma.optimizationStatistics.groupBy({
         by: ["algorithm"],
         _count: true,
         _avg: {
@@ -220,7 +274,7 @@ export class DashboardService {
       );
 
       // Filter optimizations with non-null results at query level
-      const optimizations = await prisma.optimization.findMany({
+      const optimizations = await this.prisma.optimization.findMany({
         where: {
           status: "completed",
           createdAt: { gte: thirtyDaysAgo },
@@ -303,7 +357,7 @@ export class DashboardService {
   ): Promise<ReadonlyArray<WasteReductionTrend>> {
     try {
       // Use raw SQL for daily aggregation
-      const results = await prisma.$queryRaw<
+      const results = await this.prisma.$queryRaw<
         Array<{
           date: Date;
           waste_reduction: number;
@@ -341,7 +395,7 @@ export class DashboardService {
     limit: number = 10,
   ): Promise<ReadonlyArray<RecentActivity>> {
     try {
-      const activities = await prisma.userActivity.findMany({
+      const activities = await this.prisma.userActivity.findMany({
         where: {
           activityType: {
             in: [
@@ -485,13 +539,13 @@ export class DashboardService {
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
       // Get base stats from ProfileUsageStatistics
-      const profileStats = await prisma.profileUsageStatistics.findMany({
+      const profileStats = await this.prisma.profileUsageStatistics.findMany({
         orderBy: { totalUsageCount: "desc" },
         take: limit * 2, // Get more to account for recent changes
       });
 
       // Get recent usage delta
-      const recentUsage = await prisma.cuttingListItem.groupBy({
+      const recentUsage = await this.prisma.cuttingListItem.groupBy({
         by: ["profileType"],
         _sum: {
           quantity: true,
@@ -548,8 +602,10 @@ export class DashboardService {
       const startTime = Date.now();
 
       // Test database connection with simple query
-      await prisma.$queryRaw`SELECT 1`;
+      await this.prisma.$queryRaw`SELECT 1`;
       const dbResponseTime = Date.now() - startTime;
+
+      const queryPerformance = this.buildQueryPerformanceSummary();
 
       // Get memory usage
       const memUsage = process.memoryUsage();
@@ -591,6 +647,7 @@ export class DashboardService {
           responseTime: dbResponseTime,
         },
         lastCheck: new Date().toISOString(),
+        queryPerformance,
       };
     } catch (error) {
       logger.error("[DashboardService] Failed to get system health", { error });
@@ -602,10 +659,11 @@ export class DashboardService {
         memory: { used: 0, total: 0, percentage: 0 },
         database: { connected: false, responseTime: -1 },
         lastCheck: new Date().toISOString(),
+        queryPerformance: this.buildQueryPerformanceSummary(),
       };
     }
   }
 }
 
 // Export singleton instance
-export const dashboardService = new DashboardService();
+export const dashboardService = new DashboardService(dashboardRepository);

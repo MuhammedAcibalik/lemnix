@@ -12,7 +12,6 @@
  */
 
 import { Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
 import { AdvancedOptimizationService } from "../services/optimization/AdvancedOptimizationService";
 import { PerformanceOptimizationService } from "../services/optimization/performanceOptimizationService";
 import { EnterpriseMonitoringService } from "../services/monitoring/enterpriseMonitoringService";
@@ -22,6 +21,7 @@ import { MetricsHandler } from "../services/enterprise-handlers/MetricsHandler";
 import { HealthHandler } from "../services/enterprise-handlers/HealthHandler";
 import { ExportHandler } from "../services/enterprise-handlers/ExportHandler";
 import { EnterpriseValidationService } from "../services/enterprise-validation/ValidationService";
+import { prisma } from "../config/database";
 
 /**
  * Enterprise Optimization Controller
@@ -37,7 +37,6 @@ export class EnterpriseOptimizationController {
 
   constructor() {
     // Initialize services (DIP)
-    const prisma = new PrismaClient();
     const advancedService = new AdvancedOptimizationService(undefined, prisma);
     const performanceService = new PerformanceOptimizationService();
     this.monitoringService = new EnterpriseMonitoringService();

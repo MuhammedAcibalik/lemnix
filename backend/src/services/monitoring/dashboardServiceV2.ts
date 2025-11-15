@@ -6,8 +6,8 @@
  * @version 2.0.0 - Complete Reboot
  */
 
-import { PrismaClient } from "@prisma/client";
 import { logger } from "../logger";
+import { dashboardRepository } from "../../repositories/DashboardRepository";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -41,7 +41,7 @@ interface ActivityFilter {
   readonly type?: string;
 }
 
-const prisma = new PrismaClient();
+const prisma = dashboardRepository.prisma;
 
 /**
  * Dashboard metrics options
