@@ -20,6 +20,7 @@ import {
   CacheKeys,
   CacheTags,
 } from "../services/cache/RedisCache";
+import { RepositoryError } from "../errors/RepositoryError";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -48,6 +49,17 @@ type CuttingListWithRelations = CuttingList & {
   user?: unknown;
 };
 
+interface CreateCuttingListOptions {
+  readonly name: string;
+  readonly description?: string;
+  readonly status?: CuttingListStatus;
+  readonly weekNumber?: number;
+  readonly sections?: Prisma.InputJsonValue;
+  readonly metadata?: Prisma.InputJsonValue;
+  readonly userId?: string;
+  readonly anonymousOwnerId?: string;
+}
+
 export class CuttingListRepository {
   private static instance: CuttingListRepository;
 
@@ -63,10 +75,73 @@ export class CuttingListRepository {
   /**
    * Create a new cutting list
    */
-  public async create(
-    data: Prisma.CuttingListCreateInput,
-  ): Promise<CuttingList> {
+  public async create(options: CreateCuttingListOptions): Promise<CuttingList> {
     try {
+      const fallbackUserId = process.env["SYSTEM_USER_ID"] || "system-user";
+      const fallbackEmail =
+        process.env["SYSTEM_USER_EMAIL"] || "system@lemnix.com";
+      const fallbackName = process.env["SYSTEM_USER_NAME"] || "System User";
+
+      const resolvedUserId = options.userId ?? fallbackUserId;
+
+      const metadataPayload: Record<string, unknown> = {};
+      let metadataValue: Prisma.InputJsonValue | undefined;
+      if (
+        options.metadata &&
+        typeof options.metadata === "object" &&
+        !Array.isArray(options.metadata)
+      ) {
+        Object.assign(
+          metadataPayload,
+          options.metadata as Record<string, unknown>,
+        );
+      } else if (options.metadata !== undefined) {
+        metadataValue = options.metadata;
+      }
+
+      if (!options.userId) {
+        metadataPayload.createdBy = "anonymous";
+      }
+
+      if (options.anonymousOwnerId) {
+        metadataPayload.anonymousOwnerId = options.anonymousOwnerId;
+      }
+
+      const data: Prisma.CuttingListCreateInput = {
+        name: options.name,
+        status: options.status ?? CuttingListStatus.DRAFT,
+        user: options.userId
+          ? {
+              connect: { id: resolvedUserId },
+            }
+          : {
+              connectOrCreate: {
+                where: { id: resolvedUserId },
+                create: {
+                  id: resolvedUserId,
+                  email: fallbackEmail,
+                  name: fallbackName,
+                  role: "system",
+                },
+              },
+            },
+        sections: (options.sections ?? []) as Prisma.InputJsonValue,
+      };
+
+      if (options.description) {
+        data.description = options.description;
+      }
+
+      if (typeof options.weekNumber === "number") {
+        data.weekNumber = options.weekNumber;
+      }
+
+      if (Object.keys(metadataPayload).length > 0) {
+        data.metadata = metadataPayload as Prisma.InputJsonValue;
+      } else if (metadataValue !== undefined) {
+        data.metadata = metadataValue;
+      }
+
       const result = await prisma.cuttingList.create({
         data,
         include: {
@@ -80,7 +155,26 @@ export class CuttingListRepository {
 
       return result;
     } catch (error) {
-      logger.error("Failed to create cutting list", { error });
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === "P2002") {
+          throw new RepositoryError(
+            "Bu hafta için zaten bir kesim listesi mevcut",
+            409,
+            {
+              userId: options.userId ?? resolvedUserId,
+              weekNumber: options.weekNumber,
+            },
+          );
+        }
+
+        if (error.code === "P2003" || error.code === "P2025") {
+          throw new RepositoryError("İlişkili kullanıcı bulunamadı", 400, {
+            userId: options.userId ?? resolvedUserId,
+          });
+        }
+      }
+
+      logger.error("Failed to create cutting list", { error, options });
       throw error;
     }
   }

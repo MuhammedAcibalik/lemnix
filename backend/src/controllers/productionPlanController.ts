@@ -9,6 +9,8 @@ import { productionPlanService } from "../services/productionPlanService";
 import { productionPlanToCuttingListService } from "../services/productionPlanToCuttingListService";
 import { statisticsService } from "../services/statisticsService";
 import { logger } from "../utils/logger";
+import { resolveRequestUserContext } from "../utils/requestUserContext";
+import { RepositoryError } from "../errors/RepositoryError";
 
 export class ProductionPlanController {
   /**
@@ -392,8 +394,7 @@ export class ProductionPlanController {
   async createCuttingListFromPlan(req: Request, res: Response): Promise<void> {
     try {
       const { productionPlanItems, cuttingListMetadata } = req.body;
-      const userId =
-        (req as { user?: { userId?: string } }).user?.userId || "dev-user-123"; // Development fallback
+      const { userId, anonymousUserId } = resolveRequestUserContext(req);
 
       // Validation
       if (
@@ -452,7 +453,8 @@ export class ProductionPlanController {
       logger.info("Creating cutting list from production plan", {
         itemCount: productionPlanItems.length,
         name: cuttingListMetadata.name,
-        userId,
+        userId: userId ?? "anonymous",
+        anonymousUserId,
       });
 
       const result =
@@ -460,6 +462,7 @@ export class ProductionPlanController {
           productionPlanItems,
           cuttingListMetadata,
           userId,
+          anonymousUserId,
         });
 
       if (result.success) {
@@ -478,12 +481,26 @@ export class ProductionPlanController {
           error: result.error,
         });
 
-        res.status(400).json({
+        res.status(result.statusCode ?? 400).json({
           success: false,
           error: result.error || "Kesim listesi oluşturulamadı",
         });
       }
     } catch (error) {
+      if (error instanceof RepositoryError) {
+        logger.warn("Repository error while creating cutting list from plan", {
+          error: error.message,
+          statusCode: error.statusCode,
+          details: error.details,
+        });
+
+        res.status(error.statusCode).json({
+          success: false,
+          error: error.message,
+        });
+        return;
+      }
+
       logger.error("Create cutting list from production plan error", {
         error: (error as Error).message,
         body: req.body,
