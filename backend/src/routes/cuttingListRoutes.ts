@@ -14,6 +14,7 @@ import {
 import {
   CuttingListController,
   cuttingListErrorHandler,
+  getCuttingListController,
   getSmartProductSuggestions,
   getSmartSizeSuggestions,
   getSmartProfileSuggestions,
@@ -527,9 +528,29 @@ class CuttingListRouterFactory {
 }
 
 const createRouter = (): Router => {
-  const controller = new CuttingListController();
-  const factory = new CuttingListRouterFactory(controller);
-  return factory.create();
+  try {
+    const controller = getCuttingListController();
+    const factory = new CuttingListRouterFactory(controller);
+    return factory.create();
+  } catch (error: unknown) {
+    const err = error as Error;
+    logger.error("Failed to initialize CuttingListController", {
+      error: err.message,
+      stack: err.stack,
+    });
+
+    const router = Router();
+    router.use((req: Request, res: Response) => {
+      res.status(500).json({
+        success: false,
+        error: "Cutting list controller initialization failed",
+        message: err.message || "Unknown error",
+        timestamp: new Date().toISOString(),
+      });
+    });
+
+    return router;
+  }
 };
 
 export default createRouter();
