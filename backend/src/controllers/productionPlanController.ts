@@ -466,12 +466,21 @@ export class ProductionPlanController {
         logger.info("Cutting list created successfully from production plan", {
           cuttingListId: result.data?.cuttingListId,
           itemCount: result.data?.itemCount,
+          priorityWarnings: result.warnings,
         });
+
+        if (result.warnings && result.warnings.length > 0) {
+          logger.warn("Priority normalization warnings detected", {
+            warningCount: result.warnings.length,
+            warnings: result.warnings,
+          });
+        }
 
         res.json({
           success: true,
           data: result.data,
           message: "Kesim listesi başarıyla oluşturuldu",
+          warnings: result.warnings,
         });
       } else {
         logger.error("Failed to create cutting list from production plan", {

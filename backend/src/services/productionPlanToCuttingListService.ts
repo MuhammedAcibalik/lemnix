@@ -31,6 +31,7 @@ export interface CuttingListFromPlanResult {
     readonly name: string;
     readonly itemCount: number;
   };
+  readonly warnings?: string[];
   readonly error?: string;
 }
 
@@ -78,6 +79,11 @@ export class ProductionPlanToCuttingListService {
         planItems.data!,
       );
 
+      const aggregatedWarnings = [
+        ...(planItems.warnings ?? []),
+        ...(cuttingListItems.warnings ?? []),
+      ];
+
       // Plan itemları ile kesim listesi arasında link kur
       await this.linkPlanItemsToCuttingList(
         request.productionPlanItems.map((item) => item.planItemId),
@@ -89,8 +95,10 @@ export class ProductionPlanToCuttingListService {
         data: {
           cuttingListId: cuttingList.id,
           name: cuttingList.name,
-          itemCount: cuttingListItems,
+          itemCount: cuttingListItems.itemsCreated,
         },
+        warnings:
+          aggregatedWarnings.length > 0 ? aggregatedWarnings : undefined,
       };
     } catch (error) {
       console.error("Error creating cutting list from plan:", error);
@@ -104,7 +112,21 @@ export class ProductionPlanToCuttingListService {
   /**
    * Plan itemlarını doğrula ve getir
    */
-  private async validatePlanItems(planItemIds: Array<{ planItemId: string }>) {
+  private async validatePlanItems(
+    planItemIds: Array<{ planItemId: string }>,
+  ): Promise<{
+    success: boolean;
+    data?: Array<{
+      id: string;
+      siparis: string;
+      miktar: number;
+      malzemeNo: string;
+      malzemeKisaMetni: string;
+      oncelik?: string | null;
+    }>;
+    error?: string;
+    warnings?: string[];
+  }> {
     try {
       const items = await this.prisma.productionPlanItem.findMany({
         where: {
@@ -121,9 +143,31 @@ export class ProductionPlanToCuttingListService {
         };
       }
 
+      const priorityWarnings: string[] = [];
+      items.forEach((item) => {
+        const rawPriority = item.oncelik ?? null;
+        console.info("[ProductionPlan] Priority audit", {
+          planItemId: item.id,
+          workOrderId: item.siparis,
+          priority: rawPriority,
+        });
+
+        if (!rawPriority || rawPriority.toString().trim() === "") {
+          const warningMessage =
+            `Plan item ${item.id} (${item.siparis}) için oncelik değeri eksik; ` +
+            "varsayılan MEDIUM kullanılacak.";
+          console.warn("[ProductionPlan] Missing priority", {
+            planItemId: item.id,
+            workOrderId: item.siparis,
+          });
+          priorityWarnings.push(warningMessage);
+        }
+      });
+
       return {
         success: true,
         data: items,
+        warnings: priorityWarnings.length > 0 ? priorityWarnings : undefined,
       };
     } catch (error) {
       console.error("Error validating plan items:", error);
@@ -148,7 +192,8 @@ export class ProductionPlanToCuttingListService {
       malzemeKisaMetni: string;
       oncelik?: string | null;
     }>,
-  ) {
+  ): Promise<{ itemsCreated: number; warnings: string[] }> {
+    const warnings: string[] = [];
     const itemsToCreate = planItems.map((planItem) => {
       const validatedItem = validatedItems.find(
         (item) => item.id === planItem.planItemId,
@@ -156,6 +201,15 @@ export class ProductionPlanToCuttingListService {
 
       if (!validatedItem) {
         throw new Error(`Plan item not found: ${planItem.planItemId}`);
+      }
+
+      const { priority, warning } = this.mapPriority(validatedItem.oncelik, {
+        planItemId: planItem.planItemId,
+        workOrderId: validatedItem.siparis,
+      });
+
+      if (warning) {
+        warnings.push(warning);
       }
 
       return {
@@ -171,7 +225,7 @@ export class ProductionPlanToCuttingListService {
         color: "Beyaz", // Default color
         version: "1.0", // Default version
         size: "Standard", // Default size
-        priority: this.mapPriority(validatedItem.oncelik as string),
+        priority,
         status: "DRAFT" as const,
       };
     });
@@ -179,7 +233,7 @@ export class ProductionPlanToCuttingListService {
     const result = await this.prisma.cuttingListItem.createMany({
       data: itemsToCreate,
     });
-    return result.count;
+    return { itemsCreated: result.count, warnings };
   }
 
   /**
@@ -204,18 +258,37 @@ export class ProductionPlanToCuttingListService {
   /**
    * Öncelik mapping'i
    */
-  private mapPriority(oncelik: string): ItemPriority {
-    switch (oncelik.toLowerCase()) {
+  private mapPriority(
+    oncelik: string | null | undefined,
+    context: { planItemId: string; workOrderId: string },
+  ): { priority: ItemPriority; warning?: string } {
+    const normalized = oncelik?.toLowerCase().trim();
+
+    if (!normalized) {
+      return {
+        priority: "MEDIUM",
+        warning:
+          `Plan item ${context.planItemId} (${context.workOrderId}) için oncelik değeri bulunamadı, ` +
+          "varsayılan MEDIUM değeri kullanıldı.",
+      };
+    }
+
+    switch (normalized) {
       case "yuksek":
       case "yüksek":
-        return "HIGH" as ItemPriority;
+        return { priority: "HIGH" };
       case "orta":
-        return "MEDIUM" as ItemPriority;
+        return { priority: "MEDIUM" };
       case "dusuk":
       case "düşük":
-        return "LOW" as ItemPriority;
+        return { priority: "LOW" };
       default:
-        return "MEDIUM" as ItemPriority;
+        return {
+          priority: "MEDIUM",
+          warning:
+            `Plan item ${context.planItemId} (${context.workOrderId}) için geçersiz oncelik ` +
+            `değeri "${oncelik}" tespit edildi; varsayılan MEDIUM değeri kullanıldı.`,
+        };
     }
   }
 
