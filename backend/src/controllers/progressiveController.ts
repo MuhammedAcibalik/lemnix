@@ -12,6 +12,7 @@
 
 import { Request, Response } from "express";
 import { Server as SocketIOServer } from "socket.io";
+import { Prisma } from "@prisma/client";
 import { progressiveLoadingService } from "../services/progressiveLoadingService";
 import { logger } from "../services/logger";
 import { UserRole, Permission } from "../middleware/authorization";
@@ -162,17 +163,36 @@ export class ProgressiveController {
   ): Promise<void> {
     try {
       const sessionId = req.user?.sessionId || "anonymous";
-      const filters = {
-        weekNumber: req.query.weekNumber
-          ? Number(req.query.weekNumber)
-          : undefined,
-        year: req.query.year ? Number(req.query.year) : undefined,
-        status: (req.query.status as string) || "active",
-        bolum: req.query.bolum as string,
-        oncelik: req.query.oncelik as string,
-        page: Number(req.query.page) || 1,
-        limit: Number(req.query.limit) || 50,
-      };
+      const page = Math.max(Number(req.query.page) || 1, 1);
+      const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 500);
+
+      const filters: Prisma.ProductionPlanWhereInput = {};
+      if (req.query.weekNumber) {
+        const weekNumber = Number(req.query.weekNumber);
+        if (!Number.isNaN(weekNumber)) {
+          filters.weekNumber = weekNumber;
+        }
+      }
+      if (req.query.year) {
+        const year = Number(req.query.year);
+        if (!Number.isNaN(year)) {
+          filters.year = year;
+        }
+      }
+      filters.status = (req.query.status as string) || "active";
+
+      const itemFilters: Prisma.ProductionPlanItemWhereInput = {};
+      if (req.query.bolum) {
+        itemFilters.bolum = req.query.bolum as string;
+      }
+      if (req.query.oncelik) {
+        itemFilters.oncelik = req.query.oncelik as string;
+      }
+      if (Object.keys(itemFilters).length > 0) {
+        filters.items = {
+          some: itemFilters,
+        };
+      }
 
       logger.info("Progressive retrieval started", {
         sessionId,
@@ -181,21 +201,28 @@ export class ProgressiveController {
 
       // Start progressive retrieval
       const result =
-        await progressiveLoadingService.getProductionPlansProgressive(filters, {
-          batchSize: 100,
-          concurrency: 3,
-          onProgress: (progress) => {
-            // Send real-time progress update
-            this.sendProgressUpdate(sessionId, "retrieve", progress);
+        await progressiveLoadingService.getProductionPlansProgressive(
+          filters,
+          {
+            batchSize: 100,
+            concurrency: 3,
+            onProgress: (progress) => {
+              // Send real-time progress update
+              this.sendProgressUpdate(sessionId, "retrieve", progress);
+            },
+            onStageComplete: (stage, stageResult) => {
+              logger.info("Retrieval stage completed", {
+                sessionId,
+                stage,
+                result: stageResult,
+              });
+            },
           },
-          onStageComplete: (stage, stageResult) => {
-            logger.info("Retrieval stage completed", {
-              sessionId,
-              stage,
-              result: stageResult,
-            });
+          {
+            page,
+            limit,
           },
-        });
+        );
 
       if (result.success) {
         logger.info("Progressive retrieval completed successfully", {

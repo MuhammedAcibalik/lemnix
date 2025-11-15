@@ -243,6 +243,7 @@ export class ProgressiveLoadingService extends EventEmitter {
   async getProductionPlansProgressive(
     filters: Prisma.ProductionPlanWhereInput = {},
     options: ProgressiveLoadOptions = {},
+    pagination: { page: number; limit: number } = { page: 1, limit: 50 },
   ): Promise<ProgressiveLoadResult<unknown[]>> {
     const startTime = Date.now();
     const progress: LoadingProgress = {
@@ -260,6 +261,9 @@ export class ProgressiveLoadingService extends EventEmitter {
       this.emit("progress", { ...progress });
       options.onProgress?.(progress);
 
+      const page = Math.max(pagination.page, 1);
+      const limit = Math.min(Math.max(pagination.limit, 1), 500);
+
       const plans = await this.prisma.productionPlan.findMany({
         where: filters,
         include: {
@@ -268,6 +272,8 @@ export class ProgressiveLoadingService extends EventEmitter {
           },
         },
         orderBy: [{ year: "desc" }, { weekNumber: "desc" }],
+        skip: (page - 1) * limit,
+        take: limit,
       });
 
       const totalItems = plans.reduce(
