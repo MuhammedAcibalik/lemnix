@@ -159,4 +159,59 @@ router.get("/statistics", authenticateToken, (req: Request, res: Response) =>
   profileManagementController.getStatistics(req, res),
 );
 
+// Error handling middleware - prevent degraded mode from surfacing 500s
+router.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+  // For profile list and statistics, return safe fallbacks instead of 500
+  if (req.path.startsWith("/definitions")) {
+    logger.warn(
+      "[ProfileMgmt] Definitions route error, returning empty list instead of 500",
+      {
+        error: error.message,
+        url: req.url,
+        method: req.method,
+      },
+    );
+
+    res.status(200).json({
+      success: true,
+      data: [],
+    });
+    return;
+  }
+
+  if (req.path.startsWith("/statistics")) {
+    logger.warn(
+      "[ProfileMgmt] Statistics route error, returning fallback stats instead of 500",
+      {
+        error: error.message,
+        url: req.url,
+        method: req.method,
+      },
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalProfiles: 0,
+        activeProfiles: 0,
+        totalMappings: 0,
+        uniqueWeeks: 0,
+      },
+    });
+    return;
+  }
+
+  logger.error("Profile management route error", {
+    error: error.message,
+    stack: error.stack,
+    url: req.url,
+    method: req.method,
+  });
+
+  res.status(500).json({
+    success: false,
+    error: "Sunucu hatası",
+  });
+});
+
 export default router;

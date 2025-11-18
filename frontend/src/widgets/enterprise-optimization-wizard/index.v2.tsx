@@ -11,16 +11,14 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Box, Typography, Chip, Stack } from "@mui/material";
+import { Box, Typography, Chip, Stack, alpha, Tooltip } from "@mui/material";
 import {
   CheckCircle as CheckCircleIcon,
-  PlayArrow as PlayArrowIcon,
   ChevronRight as ChevronRightIcon,
-  ArrowForward as ArrowForwardIcon,
-  ArrowBack as ArrowBackIcon,
+  PlayArrow as PlayArrowIcon,
 } from "@mui/icons-material";
-import { useDesignSystem } from "@/shared/hooks";
-import { CardV2, ButtonV2 } from "@/shared";
+import { useDesignSystem, useAdaptiveUIContext, useAdaptiveVariant } from "@/shared/hooks";
+import { CardV2 } from "@/shared";
 import { apiClient } from "@/shared/api/client";
 
 // Import step components (WizardHeader and WizardTabs no longer used - sidebar pattern)
@@ -66,6 +64,7 @@ const STEPS = [
  */
 export const EnterpriseOptimizationWizard: React.FC = () => {
   const ds = useDesignSystem();
+  const { device, tokens } = useAdaptiveUIContext();
 
   // Wizard navigation state
   const [activeStep, setActiveStep] = useState(0);
@@ -588,6 +587,17 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
     );
   }, [selectedCuttingList, params.objectives, isOptimizing]);
 
+  /**
+   * Adaptive button size for sticky optimize button
+   */
+  const stickyButtonSize = useAdaptiveVariant({
+    mobile: tokens.components.button.lg,
+    compact: tokens.components.button.lg,
+    standard: tokens.components.button.lg,
+    dense: tokens.components.button.lg,
+    kiosk: tokens.components.button.lg * 1.2,
+  });
+
   return (
     <Box
       sx={{
@@ -607,17 +617,26 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
       >
         <Box
           sx={{
-            maxWidth: 1200,
+            maxWidth: typeof tokens.layout.maxWidth === "number" 
+              ? tokens.layout.maxWidth 
+              : tokens.layout.maxWidth === "none" 
+                ? "none" 
+                : 1800,
             mx: "auto",
-            px: { xs: ds.spacing["3"], md: ds.spacing["6"] },
-            py: ds.spacing["3"],
+            px: {
+              xs: tokens.layout.containerPadding,
+              md: tokens.spacing.md,
+              lg: tokens.spacing.lg,
+            },
+            py: tokens.spacing.sm,
           }}
         >
           <Stack
-            direction="row"
-            spacing={ds.spacing["2"]}
+            direction={{ xs: "column", sm: "row" }}
+            spacing={tokens.spacing.xs}
             flexWrap="wrap"
             justifyContent="center"
+            alignItems={{ xs: "stretch", sm: "center" }}
           >
             {STEPS.map((step, idx) => {
               const isCompleted = completedSteps.includes(step.id);
@@ -649,9 +668,13 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
                         : isCompleted
                           ? ds.typography.fontWeight.medium
                           : ds.typography.fontWeight.normal,
+                      fontSize: `${tokens.typography.sm}px`,
+                      height: tokens.components.button.sm,
+                      minHeight: device.isTouch ? tokens.components.minTouchTarget : tokens.components.button.sm,
                       transition: ds.transitions.fast,
                       opacity: isClickable ? 1 : 0.6,
-                      "&:hover": isClickable
+                      width: { xs: "100%", sm: "auto" },
+                      "&:hover": isClickable && !device.isTouch
                         ? {
                             transform: "translateY(-1px)",
                             boxShadow: ds.shadows.soft.md,
@@ -661,8 +684,11 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
                   />
                   {idx < STEPS.length - 1 && (
                     <ChevronRightIcon
-                      fontSize="small"
-                      sx={{ color: ds.colors.text.secondary }}
+                      sx={{ 
+                        fontSize: tokens.components.icon.xs,
+                        color: ds.colors.text.secondary,
+                        display: { xs: "none", sm: "block" },
+                      }}
                     />
                   )}
                 </React.Fragment>
@@ -674,30 +700,150 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
 
       <Box
         sx={{
-          maxWidth: 1200,
+          maxWidth: activeStep === 2 
+            ? (tokens.layout.maxWidth === "none" ? "none" : typeof tokens.layout.maxWidth === "number" ? tokens.layout.maxWidth : "none")
+            : (typeof tokens.layout.maxWidth === "number" ? tokens.layout.maxWidth : 1800),
           mx: "auto",
-          px: { xs: ds.spacing["3"], md: ds.spacing["6"] },
-          py: ds.spacing["6"],
+          px: activeStep === 2 ? {
+            xs: tokens.spacing.md,
+            sm: tokens.spacing.lg,
+            md: tokens.spacing.xl,
+            lg: tokens.spacing.xl * 1.5,
+            xl: tokens.spacing.xl * 2,
+          } : {
+            xs: tokens.layout.containerPadding,
+            md: tokens.spacing.md,
+            lg: tokens.spacing.lg,
+          },
+          py: activeStep === 2 
+            ? { xs: tokens.spacing.sm, md: tokens.spacing.md }
+            : tokens.layout.sectionSpacing,
           display: "grid",
-          gap: ds.spacing["4"],
+          gap: activeStep === 2 
+            ? { xs: tokens.spacing.md, md: tokens.spacing.lg }
+            : tokens.layout.sectionSpacing,
+          position: "relative", // ✅ Sticky buton için
         }}
       >
-        {activeStep === 0 && (
-          <CardV2
-            variant="outlined"
-            title="Kesim Listesi Seçimi"
-            subtitle="Optimize edilecek kesim listesini seçin"
-            actions={
-              <ButtonV2
-                variant="primary"
-                endIcon={<ArrowForwardIcon />}
-                onClick={() => handleStepChange(1)}
-                disabled={!selectedCuttingList}
-              >
-                Konfigürasyona Geç
-              </ButtonV2>
-            }
+        {/* Sticky Optimize Button - Card'ın sağında, dikey ortada */}
+        {activeStep === 1 && (
+          <Box
+            sx={{
+              position: "fixed",
+              top: "50%", // ✅ Dikey ortalama
+              // ✅ Card'ın SAĞ TARAFINDA, card ile scrollbar arasındaki boşluğun tam ortası
+              // Card sağ kenarı (viewport solundan): calc(50% + 900px)
+              // Scrollbar sol kenarı (viewport solundan): calc(100% - 17px)
+              // Boşluk genişliği: calc((100% - 17px) - (50% + 900px)) = calc(50% - 900px - 17px)
+              // Boşluğun ortası (viewport solundan): calc((50% + 900px) + (50% - 900px - 17px) / 2) = calc(75% + 441.5px)
+              // left kullanarak butonun sol kenarını bu noktaya koyuyoruz, sonra transform ile merkezini hizalıyoruz
+              left: {
+                md: `calc(75% + 441.5px)`, // Boşluğun ortası (viewport solundan)
+                lg: `calc(75% + 441.5px)`,
+              },
+              transform: "translateX(-50%) translateY(-50%)", // ✅ X: buton genişliğinin yarısı sola (merkez için), Y: dikey ortalama
+              zIndex: 1000,
+              display: { xs: "none", md: "flex" },
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
+            <Tooltip
+              title="Optimizasyonu Başlat"
+              arrow
+              placement="left"
+            >
+              <Box
+                component="button"
+                onClick={handleStartOptimization}
+                disabled={!canStartOptimization || isOptimizing}
+                sx={{
+                  position: "relative",
+                  width: stickyButtonSize,
+                  height: stickyButtonSize,
+                  minWidth: device.isTouch ? tokens.components.minTouchTarget : undefined,
+                  minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+                  borderRadius: "50%",
+                  // ✅ Projenin primary renk yapısı: mavi tonları
+                  background: `linear-gradient(135deg, ${ds.colors.primary[600]} 0%, ${ds.colors.primary[700]} 50%, ${ds.colors.primary[800]} 100%)`,
+                  color: ds.colors.primary.contrast,
+                  border: `2px solid ${alpha(ds.colors.primary[500], 0.3)}`,
+                  boxShadow: `
+                    0 8px 24px ${alpha(ds.colors.primary[700], 0.3)},
+                    0 4px 12px ${alpha(ds.colors.primary[600], 0.25)},
+                    inset 0 1px 0 ${alpha("#ffffff", 0.15)}
+                  `,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: (!canStartOptimization || isOptimizing) ? "not-allowed" : "pointer",
+                  transition: `all ${ds.transitions.base} cubic-bezier(0.4, 0, 0.2, 1)`,
+                  p: 0,
+                  outline: "none",
+                  "&:hover:not([disabled])": {
+                    transform: "translateY(-4px) scale(1.1)",
+                    background: `linear-gradient(135deg, ${ds.colors.primary[500]} 0%, ${ds.colors.primary[600]} 50%, ${ds.colors.primary[700]} 100%)`,
+                    boxShadow: `
+                      0 12px 32px ${alpha(ds.colors.primary[700], 0.4)},
+                      0 6px 16px ${alpha(ds.colors.primary[600], 0.3)},
+                      0 0 0 3px ${alpha(ds.colors.primary[400], 0.2)},
+                      inset 0 1px 0 ${alpha("#ffffff", 0.2)}
+                    `,
+                    borderColor: ds.colors.primary[500],
+                    "& svg": {
+                      transform: "translateX(2px)",
+                    },
+                  },
+                  "&:active:not([disabled])": {
+                    transform: "translateY(-2px) scale(1.05)",
+                    boxShadow: `
+                      0 6px 16px ${alpha(ds.colors.primary[700], 0.3)},
+                      0 3px 8px ${alpha(ds.colors.primary[600], 0.25)},
+                      inset 0 1px 0 ${alpha("#ffffff", 0.15)}
+                    `,
+                  },
+                  "&[disabled]": {
+                    opacity: 0.5,
+                    cursor: "not-allowed",
+                    filter: "grayscale(30%)",
+                  },
+                  "&:focus-visible": {
+                    outline: `3px solid ${alpha(ds.colors.primary[400], 0.5)}`,
+                    outlineOffset: "3px",
+                  },
+                }}
+              >
+                {isOptimizing ? (
+                  <Box
+                    sx={{
+                      width: tokens.components.icon.md,
+                      height: tokens.components.icon.md,
+                      border: `3px solid ${alpha("#ffffff", 0.2)}`,
+                      borderTopColor: "#ffffff",
+                      borderRadius: "50%",
+                      animation: "spin 0.8s linear infinite",
+                      "@keyframes spin": {
+                        "0%": { transform: "rotate(0deg)" },
+                        "100%": { transform: "rotate(360deg)" },
+                      },
+                    }}
+                  />
+                ) : (
+                  <PlayArrowIcon
+                    sx={{
+                      fontSize: tokens.components.icon.md,
+                      color: "#ffffff",
+                      filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.3))",
+                      transition: ds.transitions.base,
+                    }}
+                  />
+                )}
+              </Box>
+            </Tooltip>
+          </Box>
+        )}
+        {activeStep === 0 && (
+          <CardV2 variant="outlined">
             <CuttingListStep
               cuttingLists={cuttingLists}
               selectedCuttingList={selectedCuttingList}
@@ -709,32 +855,8 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
         )}
 
         {activeStep === 1 && (
-          <CardV2
-            variant="outlined"
-            title="Parametreler & Konfigürasyon"
-            subtitle="Optimizasyon hedeflerini ve algoritma ayarlarını yapılandırın"
-            actions={
-              <Stack direction="row" spacing={ds.spacing["2"]}>
-                <ButtonV2
-                  variant="ghost"
-                  startIcon={<ArrowBackIcon />}
-                  onClick={() => handleStepChange(0)}
-                >
-                  Geri
-                </ButtonV2>
-                <ButtonV2
-                  variant="primary"
-                  startIcon={<PlayArrowIcon />}
-                  onClick={handleStartOptimization}
-                  disabled={!canStartOptimization}
-                  loading={isOptimizing}
-                >
-                  Optimizasyonu Başlat
-                </ButtonV2>
-              </Stack>
-            }
-          >
-            <Stack spacing={ds.spacing["3"]}>
+          <CardV2 variant="outlined">
+            <Stack spacing={tokens.spacing.md}>
               <ParametersStep
                 params={params}
                 onParamsChange={handleParamsChange}
@@ -746,30 +868,10 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
                     0,
                   ) ?? 0
                 }
+                onStartOptimization={handleStartOptimization}
+                canStartOptimization={canStartOptimization}
+                isOptimizing={isOptimizing}
               />
-
-              <Stack direction="row" spacing={ds.spacing["1"]}>
-                <Chip
-                  icon={<CheckCircleIcon />}
-                  label={
-                    selectedCuttingList ? "Liste seçildi" : "Liste bekleniyor"
-                  }
-                  color={selectedCuttingList ? "success" : "default"}
-                  size="small"
-                />
-                <Chip
-                  icon={<CheckCircleIcon />}
-                  label={`${params.objectives?.length || 0} hedef`}
-                  color={params.objectives?.length > 0 ? "success" : "default"}
-                  size="small"
-                />
-                <Chip
-                  icon={<CheckCircleIcon />}
-                  label={`GPU ${gpuStatus.available ? "hazır" : "pasif"}`}
-                  color={gpuStatus.available ? "success" : "default"}
-                  size="small"
-                />
-              </Stack>
             </Stack>
           </CardV2>
         )}

@@ -4,7 +4,7 @@
  * @version 3.0.0 - UI/UX v3.0 Enhancement
  */
 
-import React from "react";
+import React, { useMemo, useCallback, memo } from "react";
 import {
   Box,
   Typography,
@@ -12,7 +12,6 @@ import {
   Grid,
   Stack,
   alpha,
-  keyframes,
 } from "@mui/material";
 import {
   TrendingUp,
@@ -22,379 +21,749 @@ import {
   Engineering,
   PrecisionManufacturing,
   AutoAwesome,
+  UploadFile,
 } from "@mui/icons-material";
-import { useDesignSystem } from "@/shared/hooks";
+import { useDesignSystem, useAdaptiveUIContext } from "@/shared/hooks";
 import {
   FadeIn,
-  ScaleIn,
-  Stagger,
   Badge,
-  GradientButton,
-  SecondaryButtonV2,
+  PrimaryButton,
+  SecondaryButton,
 } from "@/shared";
 
-/**
- * Shimmer animation for gradient text
- */
-const shimmerAnimation = keyframes`
-  0% {
-    background-position: -200% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
-`;
+// Constants
+const SENTENCES = [
+  "Yapay zeka destekli optimizasyon algoritmaları ile %92'nin üzerinde verimlilik sağlayın.",
+  "WebGPU hızlandırma teknolojisi ile üretim süreçlerinizi optimize edin.",
+  "4 gelişmiş algoritma ve gerçek zamanlı analiz ile endüstri devrimi yaşayın.",
+] as const;
+
+const FEATURES = [
+  { text: "Güvenli Veri İşleme", icon: Security },
+  { text: "Endüstriyel Standartlar", icon: PrecisionManufacturing },
+  { text: "Kanıtlanmış Sonuçlar", icon: Analytics },
+] as const;
 
 interface HeroSectionProps {
   onDemoStart?: () => void;
   onExcelImport?: () => void;
 }
 
+// Helper component for sequential sentences in same position
+const SequentialSentences: React.FC<{
+  sentences: readonly string[];
+  delay?: number;
+  duration?: number; // milliseconds each sentence is visible
+  gradient?: string;
+  showCursor?: boolean;
+  className?: string;
+}> = memo(({ sentences, delay = 0, duration = 3500, gradient, showCursor = false, className }) => {
+  const fadeInOut = 500; // fade in/out duration in ms
+  const finalDuration = 6000; // final combined text duration
+  const gapBeforeFinal = 300; // gap between last sentence and final text (ms)
+
+  // Create combined final text
+  const combinedText = useMemo(
+    () => sentences.join(" "),
+    [sentences]
+  );
+
+  // Calculate total animation duration
+  const totalSequenceDuration = sentences.length * duration;
+  const finalStart = delay + totalSequenceDuration + gapBeforeFinal; // Add gap before final
+  const totalDuration = totalSequenceDuration + gapBeforeFinal + finalDuration;
+
+  // Memoize animation styles
+  const animationStyles = useMemo(
+    () => {
+      const styles: Record<string, any> = {};
+
+      // Individual sentence animations
+      sentences.forEach((_sentence, index) => {
+        const sentenceStart = delay + index * duration;
+        const fadeInEnd = sentenceStart + fadeInOut;
+        const fadeOutStart = sentenceStart + duration - fadeInOut;
+        const sentenceEnd = sentenceStart + duration;
+
+        styles[`& .sentence:nth-of-type(${index + 1})`] = {
+          animation: `sentenceShow${index} ${totalDuration}ms ${sentenceStart}ms both`,
+          willChange: "opacity, transform",
+          [`@keyframes sentenceShow${index}`]: {
+            "0%": {
+              opacity: 0,
+              transform: "translateY(8px)",
+            },
+            [`${(fadeInEnd / totalDuration) * 100}%`]: {
+              opacity: 1,
+              transform: "translateY(0)",
+            },
+            [`${(fadeOutStart / totalDuration) * 100}%`]: {
+              opacity: 1,
+              transform: "translateY(0)",
+            },
+            [`${(sentenceEnd / totalDuration) * 100}%`]: {
+              opacity: 0,
+              transform: "translateY(-8px)",
+            },
+            // Ensure completely hidden before final text appears
+            [`${((sentenceEnd + gapBeforeFinal / 2) / totalDuration) * 100}%`]: {
+              opacity: 0,
+              transform: "translateY(-8px)",
+            },
+            [`${(finalStart / totalDuration) * 100}%`]: {
+              opacity: 0,
+              transform: "translateY(-8px)",
+            },
+            "100%": {
+              opacity: 0,
+              transform: "translateY(-8px)",
+            },
+          },
+          "@media (prefers-reduced-motion: reduce)": {
+            animation: "none",
+            opacity: index === 0 ? 1 : 0,
+          },
+        };
+      });
+
+      // Final combined text animation
+      const finalFadeInEnd = finalStart + fadeInOut;
+      styles["& .combined"] = {
+        animation: `combinedShow ${totalDuration}ms ${finalStart}ms both`,
+        willChange: "opacity, transform",
+        [`@keyframes combinedShow`]: {
+          "0%": {
+            opacity: 0,
+            transform: "translateY(8px)",
+          },
+          [`${(finalFadeInEnd / totalDuration) * 100}%`]: {
+            opacity: 1,
+            transform: "translateY(0)",
+          },
+          "100%": {
+            opacity: 1,
+            transform: "translateY(0)",
+          },
+        },
+        "@media (prefers-reduced-motion: reduce)": {
+          animation: "none",
+          opacity: 1,
+        },
+      };
+
+      return styles;
+    },
+    [sentences, delay, duration, fadeInOut, finalStart, totalDuration, gapBeforeFinal]
+  );
+
+  return (
+    <Box
+      component="span"
+      sx={{
+        position: "relative",
+        display: "inline-block",
+        width: "100%",
+        minHeight: "1.75em", // Prevent layout shift
+        "& .sentence": {
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          opacity: 0,
+          transform: "translateY(8px)",
+          willChange: "opacity, transform",
+          zIndex: 1,
+          ...(gradient && {
+            background: gradient,
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }),
+        },
+        "& .combined": {
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          opacity: 0,
+          transform: "translateY(8px)",
+          willChange: "opacity, transform",
+          zIndex: 2, // Always on top
+          ...(gradient && {
+            background: gradient,
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }),
+        },
+        ...animationStyles,
+      }}
+      className={className}
+      role="region"
+      aria-label="Rotating feature descriptions"
+    >
+      {sentences.map((sentence, index) => (
+        <Box
+          key={`${sentence}-${index}`}
+          component="span"
+          className="sentence"
+          aria-hidden={true}
+        >
+          {sentence}
+        </Box>
+      ))}
+      <Box
+        component="span"
+        className="combined"
+        aria-hidden={false}
+      >
+        {combinedText}
+        {showCursor && (
+          <Box
+            component="span"
+            aria-hidden="true"
+            sx={{
+              display: "inline-block",
+              width: "2px",
+              height: "1em",
+              backgroundColor: gradient ? "transparent" : "currentColor",
+              marginLeft: "2px",
+              verticalAlign: "baseline",
+              position: "relative",
+              willChange: "opacity",
+              animation: "cursorBlink 1s infinite",
+              animationDelay: `${finalStart + fadeInOut}ms`,
+              "@media (prefers-reduced-motion: reduce)": {
+                animation: "none",
+                opacity: 1,
+              },
+              "&::before": gradient
+                ? {
+                    content: '""',
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    background: gradient,
+                  }
+                : {},
+              "@keyframes cursorBlink": {
+                "0%, 49%": { opacity: 1 },
+                "50%, 100%": { opacity: 0 },
+              },
+            }}
+          />
+        )}
+      </Box>
+    </Box>
+  );
+});
+
+SequentialSentences.displayName = "SequentialSentences";
+
 const HeroSection: React.FC<HeroSectionProps> = ({
   onDemoStart,
   onExcelImport,
 }) => {
   const ds = useDesignSystem();
+  const { tokens } = useAdaptiveUIContext();
+
+  // Memoize metrics data
+  const metrics = useMemo(
+    () => [
+      {
+        value: "92%+",
+        label: "Ortalama Verimlilik",
+        icon: TrendingUp,
+        color: ds.colors.success.main,
+      },
+      {
+        value: "<2 sn",
+        label: "Optimizasyon Süresi",
+        icon: Speed,
+        color: ds.colors.primary.main,
+      },
+      {
+        value: "35%",
+        label: "Maliyet Tasarrufu",
+        icon: Analytics,
+        color: ds.colors.primary.main,
+      },
+      {
+        value: "4",
+        label: "Optimizasyon Algoritması",
+        icon: Engineering,
+        color: ds.colors.primary.main,
+      },
+    ],
+    [ds.colors.success.main, ds.colors.primary.main]
+  );
+
+  // Memoize gradient strings
+  const subtitleGradient = useMemo(
+    () =>
+      `linear-gradient(135deg, ${ds.colors.slate[800]} 0%, ${ds.colors.primary[700]} 50%, ${ds.colors.slate[700]} 100%)`,
+    [ds.colors.slate, ds.colors.primary]
+  );
+
+  const bodyGradient = useMemo(
+    () =>
+      `linear-gradient(135deg, ${alpha(ds.colors.slate[600], 0.95)} 0%, ${alpha(ds.colors.primary[600], 0.7)} 30%, ${alpha(ds.colors.slate[600], 0.9)} 100%)`,
+    [ds.colors.slate, ds.colors.primary]
+  );
+
+  const headlineGradient = useMemo(
+    () =>
+      `linear-gradient(135deg, ${ds.colors.slate[900]} 0%, ${ds.colors.primary[800]} 40%, ${ds.colors.slate[900]} 100%)`,
+    [ds.colors.slate, ds.colors.primary]
+  );
+
+  // Memoize callbacks
+  const handleDemoStart = useCallback(() => {
+    onDemoStart?.();
+  }, [onDemoStart]);
+
+  const handleExcelImport = useCallback(() => {
+    onExcelImport?.();
+  }, [onExcelImport]);
 
   return (
     <Box
       sx={{
-        minHeight: { xs: "65vh", md: "70vh" },
+        minHeight: { xs: "auto", md: "auto" },
         display: "flex",
         alignItems: "center",
         position: "relative",
-        overflow: "hidden",
-
-        // Mesh gradient background
-        background: `
-              ${ds.gradients.mesh.primary},
-              linear-gradient(180deg, ${ds.colors.surface.base} 0%, ${ds.colors.surface.elevated2} 100%)
-            `,
-
-        // Animated gradient overlay
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          inset: 0,
-          background: ds.gradients.mesh.subtle,
-          animation: "meshFlow 15s ease-in-out infinite",
-          opacity: 0.6,
-        },
-
-        // Subtle grid pattern
-        "&::after": {
-          content: '""',
-          position: "absolute",
-          inset: 0,
-          backgroundImage: `
-                linear-gradient(${alpha(ds.colors.neutral[300], 0.3)} 1px, transparent 1px),
-                linear-gradient(90deg, ${alpha(ds.colors.neutral[300], 0.3)} 1px, transparent 1px)
-              `,
-          backgroundSize: "50px 50px",
-          opacity: 0.3,
-          pointerEvents: "none",
-        },
-
-        "@keyframes meshFlow": {
-          "0%, 100%": { transform: "scale(1) rotate(0deg)", opacity: 0.6 },
-          "50%": { transform: "scale(1.05) rotate(2deg)", opacity: 0.8 },
-        },
+        backgroundColor: ds.colors.surface.base,
+        background: `linear-gradient(180deg, ${ds.colors.surface.base} 0%, ${alpha(ds.colors.surface.base, 0.98)} 100%)`,
       }}
     >
       <Container
-        maxWidth="xl"
+        maxWidth={false}
         sx={{
           position: "relative",
           zIndex: 1,
-          pt: ds.spacing["4"],
-          pb: ds.spacing["8"],
+          pt: { xs: ds.spacing["6"], md: ds.spacing["8"] },
+          pb: { xs: ds.spacing["6"], md: ds.spacing["8"] },
+          px: {
+            xs: ds.spacing["3"],
+            sm: ds.spacing["4"],
+            md: ds.spacing["6"],
+            lg: ds.spacing["8"],
+            xl: "clamp(2rem, 5vw, 4rem)",
+          },
+          maxWidth: {
+            xs: "100%",
+            sm: "600px",
+            md: "900px",
+            lg: "1200px",
+            xl: "1400px",
+            "2xl": "1600px",
+          },
         }}
       >
         {/* Header Content */}
-        <FadeIn direction="down" duration={0.6}>
-          <Stack alignItems="center" spacing={ds.spacing["4"]}>
-            {/* System Badge - KOMPAKT */}
-            <ScaleIn delay={0.2} duration={0.4}>
-              <Badge variant="soft" color="success">
-                <Box
+        <FadeIn duration={0.4}>
+          <Stack
+            alignItems="center"
+            spacing={{ xs: ds.spacing["4"], md: ds.spacing["5"] }}
+            sx={{ width: "100%" }}
+          >
+            {/* System Badge */}
+            <Badge variant="soft" color="primary">
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: ds.spacing["1.5"],
+                }}
+              >
+                <AutoAwesome 
+                  sx={{ 
+                    fontSize: 11, 
+                    color: ds.colors.primary[600],
+                    filter: "drop-shadow(0 1px 2px rgba(37, 99, 235, 0.2))",
+                  }} 
+                />
+                <Typography
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: ds.spacing["1"],
+                    fontSize: `${tokens.typography.xs * 0.9}px`,
+                    fontWeight: 500,
+                    letterSpacing: "0.08em",
+                    background: `linear-gradient(135deg, ${ds.colors.primary[600]} 0%, ${ds.colors.primary[700]} 100%)`,
+                    backgroundClip: "text",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
                   }}
                 >
-                  <AutoAwesome sx={{ fontSize: 12 }} />
-                  <Typography
-                    sx={{
-                      fontSize: "0.65rem",
-                      fontWeight: 700,
-                      letterSpacing: "0.08em",
-                    }}
-                  >
-                    PRODUCTION OPTIMIZATION SYSTEM
-                  </Typography>
-                </Box>
-              </Badge>
-            </ScaleIn>
+                  PRODUCTION OPTIMIZATION SYSTEM
+                </Typography>
+              </Box>
+            </Badge>
 
-            {/* Main Headline - KOMPAKT with Shimmer Effect */}
-            <Box sx={{ textAlign: "center" }}>
+            {/* Main Headline */}
+            <Box sx={{ textAlign: "center", width: "100%" }}>
               <Typography
+                variant="h1"
                 sx={{
-                  fontSize: {
-                    xs: "1.75rem",
-                    sm: "2.25rem",
-                    md: "2.75rem",
-                    lg: "3.25rem",
+                  fontSize: { 
+                    xs: "2rem",
+                    sm: "2.75rem",
+                    md: "3.5rem",
                   },
-                  fontWeight: 800,
-                  background: `linear-gradient(90deg, 
-                    ${ds.colors.primary[600]} 0%, 
-                    ${ds.colors.accent[500]} 25%, 
-                    ${ds.colors.primary[400]} 50%, 
-                    ${ds.colors.accent[500]} 75%, 
-                    ${ds.colors.primary[600]} 100%)`,
+                  fontWeight: 600,
+                  mb: ds.spacing["3"],
+                  lineHeight: 1.15,
+                  letterSpacing: "-0.015em",
+                  background: headlineGradient,
                   backgroundSize: "200% auto",
+                  backgroundClip: "text",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                  animation: `${shimmerAnimation} 3s linear infinite`,
-                  mb: ds.spacing["3"],
-                  lineHeight: 1.1,
+                  position: "relative",
+                  willChange: "background-position",
+                  "@media (prefers-reduced-motion: reduce)": {
+                    backgroundSize: "100% auto",
+                  },
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    bottom: "-2px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    width: "60%",
+                    height: "2px",
+                    background: `linear-gradient(90deg, transparent 0%, ${alpha(ds.colors.primary[600], 0.3)} 50%, transparent 100%)`,
+                    borderRadius: "1px",
+                  },
                 }}
               >
                 LEMNİX
               </Typography>
 
               <Typography
+                variant="h2"
                 sx={{
-                  fontSize: { xs: "1rem", sm: "1.125rem", md: "1.25rem" },
-                  fontWeight: 600,
-                  color: ds.colors.text.primary,
-                  maxWidth: "700px",
+                  fontSize: { 
+                    xs: "1.125rem",
+                    sm: "1.25rem",
+                    md: "1.5rem",
+                  },
+                  fontWeight: 500,
+                  maxWidth: { xs: "100%", sm: "600px", md: "700px" },
                   mx: "auto",
-                  mb: ds.spacing["2"],
+                  mb: ds.spacing["3"],
+                  lineHeight: 1.4,
+                  letterSpacing: "-0.005em",
+                  background: subtitleGradient,
+                  backgroundClip: "text",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  position: "relative",
+                  willChange: "opacity, transform",
+                  animation: "fadeIn 0.8s ease-out 0.3s both",
+                  "@keyframes fadeIn": {
+                    "0%": {
+                      opacity: 0,
+                      transform: "translateY(8px)",
+                    },
+                    "100%": {
+                      opacity: 1,
+                      transform: "translateY(0)",
+                    },
+                  },
+                  "@media (prefers-reduced-motion: reduce)": {
+                    animation: "none",
+                    opacity: 1,
+                    transform: "none",
+                  },
                 }}
               >
                 Alüminyum Profil Kesiminde Endüstri Devrimi
               </Typography>
 
               <Typography
+                variant="body1"
+                component="div"
                 sx={{
-                  fontSize: { xs: "0.875rem", sm: "0.9375rem" },
-                  color: ds.colors.text.secondary,
-                  maxWidth: "750px",
+                  fontSize: { 
+                    xs: "0.8125rem",
+                    sm: "0.9375rem",
+                    md: "1rem",
+                  },
+                  maxWidth: { xs: "100%", sm: "600px", md: "700px" },
                   mx: "auto",
-                  mb: ds.spacing["6"],
-                  lineHeight: 1.6,
+                  lineHeight: 1.75,
+                  fontWeight: 400,
+                  position: "relative",
+                  textAlign: "center",
                 }}
               >
-                AI destekli optimizasyon ile %92+ verimlilik. WebGPU
-                hızlandırma, 4 algoritma ve gerçek zamanlı analiz.
+                <SequentialSentences
+                  sentences={SENTENCES}
+                  delay={800}
+                  duration={3500}
+                  showCursor={true}
+                  gradient={bodyGradient}
+                />
               </Typography>
             </Box>
 
-            {/* CTA Buttons - INTERNAL TOOL */}
+            {/* CTA Buttons */}
             <Stack
               direction={{ xs: "column", sm: "row" }}
-              spacing={ds.spacing["2"]}
-              sx={{ width: { xs: "100%", sm: "auto" } }}
+              spacing={ds.spacing["3"]}
+              sx={{ 
+                width: { xs: "100%", sm: "auto" },
+                alignItems: "center",
+                mt: ds.spacing["2"],
+              }}
             >
-              <GradientButton
-                size="medium"
-                onClick={onDemoStart}
-                startIcon={<AutoAwesome sx={{ fontSize: 16 }} />}
-                sx={{ px: ds.spacing["6"] }}
+              <PrimaryButton
+                size="large"
+                fullWidth={false}
+                onClick={handleDemoStart}
+                startIcon={<AutoAwesome sx={{ fontSize: 20 }} />}
+                aria-label="Optimizasyon işlemine başla"
+                sx={{ 
+                  px: { xs: ds.spacing["8"], sm: ds.spacing["10"] },
+                  py: { xs: ds.spacing["2"], sm: ds.spacing["2.5"] },
+                  fontSize: { xs: tokens.typography.base, sm: tokens.typography.lg },
+                  fontWeight: 600,
+                  minWidth: { xs: "100%", sm: "200px" },
+                }}
               >
                 Optimizasyona Başla
-              </GradientButton>
+              </PrimaryButton>
 
-              <SecondaryButtonV2
-                size="medium"
-                onClick={onExcelImport}
-                sx={{ px: ds.spacing["6"] }}
+              <SecondaryButton
+                size="large"
+                fullWidth={false}
+                onClick={handleExcelImport}
+                startIcon={<UploadFile sx={{ fontSize: 20 }} />}
+                aria-label="Excel dosyasından kesim listesi oluştur"
+                sx={{ 
+                  px: { xs: ds.spacing["8"], sm: ds.spacing["10"] },
+                  py: { xs: ds.spacing["2"], sm: ds.spacing["2.5"] },
+                  fontSize: { xs: tokens.typography.base, sm: tokens.typography.lg },
+                  fontWeight: 600,
+                  minWidth: { xs: "100%", sm: "220px" },
+                }}
               >
-                Akıllı Kesim Listesi Oluştur
-              </SecondaryButtonV2>
+                Kesim Listesi Oluştur
+              </SecondaryButton>
             </Stack>
           </Stack>
         </FadeIn>
 
-        {/* Metrics Grid - KOMPAKT */}
-        <FadeIn delay={0.4} duration={0.6}>
-          <Stagger staggerDelay={0.1}>
+        {/* Metrics Grid */}
+        <FadeIn delay={0.2} duration={0.4}>
             <Grid
               container
-              spacing={ds.spacing["3"]}
-              sx={{ mt: ds.spacing["8"] }}
+              spacing={{ xs: ds.spacing["3"], sm: ds.spacing["4"], md: ds.spacing["5"] }}
+              sx={{ 
+                mt: { xs: ds.spacing["5"], md: ds.spacing["6"], lg: ds.spacing["7"] }
+              }}
             >
-              {[
-                {
-                  value: "92%+",
-                  label: "Ortalama Verimlilik",
-                  icon: TrendingUp,
-                  color: ds.colors.success.main,
-                },
-                {
-                  value: "<2 sn",
-                  label: "Optimizasyon Süresi",
-                  icon: Speed,
-                  color: ds.colors.primary.main,
-                },
-                {
-                  value: "35%",
-                  label: "Maliyet Tasarrufu",
-                  icon: Analytics,
-                  color: ds.colors.accent.main,
-                },
-                {
-                  value: "4",
-                  label: "Optimizasyon Algoritması",
-                  icon: Engineering,
-                  color: ds.colors.support.main,
-                },
-              ].map((metric) => (
+              {metrics.map((metric) => (
                 <Grid key={metric.label} item xs={12} sm={6} lg={3}>
                   <Box
+                    component="article"
+                    aria-label={`${metric.label}: ${metric.value}`}
                     sx={{
-                      p: ds.spacing["4"],
-                      background: ds.glass.background,
-                      border: ds.glass.border,
+                      p: { xs: ds.spacing["2.5"], sm: ds.spacing["3"], md: ds.spacing["3.5"] },
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "flex-start",
+                      backgroundColor: ds.colors.surface.elevated1,
+                      border: `1px solid ${ds.colors.border.muted}`,
                       borderRadius: `${ds.borderRadius.lg}px`,
-                      backdropFilter: ds.glass.backdropFilter,
                       boxShadow: ds.shadows.soft.sm,
-                      transition: ds.transitions.all,
+                      transition: "transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s ease-out",
                       position: "relative",
-                      overflow: "hidden",
+                      minHeight: { xs: "140px", sm: "150px", md: "160px" },
+                      height: "100%",
+                      willChange: "transform",
+                      cursor: "default",
 
-                      // Gradient accent on top
                       "&::before": {
                         content: '""',
                         position: "absolute",
                         top: 0,
                         left: 0,
                         right: 0,
-                        height: 3,
+                        height: 2,
                         background: metric.color,
-                        opacity: 0.6,
+                        borderRadius: `${ds.borderRadius.lg}px ${ds.borderRadius.lg}px 0 0`,
                       },
 
                       "&:hover": {
-                        transform: "translateY(-4px)",
+                        transform: "translateY(-2px)",
                         boxShadow: ds.shadows.soft.md,
-                        borderColor: alpha(metric.color, 0.3),
-
-                        "& .metric-icon": {
-                          transform: "scale(1.1) rotate(3deg)",
+                        borderColor: alpha(metric.color, 0.2),
+                      },
+                      "@media (prefers-reduced-motion: reduce)": {
+                        transition: "none",
+                        "&:hover": {
+                          transform: "none",
+                        },
+                      },
+                      "@media (hover: none)": {
+                        "&:hover": {
+                          transform: "none",
                         },
                       },
                     }}
                   >
-                    <Stack spacing={ds.spacing["2"]}>
-                      {/* Icon - KOMPAKT */}
-                      <Box
-                        className="metric-icon"
-                        sx={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: `${ds.borderRadius.md}px`,
-                          background: alpha(metric.color, 0.1),
-                          border: `1.5px solid ${alpha(metric.color, 0.2)}`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          transition: ds.transitions.spring,
+                    {/* Icon */}
+                    <Box
+                      sx={{
+                        width: { xs: 32, sm: 36, md: 40 },
+                        height: { xs: 32, sm: 36, md: 40 },
+                        borderRadius: `${ds.borderRadius.md}px`,
+                        background: alpha(metric.color, 0.08),
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transition: ds.transitions.base,
+                        mb: { xs: ds.spacing["1.5"], sm: ds.spacing["2"], md: ds.spacing["2.5"] },
+                        flexShrink: 0,
+                      }}
+                    >
+                      <metric.icon
+                        sx={{ 
+                          fontSize: { xs: 16, sm: 18, md: 20 },
+                          color: metric.color 
                         }}
-                      >
-                        <metric.icon
-                          sx={{ fontSize: 20, color: metric.color }}
-                        />
-                      </Box>
+                      />
+                    </Box>
 
-                      {/* Value - KOMPAKT */}
-                      <Typography
-                        sx={{
-                          fontSize: { xs: "1.5rem", lg: "1.75rem" },
-                          fontWeight: 800,
-                          color: ds.colors.text.primary,
-                          lineHeight: 1,
-                        }}
-                      >
-                        {metric.value}
-                      </Typography>
+                    {/* Value */}
+                    <Typography
+                      variant="h3"
+                      sx={{
+                        fontSize: { 
+                          xs: `clamp(${tokens.typography.lg}px, 3vw + ${tokens.typography.base * 0.3}px, ${tokens.typography.xl * 1.3}px)`,
+                          sm: `clamp(${tokens.typography.xl}px, 2vw + ${tokens.typography.base * 0.6}px, ${tokens.typography.xxl * 1.4}px)`,
+                          md: `clamp(${tokens.typography.xl * 1.1}px, 1.5vw + ${tokens.typography.base * 0.8}px, ${tokens.typography.xxl * 1.6}px)`
+                        },
+                        fontWeight: 700,
+                        color: ds.colors.text.primary,
+                        lineHeight: 1.15,
+                        letterSpacing: "-0.015em",
+                        mb: { xs: ds.spacing["1"], sm: ds.spacing["1.5"], md: ds.spacing["2"] },
+                      }}
+                    >
+                      {metric.value}
+                    </Typography>
 
-                      {/* Label - KOMPAKT */}
-                      <Typography
-                        sx={{
-                          fontSize: "0.75rem",
-                          color: ds.colors.text.secondary,
-                          fontWeight: 500,
-                        }}
-                      >
-                        {metric.label}
-                      </Typography>
-                    </Stack>
+                    {/* Label */}
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontSize: { 
+                          xs: `${tokens.typography.xs * 0.95}px`,
+                          sm: `${tokens.typography.sm * 0.9}px`,
+                          md: `${tokens.typography.sm}px`
+                        },
+                        color: ds.colors.text.secondary,
+                        fontWeight: 500,
+                        lineHeight: 1.35,
+                        letterSpacing: "0.01em",
+                      }}
+                    >
+                      {metric.label}
+                    </Typography>
                   </Box>
                 </Grid>
               ))}
             </Grid>
-          </Stagger>
         </FadeIn>
 
-        {/* System Features - KOMPAKT */}
-        <FadeIn delay={0.6} duration={0.6}>
+        {/* System Features */}
+        <FadeIn delay={0.3} duration={0.4}>
           <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={ds.spacing["2"]}
+            direction={{ xs: "column", sm: "row" }}
+            spacing={{ xs: ds.spacing["2"], sm: ds.spacing["3"] }}
             justifyContent="center"
-            sx={{ mt: ds.spacing["8"] }}
+            alignItems="center"
+            sx={{ 
+              mt: { xs: ds.spacing["5"], md: ds.spacing["6"] },
+              px: { xs: ds.spacing["2"], sm: 0 },
+            }}
           >
-            {[
-              { text: "Güvenli Veri İşleme", icon: Security },
-              { text: "Endüstriyel Standartlar", icon: PrecisionManufacturing },
-              { text: "Kanıtlanmış Sonuçlar", icon: Analytics },
-            ].map((item) => (
+            {FEATURES.map((item) => (
               <Box
                 key={item.text}
+                component="article"
+                aria-label={item.text}
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  gap: ds.spacing["2"],
-                  px: ds.spacing["3"],
-                  py: ds.spacing["1"],
-                  borderRadius: `${ds.borderRadius.full}px`,
-                  background: alpha(ds.colors.surface.base, 0.6),
-                  border: `1px solid ${alpha(ds.colors.neutral[300], 0.5)}`,
-                  transition: ds.transitions.base,
+                  gap: { xs: ds.spacing["2"], sm: ds.spacing["2.5"] },
+                  px: { xs: ds.spacing["3"], sm: ds.spacing["4"], md: ds.spacing["5"] },
+                  py: { xs: ds.spacing["2"], sm: ds.spacing["2.5"] },
+                  borderRadius: `${ds.borderRadius.md}px`,
+                  backgroundColor: ds.colors.surface.elevated1,
+                  border: `1px solid ${ds.colors.border.muted}`,
+                  transition: "transform 0.2s ease-out, box-shadow 0.2s ease-out, border-color 0.2s ease-out, background-color 0.2s ease-out",
+                  width: { xs: "100%", sm: "auto" },
+                  minWidth: { xs: "100%", sm: "200px", md: "220px" },
+                  minHeight: "44px", // Touch target size
+                  willChange: "transform",
+                  cursor: "default",
 
                   "&:hover": {
-                    background: ds.colors.surface.base,
-                    borderColor: ds.colors.primary.light,
+                    borderColor: ds.colors.primary.main,
+                    backgroundColor: alpha(ds.colors.primary.main, 0.02),
                     transform: "translateY(-1px)",
                     boxShadow: ds.shadows.soft.sm,
+                  },
+                  "@media (prefers-reduced-motion: reduce)": {
+                    transition: "none",
+                    "&:hover": {
+                      transform: "none",
+                    },
+                  },
+                  "@media (hover: none)": {
+                    "&:hover": {
+                      transform: "none",
+                    },
                   },
                 }}
               >
                 <Box
                   sx={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: ds.borderRadius.full,
-                    background: alpha(ds.colors.primary.main, 0.1),
+                    width: { xs: 28, sm: 32, md: 36 },
+                    height: { xs: 28, sm: 32, md: 36 },
+                    borderRadius: `${ds.borderRadius.sm}px`,
+                    background: alpha(ds.colors.primary.main, 0.08),
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    flexShrink: 0,
                   }}
                 >
                   <item.icon
-                    sx={{ fontSize: 14, color: ds.colors.primary.main }}
+                    sx={{ 
+                      fontSize: { xs: 14, sm: 16, md: 18 },
+                      color: ds.colors.primary.main 
+                    }}
                   />
                 </Box>
                 <Typography
+                  variant="body2"
                   sx={{
-                    fontSize: "0.75rem",
+                    fontSize: { 
+                      xs: tokens.typography.sm,
+                      sm: tokens.typography.base,
+                      md: tokens.typography.base
+                    },
                     fontWeight: 500,
                     color: ds.colors.text.primary,
+                    lineHeight: 1.5,
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {item.text}
@@ -408,4 +777,4 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   );
 };
 
-export default HeroSection;
+export default memo(HeroSection);

@@ -21,6 +21,7 @@ import {
   InputAdornment,
   Alert,
   Grid,
+  alpha,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -28,7 +29,7 @@ import {
   Straighten as StraightenIcon,
   CheckCircle as CheckCircleIcon,
 } from "@mui/icons-material";
-import { useDesignSystem } from "@/shared/hooks";
+import { useDesignSystem, useAdaptiveUIContext } from "@/shared/hooks";
 
 // Preset stock lengths (most commonly used)
 const PRESET_STOCK_LENGTHS = [6100, 4100, 3500] as const;
@@ -44,6 +45,7 @@ export const StockLengthConfigDialog: React.FC<
   StockLengthConfigDialogProps
 > = ({ open, onClose, initialStockLengths, onConfirm }) => {
   const ds = useDesignSystem();
+  const { device, tokens } = useAdaptiveUIContext();
 
   // State
   const [stockLengths, setStockLengths] = useState<number[]>([
@@ -131,11 +133,11 @@ export const StockLengthConfigDialog: React.FC<
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth={device.uiMode === "kiosk" ? "lg" : device.uiMode === "dense" ? "md" : "md"}
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: `${ds.borderRadius.xl}px`,
+          borderRadius: `${tokens.borderRadius.xl}px`,
           overflow: "hidden",
         },
       }}
@@ -146,25 +148,35 @@ export const StockLengthConfigDialog: React.FC<
           background: ds.glass.background,
           backdropFilter: ds.glass.backdropFilter,
           borderBottom: ds.glass.border,
-          p: ds.spacing["4"],
+          px: {
+            xs: tokens.spacing.md,
+            md: tokens.spacing.lg,
+          },
+          py: tokens.spacing.sm,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
         }}
       >
         <Box
-          sx={{ display: "flex", alignItems: "center", gap: ds.spacing["2"] }}
+          sx={{ display: "flex", alignItems: "center", gap: tokens.spacing.md }}
         >
           <StraightenIcon
             sx={{
               color: ds.colors.primary.main,
-              fontSize: 24,
+              fontSize: {
+                xs: tokens.components.icon.md,
+                md: tokens.components.icon.lg,
+              },
             }}
           />
           <Typography
             sx={{
-              fontSize: "1.5rem",
-              fontWeight: 700,
+              fontSize: {
+                xs: `${tokens.typography.lg}px`,
+                md: `${tokens.typography.xl}px`,
+              },
+              fontWeight: ds.typography.fontWeight.bold,
               background: ds.gradients.primary,
               backgroundClip: "text",
               WebkitBackgroundClip: "text",
@@ -183,23 +195,34 @@ export const StockLengthConfigDialog: React.FC<
           sx={{
             color: ds.colors.text.secondary,
             transition: ds.transitions.fast,
-            "&:hover": {
+            minWidth: device.isTouch ? tokens.components.minTouchTarget : undefined,
+            minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+            "&:hover": !device.isTouch ? {
               color: ds.colors.text.primary,
               backgroundColor: `rgba(0, 0, 0, 0.04)`,
-            },
+            } : {},
           }}
         >
-          <CloseIcon fontSize="small" />
+          <CloseIcon sx={{ fontSize: tokens.components.icon.sm }} />
         </IconButton>
       </Box>
 
       {/* Content */}
-      <DialogContent sx={{ p: ds.spacing["4"] }}>
-        <Stack spacing={ds.spacing["4"]}>
+      <DialogContent sx={{
+        px: {
+          xs: tokens.spacing.md,
+          md: tokens.spacing.lg,
+        },
+        py: tokens.spacing.sm,
+      }}>
+        <Stack spacing={tokens.spacing.md}>
           {/* Description */}
           <Typography
             sx={{
-              fontSize: "0.875rem",
+              fontSize: {
+                xs: `${tokens.typography.xs}px`,
+                md: `${tokens.typography.sm}px`,
+              },
               color: ds.colors.text.secondary,
             }}
           >
@@ -211,7 +234,7 @@ export const StockLengthConfigDialog: React.FC<
           {error && (
             <Alert
               severity="error"
-              sx={{ borderRadius: `${ds.borderRadius.md}px` }}
+              sx={{ borderRadius: `${tokens.borderRadius.md}px` }}
               onClose={() => setError(null)}
             >
               {error}
@@ -222,15 +245,18 @@ export const StockLengthConfigDialog: React.FC<
           <Box>
             <Typography
               sx={{
-                fontSize: "0.875rem",
-                fontWeight: 600,
+                fontSize: {
+                  xs: `${tokens.typography.xs}px`,
+                  md: `${tokens.typography.sm}px`,
+                },
+                fontWeight: ds.typography.fontWeight.semibold,
                 color: ds.colors.text.primary,
-                mb: ds.spacing["2"],
+                mb: tokens.spacing.sm,
               }}
             >
               Sık Kullanılan Boylar
             </Typography>
-            <Grid container spacing={ds.spacing["2"]}>
+            <Grid container spacing={tokens.spacing.sm}>
               {PRESET_STOCK_LENGTHS.map((length, index) => (
                 <Grid item xs={4} key={length}>
                   <Button
@@ -239,30 +265,37 @@ export const StockLengthConfigDialog: React.FC<
                     disabled={isPresetAdded[index]}
                     fullWidth
                     sx={{
-                      py: ds.spacing["2"],
-                      borderRadius: `${ds.borderRadius.md}px`,
-                      fontWeight: 600,
-                      fontSize: "0.9375rem",
+                      py: tokens.spacing.sm,
+                      borderRadius: `${tokens.borderRadius.md}px`,
+                      fontWeight: ds.typography.fontWeight.semibold,
+                      fontSize: {
+                        xs: `${tokens.typography.xs}px`,
+                        md: `${tokens.typography.sm}px`,
+                      },
+                      minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
                       ...(isPresetAdded[index]
                         ? {
                             borderColor: ds.colors.success.main,
                             color: ds.colors.success.main,
-                            "&:hover": {
+                            "&:hover": !device.isTouch ? {
                               borderColor: ds.colors.success.main,
-                              backgroundColor: `rgba(76, 175, 80, 0.04)`,
-                            },
+                              backgroundColor: alpha(ds.colors.success.main, 0.04),
+                            } : {},
                           }
                         : {
                             background: ds.gradients.primary,
-                            "&:hover": {
+                            "&:hover": !device.isTouch ? {
                               background: ds.gradients.primary,
                               opacity: 0.9,
-                            },
+                            } : {},
                           }),
                     }}
                   >
                     {isPresetAdded[index] && (
-                      <CheckCircleIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                      <CheckCircleIcon sx={{
+                        fontSize: tokens.components.icon.xs,
+                        mr: tokens.spacing.xs,
+                      }} />
                     )}
                     {length} mm
                   </Button>
@@ -275,15 +308,18 @@ export const StockLengthConfigDialog: React.FC<
           <Box>
             <Typography
               sx={{
-                fontSize: "0.875rem",
-                fontWeight: 600,
+                fontSize: {
+                  xs: `${tokens.typography.xs}px`,
+                  md: `${tokens.typography.sm}px`,
+                },
+                fontWeight: ds.typography.fontWeight.semibold,
                 color: ds.colors.text.primary,
-                mb: ds.spacing["2"],
+                mb: tokens.spacing.sm,
               }}
             >
               Manuel Girdi
             </Typography>
-            <Stack direction="row" spacing={ds.spacing["2"]}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={tokens.spacing.sm}>
               <TextField
                 label="Stok Boyu"
                 placeholder="Örn: 5000"
@@ -308,7 +344,10 @@ export const StockLengthConfigDialog: React.FC<
                   startAdornment: (
                     <InputAdornment position="start">
                       <StraightenIcon
-                        sx={{ fontSize: 18, color: ds.colors.primary.main }}
+                        sx={{
+                          fontSize: tokens.components.icon.sm,
+                          color: ds.colors.primary.main,
+                        }}
                       />
                     </InputAdornment>
                   ),
@@ -316,9 +355,9 @@ export const StockLengthConfigDialog: React.FC<
                     <InputAdornment position="end">
                       <Typography
                         sx={{
-                          fontSize: "0.75rem",
+                          fontSize: `${tokens.typography.xs}px`,
                           color: ds.colors.text.secondary,
-                          fontWeight: 600,
+                          fontWeight: ds.typography.fontWeight.semibold,
                         }}
                       >
                         mm
@@ -326,16 +365,44 @@ export const StockLengthConfigDialog: React.FC<
                     </InputAdornment>
                   ),
                 }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: `${tokens.borderRadius.md}px`,
+                    fontSize: {
+                      xs: `${tokens.typography.sm}px`,
+                      md: `${tokens.typography.base}px`,
+                    },
+                    height: device.isTouch ? tokens.components.minTouchTarget : tokens.components.input.md,
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderWidth: "2px",
+                    },
+                  },
+                  "& .MuiInputLabel-root": {
+                    fontSize: {
+                      xs: `${tokens.typography.sm}px`,
+                      md: `${tokens.typography.base}px`,
+                    },
+                    fontWeight: ds.typography.fontWeight.semibold,
+                  },
+                }}
               />
               <Button
                 variant="contained"
                 onClick={handleAddManual}
                 disabled={!manualInput}
                 sx={{
-                  minWidth: 100,
-                  borderRadius: `${ds.borderRadius.md}px`,
+                  minWidth: {
+                    xs: "100%",
+                    sm: 100,
+                  },
+                  borderRadius: `${tokens.borderRadius.md}px`,
+                  minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+                  fontSize: {
+                    xs: `${tokens.typography.sm}px`,
+                    md: `${tokens.typography.base}px`,
+                  },
                 }}
-                startIcon={<AddIcon />}
+                startIcon={<AddIcon sx={{ fontSize: tokens.components.icon.sm }} />}
               >
                 Ekle
               </Button>
@@ -346,10 +413,13 @@ export const StockLengthConfigDialog: React.FC<
           <Box>
             <Typography
               sx={{
-                fontSize: "0.875rem",
-                fontWeight: 600,
+                fontSize: {
+                  xs: `${tokens.typography.xs}px`,
+                  md: `${tokens.typography.sm}px`,
+                },
+                fontWeight: ds.typography.fontWeight.semibold,
                 color: ds.colors.text.primary,
-                mb: ds.spacing["2"],
+                mb: tokens.spacing.sm,
               }}
             >
               Seçili Stok Boyları ({stockLengths.length})
@@ -358,22 +428,31 @@ export const StockLengthConfigDialog: React.FC<
             {stockLengths.length === 0 ? (
               <Alert
                 severity="warning"
-                sx={{ borderRadius: `${ds.borderRadius.md}px` }}
+                sx={{
+                  borderRadius: `${tokens.borderRadius.md}px`,
+                  fontSize: {
+                    xs: `${tokens.typography.xs}px`,
+                    md: `${tokens.typography.sm}px`,
+                  },
+                }}
               >
                 Hiç stok boyu seçilmedi. Lütfen en az 1 stok boyu ekleyin.
               </Alert>
             ) : (
               <Stack
                 direction="row"
-                spacing={ds.spacing["1"]}
+                spacing={tokens.spacing.xs}
                 flexWrap="wrap"
                 useFlexGap
                 sx={{
-                  p: ds.spacing["3"],
+                  p: tokens.spacing.md,
                   backgroundColor: ds.colors.neutral[50],
-                  borderRadius: `${ds.borderRadius.md}px`,
+                  borderRadius: `${tokens.borderRadius.md}px`,
                   border: `1px solid ${ds.colors.neutral[200]}`,
-                  minHeight: 60,
+                  minHeight: {
+                    xs: tokens.components.minTouchTarget * 1.5,
+                    md: tokens.components.button.lg * 1.5,
+                  },
                 }}
               >
                 {stockLengths.map((length) => (
@@ -381,22 +460,32 @@ export const StockLengthConfigDialog: React.FC<
                     key={length}
                     label={`${length} mm`}
                     onDelete={() => handleRemove(length)}
-                    deleteIcon={<CloseIcon sx={{ fontSize: 16 }} />}
+                    deleteIcon={<CloseIcon sx={{
+                      fontSize: tokens.components.icon.xs,
+                      minWidth: device.isTouch ? tokens.components.minTouchTarget : undefined,
+                      minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+                    }} />}
                     sx={{
-                      height: 32,
-                      fontSize: "0.875rem",
-                      fontWeight: 600,
+                      height: {
+                        xs: tokens.components.button.sm,
+                        md: tokens.components.button.md,
+                      },
+                      fontSize: {
+                        xs: `${tokens.typography.xs}px`,
+                        md: `${tokens.typography.sm}px`,
+                      },
+                      fontWeight: ds.typography.fontWeight.semibold,
                       backgroundColor: ds.colors.primary.main,
                       color: "white",
                       "& .MuiChip-deleteIcon": {
                         color: "rgba(255, 255, 255, 0.7)",
-                        "&:hover": {
+                        "&:hover": !device.isTouch ? {
                           color: "white",
-                        },
+                        } : {},
                       },
-                      "&:hover": {
+                      "&:hover": !device.isTouch ? {
                         backgroundColor: ds.colors.primary[600],
-                      },
+                      } : {},
                     }}
                   />
                 ))}
@@ -408,8 +497,11 @@ export const StockLengthConfigDialog: React.FC<
           <Alert
             severity="info"
             sx={{
-              borderRadius: `${ds.borderRadius.md}px`,
-              fontSize: "0.8125rem",
+              borderRadius: `${tokens.borderRadius.md}px`,
+              fontSize: {
+                xs: `${tokens.typography.xs}px`,
+                md: `${tokens.typography.sm}px`,
+              },
             }}
           >
             💡 <strong>İpucu:</strong> Optimizasyon algoritması, eklediğiniz
@@ -421,15 +513,28 @@ export const StockLengthConfigDialog: React.FC<
       {/* Footer */}
       <DialogActions
         sx={{
-          p: ds.spacing["4"],
+          px: {
+            xs: tokens.spacing.md,
+            md: tokens.spacing.lg,
+          },
+          py: tokens.spacing.sm,
           borderTop: `1px solid ${ds.colors.neutral[200]}`,
-          gap: ds.spacing["2"],
+          gap: tokens.spacing.md,
+          flexDirection: { xs: "column", sm: "row" },
         }}
       >
         <Button
           variant="outlined"
           onClick={onClose}
-          sx={{ textTransform: "none" }}
+          sx={{
+            textTransform: "none",
+            minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+            fontSize: {
+              xs: `${tokens.typography.sm}px`,
+              md: `${tokens.typography.base}px`,
+            },
+            width: { xs: "100%", sm: "auto" },
+          }}
         >
           İptal
         </Button>
@@ -437,14 +542,20 @@ export const StockLengthConfigDialog: React.FC<
           variant="contained"
           onClick={handleConfirm}
           disabled={stockLengths.length === 0}
-          startIcon={<CheckCircleIcon />}
+          startIcon={<CheckCircleIcon sx={{ fontSize: tokens.components.icon.sm }} />}
           sx={{
             background: ds.gradients.primary,
             textTransform: "none",
-            "&:hover": {
+            minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+            fontSize: {
+              xs: `${tokens.typography.sm}px`,
+              md: `${tokens.typography.base}px`,
+            },
+            width: { xs: "100%", sm: "auto" },
+            "&:hover": !device.isTouch ? {
               background: ds.gradients.primary,
               opacity: 0.9,
-            },
+            } : {},
           }}
         >
           Devam Et

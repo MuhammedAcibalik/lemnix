@@ -100,7 +100,7 @@ export const CommandSearch: React.FC<CommandSearchProps> = ({
           onChange={(e) => onChange(e.target.value)}
           sx={{
             flex: 1,
-            fontSize: "0.9375rem", // 15px - prominent
+            fontSize: "clamp(0.875rem, 1vw + 0.5rem, 1rem)",
             fontWeight: ds.typography.fontWeight.medium,
             "& input": {
               "&::placeholder": {

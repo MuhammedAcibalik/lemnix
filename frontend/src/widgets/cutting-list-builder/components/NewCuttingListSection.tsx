@@ -11,15 +11,7 @@
  */
 
 import React from "react";
-import {
-  Box,
-  Typography,
-  Stack,
-  CircularProgress,
-  TextField,
-  Button,
-  alpha,
-} from "@mui/material";
+import { Box, Typography, Stack, CircularProgress, TextField, alpha } from "@mui/material";
 import {
   Add as AddIcon,
   CalendarToday as CalendarIcon,
@@ -28,7 +20,7 @@ import { LoadingState } from "../types";
 
 // Design System v2.0
 import { useDesignSystem } from "@/shared/hooks";
-import { CardV2 } from "@/shared";
+import { CardV2, PrimaryButton } from "@/shared";
 
 interface NewCuttingListSectionProps {
   title: string;
@@ -71,18 +63,20 @@ export const NewCuttingListSection: React.FC<NewCuttingListSectionProps> = ({
             sx={{
               width: 36,
               height: 36,
-              background: ds.gradients.primary,
               borderRadius: `${ds.borderRadius.md}px`,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               boxShadow: ds.shadows.soft.sm,
+              // Icon container - keep subtle but ensure icon is clearly visible
+              background: alpha(ds.colors.primary.main, 0.08),
+              border: `1px solid ${alpha(ds.colors.primary.main, 0.18)}`,
+              color: ds.colors.primary.main,
             }}
           >
             <AddIcon
               sx={{
                 fontSize: ds.componentSizes.icon.medium,
-                color: ds.colors.text.inverse,
               }}
             />
           </Box>
@@ -158,8 +152,8 @@ export const NewCuttingListSection: React.FC<NewCuttingListSectionProps> = ({
             }}
           />
 
-          {/* Action Button - Enhanced Design System v2.0 */}
-          <Button
+          {/* Action Button - Design System Button v3.0 */}
+          <PrimaryButton
             fullWidth
             size="large"
             onClick={onCreateList}
@@ -171,73 +165,11 @@ export const NewCuttingListSection: React.FC<NewCuttingListSectionProps> = ({
                 <AddIcon sx={{ fontSize: ds.componentSizes.icon.sm }} />
               )
             }
-            sx={{
-              height: 52, // Slightly taller for better presence
-              background: ds.gradients.primary,
-              color: "white",
-              borderRadius: `${ds.borderRadius.button}px`, // Use button-specific radius
-              fontSize: "0.9375rem", // Slightly larger text
-              fontWeight: ds.typography.fontWeight.semibold, // Use design system weight
-              textTransform: "none",
-              letterSpacing: ds.typography.letterSpacing.tight, // Better typography
-              boxShadow: ds.shadows.soft.md, // Start with more prominent shadow
-              position: "relative",
-              overflow: "hidden",
-
-              // Enhanced hover effects
-              "&:hover": {
-                background: ds.gradients.primary,
-                opacity: 0.95,
-                transform: "translateY(-2px)", // More pronounced lift
-                boxShadow: ds.shadows.soft.xl, // Stronger shadow on hover
-                "&::before": {
-                  opacity: 1,
-                },
-              },
-
-              // Active state
-              "&:active": {
-                transform: "translateY(-1px)",
-                boxShadow: ds.shadows.soft.lg,
-              },
-
-              // Disabled state
-              "&:disabled": {
-                background: ds.colors.neutral[200],
-                color: ds.colors.neutral[500],
-                transform: "none",
-                boxShadow: "none",
-                cursor: "not-allowed",
-              },
-
-              // Smooth transitions
-              transition: ds.transitions.base,
-
-              // Subtle shimmer effect (optional enhancement)
-              "&::before": {
-                content: '""',
-                position: "absolute",
-                top: 0,
-                left: "-100%",
-                width: "100%",
-                height: "100%",
-                background:
-                  "linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)",
-                transition: ds.transitions.base,
-                opacity: 0,
-              },
-
-              // Focus state for accessibility
-              "&:focus-visible": {
-                outline: `2px solid ${ds.colors.primary.main}`,
-                outlineOffset: "2px",
-              },
-            }}
           >
             {loadingState === LoadingState.LOADING
               ? "Oluşturuluyor..."
               : "Kesim Listesi Oluştur"}
-          </Button>
+          </PrimaryButton>
         </Stack>
       </Box>
     </CardV2>

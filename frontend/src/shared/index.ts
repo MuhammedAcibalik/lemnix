@@ -85,6 +85,23 @@ export {
   zIndex,
 } from "./hooks";
 
+// Full Adaptive System (Device Detection + UI Mode)
+export { useDeviceInfo, useAdaptiveUI, useAdaptiveVariant } from "./hooks";
+export type {
+  DeviceType,
+  UIMode,
+  DeviceInfo,
+  AdaptiveTokens,
+  AdaptiveVariantOptions,
+} from "./hooks";
+
+// Adaptive UI Context
+export {
+  AdaptiveUIProvider,
+  useAdaptiveUIContext,
+} from "./contexts";
+export type { AdaptiveUIContextValue } from "./contexts";
+
 // ============================================================================
 // CONFIG
 // ============================================================================
@@ -190,9 +207,10 @@ export {
 // Animation Hooks
 export { useReducedMotion } from "./hooks";
 
-// Modern Components v2.0 (FAZ 3)
+// Modern Components v2.0 (FAZ 3) - Backwards-compatible aliases to current design system
+export type ButtonV2Props = ButtonProps;
 export {
-  ButtonV2,
+  Button as ButtonV2,
   PrimaryButton as PrimaryButtonV2,
   SecondaryButton as SecondaryButtonV2,
   GhostButton,
@@ -201,11 +219,11 @@ export {
   LinkButton,
   DangerButton as DangerButtonV2,
   SuccessButton as SuccessButtonV2,
-} from "./ui/Button/Button.v2";
-export type { ButtonV2Props } from "./ui/Button/Button.v2";
+} from "./ui";
 
-export { CardV2 } from "./ui/Card/Card.v2";
-export type { CardV2Props, CardVariant } from "./ui/Card/Card.v2";
+export type CardV2Props = CardProps;
+export type CardVariant = CardProps["variant"];
+export { Card as CardV2 } from "./ui";
 
 export { Badge } from "./ui/Badge";
 export type { BadgeProps, BadgeVariant, BadgeColor } from "./ui/Badge";

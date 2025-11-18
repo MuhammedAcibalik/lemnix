@@ -23,7 +23,7 @@ export abstract class BaseRepository {
    */
   public async transaction<T>(
     handler: (tx: Prisma.TransactionClient) => Promise<T>,
-    options?: Prisma.TransactionOptions,
+    options?: Parameters<PrismaClient["$transaction"]>[1],
   ): Promise<T> {
     return this.client.$transaction(handler, options);
   }
@@ -32,4 +32,9 @@ export abstract class BaseRepository {
 /**
  * Shared singleton for lightweight repository scenarios.
  */
-export const baseRepository = new (class extends BaseRepository {})();
+export const baseRepository: BaseRepository = new (class extends BaseRepository {
+  // Expose constructor publicly via this concrete subclass
+  public constructor() {
+    super();
+  }
+})();

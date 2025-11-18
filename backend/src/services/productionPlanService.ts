@@ -16,6 +16,7 @@ import {
   ProductionPlanRepository,
   productionPlanRepository,
 } from "../repositories/ProductionPlanRepository";
+import { databaseManager } from "../config/database";
 
 export interface ProductionPlanWithItems extends ProductionPlan {
   items: ProductionPlanItem[];
@@ -158,6 +159,15 @@ export class ProductionPlanService {
     filters: ProductionPlanFilters = {},
     forceRefresh: boolean = false,
   ): Promise<ProductionPlanWithItems[]> {
+    // If database is not connected (local dev, PostgreSQL stopped), return
+    // safe fallback so that the UI can still render in degraded mode.
+    if (!databaseManager.getConnectionStatus()) {
+      logger.warn(
+        "getProductionPlans: database not connected, returning empty list",
+      );
+      return [];
+    }
+
     const {
       weekNumber,
       year,
@@ -388,6 +398,19 @@ export class ProductionPlanService {
   async getProductionPlanMetrics(
     filters: ProductionPlanFilters = {},
   ): Promise<ProductionPlanMetrics> {
+    if (!databaseManager.getConnectionStatus()) {
+      logger.warn(
+        "getProductionPlanMetrics: database not connected, returning fallback metrics",
+      );
+      return {
+        totalPlans: 0,
+        totalItems: 0,
+        departments: [],
+        priorityDistribution: {},
+        upcomingDeadlines: 0,
+      };
+    }
+
     const { weekNumber, year, status = "active" } = filters;
 
     const where: Record<string, unknown> = { status };

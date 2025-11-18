@@ -12,9 +12,19 @@ import {
   Box,
   alpha,
 } from "@mui/material";
-import { useDesignSystem } from "@/shared/hooks";
+import { useDesignSystem, useAdaptiveUIContext } from "@/shared/hooks";
 
-type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl";
+// Support both new size tokens (xs/sm/md/lg/xl)
+// and legacy size names (small/medium/large) for backward compatibility
+type ButtonSize =
+  | "xs"
+  | "sm"
+  | "md"
+  | "lg"
+  | "xl"
+  | "small"
+  | "medium"
+  | "large";
 
 type ButtonVariant =
   | "primary"
@@ -246,27 +256,68 @@ const buildVariantStyles = (
 };
 
 /**
- * Get size-specific styles
+ * Get size-specific styles (adaptive token-aware)
  */
 const getSizeStyles = (
   ds: ReturnType<typeof useDesignSystem>,
+  tokens: ReturnType<typeof useAdaptiveUIContext>["tokens"],
   size: ButtonSize,
+  device: ReturnType<typeof useAdaptiveUIContext>["device"],
 ) => {
-  const sizeMap = {
-    xs: ds.componentSizes.button.xs,
-    sm: ds.componentSizes.button.sm,
-    md: ds.componentSizes.button.md,
-    lg: ds.componentSizes.button.lg,
-    xl: ds.componentSizes.button.xl,
+  // Map size to adaptive token heights
+  const heightMap = {
+    xs: tokens.components.button.sm * 0.8,
+    sm: tokens.components.button.sm,
+    md: tokens.components.button.md,
+    lg: tokens.components.button.lg,
+    xl: tokens.components.button.lg * 1.2,
+    // Legacy aliases
+    small: tokens.components.button.sm,
+    medium: tokens.components.button.md,
+    large: tokens.components.button.lg,
   };
 
-  const config = sizeMap[size];
+  // Map size to adaptive font sizes
+  const fontSizeMap = {
+    xs: tokens.typography.xs,
+    sm: tokens.typography.sm,
+    md: tokens.typography.base,
+    lg: tokens.typography.lg,
+    xl: tokens.typography.xl,
+    // Legacy aliases
+    small: tokens.typography.sm,
+    medium: tokens.typography.base,
+    large: tokens.typography.lg,
+  };
+
+  // Use adaptive heights, fallback to design system if needed
+  const adaptiveHeight = heightMap[size] ?? tokens.components.button.md;
+  const adaptiveFontSize = fontSizeMap[size] ?? tokens.typography.base;
+  
+  // Touch devices: ensure minimum interaction size
+  const finalHeight = device.isTouch
+    ? Math.max(adaptiveHeight, tokens.components.minTouchTarget * 0.9)
+    : adaptiveHeight;
+
+  // Padding based on adaptive spacing
+  const paddingMap = {
+    xs: `${tokens.spacing.fn(1)} ${tokens.spacing.fn(1.5)}`,
+    sm: `${tokens.spacing.fn(1.5)} ${tokens.spacing.fn(2)}`,
+    md: `${tokens.spacing.fn(2)} ${tokens.spacing.fn(2.5)}`,
+    lg: `${tokens.spacing.fn(2.5)} ${tokens.spacing.fn(3)}`,
+    xl: `${tokens.spacing.fn(3)} ${tokens.spacing.fn(4)}`,
+    small: `${tokens.spacing.fn(1.5)} ${tokens.spacing.fn(2)}`,
+    medium: `${tokens.spacing.fn(2)} ${tokens.spacing.fn(2.5)}`,
+    large: `${tokens.spacing.fn(2.5)} ${tokens.spacing.fn(3)}`,
+  };
 
   return {
-    height: config.height,
-    padding: config.padding,
-    fontSize: config.fontSize,
-    gap: `${config.gap}px`,
+    height: finalHeight,
+    minHeight: finalHeight,
+    padding: paddingMap[size] ?? `${tokens.spacing.fn(2)} ${tokens.spacing.fn(2.5)}`,
+    fontSize: adaptiveFontSize,
+    gap: tokens.spacing.fn(1),
+    borderRadius: tokens.borderRadius.md,
   };
 };
 
@@ -293,13 +344,17 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref,
   ) => {
     const ds = useDesignSystem();
+    const { device, tokens } = useAdaptiveUIContext();
 
     const variantStyles = useMemo(
       () => buildVariantStyles(ds, variant, glow),
       [ds, variant, glow],
     );
 
-    const sizeStyles = useMemo(() => getSizeStyles(ds, size), [ds, size]);
+    const sizeStyles = useMemo(
+      () => getSizeStyles(ds, tokens, size, device),
+      [ds, tokens, size, device],
+    );
 
     const mergedSx = useMemo(
       () => ({
@@ -318,15 +373,24 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         sx={mergedSx}
         {...props}
       >
-        {loading && (
-          <CircularProgress
-            size={size === "xs" ? 14 : size === "sm" ? 16 : 18}
-            sx={{
-              color: "currentColor",
-              marginRight: 1,
-            }}
-          />
-        )}
+        {loading && (() => {
+          const { icon } = tokens.components;
+          const loadingSize = 
+            size === "xs" || size === "small" ? icon.sm * 0.8 :
+            size === "sm" ? icon.sm :
+            size === "lg" || size === "xl" || size === "large" ? icon.md :
+            icon.sm * 1.1;
+          
+          return (
+            <CircularProgress
+              size={loadingSize}
+              sx={{
+                color: "currentColor",
+                marginRight: tokens.spacing.fn(1),
+              }}
+            />
+          );
+        })()}
         {!loading && leftIcon && (
           <Box
             component="span"
@@ -366,5 +430,86 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 );
 
 Button.displayName = "Button";
+
+/**
+ * PrimaryButton - Pre-configured primary button variant
+ */
+export const PrimaryButton = forwardRef<HTMLButtonElement, ButtonProps>(
+  (props, ref) => <Button ref={ref} variant="primary" {...props} />
+);
+
+PrimaryButton.displayName = "PrimaryButton";
+
+/**
+ * SecondaryButton - Pre-configured secondary button variant
+ */
+export const SecondaryButton = forwardRef<HTMLButtonElement, ButtonProps>(
+  (props, ref) => <Button ref={ref} variant="secondary" {...props} />
+);
+
+SecondaryButton.displayName = "SecondaryButton";
+
+/**
+ * TextButton - Pre-configured text/link button variant
+ */
+export const TextButton = forwardRef<HTMLButtonElement, ButtonProps>(
+  (props, ref) => <Button ref={ref} variant="link" {...props} />
+);
+
+TextButton.displayName = "TextButton";
+
+/**
+ * DangerButton - Pre-configured danger button variant
+ */
+export const DangerButton = forwardRef<HTMLButtonElement, ButtonProps>(
+  (props, ref) => <Button ref={ref} variant="danger" {...props} />
+);
+
+DangerButton.displayName = "DangerButton";
+
+/**
+ * SuccessButton - Pre-configured success button variant
+ */
+export const SuccessButton = forwardRef<HTMLButtonElement, ButtonProps>(
+  (props, ref) => <Button ref={ref} variant="success" {...props} />
+);
+
+SuccessButton.displayName = "SuccessButton";
+
+/**
+ * GhostButton - Pre-configured ghost button variant
+ */
+export const GhostButton = forwardRef<HTMLButtonElement, ButtonProps>(
+  (props, ref) => <Button ref={ref} variant="ghost" {...props} />
+);
+
+GhostButton.displayName = "GhostButton";
+
+/**
+ * GradientButton - Pre-configured gradient button variant
+ */
+export const GradientButton = forwardRef<HTMLButtonElement, ButtonProps>(
+  (props, ref) => <Button ref={ref} variant="gradient" {...props} />
+);
+
+GradientButton.displayName = "GradientButton";
+
+/**
+ * SoftButton - Pre-configured soft button variant
+ */
+export const SoftButton = forwardRef<HTMLButtonElement, ButtonProps>(
+  (props, ref) => <Button ref={ref} variant="soft" {...props} />
+);
+
+SoftButton.displayName = "SoftButton";
+
+/**
+ * LinkButton - Pre-configured link button variant (alias for TextButton)
+ */
+export const LinkButton = forwardRef<HTMLButtonElement, ButtonProps>(
+  (props, ref) => <Button ref={ref} variant="link" {...props} />
+);
+
+LinkButton.displayName = "LinkButton";
 
 export default Button;

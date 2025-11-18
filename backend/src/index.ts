@@ -1,13 +1,10 @@
-import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
-import { createApp } from './server/createApp';
-import { env } from './config/env';
-import { databaseManager } from './config/database';
-import { logger } from './services/logger';
-import { startQueryMonitoring } from './middleware/queryMonitoring';
-
-dotenv.config();
+import { createApp } from './server/createApp.js';
+import { env } from './config/env.js';
+import { databaseManager } from './config/database.js';
+import { logger } from './services/logger.js';
+import { startQueryMonitoring } from './middleware/queryMonitoring.js';
 
 async function bootstrap(): Promise<void> {
   const httpServer = createServer();

@@ -4,7 +4,18 @@
  */
 
 // Export v3.0 as primary
-export { Button } from "./Button";
+export {
+  Button,
+  PrimaryButton,
+  SecondaryButton,
+  TextButton,
+  DangerButton,
+  SuccessButton,
+  GhostButton,
+  GradientButton,
+  SoftButton,
+  LinkButton,
+} from "./Button";
 export type { ButtonProps } from "./Button";
 
 // Legacy exports for backward compatibility (if needed)

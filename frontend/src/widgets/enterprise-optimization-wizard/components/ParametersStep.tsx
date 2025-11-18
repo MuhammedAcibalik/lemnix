@@ -36,7 +36,7 @@ import {
   Check as CheckIcon,
   Info as InfoIcon,
 } from "@mui/icons-material";
-import { useDesignSystem } from "@/shared/hooks";
+import { useDesignSystem, useAdaptiveUIContext, useAdaptiveVariant } from "@/shared/hooks";
 import { AlgorithmModeSelector } from "@/widgets/algorithm-selector";
 import type { ParametersStepProps, AlgorithmType } from "../types";
 
@@ -50,8 +50,12 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
   algorithmMode = "standard",
   onAlgorithmModeChange,
   itemCount,
+  onStartOptimization,
+  canStartOptimization = false,
+  isOptimizing = false,
 }) => {
   const ds = useDesignSystem();
+  const { device, tokens } = useAdaptiveUIContext();
 
   const handleAlgorithmChange = (algorithm: AlgorithmType) => {
     onParamsChange({ ...params, algorithm });
@@ -131,22 +135,22 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
       }}
     >
       {/* Enterprise Algorithm Configuration */}
-      <Grid container spacing={ds.spacing["4"]}>
+      <Grid container spacing={tokens.layout.sectionSpacing}>
         {/* Algorithm Engine Selection */}
         <Grid item xs={12}>
           <Card
             sx={{
               background: `linear-gradient(135deg, ${alpha(ds.colors.primary.main, 0.03)} 0%, ${alpha(ds.colors.secondary.main, 0.02)} 100%)`,
               border: `2px solid ${alpha(ds.colors.primary.main, 0.08)}`,
-              borderRadius: `${ds.borderRadius.xl}px`,
+              borderRadius: `${tokens.borderRadius.xl}px`,
               boxShadow: ds.shadows.soft.lg,
               position: "relative",
               overflow: "hidden",
               transition: ds.transitions.base,
-              "&:hover": {
+              "&:hover": !device.isTouch ? {
                 borderColor: alpha(ds.colors.primary.main, 0.15),
                 boxShadow: ds.shadows.soft.xl,
-              },
+              } : {},
               "&::before": {
                 content: '""',
                 position: "absolute",
@@ -158,42 +162,60 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
               },
             }}
           >
-            <CardContent sx={{ p: ds.spacing["6"] }}>
+            <CardContent sx={{ p: useAdaptiveVariant({
+              mobile: tokens.components.card.padding,
+              compact: tokens.spacing.md,
+              standard: tokens.spacing.lg,
+              dense: tokens.spacing.xl,
+              kiosk: tokens.spacing.xxl,
+            }) }}>
               {/* Header */}
               <Box
                 sx={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
-                  mb: ds.spacing["6"],
+                  mb: {
+                    xs: tokens.spacing.md,
+                    md: tokens.spacing.lg,
+                  },
                 }}
               >
                 <Box
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    gap: ds.spacing["3"],
+                    gap: tokens.spacing.md,
                   }}
                 >
                   <Box
                     sx={{
-                      p: ds.spacing["3"],
-                      borderRadius: `${ds.borderRadius.xl}px`,
+                      p: tokens.spacing.md,
+                      borderRadius: `${tokens.borderRadius.xl}px`,
                       background: alpha(ds.colors.primary.main, 0.08),
                       border: `1px solid ${alpha(ds.colors.primary.main, 0.15)}`,
                     }}
                   >
                     <PsychologyIcon
-                      sx={{ fontSize: 28, color: ds.colors.primary.main }}
+                      sx={{ 
+                        fontSize: {
+                          xs: tokens.components.icon.md,
+                          md: tokens.components.icon.lg,
+                        },
+                        color: ds.colors.primary.main 
+                      }}
                     />
                   </Box>
                   <Box>
                     <Typography
                       sx={{
-                        fontSize: "1.375rem",
+                        fontSize: {
+                          xs: `${tokens.typography.lg}px`,
+                          md: `${tokens.typography.xl}px`,
+                        },
                         fontWeight: ds.typography.fontWeight.bold,
                         color: ds.colors.text.primary,
-                        mb: ds.spacing["1"],
+                        mb: tokens.spacing.xs,
                         letterSpacing: ds.typography.letterSpacing.tight,
                       }}
                     >
@@ -201,7 +223,10 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                     </Typography>
                     <Typography
                       sx={{
-                        fontSize: "0.9375rem",
+                        fontSize: {
+                          xs: `${tokens.typography.sm}px`,
+                          md: `${tokens.typography.base}px`,
+                        },
                         color: ds.colors.text.secondary,
                         fontWeight: ds.typography.fontWeight.medium,
                       }}
@@ -215,13 +240,13 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   label="Enterprise"
                   size="small"
                   sx={{
-                    height: 28,
-                    fontSize: "0.75rem",
+                    height: tokens.components.button.sm,
+                    fontSize: `${tokens.typography.xs}px`,
                     fontWeight: 700,
                     backgroundColor: alpha(ds.colors.primary.main, 0.08),
                     color: ds.colors.primary.main,
                     border: `1px solid ${alpha(ds.colors.primary.main, 0.2)}`,
-                    borderRadius: `${ds.borderRadius.md}px`,
+                    borderRadius: `${tokens.borderRadius.md}px`,
                     textTransform: "uppercase",
                     letterSpacing: "0.5px",
                   }}
@@ -229,20 +254,20 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
               </Box>
 
               {/* Algorithm Selection */}
-              <Box sx={{ mb: ds.spacing["2"] }}>
+              <Box sx={{ mb: tokens.spacing.sm }}>
                 <Typography
                   sx={{
-                    fontSize: "1rem",
+                    fontSize: `${tokens.typography.base}px`,
                     fontWeight: 600,
                     color: ds.colors.text.primary,
-                    mb: ds.spacing["1"],
+                    mb: tokens.spacing.xs,
                   }}
                 >
                   Algoritma Seçimi
                 </Typography>
                 <Typography
                   sx={{
-                    fontSize: "0.8125rem",
+                    fontSize: `${tokens.typography.xs}px`,
                     color: ds.colors.text.secondary,
                   }}
                 >
@@ -256,8 +281,8 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   severity="info"
                   icon={<InfoIcon />}
                   sx={{
-                    mb: ds.spacing["3"],
-                    borderRadius: `${ds.borderRadius.xl}px`,
+                    mb: tokens.spacing.md,
+                    borderRadius: `${tokens.borderRadius.xl}px`,
                     backgroundColor: alpha(ds.colors.primary.main, 0.05),
                     border: `1px solid ${alpha(ds.colors.primary.main, 0.2)}`,
                     "& .MuiAlert-icon": {
@@ -267,14 +292,14 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                 >
                   <Typography
                     sx={{
-                      fontSize: "0.875rem",
+                      fontSize: `${tokens.typography.sm}px`,
                       fontWeight: 600,
-                      mb: ds.spacing["1"],
+                      mb: tokens.spacing.xs,
                     }}
                   >
                     Gelişmiş Mod Aktif
                   </Typography>
-                  <Typography sx={{ fontSize: "0.8125rem", lineHeight: 1.5 }}>
+                  <Typography sx={{ fontSize: `${tokens.typography.xs}px`, lineHeight: 1.5 }}>
                     Çok hedefli optimizasyon için{" "}
                     <strong>NSGA-II algoritması</strong> kullanılacaktır. Bu mod
                     Pareto front analizi ve alternatif çözümler sağlar.
@@ -283,7 +308,7 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
               )}
 
               {/* Algorithm Cards Grid - SQUARE CARDS */}
-              <Grid container spacing={ds.spacing["3"]}>
+              <Grid container spacing={tokens.layout.gridGap}>
                 {[
                   {
                     id: "ffd",
@@ -330,21 +355,27 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   const isDisabled = algorithmMode === "advanced"; // Disable in advanced mode
 
                   return (
-                    <Grid item xs={6} sm={4} key={algorithm.id}>
+                    <Grid 
+                      item 
+                      xs={6}   // Mobile: 2 columns
+                      sm={4}   // Tablet: 3 columns
+                      md={2.4} // Desktop: 5 columns
+                      key={algorithm.id}
+                    >
                       <Card
                         sx={{
                           cursor: isDisabled ? "not-allowed" : "pointer",
                           border: `2px solid ${isSelected ? algorithm.color : alpha(ds.colors.neutral[300], 0.2)}`,
-                          borderRadius: `${ds.borderRadius.xl}px`,
+                          borderRadius: `${tokens.borderRadius.xl}px`,
                           background: isSelected
                             ? `linear-gradient(135deg, ${alpha(algorithm.color, 0.08)} 0%, ${alpha(algorithm.color, 0.03)} 100%)`
                             : `linear-gradient(135deg, ${alpha(ds.colors.neutral[100], 0.3)} 0%, ${alpha(ds.colors.neutral[50], 0.5)} 100%)`,
                           transition: ds.transitions.base,
-                          aspectRatio: "1", // PERFECT SQUARE!
+                          aspectRatio: "1",
                           position: "relative",
                           opacity: isDisabled ? 0.5 : 1,
                           pointerEvents: isDisabled ? "none" : "auto",
-                          "&:hover": !isDisabled
+                          "&:hover": !isDisabled && !device.isTouch
                             ? {
                                 borderColor: algorithm.color,
                                 background: `linear-gradient(135deg, ${alpha(algorithm.color, 0.05)} 0%, ${alpha(algorithm.color, 0.02)} 100%)`,
@@ -363,10 +394,10 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                           <Box
                             sx={{
                               position: "absolute",
-                              top: ds.spacing["2"],
-                              right: ds.spacing["2"],
-                              width: 24,
-                              height: 24,
+                              top: tokens.spacing.sm,
+                              right: tokens.spacing.sm,
+                              width: tokens.components.icon.sm,
+                              height: tokens.components.icon.sm,
                               borderRadius: "50%",
                               background: algorithm.color,
                               display: "flex",
@@ -377,13 +408,19 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                               zIndex: 1,
                             }}
                           >
-                            <CheckIcon sx={{ fontSize: 16, color: "white" }} />
+                            <CheckIcon sx={{ fontSize: tokens.components.icon.xs, color: "white" }} />
                           </Box>
                         )}
 
                         <CardContent
                           sx={{
-                            p: ds.spacing["3"],
+                            p: useAdaptiveVariant({
+                              mobile: tokens.components.card.padding,
+                              compact: tokens.spacing.md,
+                              standard: tokens.spacing.md,
+                              dense: tokens.spacing.md,
+                              kiosk: tokens.spacing.lg,
+                            }),
                             textAlign: "center",
                             height: "100%",
                             display: "flex",
@@ -395,8 +432,16 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                           {/* Icon - Bigger for square */}
                           <Box
                             sx={{
-                              width: 80,
-                              height: 80,
+                              width: {
+                                xs: 64,
+                                md: 80,
+                                lg: 96,
+                              },
+                              height: {
+                                xs: 64,
+                                md: 80,
+                                lg: 96,
+                              },
                               borderRadius: "50%",
                               background: isSelected
                                 ? `linear-gradient(135deg, ${alpha(algorithm.color, 0.15)} 0%, ${alpha(algorithm.color, 0.08)} 100%)`
@@ -404,14 +449,17 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
-                              mb: ds.spacing["2"],
+                              mb: tokens.spacing.sm,
                               border: `2px solid ${isSelected ? alpha(algorithm.color, 0.2) : alpha(ds.colors.neutral[300], 0.1)}`,
                               transition: ds.transitions.base,
                             }}
                           >
                             <Typography
                               sx={{
-                                fontSize: "2.5rem",
+                                fontSize: {
+                                  xs: `${tokens.typography.xl}px`,
+                                  md: `${tokens.typography.xxl}px`,
+                                },
                               }}
                             >
                               {algorithm.icon}
@@ -421,12 +469,12 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                           {/* Title - Compact */}
                           <Typography
                             sx={{
-                              fontSize: "1.125rem",
+                              fontSize: `${tokens.typography.base}px`,
                               fontWeight: ds.typography.fontWeight.bold,
                               color: isSelected
                                 ? algorithm.color
                                 : ds.colors.text.primary,
-                              mb: ds.spacing["1"],
+                              mb: tokens.spacing.xs,
                               letterSpacing: ds.typography.letterSpacing.tight,
                             }}
                           >
@@ -436,10 +484,10 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                           {/* Short Name */}
                           <Typography
                             sx={{
-                              fontSize: "0.75rem",
+                              fontSize: `${tokens.typography.xs}px`,
                               fontWeight: 600,
                               color: ds.colors.text.secondary,
-                              mb: ds.spacing["2"],
+                              mb: tokens.spacing.sm,
                               textTransform: "uppercase",
                               letterSpacing: "0.5px",
                             }}
@@ -450,7 +498,7 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                           {/* Description - Compact */}
                           <Typography
                             sx={{
-                              fontSize: "0.75rem",
+                              fontSize: `${tokens.typography.xs}px`,
                               color: ds.colors.text.secondary,
                               fontWeight: ds.typography.fontWeight.medium,
                               lineHeight: 1.3,
@@ -466,67 +514,6 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                 })}
               </Grid>
 
-              {/* GPU Status Card */}
-              <Box
-                sx={{
-                  mt: ds.spacing["4"],
-                  p: ds.spacing["4"],
-                  background: `linear-gradient(135deg, ${alpha(ds.colors.success.main, 0.08)} 0%, ${alpha(ds.colors.success.main, 0.03)} 100%)`,
-                  borderRadius: `${ds.borderRadius.xl}px`,
-                  border: `2px solid ${alpha(ds.colors.success.main, 0.15)}`,
-                  textAlign: "center",
-                  transition: ds.transitions.base,
-                  "&:hover": {
-                    borderColor: alpha(ds.colors.success.main, 0.25),
-                    transform: "translateY(-2px)",
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: "50%",
-                    background: alpha(ds.colors.success.main, 0.15),
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    mx: "auto",
-                    mb: ds.spacing["2"],
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: "1.5rem",
-                      fontWeight: 700,
-                      color: ds.colors.success.main,
-                    }}
-                  >
-                    ⚡
-                  </Typography>
-                </Box>
-                <Typography
-                  sx={{
-                    fontSize: "0.75rem",
-                    fontWeight: 700,
-                    color: ds.colors.success.main,
-                    mb: ds.spacing["1"],
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px",
-                  }}
-                >
-                  GPU ACCELERATED
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: "1rem",
-                    fontWeight: 700,
-                    color: ds.colors.text.primary,
-                  }}
-                >
-                  WebGPU Ready
-                </Typography>
-              </Box>
             </CardContent>
           </Card>
         </Grid>
@@ -537,17 +524,23 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
             <Card
               sx={{
                 border: `2px solid ${alpha(ds.colors.secondary.main, 0.08)}`,
-                borderRadius: `${ds.borderRadius.xl}px`,
+                borderRadius: `${tokens.borderRadius.xl}px`,
                 boxShadow: ds.shadows.soft.lg,
                 background: `linear-gradient(135deg, ${alpha(ds.colors.secondary.main, 0.02)} 0%, ${alpha(ds.colors.primary.main, 0.02)} 100%)`,
                 transition: ds.transitions.base,
-                "&:hover": {
+                "&:hover": !device.isTouch ? {
                   borderColor: alpha(ds.colors.secondary.main, 0.15),
                   boxShadow: ds.shadows.soft.xl,
-                },
+                } : {},
               }}
             >
-              <CardContent sx={{ p: ds.spacing["6"] }}>
+              <CardContent sx={{ p: useAdaptiveVariant({
+                mobile: tokens.components.card.padding,
+                compact: tokens.spacing.md,
+                standard: tokens.spacing.lg,
+                dense: tokens.spacing.xl,
+                kiosk: tokens.spacing.xxl,
+              }) }}>
                 <AlgorithmModeSelector
                   value={algorithmMode}
                   onChange={onAlgorithmModeChange}
@@ -563,45 +556,63 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
           <Card
             sx={{
               border: `2px solid ${alpha(ds.colors.secondary.main, 0.08)}`,
-              borderRadius: `${ds.borderRadius.xl}px`,
+              borderRadius: `${tokens.borderRadius.xl}px`,
               boxShadow: ds.shadows.soft.lg,
               background: `linear-gradient(135deg, ${alpha(ds.colors.secondary.main, 0.03)} 0%, ${alpha(ds.colors.success.main, 0.02)} 100%)`,
               transition: ds.transitions.base,
-              "&:hover": {
+              "&:hover": !device.isTouch ? {
                 borderColor: alpha(ds.colors.secondary.main, 0.15),
                 boxShadow: ds.shadows.soft.xl,
-              },
+              } : {},
             }}
           >
-            <CardContent sx={{ p: ds.spacing["6"] }}>
+            <CardContent sx={{ p: useAdaptiveVariant({
+              mobile: tokens.components.card.padding,
+              compact: tokens.spacing.md,
+              standard: tokens.spacing.lg,
+              dense: tokens.spacing.xl,
+              kiosk: tokens.spacing.xxl,
+            }) }}>
               {/* Header */}
               <Box
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  gap: ds.spacing["3"],
-                  mb: ds.spacing["6"],
+                  gap: tokens.spacing.md,
+                  mb: {
+                    xs: tokens.spacing.md,
+                    md: tokens.spacing.lg,
+                  },
                 }}
               >
                 <Box
                   sx={{
-                    p: ds.spacing["3"],
-                    borderRadius: `${ds.borderRadius.xl}px`,
+                    p: tokens.spacing.md,
+                    borderRadius: `${tokens.borderRadius.xl}px`,
                     background: alpha(ds.colors.secondary.main, 0.08),
                     border: `1px solid ${alpha(ds.colors.secondary.main, 0.15)}`,
                   }}
                 >
                   <SettingsIcon
-                    sx={{ fontSize: 28, color: ds.colors.secondary.main }}
+                    sx={{ 
+                      fontSize: {
+                        xs: tokens.components.icon.md,
+                        md: tokens.components.icon.lg,
+                      },
+                      color: ds.colors.secondary.main 
+                    }}
                   />
                 </Box>
                 <Box>
                   <Typography
                     sx={{
-                      fontSize: "1.375rem",
+                      fontSize: {
+                        xs: `${tokens.typography.lg}px`,
+                        md: `${tokens.typography.xl}px`,
+                      },
                       fontWeight: ds.typography.fontWeight.bold,
                       color: ds.colors.text.primary,
-                      mb: ds.spacing["1"],
+                      mb: tokens.spacing.xs,
                       letterSpacing: ds.typography.letterSpacing.tight,
                     }}
                   >
@@ -609,7 +620,10 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   </Typography>
                   <Typography
                     sx={{
-                      fontSize: "0.9375rem",
+                      fontSize: {
+                        xs: `${tokens.typography.sm}px`,
+                        md: `${tokens.typography.base}px`,
+                      },
                       color: ds.colors.text.secondary,
                       fontWeight: ds.typography.fontWeight.medium,
                     }}
@@ -620,45 +634,69 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
               </Box>
 
               {/* Objectives Grid */}
-              <Grid container spacing={ds.spacing["4"]}>
+              <Grid container spacing={tokens.layout.sectionSpacing} justifyContent="center">
                 {objectives.map((objective) => {
                   const isSelected = isObjectiveSelected(objective.key);
                   return (
-                    <Grid item xs={12} sm={6} md={3} key={objective.key}>
+                    <Grid 
+                      item 
+                      xs={12}  // Mobile: 1 column
+                      sm={6}   // Tablet: 2 columns
+                      md={3}   // Desktop: 4 columns
+                      key={objective.key}
+                    >
                       <Card
                         sx={{
                           cursor: "pointer",
                           border: `2px solid ${isSelected ? objective.color : alpha(ds.colors.neutral[300], 0.2)}`,
-                          borderRadius: `${ds.borderRadius.xl}px`,
+                          borderRadius: `${tokens.borderRadius.xl}px`,
                           background: isSelected
                             ? `linear-gradient(135deg, ${alpha(objective.color, 0.08)} 0%, ${alpha(objective.color, 0.03)} 100%)`
                             : `linear-gradient(135deg, ${alpha(ds.colors.neutral[100], 0.3)} 0%, ${alpha(ds.colors.neutral[50], 0.5)} 100%)`,
                           transition: ds.transitions.base,
-                          height: "100%",
-                          "&:hover": {
+                          aspectRatio: "1/1",
+                          height: "auto",
+                          display: "flex",
+                          flexDirection: "column",
+                          "&:hover": !device.isTouch ? {
                             borderColor: objective.color,
                             background: `linear-gradient(135deg, ${alpha(objective.color, 0.05)} 0%, ${alpha(objective.color, 0.02)} 100%)`,
                             transform: "translateY(-4px)",
                             boxShadow: ds.shadows.soft.lg,
-                          },
+                          } : {},
                         }}
                         onClick={() => handleObjectiveToggle(objective.key)}
                       >
                         <CardContent
                           sx={{
-                            p: ds.spacing["4"],
+                            p: useAdaptiveVariant({
+                              mobile: tokens.components.card.padding,
+                              compact: tokens.spacing.md,
+                              standard: tokens.spacing.lg,
+                              dense: tokens.spacing.lg,
+                              kiosk: tokens.spacing.xl,
+                            }),
                             textAlign: "center",
-                            height: "100%",
+                            flex: 1,
                             display: "flex",
                             flexDirection: "column",
-                            justifyContent: "space-between",
+                            justifyContent: "center",
+                            alignItems: "center",
                           }}
                         >
-                          <Box>
+                          <Box sx={{ position: "relative", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", flex: 1, justifyContent: "center" }}>
                             <Box
                               sx={{
-                                width: 64,
-                                height: 64,
+                                width: {
+                                  xs: 64,
+                                  md: 80,
+                                  lg: 96,
+                                },
+                                height: {
+                                  xs: 64,
+                                  md: 80,
+                                  lg: 96,
+                                },
                                 borderRadius: "50%",
                                 background: isSelected
                                   ? `linear-gradient(135deg, ${alpha(objective.color, 0.15)} 0%, ${alpha(objective.color, 0.08)} 100%)`
@@ -666,8 +704,7 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
-                                mx: "auto",
-                                mb: ds.spacing["3"],
+                                mb: tokens.spacing.md,
                                 border: `2px solid ${isSelected ? alpha(objective.color, 0.2) : alpha(ds.colors.neutral[300], 0.1)}`,
                                 transition: ds.transitions.base,
                                 position: "relative",
@@ -679,8 +716,8 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                                     position: "absolute",
                                     top: -4,
                                     right: -4,
-                                    width: 24,
-                                    height: 24,
+                                    width: tokens.components.icon.sm,
+                                    height: tokens.components.icon.sm,
                                     borderRadius: "50%",
                                     background: objective.color,
                                     display: "flex",
@@ -691,13 +728,20 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                                   }}
                                 >
                                   <CheckIcon
-                                    sx={{ fontSize: 16, color: "white" }}
+                                    sx={{ 
+                                      fontSize: tokens.components.icon.xs,
+                                      color: "white" 
+                                    }}
                                   />
                                 </Box>
                               )}
                               <Typography
                                 sx={{
-                                  fontSize: "2rem",
+                                  fontSize: {
+                                    xs: `${tokens.typography.xl}px`,
+                                    md: `${tokens.typography.xxl}px`,
+                                  },
+                                  lineHeight: 1,
                                 }}
                               >
                                 {objective.icon}
@@ -705,30 +749,34 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                             </Box>
                             <Typography
                               sx={{
-                                fontSize: "0.9375rem",
+                                fontSize: `${tokens.typography.lg}px`,
                                 fontWeight: ds.typography.fontWeight.bold,
                                 color: isSelected
                                   ? objective.color
                                   : ds.colors.text.primary,
-                                mb: ds.spacing["2"],
+                                mb: tokens.spacing.sm,
                                 letterSpacing:
                                   ds.typography.letterSpacing.tight,
                               }}
                             >
                               {objective.label}
                             </Typography>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontSize: `${tokens.typography.sm}px`,
+                                color: ds.colors.text.secondary,
+                                fontWeight: ds.typography.fontWeight.normal,
+                                lineHeight: 1.4,
+                                mt: tokens.spacing.xs,
+                                width: "100%",
+                                display: "block",
+                                opacity: 0.9,
+                              }}
+                            >
+                              {objective.description}
+                            </Typography>
                           </Box>
-                          <Typography
-                            sx={{
-                              fontSize: "0.8125rem",
-                              color: ds.colors.text.secondary,
-                              fontWeight: ds.typography.fontWeight.medium,
-                              lineHeight: 1.5,
-                              mt: "auto",
-                            }}
-                          >
-                            {objective.description}
-                          </Typography>
                         </CardContent>
                       </Card>
                     </Grid>
@@ -736,44 +784,6 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                 })}
               </Grid>
 
-              {/* Selection Summary */}
-              <Box
-                sx={{
-                  mt: ds.spacing["6"],
-                  p: ds.spacing["6"],
-                  background: `linear-gradient(135deg, ${alpha(ds.colors.primary.main, 0.08)} 0%, ${alpha(ds.colors.primary.main, 0.03)} 100%)`,
-                  borderRadius: `${ds.borderRadius.xl}px`,
-                  border: `2px solid ${alpha(ds.colors.primary.main, 0.1)}`,
-                  textAlign: "center",
-                  transition: ds.transitions.base,
-                  "&:hover": {
-                    borderColor: alpha(ds.colors.primary.main, 0.2),
-                    transform: "translateY(-2px)",
-                  },
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontSize: "1rem",
-                    fontWeight: 700,
-                    color: ds.colors.text.primary,
-                    mb: ds.spacing["1"],
-                  }}
-                >
-                  {params.objectives?.length || 0} Hedef Seçildi
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: "0.8125rem",
-                    color: ds.colors.text.secondary,
-                    fontWeight: ds.typography.fontWeight.medium,
-                  }}
-                >
-                  {params.objectives?.length === 0
-                    ? "En az bir hedef seçmelisiniz"
-                    : "Çok hedefli optimizasyon aktif"}
-                </Typography>
-              </Box>
             </CardContent>
           </Card>
         </Grid>
@@ -783,45 +793,67 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
           <Card
             sx={{
               border: `2px solid ${alpha(ds.colors.info.main, 0.08)}`,
-              borderRadius: `${ds.borderRadius.xl}px`,
+              borderRadius: `${tokens.borderRadius.xl}px`,
               boxShadow: ds.shadows.soft.lg,
               background: `linear-gradient(135deg, ${alpha(ds.colors.info.main, 0.02)} 0%, ${alpha(ds.colors.neutral[50], 0.5)} 100%)`,
               transition: ds.transitions.base,
-              "&:hover": {
+              "&:hover": !device.isTouch ? {
                 borderColor: alpha(ds.colors.info.main, 0.15),
                 boxShadow: ds.shadows.soft.xl,
-              },
+              } : {},
             }}
           >
-            <CardContent sx={{ p: ds.spacing["6"] }}>
+            <CardContent sx={{ p: useAdaptiveVariant({
+              mobile: tokens.components.card.padding,
+              compact: tokens.spacing.md,
+              standard: tokens.spacing.lg,
+              dense: tokens.spacing.xl,
+              kiosk: tokens.spacing.xxl,
+            }) }}>
               {/* Header */}
               <Box
                 sx={{
                   display: "flex",
                   alignItems: "flex-start",
-                  gap: ds.spacing["3"],
-                  mb: ds.spacing["4"],
+                  gap: tokens.spacing.md,
+                  mb: {
+                    xs: tokens.spacing.md,
+                    md: tokens.spacing.lg,
+                  },
                 }}
               >
                 <Box
                   sx={{
-                    p: ds.spacing["3"],
-                    borderRadius: `${ds.borderRadius.xl}px`,
+                    p: {
+                      xs: tokens.spacing.sm,
+                      md: tokens.spacing.md,
+                      lg: tokens.spacing.lg,
+                    },
+                    borderRadius: `${tokens.borderRadius.xl}px`,
                     background: alpha(ds.colors.info.main, 0.08),
                     border: `1px solid ${alpha(ds.colors.info.main, 0.15)}`,
                   }}
                 >
                   <RulerIcon
-                    sx={{ fontSize: 28, color: ds.colors.info.main }}
+                    sx={{ 
+                      fontSize: {
+                        xs: tokens.components.icon.md,
+                        md: tokens.components.icon.lg,
+                      },
+                      color: ds.colors.info.main 
+                    }}
                   />
                 </Box>
                 <Box sx={{ flex: 1 }}>
                   <Typography
                     sx={{
-                      fontSize: "1.375rem",
+                      fontSize: {
+                        xs: `${tokens.typography.lg}px`,
+                        md: `${tokens.typography.xl}px`,
+                      },
                       fontWeight: ds.typography.fontWeight.bold,
                       color: ds.colors.text.primary,
-                      mb: ds.spacing["1"],
+                      mb: tokens.spacing.xs,
                       letterSpacing: ds.typography.letterSpacing.tight,
                     }}
                   >
@@ -829,7 +861,10 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   </Typography>
                   <Typography
                     sx={{
-                      fontSize: "0.9375rem",
+                      fontSize: {
+                        xs: `${tokens.typography.sm}px`,
+                        md: `${tokens.typography.base}px`,
+                      },
                       color: ds.colors.text.secondary,
                       fontWeight: ds.typography.fontWeight.medium,
                     }}
@@ -842,15 +877,23 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
               {/* Stock Lengths Display */}
               <Stack
                 direction="row"
-                spacing={ds.spacing["2"]}
+                spacing={tokens.spacing.sm}
                 flexWrap="wrap"
                 useFlexGap
                 sx={{
-                  p: ds.spacing["3"],
+                  p: {
+                    xs: tokens.spacing.sm,
+                    md: tokens.spacing.md,
+                    lg: tokens.spacing.lg,
+                  },
                   backgroundColor: alpha(ds.colors.info.main, 0.03),
-                  borderRadius: `${ds.borderRadius.lg}px`,
+                  borderRadius: `${tokens.borderRadius.lg}px`,
                   border: `1px dashed ${alpha(ds.colors.info.main, 0.2)}`,
-                  minHeight: 60,
+                  minHeight: {
+                    xs: tokens.components.input.sm,
+                    md: tokens.components.input.md,
+                    lg: tokens.components.input.lg,
+                  },
                   alignItems: "center",
                 }}
               >
@@ -858,13 +901,20 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   <Chip
                     key={length}
                     label={`${length} mm`}
-                    icon={<RulerIcon sx={{ fontSize: 14 }} />}
+                    icon={<RulerIcon sx={{ fontSize: tokens.components.icon.xs }} />}
                     sx={{
-                      height: 32,
-                      fontSize: "0.875rem",
+                      height: {
+                        xs: tokens.components.button.sm,
+                        md: tokens.components.button.md,
+                      },
+                      fontSize: `${tokens.typography.sm}px`,
                       fontWeight: 600,
                       backgroundColor: ds.colors.info.main,
                       color: "white",
+                      px: {
+                        xs: tokens.spacing.sm,
+                        md: tokens.spacing.md,
+                      },
                       "& .MuiChip-icon": {
                         color: "rgba(255, 255, 255, 0.8)",
                       },
@@ -878,9 +928,9 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                 severity="info"
                 icon={<InfoIcon />}
                 sx={{
-                  mt: ds.spacing["3"],
-                  borderRadius: `${ds.borderRadius.md}px`,
-                  fontSize: "0.8125rem",
+                  mt: tokens.spacing.md,
+                  borderRadius: `${tokens.borderRadius.md}px`,
+                  fontSize: `${tokens.typography.xs}px`,
                   backgroundColor: alpha(ds.colors.info.main, 0.05),
                   border: `1px solid ${alpha(ds.colors.info.main, 0.15)}`,
                 }}
@@ -897,7 +947,7 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
           <Accordion
             sx={{
               border: `2px solid ${alpha(ds.colors.warning.main, 0.08)}`,
-              borderRadius: `${ds.borderRadius.xl}px !important`,
+              borderRadius: `${tokens.borderRadius.xl}px !important`,
               boxShadow: ds.shadows.soft.sm,
               background: `linear-gradient(135deg, ${alpha(ds.colors.warning.main, 0.02)} 0%, ${alpha(ds.colors.neutral[50], 0.5)} 100%)`,
               "&:before": {
@@ -913,35 +963,61 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
             <AccordionSummary
               expandIcon={
                 <ExpandMoreIcon
-                  sx={{ fontSize: 24, color: ds.colors.warning.main }}
+                  sx={{ 
+                    fontSize: tokens.components.icon.md,
+                    color: ds.colors.warning.main 
+                  }}
                 />
               }
               sx={{
-                px: ds.spacing["6"],
-                py: ds.spacing["6"],
+                px: useAdaptiveVariant({
+                  mobile: tokens.components.card.padding,
+                  compact: tokens.spacing.md,
+                  standard: tokens.spacing.lg,
+                  dense: tokens.spacing.xl,
+                  kiosk: tokens.spacing.xxl,
+                }),
+                py: {
+                  xs: tokens.spacing.sm,
+                  md: tokens.spacing.md,
+                },
+                minHeight: tokens.components.minTouchTarget,
                 "& .MuiAccordionSummary-content": {
                   display: "flex",
                   alignItems: "center",
-                  gap: ds.spacing["3"],
+                  gap: tokens.spacing.md,
                 },
               }}
             >
               <Box
                 sx={{
-                  p: ds.spacing["3"],
-                  borderRadius: `${ds.borderRadius.xl}px`,
+                  p: {
+                    xs: tokens.spacing.sm,
+                    md: tokens.spacing.md,
+                    lg: tokens.spacing.lg,
+                  },
+                  borderRadius: `${tokens.borderRadius.xl}px`,
                   background: alpha(ds.colors.warning.main, 0.08),
                   border: `1px solid ${alpha(ds.colors.warning.main, 0.15)}`,
                 }}
               >
                 <RulerIcon
-                  sx={{ fontSize: 28, color: ds.colors.warning.main }}
+                  sx={{ 
+                    fontSize: {
+                      xs: tokens.components.icon.md,
+                      md: tokens.components.icon.lg,
+                    },
+                    color: ds.colors.warning.main 
+                  }}
                 />
               </Box>
               <Box>
                 <Typography
                   sx={{
-                    fontSize: "1.25rem",
+                    fontSize: {
+                      xs: `${tokens.typography.lg}px`,
+                      md: `${tokens.typography.xl}px`,
+                    },
                     fontWeight: ds.typography.fontWeight.bold,
                     color: ds.colors.text.primary,
                     letterSpacing: ds.typography.letterSpacing.tight,
@@ -951,7 +1027,10 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                 </Typography>
                 <Typography
                   sx={{
-                    fontSize: "0.9375rem",
+                    fontSize: {
+                      xs: `${tokens.typography.sm}px`,
+                      md: `${tokens.typography.base}px`,
+                    },
                     color: ds.colors.text.secondary,
                     fontWeight: ds.typography.fontWeight.medium,
                   }}
@@ -963,23 +1042,35 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                 label="Opsiyonel"
                 size="small"
                 sx={{
-                  height: 28,
-                  fontSize: "0.75rem",
+                  height: tokens.components.button.sm,
+                  fontSize: `${tokens.typography.xs}px`,
                   fontWeight: 700,
                   backgroundColor: alpha(ds.colors.warning.main, 0.08),
                   color: ds.colors.warning.main,
                   border: `1px solid ${alpha(ds.colors.warning.main, 0.2)}`,
-                  borderRadius: `${ds.borderRadius.md}px`,
+                  borderRadius: `${tokens.borderRadius.md}px`,
                   textTransform: "uppercase",
                   letterSpacing: "0.5px",
                   ml: "auto",
                 }}
               />
             </AccordionSummary>
-            <AccordionDetails sx={{ px: ds.spacing["6"], pb: ds.spacing["6"] }}>
-              <Grid container spacing={ds.spacing["4"]}>
+            <AccordionDetails sx={{ 
+              px: useAdaptiveVariant({
+                mobile: tokens.components.card.padding,
+                compact: tokens.spacing.md,
+                standard: tokens.spacing.lg,
+                dense: tokens.spacing.xl,
+                kiosk: tokens.spacing.xxl,
+              }),
+              pb: {
+                xs: tokens.spacing.md,
+                md: tokens.spacing.lg,
+              },
+            }}>
+              <Grid container spacing={tokens.layout.sectionSpacing}>
                 <Grid item xs={12} sm={6}>
-                  <Box sx={{ mb: ds.spacing["3"] }}>
+                  <Box sx={{ mb: tokens.spacing.md }}>
                     <TextField
                       fullWidth
                       label="Kesim Genişliği (Kerf)"
@@ -1001,15 +1092,15 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                       }}
                       sx={{
                         "& .MuiOutlinedInput-root": {
-                          borderRadius: `${ds.borderRadius.xl}px`,
-                          fontSize: "0.9375rem",
-                          height: 56,
+                          borderRadius: `${tokens.borderRadius.xl}px`,
+                          fontSize: `${tokens.typography.sm}px`,
+                          height: tokens.components.input.md,
                           "& .MuiOutlinedInput-notchedOutline": {
                             borderWidth: "2px",
                           },
                         },
                         "& .MuiInputLabel-root": {
-                          fontSize: "0.9375rem",
+                          fontSize: `${tokens.typography.base}px`,
                           fontWeight: 600,
                         },
                       }}
@@ -1017,7 +1108,7 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Box sx={{ mb: ds.spacing["3"] }}>
+                  <Box sx={{ mb: tokens.spacing.md }}>
                     <TextField
                       fullWidth
                       label="Güvenlik Mesafesi (Başlangıç)"
@@ -1039,15 +1130,15 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                       }}
                       sx={{
                         "& .MuiOutlinedInput-root": {
-                          borderRadius: `${ds.borderRadius.xl}px`,
-                          fontSize: "0.9375rem",
-                          height: 56,
+                          borderRadius: `${tokens.borderRadius.xl}px`,
+                          fontSize: `${tokens.typography.sm}px`,
+                          height: tokens.components.input.md,
                           "& .MuiOutlinedInput-notchedOutline": {
                             borderWidth: "2px",
                           },
                         },
                         "& .MuiInputLabel-root": {
-                          fontSize: "0.9375rem",
+                          fontSize: `${tokens.typography.base}px`,
                           fontWeight: 600,
                         },
                       }}
@@ -1055,7 +1146,7 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Box sx={{ mb: ds.spacing["3"] }}>
+                  <Box sx={{ mb: tokens.spacing.md }}>
                     <TextField
                       fullWidth
                       label="Güvenlik Mesafesi (Bitiş)"
@@ -1077,15 +1168,15 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                       }}
                       sx={{
                         "& .MuiOutlinedInput-root": {
-                          borderRadius: `${ds.borderRadius.xl}px`,
-                          fontSize: "0.9375rem",
-                          height: 56,
+                          borderRadius: `${tokens.borderRadius.xl}px`,
+                          fontSize: `${tokens.typography.sm}px`,
+                          height: tokens.components.input.md,
                           "& .MuiOutlinedInput-notchedOutline": {
                             borderWidth: "2px",
                           },
                         },
                         "& .MuiInputLabel-root": {
-                          fontSize: "0.9375rem",
+                          fontSize: `${tokens.typography.base}px`,
                           fontWeight: 600,
                         },
                       }}
@@ -1093,7 +1184,7 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   </Box>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <Box sx={{ mb: ds.spacing["3"] }}>
+                  <Box sx={{ mb: tokens.spacing.md }}>
                     <TextField
                       fullWidth
                       label="Minimum Artık Uzunluk"
@@ -1115,15 +1206,15 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                       }}
                       sx={{
                         "& .MuiOutlinedInput-root": {
-                          borderRadius: `${ds.borderRadius.xl}px`,
-                          fontSize: "0.9375rem",
-                          height: 56,
+                          borderRadius: `${tokens.borderRadius.xl}px`,
+                          fontSize: `${tokens.typography.sm}px`,
+                          height: tokens.components.input.md,
                           "& .MuiOutlinedInput-notchedOutline": {
                             borderWidth: "2px",
                           },
                         },
                         "& .MuiInputLabel-root": {
-                          fontSize: "0.9375rem",
+                          fontSize: `${tokens.typography.base}px`,
                           fontWeight: 600,
                         },
                       }}
@@ -1134,6 +1225,7 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
             </AccordionDetails>
           </Accordion>
         </Grid>
+
       </Grid>
     </Box>
   );

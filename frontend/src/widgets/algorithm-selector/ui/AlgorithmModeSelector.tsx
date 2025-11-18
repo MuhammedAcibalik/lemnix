@@ -18,6 +18,7 @@ import {
   alpha,
 } from "@mui/material";
 import { FlashOn, Analytics, AutoAwesome } from "@mui/icons-material";
+import { useDesignSystem } from "@/shared/hooks";
 import {
   ALGORITHM_CONFIGS,
   getRecommendedMode,
@@ -58,6 +59,8 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
   itemCount,
   disabled = false,
 }) => {
+  const ds = useDesignSystem();
+  
   // Get recommendation based on item count
   const recommendedMode =
     itemCount !== undefined ? getRecommendedMode(itemCount) : "standard";
@@ -75,10 +78,12 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
   return (
     <Box sx={{ width: "100%" }}>
       <Typography
-        variant="subtitle1"
-        fontWeight={600}
-        gutterBottom
-        sx={{ color: "text.primary", mb: 2 }}
+        sx={{
+          fontSize: { xs: "0.9375rem", md: "1rem", lg: "1.125rem" }, // ✅ Biraz küçültüldü
+          fontWeight: ds.typography.fontWeight.bold,
+          color: ds.colors.text.primary,
+          mb: { xs: ds.spacing["1.5"], md: ds.spacing["2"] }, // ✅ Spacing azaltıldı
+        }}
       >
         Algoritma Modu
       </Typography>
@@ -94,11 +99,11 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
         sx={{
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 1.5,
+          gap: { xs: ds.spacing["1.5"], md: ds.spacing["2"] }, // ✅ Spacing azaltıldı
           "& .MuiToggleButtonGroup-grouped": {
             border: "1px solid",
-            borderColor: "divider",
-            borderRadius: "12px !important",
+            borderColor: ds.colors.neutral[200],
+            borderRadius: `${ds.borderRadius.sm}px !important`, // ✅ Border radius küçültüldü
             margin: 0,
           },
         }}
@@ -116,32 +121,36 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
               sx={{
                 flexDirection: "column",
                 alignItems: "flex-start",
-                p: 2,
+                p: { xs: ds.spacing["2"], md: ds.spacing["2.5"], lg: ds.spacing["3"] }, // ✅ Padding azaltıldı
                 textAlign: "left",
+                minHeight: { xs: 100, md: 120, lg: 140 }, // ✅ Min height azaltıldı
                 backgroundColor: isSelected
-                  ? alpha("#1976d2", 0.08)
-                  : "background.paper",
+                  ? alpha(ds.colors.primary.main, 0.1)
+                  : ds.colors.background.paper,
                 "&:hover": {
-                  backgroundColor: alpha("#1976d2", 0.12),
+                  backgroundColor: alpha(ds.colors.primary.main, 0.12),
                 },
                 "&.Mui-selected": {
-                  backgroundColor: alpha("#1976d2", 0.16),
-                  borderColor: "primary.main",
+                  backgroundColor: alpha(ds.colors.primary.main, 0.12),
+                  borderColor: ds.colors.primary.main,
+                  borderWidth: "1px",
                   "&:hover": {
-                    backgroundColor: alpha("#1976d2", 0.2),
+                    backgroundColor: alpha(ds.colors.primary.main, 0.16),
                   },
                 },
               }}
             >
               <Stack
                 direction="row"
-                spacing={1}
+                spacing={ds.spacing["1"]} // ✅ Spacing azaltıldı
                 alignItems="center"
-                sx={{ mb: 1, width: "100%" }}
+                sx={{ mb: ds.spacing["1"], width: "100%" }} // ✅ Margin azaltıldı
               >
                 <IconComponent
-                  fontSize="small"
-                  color={isSelected ? "primary" : "action"}
+                  sx={{
+                    fontSize: { xs: 20, md: 24, lg: 28 }, // ✅ Icon küçültüldü
+                    color: isSelected ? ds.colors.primary.main : ds.colors.text.secondary,
+                  }}
                 />
                 {isRecommended && config.badge && (
                   <Chip
@@ -149,38 +158,46 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
                     size="small"
                     color="primary"
                     variant="outlined"
-                    sx={{ height: 20, fontSize: "0.7rem" }}
+                    sx={{
+                      height: { xs: 20, md: 22 }, // ✅ Chip height küçültüldü
+                      fontSize: { xs: "0.625rem", md: "0.6875rem" }, // ✅ Font size küçültüldü
+                      fontWeight: 600,
+                    }}
                   />
                 )}
               </Stack>
 
               <Typography
-                variant="subtitle2"
-                fontWeight={600}
                 sx={{
-                  color: isSelected ? "primary.main" : "text.primary",
-                  mb: 0.5,
+                  fontSize: { xs: "0.875rem", md: "0.9375rem", lg: "1rem" }, // ✅ Font size küçültüldü
+                  fontWeight: ds.typography.fontWeight.bold,
+                  color: isSelected ? ds.colors.primary.main : ds.colors.text.primary,
+                  mb: ds.spacing["0.5"],
                 }}
               >
                 {config.name}
               </Typography>
 
               <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{ mb: 1, display: "block", lineHeight: 1.4 }}
+                sx={{
+                  fontSize: { xs: "0.6875rem", md: "0.75rem", lg: "0.8125rem" }, // ✅ Font size küçültüldü
+                  color: ds.colors.text.secondary,
+                  mb: ds.spacing["1"], // ✅ Margin azaltıldı
+                  display: "block",
+                  lineHeight: 1.4,
+                }}
               >
                 {config.description}
               </Typography>
 
               <Typography
-                variant="caption"
                 sx={{
-                  color: "primary.main",
-                  fontWeight: 500,
+                  fontSize: { xs: "0.6875rem", md: "0.75rem" }, // ✅ Font size küçültüldü
+                  color: ds.colors.primary.main,
+                  fontWeight: ds.typography.fontWeight.semibold,
                   display: "flex",
                   alignItems: "center",
-                  gap: 0.5,
+                  gap: ds.spacing["0.5"],
                 }}
               >
                 ⏱️ {config.estimatedTime}
@@ -192,24 +209,37 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
 
       {/* Features list for selected mode */}
       <Box
-        sx={{ mt: 2, p: 2, bgcolor: alpha("#1976d2", 0.04), borderRadius: 2 }}
+        sx={{
+          mt: { xs: ds.spacing["1.5"], md: ds.spacing["2"] }, // ✅ Margin azaltıldı
+          p: { xs: ds.spacing["2"], md: ds.spacing["2.5"] }, // ✅ Padding azaltıldı
+          bgcolor: alpha(ds.colors.primary.main, 0.05),
+          borderRadius: `${ds.borderRadius.sm}px`,
+          border: `1px solid ${alpha(ds.colors.primary.main, 0.1)}`,
+        }}
       >
         <Typography
-          variant="caption"
-          fontWeight={600}
-          color="text.secondary"
-          display="block"
-          sx={{ mb: 1 }}
+          sx={{
+            fontSize: { xs: "0.75rem", md: "0.8125rem" }, // ✅ Font size küçültüldü
+            fontWeight: ds.typography.fontWeight.bold,
+            color: ds.colors.text.primary,
+            display: "block",
+            mb: ds.spacing["1"], // ✅ Margin azaltıldı
+          }}
         >
           Özellikler:
         </Typography>
-        <Stack spacing={0.5}>
+        <Stack spacing={ds.spacing["0.5"]}>
           {ALGORITHM_CONFIGS[value].features.map((feature, index) => (
             <Typography
               key={index}
-              variant="caption"
-              color="text.secondary"
-              sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
+              sx={{
+                fontSize: { xs: "0.6875rem", md: "0.75rem", lg: "0.8125rem" }, // ✅ Font size küçültüldü
+                color: ds.colors.text.secondary,
+                display: "flex",
+                alignItems: "center",
+                gap: ds.spacing["0.5"],
+                lineHeight: 1.4,
+              }}
             >
               • {feature}
             </Typography>

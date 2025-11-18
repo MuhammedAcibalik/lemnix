@@ -116,63 +116,61 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     <CardV2
       variant="glass"
       sx={{
-        p: 0.0625, // Daha da azalt
-        pl: 0.125, // Sol padding'i daha da azalt
-        pr: 0.125, // Sağ padding'i de azalt
-        pt: 0.125, // Üst padding'i azalt
-        pb: 0.125, // Alt padding'i azalt
-        height: 120, // Yüksekliği azalt
-        minHeight: 120,
-        maxHeight: 120,
+        p: ds.spacing["3"], // ✅ Arttırılmış padding (12px)
+        height: "100%", // ✅ Esnek yükseklik
+        minHeight: 140, // ✅ Minimum yükseklik arttırıldı
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
         overflow: "hidden",
         width: "100%",
+        transition: ds.transitions.base,
+        "&:hover": {
+          transform: "translateY(-4px)",
+          boxShadow: ds.shadows.soft.lg,
+        },
       }}
     >
       {/* Label with Subtitle */}
-      <Box
-        sx={{ display: "flex", alignItems: "center", gap: 0.0625, mb: 0.0625 }}
-      >
+      <Box sx={{ display: "flex", alignItems: "center", gap: ds.spacing["2"], mb: ds.spacing["2"] }}>
         {icon && (
           <Box
-            sx={{ color: selectedColor, display: "flex", alignItems: "center" }}
+            sx={{
+              color: selectedColor,
+              display: "flex",
+              alignItems: "center",
+              p: ds.spacing["1.5"],
+              borderRadius: "50%",
+              backgroundColor: `${selectedColor}15`, // Light background for icon
+            }}
           >
             {icon}
           </Box>
         )}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.125 }}>
+        <Box sx={{ display: "flex", flexDirection: "column" }}>
           <Typography
             variant="caption"
             sx={{
               color: ds.colors.text.secondary,
-              fontSize: "0.7rem",
-              fontWeight: 500,
-              lineHeight: 1,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+            }}
+          >
+            {subtitle || "METRİK"}
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              color: ds.colors.text.primary,
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              lineHeight: 1.2,
             }}
           >
             {label}
           </Typography>
-          {subtitle && (
-            <Typography
-              variant="caption"
-              sx={{
-                color: ds.colors.text.secondary,
-                fontSize: "0.65rem",
-                fontWeight: 400,
-                lineHeight: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {subtitle}
-            </Typography>
-          )}
         </Box>
       </Box>
 
@@ -181,9 +179,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         sx={{
           display: "flex",
           alignItems: "baseline",
-          gap: 0.25,
+          gap: ds.spacing["1"],
           flex: 1,
           minHeight: 0,
+          my: ds.spacing["1"],
         }}
       >
         <Typography
@@ -191,7 +190,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           sx={{
             fontWeight: 700,
             color: selectedColor,
-            fontSize: "1.6rem",
+            fontSize: "2rem",
             lineHeight: 1,
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -206,16 +205,16 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: 0.03125,
+              gap: ds.spacing["0.5"],
               flexShrink: 0,
             }}
           >
             <Typography
               component="span"
               sx={{
-                fontSize: "0.8rem",
-                fontWeight: 500,
-                color: selectedColor,
+                fontSize: "0.875rem",
+                fontWeight: 600,
+                color: ds.colors.text.secondary,
                 lineHeight: 1,
               }}
             >
@@ -226,68 +225,67 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                 size="small"
                 onClick={handleUnitClick}
                 sx={{
-                  p: 0.125,
+                  p: 0.5,
                   color: ds.colors.text.secondary,
                   "&:hover": {
                     color: selectedColor,
                   },
                 }}
               >
-                <ExpandMore sx={{ fontSize: 12 }} />
+                <ExpandMore sx={{ fontSize: 16 }} />
               </IconButton>
             )}
           </Box>
         )}
       </Box>
 
-      {/* Detail */}
-      {detail && (
-        <Typography
-          variant="caption"
-          sx={{
-            color: ds.colors.text.secondary,
-            fontSize: "0.65rem",
-            fontWeight: 400,
-            mt: 0.0625,
-            display: "block",
-            lineHeight: 1,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {detail}
-        </Typography>
-      )}
+      {/* Detail & Change */}
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mt: "auto" }}>
+        {detail && (
+          <Typography
+            variant="caption"
+            sx={{
+              color: ds.colors.text.secondary,
+              fontSize: "0.75rem",
+              fontWeight: 500,
+              display: "block",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {detail}
+          </Typography>
+        )}
 
-      {/* Change Indicator */}
-      {change !== undefined && (
-        <Chip
-          size="small"
-          icon={
-            change >= 0 ? (
-              <TrendingUp sx={{ fontSize: 14 }} />
-            ) : (
-              <TrendingDown sx={{ fontSize: 14 }} />
-            )
-          }
-          label={`${change >= 0 ? "+" : ""}${change.toFixed(1)}%`}
-          sx={{
-            height: 20,
-            fontSize: "0.6875rem",
-            fontWeight: 600,
-            alignSelf: "flex-start",
-            backgroundColor:
-              change >= 0
-                ? `${ds.colors.success.main}15`
-                : `${ds.colors.error.main}15`,
-            color: change >= 0 ? ds.colors.success.main : ds.colors.error.main,
-            "& .MuiChip-icon": {
-              color: "inherit",
-            },
-          }}
-        />
-      )}
+        {change !== undefined && (
+          <Chip
+            size="small"
+            icon={
+              change >= 0 ? (
+                <TrendingUp sx={{ fontSize: 14 }} />
+              ) : (
+                <TrendingDown sx={{ fontSize: 14 }} />
+              )
+            }
+            label={`${change >= 0 ? "+" : ""}${change.toFixed(1)}%`}
+            sx={{
+              height: 24,
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              ml: ds.spacing["1"],
+              backgroundColor:
+                change >= 0
+                  ? `${ds.colors.success.main}15`
+                  : `${ds.colors.error.main}15`,
+              color: change >= 0 ? ds.colors.success.main : ds.colors.error.main,
+              "& .MuiChip-icon": {
+                color: "inherit",
+              },
+            }}
+          />
+        )}
+      </Box>
 
       {/* Unit Converter Menu */}
       <Menu

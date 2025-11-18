@@ -77,6 +77,7 @@ export const ModernNavigation: React.FC<ModernNavigationProps> = ({
       <AppBar
         isMobile={isMobile}
         currentPageItem={currentPageItem}
+        activePage={activePage}
         onToggleSidebar={onToggleSidebar}
         onCommandPaletteOpen={openCommandPalette}
         onUserMenuOpen={openUserMenu}

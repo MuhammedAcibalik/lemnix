@@ -125,22 +125,23 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
     setSearchQuery(query);
   };
 
-  // Responsive dimensions - Optimized for golden ratio
+  // Responsive dimensions - Fluid scaling for all resolutions
   const getDimensions = () => {
     if (isMobile) {
       return {
-        width: "95vw",
-        height: "85vh",
+        width: "clamp(320px, 95vw, 95vw)",
+        height: "clamp(400px, 85vh, 85vh)",
         maxWidth: "95vw",
         maxHeight: "85vh",
       };
     }
 
+    // Desktop: Fluid scaling from tablet to 4K
     return {
-      width: "min(720px, 90vw)",
-      height: "min(580px, 80vh)", // 500px → 580px for better content/search ratio
-      maxWidth: "720px",
-      maxHeight: "580px",
+      width: "clamp(600px, min(720px, 90vw), 900px)",
+      height: "clamp(500px, min(580px, 80vh), 700px)",
+      maxWidth: { sm: "600px", md: "720px", lg: "800px", xl: "900px" },
+      maxHeight: { sm: "500px", md: "580px", lg: "650px", xl: "700px" },
     };
   };
 

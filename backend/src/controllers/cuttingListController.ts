@@ -7,6 +7,7 @@
 import { Request, Response, NextFunction } from "express";
 import * as fs from "fs";
 import * as path from "path";
+import { fileURLToPath } from "url";
 import { PDFExportService } from "../services/export/pdfExportService";
 import { ExcelExportService } from "../services/export/excelExportService";
 import { ProfileSuggestionService } from "../services/suggestions/profileSuggestionService";
@@ -20,6 +21,7 @@ import {
   ProfileSuggestion,
 } from "../services/suggestions/UnifiedSuggestionService";
 import { cuttingListRepository } from "../repositories/CuttingListRepository";
+import { prisma, databaseManager } from "../config/database";
 import { logger } from "../services/logger";
 import { MeasurementConverter } from "../utils/measurementConverter";
 
@@ -150,6 +152,9 @@ export class CuttingListController {
 
   constructor() {
     // Create storage directory if it doesn't exist
+    // ESM-compatible __dirname replacement
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
     const storageDir = path.join(__dirname, "../../data");
     if (!fs.existsSync(storageDir)) {
       fs.mkdirSync(storageDir, { recursive: true });
@@ -424,6 +429,22 @@ export class CuttingListController {
           return;
         }
 
+        // ✅ FIXED: Check database connection before querying
+        const isConnected = databaseManager.getConnectionStatus();
+        if (!isConnected) {
+          const healthCheck = await databaseManager.healthCheck();
+          if (!healthCheck) {
+            res.status(503).json(
+              this.createResponse(
+                false,
+                undefined,
+                "Veritabanı bağlantı hatası. Lütfen PostgreSQL servisinin çalıştığından emin olun.",
+              ),
+            );
+            return;
+          }
+        }
+
         // ✅ FIXED: Check PostgreSQL database instead of in-memory Map
         const existingLists =
           await cuttingListRepository.findAllByWeekNumber(weekNumber);
@@ -442,13 +463,28 @@ export class CuttingListController {
           return;
         }
 
+        // ✅ FIXED: Ensure system user exists before creating cutting list
+        const systemUser = await prisma.user.upsert({
+          where: { id: "system-user" },
+          update: {},
+          create: {
+            id: "system-user",
+            email: "system@lemnix.com",
+            name: "System User",
+            role: "system",
+            isActive: true,
+          },
+        });
+
         // ✅ MIGRATED: Create cutting list in PostgreSQL (persistent storage)
+        // ✅ FIX: Explicitly set status to ensure it's saved
         const cuttingList = await cuttingListRepository.create({
           name: cuttingListTitle.trim(),
           weekNumber: weekNumber,
+          status: "DRAFT", // ✅ Explicitly set status
           sections: [],
           user: {
-            connect: { id: "system-user" }, // Temporary system user ID
+            connect: { id: systemUser.id },
           },
         });
 
@@ -470,10 +506,87 @@ export class CuttingListController {
 
         res.json(this.createResponse(true, response));
       } catch (error) {
-        console.error(`[${requestId}] Error creating cutting list:`, error);
+        const err = error as Error & { code?: string; meta?: unknown };
+        
+        logger.error(`[${requestId}] Error creating cutting list:`, {
+          error: err.message,
+          code: err.code,
+          stack: err.stack,
+          meta: err.meta,
+        });
+
+        // Handle Prisma errors
+        if (err.code === "P2002") {
+          // Unique constraint violation (duplicate week number)
+          res
+            .status(409)
+            .json(
+              this.createResponse(
+                false,
+                undefined,
+                `${weekNumber}. Hafta için zaten bir kesim listesi mevcut.`,
+              ),
+            );
+          return;
+        }
+
+        if (err.code === "P2025") {
+          // Record not found (user doesn't exist)
+          res
+            .status(500)
+            .json(
+              this.createResponse(
+                false,
+                undefined,
+                "System user not found. Please contact administrator.",
+              ),
+            );
+          return;
+        }
+
+        // Handle database connection errors
+        if (
+          err.code === "P1001" ||
+          err.code === "P1002" ||
+          err.message?.includes("Can't reach database server") ||
+          err.message?.includes("database server is running")
+        ) {
+          logger.error(`[${requestId}] Database connection error:`, {
+            code: err.code,
+            message: err.message,
+          });
+          
+          res.status(503).json(
+            this.createResponse(
+              false,
+              undefined,
+              "Veritabanı bağlantı hatası. Lütfen daha sonra tekrar deneyin veya sistem yöneticisine başvurun.",
+            ),
+          );
+          return;
+        }
+
+        // Handle other Prisma errors
+        if (err.code?.startsWith("P")) {
+          logger.error(`[${requestId}] Prisma error:`, {
+            code: err.code,
+            message: err.message,
+            meta: err.meta,
+          });
+          
+          res.status(500).json(
+            this.createResponse(
+              false,
+              undefined,
+              "Veritabanı işlemi başarısız oldu. Lütfen tekrar deneyin.",
+            ),
+          );
+          return;
+        }
 
         const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
+          err instanceof Error ? err.message : "Unknown error occurred";
+        
         res
           .status(500)
           .json(this.createResponse(false, undefined, errorMessage));
@@ -657,20 +770,49 @@ export class CuttingListController {
                 {} as Record<string, unknown[]>,
               );
 
-              // Merge items into existing sections
+              // ✅ FIX: Merge items into existing sections, preserving profiles from both sources
               const updatedSections = dbSections.map((section) => {
                 const profileType = section.productName;
+                
+                // If section already has items with profiles, preserve them
+                const existingItems = (section.items || []) as CuttingListItem[];
+                
+                // If we have items from DB for this profile type, merge them
                 if (workOrdersByProfileType[profileType]) {
-                  // Add items to matching section
-                  const existingItems = section.items || [];
+                  const dbItems = workOrdersByProfileType[profileType] as CuttingListItem[];
+                  
+                  // Merge: combine existing items with DB items by workOrderId
+                  const itemsMap = new Map<string, CuttingListItem>();
+                  
+                  // First, add existing items (preserve profiles if they exist)
+                  existingItems.forEach((item) => {
+                    itemsMap.set(item.workOrderId, item);
+                  });
+                  
+                  // Then, merge or add DB items
+                  dbItems.forEach((dbItem) => {
+                    const existing = itemsMap.get(dbItem.workOrderId);
+                    if (existing) {
+                      // Merge: if existing has no profiles, use DB profiles
+                      // If existing has profiles, keep them (don't override)
+                      itemsMap.set(dbItem.workOrderId, {
+                        ...existing,
+                        profiles: existing.profiles && existing.profiles.length > 0
+                          ? existing.profiles
+                          : dbItem.profiles,
+                      });
+                    } else {
+                      itemsMap.set(dbItem.workOrderId, dbItem);
+                    }
+                  });
+                  
                   return {
                     ...section,
-                    items: [
-                      ...existingItems,
-                      ...workOrdersByProfileType[profileType],
-                    ],
+                    items: Array.from(itemsMap.values()),
                   };
                 }
+                
+                // No DB items for this section, return as-is (preserve existing profiles)
                 return section;
               });
 
@@ -867,7 +1009,7 @@ export class CuttingListController {
           return;
         }
 
-        // Convert to response format (same as getAllCuttingLists)
+        // ✅ FIX: Use same transformation logic as getAllCuttingLists
         type CuttingListWithFields = PrismaCuttingList & {
           weekNumber: number | null;
           sections: Prisma.JsonValue;
@@ -893,104 +1035,293 @@ export class CuttingListController {
 
         const typedList = dbList as unknown as CuttingListWithFields;
 
-        // First group items by workOrderId with mutable arrays
-        const mutableItemsByWorkOrder = typedList.items.reduce(
-          (acc, item) => {
-            const workOrderId = item.workOrderId;
-            if (!acc[workOrderId]) {
-              acc[workOrderId] = {
-                id: workOrderId,
-                workOrderId: item.workOrderId,
-                date: item.date || new Date().toISOString().split("T")[0],
-                version: item.version,
-                color: item.color,
-                note: item.notes || "",
-                orderQuantity: item.orderQuantity || item.quantity,
-                size: item.size,
-                priority: normalizeItemPriority(item.priority),
-                status: item.status as
-                  | "draft"
-                  | "ready"
-                  | "processing"
-                  | "completed",
-                profiles: [] as ProfileItem[],
-                createdAt: item.createdAt.toISOString(),
-                updatedAt: item.updatedAt.toISOString(),
-              };
-            }
+        // ✅ FIX: Try to parse sections from database JSON field first
+        let dbSections: ProductSection[] = [];
+        try {
+          if (typedList.sections) {
+            const parsed =
+              typeof typedList.sections === "string"
+                ? JSON.parse(typedList.sections)
+                : typedList.sections;
+            dbSections = Array.isArray(parsed) ? parsed : [];
+          }
+        } catch (parseError) {
+          logger.warn("Failed to parse sections from database", {
+            id: typedList.id,
+            parseError,
+          });
+          dbSections = [];
+        }
 
-            // Add profile to existing work order
-            (acc[workOrderId].profiles as ProfileItem[]).push({
-              id: `${item.id}-profile`,
-              profile: item.profileType,
-              measurement: `${item.length}mm`,
-              quantity: item.quantity,
+        // ✅ FIX: If we have DB sections, use them as base (preserves user-defined product names and profiles)
+        if (dbSections.length > 0) {
+          // If we have items, merge them with existing sections
+          if (typedList.items.length > 0) {
+            // Group items by workOrderId with profiles
+            const mutableItemsByWorkOrder = typedList.items.reduce(
+              (acc, item) => {
+                const workOrderId = item.workOrderId;
+                if (!acc[workOrderId]) {
+                  acc[workOrderId] = {
+                    id: workOrderId,
+                    workOrderId: item.workOrderId,
+                    date: item.date || new Date().toISOString().split("T")[0],
+                    version: item.version,
+                    color: item.color,
+                    note: item.notes || "",
+                    orderQuantity: item.orderQuantity || item.quantity,
+                    size: item.size,
+                    priority: normalizeItemPriority(item.priority),
+                    status: item.status as
+                      | "draft"
+                      | "ready"
+                      | "processing"
+                      | "completed",
+                    profiles: [] as ProfileItem[],
+                    createdAt: item.createdAt.toISOString(),
+                    updatedAt: item.updatedAt.toISOString(),
+                  };
+                }
+
+                (acc[workOrderId].profiles as ProfileItem[]).push({
+                  id: `${item.id}-profile`,
+                  profile: item.profileType,
+                  measurement: `${item.length}mm`,
+                  quantity: item.quantity,
+                });
+
+                return acc;
+              },
+              {} as Record<
+                string,
+                Omit<CuttingListItem, "profiles"> & { profiles: ProfileItem[] }
+              >,
+            );
+
+            const itemsByWorkOrder = Object.fromEntries(
+              Object.entries(mutableItemsByWorkOrder).map(([key, value]) => [
+                key,
+                {
+                  ...value,
+                  profiles: value.profiles as ReadonlyArray<ProfileItem>,
+                } as CuttingListItem,
+              ]),
+            ) as Record<string, CuttingListItem>;
+
+            // Group by profile type
+            const workOrdersByProfileType = Object.values(
+              itemsByWorkOrder,
+            ).reduce(
+              (acc, workOrder) => {
+                const profileType = workOrder.profiles[0]?.profile || "Genel";
+                if (!acc[profileType]) {
+                  acc[profileType] = [];
+                }
+                acc[profileType].push({
+                  id: `workorder-${workOrder.workOrderId}`,
+                  workOrderId: workOrder.workOrderId,
+                  date: workOrder.date,
+                  version: workOrder.version,
+                  color: workOrder.color,
+                  note: workOrder.note,
+                  orderQuantity: workOrder.orderQuantity,
+                  size: workOrder.size,
+                  priority: normalizeItemPriority(workOrder.priority),
+                  status: workOrder.status,
+                  profiles: workOrder.profiles,
+                  createdAt: workOrder.createdAt,
+                  updatedAt: workOrder.updatedAt,
+                });
+                return acc;
+              },
+              {} as Record<string, unknown[]>,
+            );
+
+            // Merge items into existing sections, preserving profiles
+            const updatedSections = dbSections.map((section) => {
+              const profileType = section.productName;
+              const existingItems = (section.items || []) as CuttingListItem[];
+
+              if (workOrdersByProfileType[profileType]) {
+                const dbItems = workOrdersByProfileType[
+                  profileType
+                ] as CuttingListItem[];
+
+                const itemsMap = new Map<string, CuttingListItem>();
+
+                existingItems.forEach((item) => {
+                  itemsMap.set(item.workOrderId, item);
+                });
+
+                dbItems.forEach((dbItem) => {
+                  const existing = itemsMap.get(dbItem.workOrderId);
+                  if (existing) {
+                    itemsMap.set(dbItem.workOrderId, {
+                      ...existing,
+                      profiles: existing.profiles && existing.profiles.length > 0
+                        ? existing.profiles
+                        : dbItem.profiles,
+                    });
+                  } else {
+                    itemsMap.set(dbItem.workOrderId, dbItem);
+                  }
+                });
+
+                return {
+                  ...section,
+                  items: Array.from(itemsMap.values()),
+                };
+              }
+
+              return section;
             });
 
-            return acc;
-          },
-          {} as Record<
-            string,
-            Omit<CuttingListItem, "profiles"> & { profiles: ProfileItem[] }
-          >,
-        );
-
-        // Convert to readonly structure
-        const itemsByWorkOrder = Object.fromEntries(
-          Object.entries(mutableItemsByWorkOrder).map(([key, value]) => [
-            key,
-            {
-              ...value,
-              profiles: value.profiles as ReadonlyArray<ProfileItem>,
-            } as CuttingListItem,
-          ]),
-        ) as Record<string, CuttingListItem>;
-
-        // Convert grouped items to sections by profileType
-        const itemsByProfile = Object.values(itemsByWorkOrder).reduce(
-          (acc, workOrder) => {
-            const profileType = workOrder.profiles[0]?.profile || "Genel";
-            if (!acc[profileType]) {
-              acc[profileType] = [];
-            }
-
-            // Create WorkOrderItem - use actual workOrderId as id
-            const workOrderItem = {
-              id: workOrder.workOrderId, // ✅ Use actual work order ID, not prefixed
-              workOrderId: workOrder.workOrderId,
-              date: workOrder.date,
-              version: workOrder.version,
-              color: workOrder.color,
-              note: workOrder.note,
-              orderQuantity: workOrder.orderQuantity,
-              size: workOrder.size,
-              profiles: workOrder.profiles,
-              priority: normalizeItemPriority(workOrder.priority),
-              status: workOrder.status,
-              createdAt: workOrder.createdAt,
-              updatedAt: workOrder.updatedAt,
+            const cuttingList = {
+              id: typedList.id,
+              title: typedList.name,
+              weekNumber: typedList.weekNumber || 0,
+              sections: updatedSections,
+              createdAt: typedList.createdAt.toISOString(),
+              updatedAt: typedList.updatedAt.toISOString(),
             };
 
-            acc[profileType].push(workOrderItem);
-            return acc;
-          },
-          {} as Record<string, CuttingListItem[]>,
-        );
+            logger.info(
+              `[${requestId}] ✅ Found cutting list from PostgreSQL: ${id}`,
+            );
+            res.json(this.createResponse(true, cuttingList));
+            return;
+          }
 
-        // Create sections array from grouped items
-        const sections = Object.keys(itemsByProfile).map((profileType) => ({
-          id: profileType,
-          productName: profileType,
-          items: itemsByProfile[profileType]!,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }));
+          // No items, just return DB sections (with profiles if they exist)
+          const cuttingList = {
+            id: typedList.id,
+            title: typedList.name,
+            weekNumber: typedList.weekNumber || 0,
+            sections: dbSections,
+            createdAt: typedList.createdAt.toISOString(),
+            updatedAt: typedList.updatedAt.toISOString(),
+          };
 
+          logger.info(
+            `[${requestId}] ✅ Found cutting list from PostgreSQL: ${id}`,
+          );
+          res.json(this.createResponse(true, cuttingList));
+          return;
+        }
+
+        // If we have items but NO DB sections, group them by workOrderId to create sections
+        if (typedList.items.length > 0) {
+          const mutableItemsByWorkOrder = typedList.items.reduce(
+            (acc, item) => {
+              const workOrderId = item.workOrderId;
+              if (!acc[workOrderId]) {
+                acc[workOrderId] = {
+                  id: workOrderId,
+                  workOrderId: item.workOrderId,
+                  date: item.date || new Date().toISOString().split("T")[0],
+                  version: item.version,
+                  color: item.color,
+                  note: item.notes || "",
+                  orderQuantity: item.orderQuantity || item.quantity,
+                  size: item.size,
+                  priority: normalizeItemPriority(item.priority),
+                  status: item.status as
+                    | "draft"
+                    | "ready"
+                    | "processing"
+                    | "completed",
+                  profiles: [] as ProfileItem[],
+                  createdAt: item.createdAt.toISOString(),
+                  updatedAt: item.updatedAt.toISOString(),
+                };
+              }
+
+              (acc[workOrderId].profiles as ProfileItem[]).push({
+                id: `${item.id}-profile`,
+                profile: item.profileType,
+                measurement: `${item.length}mm`,
+                quantity: item.quantity,
+              });
+
+              return acc;
+            },
+            {} as Record<
+              string,
+              Omit<CuttingListItem, "profiles"> & { profiles: ProfileItem[] }
+            >,
+          );
+
+          const itemsByWorkOrder = Object.fromEntries(
+            Object.entries(mutableItemsByWorkOrder).map(([key, value]) => [
+              key,
+              {
+                ...value,
+                profiles: value.profiles as ReadonlyArray<ProfileItem>,
+              } as CuttingListItem,
+            ]),
+          ) as Record<string, CuttingListItem>;
+
+          const itemsByProfile = Object.values(itemsByWorkOrder).reduce(
+            (acc, workOrder) => {
+              const profileType = workOrder.profiles[0]?.profile || "Genel";
+              if (!acc[profileType]) {
+                acc[profileType] = [];
+              }
+
+              const workOrderItem = {
+                id: workOrder.workOrderId,
+                workOrderId: workOrder.workOrderId,
+                date: workOrder.date,
+                version: workOrder.version,
+                color: workOrder.color,
+                note: workOrder.note,
+                orderQuantity: workOrder.orderQuantity,
+                size: workOrder.size,
+                profiles: workOrder.profiles,
+                priority: normalizeItemPriority(workOrder.priority),
+                status: workOrder.status,
+                createdAt: workOrder.createdAt,
+                updatedAt: workOrder.updatedAt,
+              };
+
+              acc[profileType].push(workOrderItem);
+              return acc;
+            },
+            {} as Record<string, CuttingListItem[]>,
+          );
+
+          const sections = Object.entries(itemsByProfile).map(
+            ([productName, items], index) => ({
+              id: `section-${typedList.id}-${index}`,
+              productName,
+              items: items as unknown[],
+              createdAt: typedList.createdAt.toISOString(),
+              updatedAt: typedList.updatedAt.toISOString(),
+            }),
+          );
+
+          const cuttingList = {
+            id: typedList.id,
+            title: typedList.name,
+            weekNumber: typedList.weekNumber || 0,
+            sections,
+            createdAt: typedList.createdAt.toISOString(),
+            updatedAt: typedList.updatedAt.toISOString(),
+          };
+
+          logger.info(
+            `[${requestId}] ✅ Found cutting list from PostgreSQL: ${id}`,
+          );
+          res.json(this.createResponse(true, cuttingList));
+          return;
+        }
+
+        // No items and no DB sections
         const cuttingList = {
           id: typedList.id,
           title: typedList.name || "Untitled",
-          weekNumber: typedList.weekNumber || 1,
-          sections,
+          weekNumber: typedList.weekNumber || 0,
+          sections: [],
           createdAt: typedList.createdAt.toISOString(),
           updatedAt: typedList.updatedAt.toISOString(),
         };

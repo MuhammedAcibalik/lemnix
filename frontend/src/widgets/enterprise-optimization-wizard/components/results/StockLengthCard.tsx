@@ -8,7 +8,7 @@
 
 import React from "react";
 import { Box, Typography, Stack, Chip, Divider, alpha } from "@mui/material";
-import { CardV2 } from "@/shared/ui/Card/Card.v2";
+import { CardV2 } from "@/shared";
 import { useDesignSystem } from "@/shared/hooks";
 import {
   Straighten as StraightenIcon,

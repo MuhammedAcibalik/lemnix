@@ -40,7 +40,14 @@ export class DashboardRepository extends BaseRepository {
   public groupOptimizationStatistics(
     args: Prisma.OptimizationStatisticsGroupByArgs,
   ) {
-    return this.prisma.optimizationStatistics.groupBy(args);
+    // Prisma 5 groupBy requires orderBy when using take/skip.
+    // Our repository stays thin and delegates validation to service layer,
+    // but we still satisfy the stricter type by asserting the args shape.
+    return this.prisma.optimizationStatistics.groupBy(
+      args as Parameters<
+        (typeof this.prisma.optimizationStatistics)["groupBy"]
+      >[0],
+    );
   }
 
   public findOptimizations(args: Prisma.OptimizationFindManyArgs) {

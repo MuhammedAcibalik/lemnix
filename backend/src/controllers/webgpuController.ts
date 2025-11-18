@@ -28,14 +28,31 @@ export class WebGPUController {
    */
   public async getStatus(_req: Request, res: Response): Promise<void> {
     try {
-      const isAvailable = this.webgpuService.isAvailable();
-      const gpuInfo = this.webgpuService.getCurrentGPUInfo();
+      // Safely check WebGPU availability
+      let isAvailable = false;
+      let gpuInfo = null;
+
+      try {
+        isAvailable = this.webgpuService.isAvailable();
+        gpuInfo = this.webgpuService.getCurrentGPUInfo();
+      } catch (serviceError) {
+        logger.warn("WebGPU service check failed", {
+          error: serviceError instanceof Error ? serviceError.message : "Unknown error",
+        });
+        // Continue with default values (WebGPU not available)
+      }
 
       res.json({
         success: true,
         data: {
           available: isAvailable,
-          gpuInfo,
+          gpuInfo: gpuInfo || {
+            name: "Not Available",
+            type: "unknown",
+            memory: 0,
+            driver: "N/A",
+            version: "N/A",
+          },
           timestamp: new Date().toISOString(),
         },
       });

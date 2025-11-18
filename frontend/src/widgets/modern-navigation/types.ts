@@ -44,7 +44,8 @@ export interface NavigationItem {
   readonly id: string;
   readonly title: string;
   readonly path: string;
-  readonly icon: React.ReactElement;
+  // Use SvgIconComponent so we can render it with JSX: <Icon sx={{ ... }} />
+  readonly icon: SvgIconComponent;
   readonly label?: string;
 }
 

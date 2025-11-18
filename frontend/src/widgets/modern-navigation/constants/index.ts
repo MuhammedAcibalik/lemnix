@@ -48,6 +48,7 @@ export const navigationItems: NavigationItem[] = [
   {
     id: "home",
     label: "Ana Sayfa",
+    path: "/",
     icon: HomeIcon,
     description: "Genel bakış ve sistem durumu",
     category: "main",
@@ -57,6 +58,7 @@ export const navigationItems: NavigationItem[] = [
   {
     id: "cutting-list",
     label: "Kesim Listesi",
+    path: "/cutting-list",
     icon: ListIcon,
     description: "Akıllı kesim listesi yönetimi",
     category: "main",
@@ -66,6 +68,7 @@ export const navigationItems: NavigationItem[] = [
   {
     id: "enterprise-optimization",
     label: "Enterprise Optimizasyon",
+    path: "/enterprise-optimization",
     icon: PsychologyIcon,
     description: "AI destekli akıllı optimizasyon algoritmaları",
     category: "tools",
@@ -82,6 +85,7 @@ export const navigationItems: NavigationItem[] = [
   {
     id: "statistics",
     label: "İstatistikler",
+    path: "/statistics",
     icon: AnalyticsIcon,
     description: "Detaylı analiz ve performans raporları",
     category: "tools",
@@ -91,6 +95,7 @@ export const navigationItems: NavigationItem[] = [
   {
     id: "production-plan",
     label: "Üretim Planı",
+    path: "/production-plan",
     icon: CalendarTodayIcon,
     description: "Haftalık üretim planlarını yönetin ve takip edin",
     category: "main",
@@ -100,6 +105,7 @@ export const navigationItems: NavigationItem[] = [
   {
     id: "profile-management",
     label: "Profil Yönetimi",
+    path: "/profile-management",
     icon: AccountTreeIcon,
     description: "Profil tanımları ve iş emri eşleştirmelerini yönetin",
     category: "main",
@@ -117,6 +123,7 @@ export const navigationItems: NavigationItem[] = [
   {
     id: "settings",
     label: "Ayarlar",
+    path: "/settings",
     icon: TuneIcon,
     description: "Sistem ayarları ve konfigürasyon",
     category: "settings",

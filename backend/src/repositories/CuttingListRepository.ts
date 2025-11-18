@@ -78,9 +78,35 @@ export class CuttingListRepository {
       // Cache invalidation
       await cacheService.invalidateByTag(CacheTags.CUTTING_LISTS);
 
+      // Verify: Query back to confirm it was saved
+      const verify = await prisma.cuttingList.findUnique({
+        where: { id: result.id },
+      });
+      
+      if (!verify) {
+        logger.error("Created list not found in database after creation", {
+          id: result.id,
+        });
+        throw new Error("Created cutting list not found in database");
+      }
+
+      logger.info("Cutting list created successfully", {
+        id: result.id,
+        name: result.name,
+        weekNumber: result.weekNumber,
+        status: result.status,
+      });
+
       return result;
     } catch (error) {
-      logger.error("Failed to create cutting list", { error });
+      logger.error("Failed to create cutting list", { 
+        error,
+        data: {
+          name: data.name,
+          weekNumber: data.weekNumber,
+          status: data.status,
+        },
+      });
       throw error;
     }
   }
@@ -178,24 +204,24 @@ export class CuttingListRepository {
         orderBy: { createdAt: "desc" },
       });
 
-      // Log for debugging
       logger.info(`Found ${lists.length} cutting lists`);
-
-      // 🐛 DEBUG: Log items for each list
-      lists.forEach((list) => {
-        console.log(
-          `🔍 List ${list.id} has ${list.items.length} items:`,
-          list.items.map((i) => ({
-            id: i.id,
-            profileType: i.profileType,
-            quantity: i.quantity,
-            length: i.length,
-          })),
-        );
-      });
 
       return lists;
     } catch (error) {
+      // If database is unreachable (e.g. PostgreSQL not running) we don't want
+      // to break the whole cutting list page in development. Log the error and
+      // return an empty list as a safe fallback.
+      const message =
+        error instanceof Error ? error.message : String(error ?? "Unknown");
+
+      if (message.includes("Can't reach database server")) {
+        logger.warn(
+          "Database is not reachable while fetching cutting lists. Returning empty list.",
+          { error: message },
+        );
+        return [];
+      }
+
       logger.error("Failed to find all cutting lists", { error });
       throw error;
     }
@@ -418,12 +444,6 @@ export class CuttingListRepository {
         updatedAt: now.toISOString(),
       };
 
-      // 🐛 DEBUG: Log the new section being created
-      console.log(
-        "🔍 Creating new section:",
-        JSON.stringify(newSection, null, 2),
-      );
-
       // Parse existing sections from JSON
       let existingSections: CuttingListSection[] = [];
       try {
@@ -440,33 +460,7 @@ export class CuttingListRepository {
         existingSections = [];
       }
 
-      // 🐛 DEBUG: Log existing sections
-      console.log(
-        "🔍 Existing sections before update:",
-        existingSections.length,
-        existingSections.map((s) => s.productName),
-      );
-
       const updatedSections = [...existingSections, newSection];
-
-      // 🐛 DEBUG: Log what will be saved
-      console.log(
-        "🔍 Updated sections to save:",
-        updatedSections.length,
-        updatedSections.map((s) => s.productName),
-      );
-      console.log(
-        "🔍 Full updated sections:",
-        JSON.stringify(
-          updatedSections.map((s) => ({
-            id: s.id,
-            productName: s.productName,
-            itemsCount: s.items.length,
-          })),
-          null,
-          2,
-        ),
-      );
 
       await prisma.cuttingList.update({
         where: { id: cuttingListId },
@@ -475,15 +469,6 @@ export class CuttingListRepository {
           updatedAt: now,
         },
       });
-
-      // 🐛 DEBUG: Verify what was saved
-      const saved = await prisma.cuttingList.findUnique({
-        where: { id: cuttingListId },
-      });
-      console.log(
-        "🔍 Verified saved sections:",
-        JSON.stringify(saved?.sections, null, 2),
-      );
 
       // Invalidate cache (non-blocking)
       try {
@@ -603,8 +588,33 @@ export class CuttingListRepository {
 
       // Create new item with unique ID
       const now = new Date();
+      const newItemId = `id-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      
+      // ✅ CRITICAL FIX: Create item for JSONB sections with profiles
+      const newItemForSections = {
+        id: newItemId,
+        workOrderId: itemData.workOrderId,
+        date: itemData.date,
+        version: itemData.version,
+        color: itemData.color,
+        note: itemData.note || "",
+        orderQuantity: itemData.orderQuantity,
+        size: itemData.size,
+        priority: itemData.priority,
+        status: itemData.status,
+        // ✅ FIX: Include profiles in JSONB item
+        profiles: itemData.profiles.map((profile) => ({
+          id: profile.id,
+          profile: profile.profile,
+          measurement: profile.measurement,
+          quantity: profile.quantity,
+        })),
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+      };
+
       const newItem = {
-        id: `id-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: newItemId,
         cuttingListId: cuttingListId, // ✅ ADD - CRITICAL for smart learning
         workOrderId: itemData.workOrderId,
         date: itemData.date,
@@ -615,31 +625,27 @@ export class CuttingListRepository {
         size: itemData.size,
         priority: itemData.priority,
         status: itemData.status,
-        // profiles: itemData.profiles, // Removed - not part of PrismaCuttingListItem interface
         profileType: itemData.profileType || "Unknown",
-        // measurement: itemData.measurement || '0mm', // Removed - not part of PrismaCuttingListItem interface
         quantity: itemData.quantity || 1,
         length: 0, // Default value
         cuttingPattern: null, // Default value
-        // Üretim planı entegrasyonu
-        materialNumber: null, // Malzeme numarası (üretim planından)
-        materialDescription: null, // Malzeme açıklaması (üretim planından)
-        productionPlanItemId: null, // Hangi plan itemından geldiği
+        materialNumber: null,
+        materialDescription: null,
+        productionPlanItemId: null,
         createdAt: now,
         updatedAt: now,
       } as PrismaCuttingListItem;
 
-      // Add item to section.items array
+      // ✅ FIX: Add item with profiles to section.items array
       const targetSection = existingSections[sectionIndex];
-      targetSection.items = [...(targetSection.items || []), newItem];
+      // JSONB field allows flexible structure, so we can store items with profiles
+      targetSection.items = [
+        ...(targetSection.items || []),
+        newItemForSections as unknown as PrismaCuttingListItem,
+      ];
       targetSection.updatedAt = now.toISOString();
 
       // ✅ CRITICAL FIX: Create CuttingListItem records for each profile
-      console.log(
-        "🔍 Creating DB items for profiles:",
-        itemData.profiles.length,
-        "profiles",
-      );
       const dbItems = [];
       for (const profile of itemData.profiles) {
         const profileData = {
@@ -666,19 +672,11 @@ export class CuttingListRepository {
           productionPlanItemId: null,
         };
 
-        console.log(
-          "🔍 Creating DB item:",
-          JSON.stringify(profileData, null, 2),
-        );
-
         const profileItem = await prisma.cuttingListItem.create({
           data: profileData,
         });
         dbItems.push(profileItem);
-        console.log("✅ DB item created:", profileItem.id);
       }
-
-      console.log("✅ Total DB items created:", dbItems.length);
 
       // Update cutting list in PostgreSQL
       await prisma.cuttingList.update({
@@ -688,8 +686,6 @@ export class CuttingListRepository {
           updatedAt: now,
         },
       });
-
-      console.log("✅ Cutting list sections updated with new item");
 
       // Invalidate cache (non-blocking)
       try {
@@ -701,25 +697,6 @@ export class CuttingListRepository {
           cacheError,
         });
       }
-
-      // 🐛 DEBUG: Verify items were saved by querying them back
-      const verifyItems = await prisma.cuttingListItem.findMany({
-        where: { cuttingListId, workOrderId: itemData.workOrderId },
-      });
-      console.log("🔍 Verified saved items in DB:", verifyItems.length);
-      console.log(
-        "🔍 Verified items:",
-        JSON.stringify(
-          verifyItems.map((i) => ({
-            id: i.id,
-            profileType: i.profileType,
-            quantity: i.quantity,
-            length: i.length,
-          })),
-          null,
-          2,
-        ),
-      );
 
       logger.info("Item added to section successfully", {
         cuttingListId,
@@ -790,27 +767,11 @@ export class CuttingListRepository {
         throw new Error("Invalid sections data");
       }
 
-      // DEBUG: Log section matching details
-      logger.info("🔍 Section matching debug", {
-        cuttingListId,
-        sectionId,
-        existingSectionsCount: existingSections.length,
-        existingSectionIds: existingSections.map((s) => s.id),
-        sections: existingSections.map((s) => ({
-          id: s.id,
-          productName: s.productName,
-        })),
-      });
-
       // Find target section - support both old and new ID formats
       const sectionIndex = existingSections.findIndex(
         (s: CuttingListSection) => {
           // Direct match
           if (s.id === sectionId) {
-            logger.info("✅ Direct match found", {
-              sectionId,
-              matchedId: s.id,
-            });
             return true;
           }
 
@@ -820,19 +781,7 @@ export class CuttingListRepository {
           if (match) {
             const [, listId, index] = match;
             const expectedId = `section-${listId}-${index}`;
-            logger.info("🔍 Checking new format", {
-              sectionId,
-              listId,
-              index,
-              expectedId,
-              actualId: s.id,
-            });
             if (s.id === expectedId) {
-              logger.info("✅ New format match found", {
-                sectionId,
-                expectedId,
-                matchedId: s.id,
-              });
               return true;
             }
           }
@@ -841,23 +790,10 @@ export class CuttingListRepository {
           const indexMatch = sectionId.match(/-(\d+)$/);
           if (indexMatch) {
             const index = parseInt(indexMatch[1]);
-            const isMatch =
+            return (
               index < existingSections.length &&
-              existingSections[index] !== undefined;
-            logger.info("🔍 Checking index fallback", {
-              sectionId,
-              index,
-              isMatch,
-              sectionExists: existingSections[index]?.id,
-            });
-            if (isMatch) {
-              logger.info("✅ Index fallback match found", {
-                sectionId,
-                index,
-                matchedId: existingSections[index]?.id,
-              });
-              return true;
-            }
+              existingSections[index] !== undefined
+            );
           }
 
           return false;
@@ -874,20 +810,6 @@ export class CuttingListRepository {
 
       const targetSection = existingSections[sectionIndex];
 
-      // DEBUG: Log item matching details
-      logger.info("🔍 Item matching debug", {
-        itemId,
-        sectionId,
-        targetSectionId: targetSection.id,
-        itemsCount: targetSection.items?.length || 0,
-        itemIds: targetSection.items?.map((item) => item.id) || [],
-        items:
-          targetSection.items?.map((item) => ({
-            id: item.id,
-            workOrderId: item.workOrderId,
-          })) || [],
-      });
-
       // Find target item - try by ID first, then by workOrderId if itemId starts with "workorder-"
       let itemIndex =
         targetSection.items?.findIndex(
@@ -897,10 +819,6 @@ export class CuttingListRepository {
       if (itemIndex === -1 && itemId.startsWith("workorder-")) {
         // Extract workOrderId from itemId (e.g., "workorder-2355572" -> "2355572")
         const workOrderId = itemId.replace("workorder-", "");
-        logger.info("🔍 Trying to match by workOrderId", {
-          itemId,
-          workOrderId,
-        });
         itemIndex =
           targetSection.items?.findIndex(
             (item: PrismaCuttingListItem) => item.workOrderId === workOrderId,
@@ -908,7 +826,7 @@ export class CuttingListRepository {
       }
 
       if (itemIndex === -1) {
-        logger.error("❌ Item not found in section", {
+        logger.error("Item not found in section", {
           itemId,
           sectionId,
           availableItemIds: targetSection.items?.map((item) => item.id) || [],
@@ -919,7 +837,7 @@ export class CuttingListRepository {
         throw new Error("Item not found");
       }
 
-      logger.info("✅ Item found", { itemId, itemIndex });
+      logger.info("Item found", { itemId, itemIndex });
 
       // Update item with new data
       const now = new Date();
@@ -1139,10 +1057,6 @@ export class CuttingListRepository {
         itemId.startsWith("workorder-")
       ) {
         const workOrderId = itemId.replace("workorder-", "");
-        logger.info("🔍 Delete: Trying to match by workOrderId", {
-          itemId,
-          workOrderId,
-        });
         filteredItems = (targetSection.items || []).filter(
           (item: PrismaCuttingListItem) => item.workOrderId !== workOrderId,
         );
@@ -1151,7 +1065,7 @@ export class CuttingListRepository {
       targetSection.items = filteredItems;
 
       if (targetSection.items.length === originalLength) {
-        logger.error("❌ Item not found for deletion", {
+        logger.error("Item not found for deletion", {
           itemId,
           sectionId,
           availableItemIds: targetSection.items?.map((item) => item.id) || [],

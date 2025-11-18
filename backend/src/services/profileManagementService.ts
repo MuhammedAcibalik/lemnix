@@ -19,6 +19,7 @@ import {
   ProfileManagementRepository,
   profileManagementRepository,
 } from "../repositories/ProfileManagementRepository";
+import { databaseManager } from "../config/database";
 
 export class ProfileManagementService {
   constructor(private readonly repository: ProfileManagementRepository) {}
@@ -210,6 +211,15 @@ export class ProfileManagementService {
     activeOnly?: boolean;
     includeStockLengths?: boolean;
   }): Promise<ProfileDefinition[]> {
+    // In degraded mode (database not connected), return an empty list so that
+    // the UI can still render without server errors.
+    if (!databaseManager.getConnectionStatus()) {
+      logger.warn(
+        "[ProfileManagement] getProfileDefinitions: database not connected, returning empty list",
+      );
+      return [];
+    }
+
     const where = options?.activeOnly ? { isActive: true } : undefined;
 
     const profiles = await this.profileDefinition.findMany({
@@ -460,6 +470,18 @@ export class ProfileManagementService {
     totalMappings: number;
     uniqueWeeks: number;
   }> {
+    if (!databaseManager.getConnectionStatus()) {
+      logger.warn(
+        "[ProfileManagement] getStatistics: database not connected, returning fallback stats",
+      );
+      return {
+        totalProfiles: 0,
+        activeProfiles: 0,
+        totalMappings: 0,
+        uniqueWeeks: 0,
+      };
+    }
+
     const [totalProfiles, activeProfiles, totalMappings, uniqueWeeks] =
       await Promise.all([
         this.profileDefinition.count(),

@@ -33,7 +33,8 @@ export const UserMenu: React.FC<UserMenuProps> = ({ anchorEl, onClose }) => {
       sx={{
         zIndex: stylingConstants.zIndex.userMenu,
         "& .MuiPaper-root": {
-          minWidth: 200,
+          minWidth: { xs: "180px", sm: "200px", md: "220px" },
+          maxWidth: { xs: "90vw", sm: "none" },
           backgroundColor: "rgba(255, 255, 255, 0.98)",
           backdropFilter: "blur(20px)",
           border: "1px solid rgba(226, 232, 240, 0.2)",

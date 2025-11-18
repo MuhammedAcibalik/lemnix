@@ -104,3 +104,20 @@ export {
   useFocusManagement,
 } from "./useFocusTrap";
 export type { FocusTrapOptions } from "./useFocusTrap";
+
+// Export adaptive UI hooks (Full Adaptive System)
+export { useDeviceInfo } from "./useDeviceInfo";
+export type {
+  DeviceType,
+  UIMode,
+  DeviceInfo,
+} from "./useDeviceInfo";
+
+export { useAdaptiveUI, useAdaptiveVariant } from "./useAdaptiveUI";
+export type {
+  AdaptiveTokens,
+  AdaptiveVariantOptions,
+} from "./useAdaptiveUI";
+
+// Export adaptive UI context (from contexts layer)
+export { useAdaptiveUIContext } from "../contexts";

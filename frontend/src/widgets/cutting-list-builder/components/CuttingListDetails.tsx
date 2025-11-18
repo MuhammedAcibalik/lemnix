@@ -22,7 +22,7 @@ import {
 } from "@mui/icons-material";
 
 import { useDesignSystem, Permission, usePermissions } from "@/shared/hooks";
-import { CardV2, FadeIn, ScaleIn } from "@/shared";
+import { CardV2, FadeIn, ScaleIn, Button } from "@/shared";
 import {
   CuttingList,
   ProductSection,
@@ -228,10 +228,38 @@ export const CuttingListDetails: React.FC<CuttingListDetailsProps> = ({
                 Henüz ürün bölümü yok
               </Typography>
               <Typography
-                sx={{ fontSize: "0.8125rem", color: ds.colors.text.secondary }}
+                sx={{
+                  fontSize: "0.8125rem",
+                  color: ds.colors.text.secondary,
+                  mb: ds.spacing["3"],
+                }}
               >
-                "Yeni Ürün" butonunu kullanarak başlayın
+                İlk ürün bölümünü ekleyerek başlayın
               </Typography>
+              {/* ✅ P1-4: Add product button - permission protected (Planner+) */}
+              {canManage && (
+                <Button
+                  variant="primary"
+                  size="large"
+                  leftIcon={<AddIcon />}
+                  onClick={onAddProduct}
+                  sx={{
+                    mt: ds.spacing["2"],
+                    px: ds.spacing["4"],
+                    py: ds.spacing["2"],
+                    fontSize: "0.9375rem",
+                    fontWeight: 600,
+                    boxShadow: ds.shadows.soft.md,
+                    "&:hover": {
+                      transform: "translateY(-2px)",
+                      boxShadow: ds.shadows.soft.lg,
+                    },
+                    transition: ds.transitions.fast,
+                  }}
+                >
+                  Ürün Ekle
+                </Button>
+              )}
             </CardV2>
           </ScaleIn>
         ) : (

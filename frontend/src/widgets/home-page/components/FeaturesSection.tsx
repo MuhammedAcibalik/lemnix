@@ -15,7 +15,7 @@ import {
   Layers as Layers,
   AutoAwesome,
 } from "@mui/icons-material";
-import { useDesignSystem } from "@/shared/hooks";
+import { useDesignSystem, useAdaptiveUIContext } from "@/shared/hooks";
 import { FadeIn, CardV2, Badge } from "@/shared";
 
 interface FeaturesSectionProps {
@@ -27,64 +27,84 @@ const features = [
     icon: Cpu,
     title: "4 Gelişmiş Optimizasyon Algoritması",
     description:
-      "FFD, BFD, Genetic Algorithm v1.7.1, Profile Pooling algoritmaları ile %92+ verimlilik. GPU hızlandırma teknolojisi ile 2 saniyede sonuç.",
+      "FFD, BFD, Genetic Algorithm v1.7.1 ve Profile Pooling algoritmaları ile %92'nin üzerinde verimlilik elde edin. WebGPU hızlandırma teknolojisi sayesinde optimizasyon sonuçlarını 2 saniyenin altında görün.",
     badge: "AI Algoritma",
   },
   {
     icon: FileSpreadsheet,
     title: "Kapsamlı Kesim Listesi Yönetimi",
     description:
-      "Haftalık kesim listeleri, iş emri yönetimi, profil kombinasyonları ve akıllı öneriler. Gerçek zamanlı senkronizasyon ve otomatik güncelleme.",
+      "Haftalık kesim listeleri oluşturun, iş emirlerini yönetin ve profil kombinasyonlarını optimize edin. Akıllı öneriler, gerçek zamanlı senkronizasyon ve otomatik güncellemeler ile süreçlerinizi kolaylaştırın.",
     badge: "Yönetim",
   },
   {
     icon: BarChart3,
     title: "Gerçek Zamanlı Analiz ve Raporlama",
     description:
-      "Verimlilik %, Fire Oranı, Maliyet Analizi, Kesim Planı görselleştirmesi. ISO standartlarında denetlenebilir raporlama sistemi.",
+      "Verimlilik oranları, fire oranı, maliyet analizi ve kesim planı görselleştirmeleri ile performansınızı izleyin. ISO standartlarında denetlenebilir raporlama sistemi ile şeffaflık sağlayın.",
     badge: "Canlı Analiz",
   },
   {
     icon: Building2,
     title: "Enterprise İş Emri Yönetimi",
     description:
-      "İş emri oluşturma, versiyon kontrolü, renk ve ebat yönetimi, profil kombinasyonları. Çoklu kullanıcı desteği ve rol tabanlı erişim.",
+      "İş emri oluşturma, versiyon kontrolü, renk ve ebat yönetimi, profil kombinasyonları ile kapsamlı üretim süreçlerini yönetin. Çoklu kullanıcı desteği ve rol tabanlı erişim ile güvenli çalışma ortamı.",
     badge: "Enterprise",
   },
   {
     icon: ShieldCheck,
     title: "Endüstriyel Standartlar ve Güvenlik",
     description:
-      "6100mm stok uzunluğu, 3.5mm kerf genişliği, 2mm güvenlik payı ile gerçekçi hesaplamalar. Enterprise-grade güvenlik ve veri koruma.",
+      "6100mm stok uzunluğu, 3.5mm kerf genişliği ve 2mm güvenlik payı ile gerçekçi hesaplamalar yapın. Enterprise seviyesinde güvenlik ve veri koruma ile hassas bilgilerinizi güvende tutun.",
     badge: "ISO Standart",
   },
   {
     icon: Layers,
     title: "AI Destekli Akıllı Öneriler",
     description:
-      "Profil kombinasyonları, ebat önerileri, akıllı tamamlama ve geçmiş veri analizi. Machine learning algoritmaları ile sürekli öğrenen sistem.",
+      "Profil kombinasyonları, ebat önerileri ve akıllı tamamlama özellikleri ile karar süreçlerinizi destekleyin. Machine learning algoritmaları ile geçmiş veri analizi yaparak sürekli öğrenen sistem.",
     badge: "AI Öneri",
   },
 ];
 
 const FeaturesSection: React.FC<FeaturesSectionProps> = ({ className }) => {
   const ds = useDesignSystem();
+  const { tokens } = useAdaptiveUIContext();
 
   return (
     <Box
       sx={{
-        py: ds.spacing["12"],
+        py: { xs: ds.spacing["5"], md: ds.spacing["6"] },
         background: ds.colors.surface.elevated1,
         position: "relative",
       }}
     >
-      <Container maxWidth="xl">
-        {/* Section Header - KOMPAKT */}
-        <FadeIn direction="up" duration={0.5}>
+      <Container
+        maxWidth={false}
+        sx={{
+          px: {
+            xs: ds.spacing["3"],
+            sm: ds.spacing["4"],
+            md: ds.spacing["6"],
+            lg: ds.spacing["8"],
+            xl: "clamp(2rem, 5vw, 4rem)",
+          },
+          maxWidth: {
+            xs: "100%",
+            sm: "600px",
+            md: "900px",
+            lg: "1200px",
+            xl: "1400px",
+            "2xl": "1600px",
+          },
+        }}
+      >
+        {/* Section Header */}
+        <FadeIn duration={0.4}>
           <Stack
             alignItems="center"
             spacing={ds.spacing["3"]}
-            sx={{ mb: ds.spacing["8"] }}
+            sx={{ mb: ds.spacing["6"] }}
           >
             <Badge variant="soft" color="primary">
               <Stack
@@ -92,16 +112,24 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ className }) => {
                 spacing={ds.spacing["2"]}
                 alignItems="center"
               >
-                <AutoAwesome sx={{ fontSize: 16 }} />
-                <Typography sx={{ ...ds.typography.label.prominent }}>
+                <AutoAwesome sx={{ fontSize: 14, color: ds.colors.primary.main }} />
+                <Typography
+                  sx={{
+                    fontSize: tokens.typography.xs,
+                    fontWeight: 600,
+                    letterSpacing: "0.05em",
+                    color: ds.colors.text.secondary,
+                  }}
+                >
                   PLATFORM ÖZELLİKLERİ
                 </Typography>
               </Stack>
             </Badge>
 
             <Typography
+              variant="h2"
               sx={{
-                fontSize: { xs: "1.5rem", md: "1.875rem" },
+                fontSize: `clamp(${tokens.typography.xl * 1.2}px, 2.5vw + ${tokens.typography.base}px, ${tokens.typography.xxl * 1.3}px)`,
                 fontWeight: 700,
                 textAlign: "center",
                 color: ds.colors.text.primary,
@@ -111,99 +139,98 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ className }) => {
             </Typography>
 
             <Typography
+              variant="body1"
               sx={{
-                fontSize: "0.9375rem",
+                fontSize: `clamp(${tokens.typography.base}px, 1vw + ${tokens.typography.base * 0.25}px, ${tokens.typography.lg}px)`,
                 textAlign: "center",
                 color: ds.colors.text.secondary,
-                maxWidth: "600px",
+                maxWidth: { xs: "100%", sm: "600px", md: "650px", lg: "750px" },
+                lineHeight: 1.75,
+                fontWeight: 400,
               }}
             >
-              Endüstri 4.0 standardında üretim optimizasyon platformu
+              Endüstri 4.0 standartlarında geliştirilmiş, kapsamlı üretim optimizasyon platformu ile 
+              iş süreçlerinizi dijitalleştirin ve verimliliği artırın.
             </Typography>
           </Stack>
         </FadeIn>
 
-        {/* Bento Grid - KOMPAKT Feature Cards */}
-        <Grid container spacing={ds.spacing["3"]}>
+        {/* Feature Cards Grid */}
+        <Grid 
+          container 
+          spacing={{ xs: ds.spacing["4"], sm: ds.spacing["5"], md: ds.spacing["6"] }}
+        >
           {features.map((feature, index) => (
             <Grid key={feature.title} item xs={12} md={6} lg={4}>
-              <FadeIn delay={0.1 * index} duration={0.5}>
+              <FadeIn delay={0.05 * index} duration={0.3}>
                 <CardV2
-                  variant="glass"
+                  variant="elevated"
                   hoverable
                   sx={{
                     height: "100%",
-                    cursor: "pointer",
-                    borderRadius: `${ds.borderRadius.lg}px`,
-                    transition: `all ${ds.transitions.base}`,
+                    transition: ds.transitions.base,
 
                     "&:hover": {
-                      transform: "scale(1.02) translateY(-4px)",
-                      boxShadow: `
-                        ${ds.shadows.soft.xl},
-                        0 0 40px ${alpha(ds.colors.primary.main, 0.15)}
-                      `,
-                    },
-
-                    "&:hover .feature-icon": {
-                      transform: "scale(1.08) rotate(-3deg)",
-                      boxShadow: `0 0 20px ${alpha(ds.colors.primary.main, 0.3)}`,
+                      transform: "translateY(-2px)",
+                      boxShadow: ds.shadows.soft.lg,
                     },
                   }}
                 >
-                  <Stack spacing={ds.spacing["3"]}>
-                    {/* Icon + Badge - KOMPAKT */}
+                  <Stack spacing={ds.spacing["4"]}>
+                    {/* Icon + Badge */}
                     <Stack
                       direction="row"
                       alignItems="center"
                       justifyContent="space-between"
                     >
                       <Box
-                        className="feature-icon"
                         sx={{
-                          width: 44,
-                          height: 44,
+                          width: 48,
+                          height: 48,
                           borderRadius: `${ds.borderRadius.md}px`,
-                          background: alpha(ds.colors.primary.main, 0.1),
-                          border: `1.5px solid ${alpha(ds.colors.primary.main, 0.2)}`,
+                          background: alpha(ds.colors.primary.main, 0.08),
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          transition: ds.transitions.spring,
+                          transition: ds.transitions.base,
                         }}
                       >
                         <feature.icon
-                          sx={{ fontSize: 22, color: ds.colors.primary.main }}
+                          sx={{ fontSize: 24, color: ds.colors.primary.main }}
                         />
                       </Box>
 
-                      <Badge variant="outlined" color="primary">
+                      <Badge variant="outline" color="primary">
                         <Typography
-                          sx={{ fontSize: "0.65rem", fontWeight: 600 }}
+                          sx={{ fontSize: tokens.typography.xs, fontWeight: 600 }}
                         >
                           {feature.badge}
                         </Typography>
                       </Badge>
                     </Stack>
 
-                    {/* Title - KOMPAKT */}
+                    {/* Title */}
                     <Typography
+                      variant="h6"
                       sx={{
-                        fontSize: "1rem",
+                        fontSize: `clamp(${tokens.typography.lg}px, 1.5vw + ${tokens.typography.base * 0.5}px, ${tokens.typography.xl}px)`,
                         fontWeight: 600,
                         color: ds.colors.text.primary,
-                        lineHeight: 1.3,
+                        lineHeight: 1.4,
+                        letterSpacing: "-0.01em",
                       }}
                     >
                       {feature.title}
                     </Typography>
 
-                    {/* Description - KOMPAKT */}
+                    {/* Description */}
                     <Typography
+                      variant="body2"
                       sx={{
-                        fontSize: "0.8125rem",
+                        fontSize: { xs: tokens.typography.sm, sm: tokens.typography.base },
                         color: ds.colors.text.secondary,
-                        lineHeight: 1.5,
+                        lineHeight: 1.65,
+                        fontWeight: 400,
                       }}
                     >
                       {feature.description}

@@ -7,6 +7,7 @@
 import { Request, Response } from "express";
 import { profileManagementService } from "../services/profileManagementService";
 import { logger } from "../utils/logger";
+import { databaseManager } from "../config/database";
 
 export class ProfileManagementController {
   /**
@@ -73,6 +74,20 @@ export class ProfileManagementController {
    */
   async getProfileDefinitions(req: Request, res: Response): Promise<void> {
     try {
+      // In degraded mode we still want UI to render with an empty list instead
+      // of a 500 error. Service already checks DB status but we keep this guard
+      // for extra safety.
+      if (!databaseManager.getConnectionStatus()) {
+        logger.warn(
+          "[ProfileMgmt] getProfileDefinitions: database not connected, returning empty list",
+        );
+        res.status(200).json({
+          success: true,
+          data: [],
+        });
+        return;
+      }
+
       // Support both activeOnly and isActive parameters
       const activeOnly =
         req.query.activeOnly === "true" || req.query.isActive === "true";
@@ -88,10 +103,12 @@ export class ProfileManagementController {
         data: profiles,
       });
     } catch (error) {
+      // In degraded mode or when DB is not available, do not surface 500 to UI.
+      // Log the error and return an empty list instead so the page can render.
       logger.error("[ProfileMgmt] Get definitions error", { error });
-      res.status(500).json({
-        success: false,
-        error: "Profil listesi alınamadı",
+      res.status(200).json({
+        success: true,
+        data: [],
       });
     }
   }
@@ -353,6 +370,22 @@ export class ProfileManagementController {
    */
   async getStatistics(req: Request, res: Response): Promise<void> {
     try {
+      if (!databaseManager.getConnectionStatus()) {
+        logger.warn(
+          "[ProfileMgmt] getStatistics: database not connected, returning fallback stats",
+        );
+        res.status(200).json({
+          success: true,
+          data: {
+            totalProfiles: 0,
+            activeProfiles: 0,
+            totalMappings: 0,
+            uniqueWeeks: 0,
+          },
+        });
+        return;
+      }
+
       const stats = await profileManagementService.getStatistics();
 
       res.status(200).json({
@@ -360,10 +393,16 @@ export class ProfileManagementController {
         data: stats,
       });
     } catch (error) {
+      // Same degrade-mode behavior as above: never surface 500 for statistics.
       logger.error("[ProfileMgmt] Get statistics error", { error });
-      res.status(500).json({
-        success: false,
-        error: "İstatistikler alınamadı",
+      res.status(200).json({
+        success: true,
+        data: {
+          totalProfiles: 0,
+          activeProfiles: 0,
+          totalMappings: 0,
+          uniqueWeeks: 0,
+        },
       });
     }
   }

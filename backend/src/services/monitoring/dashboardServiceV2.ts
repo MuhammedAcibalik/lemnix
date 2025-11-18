@@ -8,6 +8,7 @@
 
 import { logger } from "../logger";
 import { dashboardRepository } from "../../repositories/DashboardRepository";
+import { databaseManager } from "../../config/database";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -58,6 +59,22 @@ export async function getHeroMetrics(options: DashboardMetricsOptions = {}) {
   const { timeRange = "7d" } = options;
 
   try {
+    // If database is not connected (local dev, PostgreSQL stopped), return
+    // safe fallback metrics instead of attempting Prisma queries.
+    if (!databaseManager.getConnectionStatus()) {
+      logger.warn(
+        "getHeroMetrics: database not connected, returning fallback metrics",
+      );
+      return {
+        activeOptimizations: 0,
+        cuttingListsThisWeek: 0,
+        averageEfficiency: 0,
+        totalWasteSaved: 0,
+        efficiencyTrend: [],
+        wasteTrend: [],
+      };
+    }
+
     const now = new Date();
     const startDate = getStartDate(now, timeRange);
 
@@ -129,8 +146,19 @@ export async function getHeroMetrics(options: DashboardMetricsOptions = {}) {
       wasteTrend,
     };
   } catch (error) {
-    logger.error("Failed to fetch hero metrics", error);
-    throw error;
+    // In development environments or when the dashboard tables are not yet
+    // migrated, we don't want the entire dashboard to fail with 500.
+    // Log the error and return safe fallback metrics instead.
+    logger.error("Failed to fetch hero metrics", { error });
+
+    return {
+      activeOptimizations: 0,
+      cuttingListsThisWeek: 0,
+      averageEfficiency: 0,
+      totalWasteSaved: 0,
+      efficiencyTrend: [],
+      wasteTrend: [],
+    };
   }
 }
 
@@ -143,6 +171,20 @@ export async function getOptimizationPerformance(
   const { timeRange = "7d" } = options;
 
   try {
+    if (!databaseManager.getConnectionStatus()) {
+      logger.warn(
+        "getOptimizationPerformance: database not connected, returning fallback data",
+      );
+      return {
+        algorithmStats: [],
+        efficiencyTimeSeries: [],
+        wasteTimeSeries: [],
+        costSavings: {
+          totalSaved: 0,
+          savingsTimeSeries: [],
+        },
+      };
+    }
     const now = new Date();
     const startDate = getStartDate(now, timeRange);
 
@@ -200,8 +242,19 @@ export async function getOptimizationPerformance(
       costSavings,
     };
   } catch (error) {
-    logger.error("Failed to fetch optimization performance", error);
-    throw error;
+    // In development or when dashboard tables are not ready, do not break the
+    // dashboard with a 500. Log the error and return safe fallback data.
+    logger.error("Failed to fetch optimization performance", { error });
+
+    return {
+      algorithmStats: [],
+      efficiencyTimeSeries: [],
+      wasteTimeSeries: [],
+      costSavings: {
+        totalSaved: 0,
+        savingsTimeSeries: [],
+      },
+    };
   }
 }
 
@@ -210,6 +263,18 @@ export async function getOptimizationPerformance(
  */
 export async function getActiveOperations() {
   try {
+    if (!databaseManager.getConnectionStatus()) {
+      logger.warn(
+        "getActiveOperations: database not connected, returning fallback data",
+      );
+      return {
+        activeOperations: [],
+        queuedCount: 0,
+        processingCount: 0,
+        recentCompletions: [],
+        failedOperations: [],
+      };
+    }
     // Active optimizations
     const activeOptimizations = await prisma.optimization.findMany({
       where: {
@@ -273,8 +338,17 @@ export async function getActiveOperations() {
       failedOperations: [],
     };
   } catch (error) {
-    logger.error("Failed to fetch active operations", error);
-    throw error;
+    // When database is unreachable or tables are missing we still want the
+    // dashboard to render, just without active operations data.
+    logger.error("Failed to fetch active operations", { error });
+
+    return {
+      activeOperations: [],
+      queuedCount: 0,
+      processingCount: 0,
+      recentCompletions: [],
+      failedOperations: [],
+    };
   }
 }
 
@@ -285,6 +359,17 @@ export async function getSmartInsights(options: DashboardMetricsOptions = {}) {
   const { timeRange = "7d" } = options;
 
   try {
+    if (!databaseManager.getConnectionStatus()) {
+      logger.warn(
+        "getSmartInsights: database not connected, returning fallback data",
+      );
+      return {
+        topProfiles: [],
+        bestAlgorithm: null,
+        peakHours: [],
+        suggestions: [],
+      };
+    }
     const now = new Date();
     const startDate = getStartDate(now, timeRange);
 
@@ -360,8 +445,15 @@ export async function getSmartInsights(options: DashboardMetricsOptions = {}) {
       suggestions: [],
     };
   } catch (error) {
-    logger.error("Failed to fetch smart insights", error);
-    throw error;
+    // In local/dev environments missing dashboard data should not surface as 500s.
+    logger.error("Failed to fetch smart insights", { error });
+
+    return {
+      topProfiles: [],
+      bestAlgorithm: null,
+      peakHours: [],
+      suggestions: [],
+    };
   }
 }
 
@@ -372,6 +464,16 @@ export async function getActivityTimeline(filter: ActivityFilter = {}) {
   const { limit = 20, type } = filter;
 
   try {
+    if (!databaseManager.getConnectionStatus()) {
+      logger.warn(
+        "getActivityTimeline: database not connected, returning empty timeline",
+      );
+      return {
+        events: [],
+        totalCount: 0,
+        hasMore: false,
+      };
+    }
     const activities = await prisma.userActivity.findMany({
       where: type ? { activityType: type } : undefined,
       include: {
@@ -401,8 +503,15 @@ export async function getActivityTimeline(filter: ActivityFilter = {}) {
       hasMore: events.length === limit,
     };
   } catch (error) {
-    logger.error("Failed to fetch activity timeline", error);
-    throw error;
+    // If activity table is missing or DB is down, return an empty timeline so
+    // the dashboard can still render without crashing.
+    logger.error("Failed to fetch activity timeline", { error });
+
+    return {
+      events: [],
+      totalCount: 0,
+      hasMore: false,
+    };
   }
 }
 

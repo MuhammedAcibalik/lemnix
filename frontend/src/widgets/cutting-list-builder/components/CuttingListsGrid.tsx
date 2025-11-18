@@ -31,7 +31,7 @@ import {
 
 // Design System v2.0
 import { useDesignSystem } from "@/shared/hooks";
-import { CardV2, FadeIn, ScaleIn } from "@/shared";
+import { CardV2, FadeIn, ScaleIn, PrimaryButton } from "@/shared";
 import { useDeleteCuttingList } from "@/entities/cutting-list";
 import { CuttingList } from "../types";
 
@@ -507,26 +507,13 @@ export const CuttingListsGrid: React.FC<CuttingListsGridProps> = ({
                             </Typography>
 
                             {/* Action Button */}
-                            <Button
+                            <PrimaryButton
                               onClick={() => onSelectList(list)}
                               fullWidth
                               endIcon={<ArrowIcon />}
-                              sx={{
-                                borderRadius: `${ds.borderRadius.md}px`,
-                                textTransform: "none",
-                                fontWeight: 600,
-                                background: ds.gradients.primary,
-                                color: "#ffffff",
-                                boxShadow: ds.shadows.soft.sm,
-                                "&:hover": {
-                                  boxShadow: ds.shadows.soft.md,
-                                  transform: "translateY(-1px)",
-                                },
-                                transition: ds.transitions.fast,
-                              }}
                             >
                               Listeyi Aç
-                            </Button>
+                            </PrimaryButton>
                           </Stack>
                         </Box>
                       </CardV2>

@@ -45,8 +45,9 @@ import {
   Analytics as AnalyticsIcon,
   HighQuality as HighQualityIcon,
   ArrowBack as ArrowBackIcon,
+  Straighten as RulerIcon,
 } from "@mui/icons-material";
-import { useDesignSystem } from "@/shared/hooks";
+import { useDesignSystem, useAdaptiveUIContext } from "@/shared/hooks";
 import { CardV2 } from "@/shared/ui/Card/Card.v2";
 import type {
   ResultsStepProps,
@@ -110,6 +111,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
   loading,
 }) => {
   const ds = useDesignSystem();
+  const { device, tokens } = useAdaptiveUIContext();
   const [globalUnit, setGlobalUnit] = useState<"mm" | "cm" | "m">("mm");
 
   // Unit converter helper
@@ -288,21 +290,21 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
         }}
       >
         <CircularProgress
-          size={64}
-          sx={{ mb: ds.spacing["3"], color: ds.colors.primary.main }}
+          size={tokens.components.icon.xl}
+          sx={{ mb: tokens.spacing.md, color: ds.colors.primary.main }}
         />
         <Typography
           sx={{
-            fontSize: "1.25rem",
+            fontSize: `${tokens.typography.lg}px`,
             fontWeight: ds.typography.fontWeight.semibold,
             color: ds.colors.text.primary,
-            mb: ds.spacing["1"],
+            mb: tokens.spacing.xs,
           }}
         >
           Optimizasyon Çalışıyor...
         </Typography>
         <Typography
-          sx={{ fontSize: "0.875rem", color: ds.colors.text.secondary }}
+          sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
         >
           Lütfen bekleyin, bu işlem birkaç dakika sürebilir
         </Typography>
@@ -315,7 +317,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
     return (
       <Box
         sx={{
-          p: ds.spacing["4"],
+          p: tokens.components.card.padding,
           textAlign: "center",
           minHeight: 500,
           display: "flex",
@@ -329,17 +331,17 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
       >
         <ErrorIcon
           sx={{
-            fontSize: 64,
+            fontSize: tokens.components.icon.xl,
             color: ds.colors.error.main,
-            mb: ds.spacing["3"],
+            mb: tokens.spacing.md,
           }}
         />
         <Typography
           sx={{
-            fontSize: "1.25rem",
+            fontSize: `${tokens.typography.lg}px`,
             fontWeight: ds.typography.fontWeight.semibold,
             color: ds.colors.text.primary,
-            mb: ds.spacing["2"],
+            mb: tokens.spacing.sm,
           }}
         >
           Optimizasyon Başarısız Oldu
@@ -347,9 +349,9 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
         <Alert
           severity="error"
           sx={{
-            borderRadius: `${ds.borderRadius.lg}px`,
+            borderRadius: `${tokens.borderRadius.lg}px`,
             maxWidth: 600,
-            mb: ds.spacing["4"],
+            mb: tokens.spacing.md,
           }}
         >
           {result.message || "Bilinmeyen bir hata oluştu"}
@@ -358,6 +360,9 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
           variant="outlined"
           startIcon={<RefreshIcon />}
           onClick={onNewOptimization}
+          sx={{
+            minHeight: device.isTouch ? tokens.components.minTouchTarget : tokens.components.button.md,
+          }}
         >
           Yeniden Dene
         </Button>
@@ -383,7 +388,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
       >
         <Alert
           severity="info"
-          sx={{ borderRadius: `${ds.borderRadius.lg}px`, maxWidth: 500 }}
+          sx={{ borderRadius: `${tokens.borderRadius.lg}px`, maxWidth: 500 }}
         >
           Optimizasyon sonucu bekleniyor. Lütfen önce optimizasyonu başlatın.
         </Alert>
@@ -397,7 +402,16 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
     return (
       <Box
         sx={{
-          p: ds.spacing["4"],
+          px: {
+            xs: tokens.spacing.md,
+            sm: tokens.spacing.lg,
+            md: tokens.spacing.xl,
+            lg: tokens.spacing.xl * 1.5,
+          },
+          py: {
+            xs: tokens.spacing.sm,
+            md: tokens.spacing.md,
+          },
           width: "100%",
           maxWidth: "none",
           mx: 0,
@@ -408,19 +422,22 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: ds.spacing["2"],
-            mb: ds.spacing["4"],
+            gap: tokens.spacing.sm,
+            mb: tokens.spacing.md,
           }}
         >
           <Button
             variant="outlined"
             startIcon={<ArrowBackIcon />}
             onClick={handleBackToOverview}
-            sx={{ textTransform: "none" }}
+            sx={{ 
+              textTransform: "none",
+              minHeight: device.isTouch ? tokens.components.minTouchTarget : tokens.components.button.md,
+            }}
           >
             ← Geri
           </Button>
-          <Typography sx={{ fontSize: "1.5rem", fontWeight: 600 }}>
+          <Typography sx={{ fontSize: `${tokens.typography.xl}px`, fontWeight: 600 }}>
             {currentPage === "cutting-plan" && "Kesim Planı Görselleştirme"}
             {currentPage === "stock-details" && "Stok Detayları"}
             {currentPage === "cost-distribution" && "Maliyet Dağılımı"}
@@ -441,7 +458,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 <StockLengthCard group={group} />
 
                 {/* Her stok boyu için tablo */}
-                <Box sx={{ mb: ds.spacing["4"] }}>
+                <Box sx={{ mb: tokens.spacing.md }}>
                   <CuttingPlanDataGrid plans={group.plans} />
                 </Box>
               </Box>
@@ -450,17 +467,17 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
         )}
 
         {currentPage === "stock-details" && (
-          <Grid container spacing={ds.spacing["2"]}>
+          <Grid container spacing={tokens.layout.gridGap}>
             {/* Stock Metrics Grid */}
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Toplam Stok"
                 value={stockBreakdown.length}
                 color="primary"
-                icon={<InventoryIcon sx={{ fontSize: 20 }} />}
+                icon={<InventoryIcon sx={{ fontSize: tokens.components.icon.sm }} />}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Ortalama Kullanım"
                 value={
@@ -478,7 +495,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 color="info"
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="En Verimli Stok"
                 value={
@@ -494,7 +511,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 color="success"
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="En Az Verimli"
                 value={
@@ -532,18 +549,18 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
         )}
 
         {currentPage === "cost-distribution" && (
-          <Grid container spacing={ds.spacing["2"]}>
+          <Grid container spacing={tokens.layout.gridGap}>
             {/* Cost Breakdown Metrics */}
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Malzeme Maliyeti"
                 value={(costBreakdown?.materialCost || 0).toFixed(2)}
                 unit="₺"
                 color="primary"
-                icon={<PieChartIcon sx={{ fontSize: 20 }} />}
+                icon={<PieChartIcon sx={{ fontSize: tokens.components.icon.sm }} />}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="İşçilik Maliyeti"
                 value={(costBreakdown?.laborCost || 0).toFixed(2)}
@@ -551,7 +568,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 color="info"
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Fire Maliyeti"
                 value={(costBreakdown?.wasteCost || 0).toFixed(2)}
@@ -559,7 +576,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 color="warning"
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Toplam Maliyet"
                 value={(costBreakdown?.totalCost || 0).toFixed(2)}
@@ -576,25 +593,25 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
         )}
 
         {currentPage === "algorithm-performance" && (
-          <Grid container spacing={ds.spacing["2"]}>
+          <Grid container spacing={tokens.layout.gridGap}>
             {/* Performance Metrics */}
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Çalışma Süresi"
                 value={(result as WizardOptimizationResult).executionTime || 0}
                 unit="ms"
                 color="info"
-                icon={<SpeedIcon sx={{ fontSize: 20 }} />}
+                icon={<SpeedIcon sx={{ fontSize: tokens.components.icon.sm }} />}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="İterasyon Sayısı"
                 value={(result as WizardOptimizationResult).iterations || 0}
                 color="primary"
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Yakınsama Oranı"
                 value={((result as WizardOptimizationResult).iterations
@@ -606,7 +623,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 color="success"
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Kalite Skoru"
                 value={(
@@ -641,9 +658,9 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
         )}
 
         {currentPage === "smart-recommendations" && (
-          <Grid container spacing={ds.spacing["2"]}>
+          <Grid container spacing={tokens.layout.gridGap}>
             {/* Recommendations Metrics */}
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Yüksek Öncelikli"
                 value={
@@ -654,10 +671,10 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   ).length
                 }
                 color="error"
-                icon={<LightbulbIcon sx={{ fontSize: 20 }} />}
+                icon={<LightbulbIcon sx={{ fontSize: tokens.components.icon.sm }} />}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Orta Öncelikli"
                 value={
@@ -670,7 +687,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 color="warning"
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Düşük Öncelikli"
                 value={
@@ -682,7 +699,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 color="success"
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Toplam Tasarruf"
                 value={(
@@ -723,9 +740,9 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
         )}
 
         {currentPage === "waste-analysis" && (
-          <Grid container spacing={ds.spacing["2"]}>
+          <Grid container spacing={tokens.layout.gridGap}>
             {/* Waste Metrics */}
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Toplam Fire"
                 value={(
@@ -733,10 +750,10 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 ).toFixed(2)}
                 unit="mm"
                 color="error"
-                icon={<RecyclingIcon sx={{ fontSize: 20 }} />}
+                icon={<RecyclingIcon sx={{ fontSize: tokens.components.icon.sm }} />}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Fire Yüzdesi"
                 value={(
@@ -746,7 +763,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 color="warning"
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Geri Kazanılabilir"
                 value={
@@ -758,7 +775,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 color="success"
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Fire Maliyeti"
                 value={(costBreakdown?.wasteCost || 0).toFixed(2)}
@@ -846,18 +863,18 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
         )}
 
         {currentPage === "cost-analysis" && (
-          <Grid container spacing={ds.spacing["2"]}>
+          <Grid container spacing={tokens.layout.gridGap}>
             {/* Cost Metrics */}
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Toplam Maliyet"
                 value={(costBreakdown?.totalCost || 0).toFixed(2)}
                 unit="₺"
                 color="primary"
-                icon={<AnalyticsIcon sx={{ fontSize: 20 }} />}
+                icon={<AnalyticsIcon sx={{ fontSize: tokens.components.icon.sm }} />}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Birim Maliyet"
                 value={(costBreakdown
@@ -869,7 +886,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 color="info"
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Malzeme Tasarrufu"
                 value={(costBreakdown?.materialSavings || 0).toFixed(2)}
@@ -877,7 +894,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 color="success"
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="İşçilik Tasarrufu"
                 value={(costBreakdown?.laborSavings || 0).toFixed(2)}
@@ -894,9 +911,9 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
         )}
 
         {currentPage === "quality-metrics" && (
-          <Grid container spacing={ds.spacing["2"]}>
+          <Grid container spacing={tokens.layout.gridGap}>
             {/* Quality Metrics */}
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Kalite Skoru"
                 value={(
@@ -904,10 +921,10 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 ).toFixed(1)}
                 unit="/100"
                 color="success"
-                icon={<HighQualityIcon sx={{ fontSize: 20 }} />}
+                icon={<HighQualityIcon sx={{ fontSize: tokens.components.icon.sm }} />}
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Kesim Hassasiyeti"
                 value={(
@@ -917,7 +934,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 color="primary"
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Stok Kullanımı"
                 value={(
@@ -927,7 +944,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 color="info"
               />
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={4} lg={3}>
               <MetricCard
                 label="Malzeme Verimliliği"
                 value={(
@@ -975,6 +992,12 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
         width: "100%",
         maxWidth: "none",
         mx: 0,
+        px: {
+          xs: 0,
+          sm: tokens.spacing.xs,
+          md: tokens.spacing.sm,
+          lg: tokens.spacing.md,
+        },
       }}
     >
       {/* Results Tabs */}
@@ -983,8 +1006,13 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
           borderBottom: 1,
           borderColor: "divider",
           backgroundColor: ds.colors.background.paper,
-          px: ds.spacing["4"],
-          py: ds.spacing["2"],
+          px: {
+            xs: tokens.spacing.md,
+            sm: tokens.spacing.lg,
+            md: tokens.spacing.xl,
+            lg: tokens.spacing.xl * 1.5,
+          },
+          py: tokens.spacing.xs,
         }}
       >
         <Tabs
@@ -994,7 +1022,8 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
             "& .MuiTab-root": {
               textTransform: "none",
               fontWeight: 600,
-              fontSize: "1rem",
+              fontSize: `${tokens.typography.base}px`,
+              minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
             },
           }}
         >
@@ -1012,7 +1041,18 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
       </Box>
 
       {/* Tab Content */}
-      <Box sx={{ p: ds.spacing["4"] }}>
+      <Box sx={{ 
+        px: {
+          xs: tokens.spacing.md,
+          sm: tokens.spacing.lg,
+          md: tokens.spacing.xl,
+          lg: tokens.spacing.xl * 1.5,
+        },
+        py: {
+          xs: tokens.spacing.sm,
+          md: tokens.spacing.md,
+        },
+      }}>
         {resultsTab === 0 && (
           <Box sx={{ width: "100%" }}>
             {stockLengthGroups.length === 0 ? (
@@ -1028,18 +1068,18 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
               >
                 <Typography
                   sx={{
-                    fontSize: "1.125rem",
+                    fontSize: `${tokens.typography.lg}px`,
                     fontWeight: 600,
-                    mb: ds.spacing["2"],
+                    mb: tokens.spacing.sm,
                   }}
                 >
                   Kesim Planı Verisi Bulunamadı
                 </Typography>
                 <Typography
                   sx={{
-                    fontSize: "0.875rem",
+                    fontSize: `${tokens.typography.sm}px`,
                     color: ds.colors.text.secondary,
-                    mb: ds.spacing["3"],
+                    mb: tokens.spacing.md,
                   }}
                 >
                   Optimizasyon sonucu henüz hazır değil veya veri yüklenemedi.
@@ -1048,7 +1088,10 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   variant="outlined"
                   startIcon={<RefreshIcon />}
                   onClick={() => window.location.reload()}
-                  sx={{ textTransform: "none" }}
+                  sx={{ 
+                    textTransform: "none",
+                    minHeight: device.isTouch ? tokens.components.minTouchTarget : tokens.components.button.md,
+                  }}
                 >
                   Sayfayı Yenile
                 </Button>
@@ -1060,10 +1103,10 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   sx={{
                     display: "flex",
                     justifyContent: "center",
-                    mb: ds.spacing["4"],
-                    p: ds.spacing["3"],
+                    mb: tokens.spacing.md,
+                    p: tokens.spacing.sm,
                     backgroundColor: alpha(ds.colors.primary.main, 0.05),
-                    borderRadius: `${ds.borderRadius.lg}px`,
+                    borderRadius: `${tokens.borderRadius.lg}px`,
                     border: `1px solid ${alpha(ds.colors.primary.main, 0.1)}`,
                   }}
                 >
@@ -1071,19 +1114,19 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                     sx={{
                       display: "flex",
                       alignItems: "center",
-                      gap: ds.spacing["2"],
+                      gap: tokens.spacing.sm,
                     }}
                   >
                     <Typography
                       sx={{
-                        fontSize: "0.875rem",
+                        fontSize: `${tokens.typography.sm}px`,
                         fontWeight: 600,
                         color: ds.colors.text.primary,
                       }}
                     >
                       Uzunluk Birimi:
                     </Typography>
-                    <Box sx={{ display: "flex", gap: ds.spacing["1"] }}>
+                    <Box sx={{ display: "flex", gap: tokens.spacing.xs }}>
                       {["mm", "cm", "m"].map((unit) => (
                         <Chip
                           key={unit}
@@ -1094,6 +1137,8 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                           }
                           sx={{
                             cursor: "pointer",
+                            height: tokens.components.button.sm,
+                            fontSize: `${tokens.typography.xs}px`,
                             backgroundColor:
                               globalUnit === unit
                                 ? ds.colors.primary.main
@@ -1103,12 +1148,13 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                                 ? "white"
                                 : ds.colors.text.secondary,
                             fontWeight: 600,
-                            "&:hover": {
+                            minWidth: device.isTouch ? tokens.components.minTouchTarget : undefined,
+                            "&:hover": !device.isTouch ? {
                               backgroundColor:
                                 globalUnit === unit
                                   ? ds.colors.primary[700]
                                   : ds.colors.neutral[200],
-                            },
+                            } : {},
                           }}
                         />
                       ))}
@@ -1118,7 +1164,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
 
                 {/* Profile Badge */}
                 {profileInfo && (
-                  <Box sx={{ mb: ds.spacing["4"] }}>
+                  <Box sx={{ mb: tokens.spacing.md }}>
                     <ProfileBadge
                       profileCode={profileInfo.profileCode}
                       profileName={profileInfo.profileName}
@@ -1128,25 +1174,25 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   </Box>
                 )}
 
-                {/* Summary Metrics Cards - Single Row 5 Cards - Compact Spacing */}
-                <Grid container spacing={0.5} sx={{ mb: ds.spacing["1"] }}>
-                  <Grid item xs={12} sm={6} md={2.4}>
+                {/* Summary Metrics Cards - Single Row 5 Cards - Standard Spacing */}
+                <Grid container spacing={tokens.layout.gridGap} sx={{ mb: tokens.spacing.md }}>
+                  <Grid item xs={12} sm={6} md={4} lg={2.4}>
                     <MetricCard
                       label="Toplam Profil"
                       value={result?.stockCount || 0}
                       unit="ADT"
-                      icon={<InventoryIcon sx={{ fontSize: 18 }} />}
+                      icon={<InventoryIcon sx={{ fontSize: tokens.components.icon.md }} />}
                       color="primary"
                       subtitle="Stok"
                       detail={`${result?.cuts?.length || 0} kesim`}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6} md={2.4}>
+                  <Grid item xs={12} sm={6} md={4} lg={2.4}>
                     <MetricCard
                       label="Fire Oranı"
                       value={(result?.wastePercentage || 0).toFixed(1)}
                       unit="%"
-                      icon={<RecyclingIcon sx={{ fontSize: 18 }} />}
+                      icon={<RecyclingIcon sx={{ fontSize: tokens.components.icon.md }} />}
                       color={
                         (result?.wastePercentage || 0) < 10
                           ? "success"
@@ -1156,12 +1202,12 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                       detail={`${convertLength(result?.totalWaste || 0, "mm", globalUnit).toFixed(globalUnit === "mm" ? 0 : 1)}${globalUnit}`}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6} md={2.4}>
+                  <Grid item xs={12} sm={6} md={4} lg={2.4}>
                     <MetricCard
                       label="Verimlilik"
                       value={(result?.efficiency || 0).toFixed(1)}
                       unit="%"
-                      icon={<SpeedIcon sx={{ fontSize: 18 }} />}
+                      icon={<SpeedIcon sx={{ fontSize: tokens.components.icon.md }} />}
                       color={
                         (result?.efficiency || 0) >= 90 ? "success" : "info"
                       }
@@ -1169,18 +1215,18 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                       detail={`${convertLength(result?.cuts?.reduce((sum, cut) => sum + (cut as BackendCut).usedLength, 0) || 0, "mm", globalUnit).toFixed(globalUnit === "mm" ? 0 : 1)}${globalUnit}`}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6} md={2.4}>
+                  <Grid item xs={12} sm={6} md={4} lg={2.4}>
                     <MetricCard
                       label="Kesim Sayısı"
                       value={result?.cuts?.length || 0}
                       unit="ADT"
-                      icon={<SpeedIcon sx={{ fontSize: 18 }} />}
+                      icon={<SpeedIcon sx={{ fontSize: tokens.components.icon.md }} />}
                       color="success"
                       subtitle="Plan"
                       detail={`${result?.stockCount || 0} stok`}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6} md={2.4}>
+                  <Grid item xs={12} sm={6} md={4} lg={2.4}>
                     <MetricCard
                       label="Kullanılan Malzeme"
                       value={convertLength(
@@ -1192,7 +1238,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                         globalUnit,
                       ).toFixed(globalUnit === "mm" ? 0 : 1)}
                       unit={globalUnit}
-                      icon={<InventoryIcon sx={{ fontSize: 18 }} />}
+                      icon={<InventoryIcon sx={{ fontSize: tokens.components.icon.md }} />}
                       color="info"
                       subtitle="Uzunluk"
                       detail={`${result?.stockCount || 0} stok`}
@@ -1201,36 +1247,94 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 </Grid>
 
                 {/* Stock Length Summary Cards */}
-                <Box sx={{ mb: ds.spacing["4"] }}>
+                <Box sx={{ mb: tokens.spacing.md }}>
                   <Typography
                     variant="h6"
-                    sx={{ mb: ds.spacing["3"], fontWeight: 600 }}
+                    sx={{ 
+                      mb: tokens.spacing.sm,
+                      fontWeight: 600,
+                      fontSize: `${tokens.typography.lg}px`,
+                    }}
                   >
                     Kullanılan Stok Boyları
                   </Typography>
-                  <Grid container spacing={ds.spacing["2"]}>
+                  <Grid container spacing={tokens.layout.gridGap}>
                     {stockLengthGroups.map((group) => (
                       <Grid item xs={12} sm={6} md={4} key={group.stockLength}>
-                        <CardV2 variant="glass" sx={{ p: ds.spacing["3"] }}>
-                          <Typography
-                            variant="h4"
-                            sx={{
-                              fontWeight: 700,
-                              color: ds.colors.primary.main,
-                              mb: ds.spacing["1"],
-                            }}
-                          >
-                            {group.stockLength}mm
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {group.totalStocks} Adet Stok
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {group.totalPieces} Parça
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Verimlilik: {group.avgEfficiency.toFixed(1)}%
-                          </Typography>
+                        <CardV2 variant="elevated" sx={{ p: tokens.components.card.padding, height: "100%" }}>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: tokens.spacing.sm, mb: tokens.spacing.xs }}>
+                            <Box
+                              sx={{
+                                p: tokens.spacing.sm,
+                                borderRadius: "50%",
+                                backgroundColor: `${ds.colors.primary.main}15`,
+                                color: ds.colors.primary.main,
+                              }}
+                            >
+                              <RulerIcon sx={{ fontSize: tokens.components.icon.md }} />
+                            </Box>
+                            <Typography
+                              variant="h5"
+                              sx={{
+                                fontWeight: 700,
+                                color: ds.colors.text.primary,
+                                fontSize: `${tokens.typography.xl}px`,
+                              }}
+                            >
+                              {group.stockLength}mm
+                            </Typography>
+                          </Box>
+                          <Stack spacing={tokens.spacing.xs}>
+                            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                              <Typography 
+                                variant="body2" 
+                                color="text.secondary"
+                                sx={{ fontSize: `${tokens.typography.sm}px` }}
+                              >
+                                Toplam Stok:
+                              </Typography>
+                              <Typography 
+                                variant="body2" 
+                                fontWeight={600}
+                                sx={{ fontSize: `${tokens.typography.sm}px` }}
+                              >
+                                {group.totalStocks} Adet
+                              </Typography>
+                            </Box>
+                            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                              <Typography 
+                                variant="body2" 
+                                color="text.secondary"
+                                sx={{ fontSize: `${tokens.typography.sm}px` }}
+                              >
+                                Toplam Parça:
+                              </Typography>
+                              <Typography 
+                                variant="body2" 
+                                fontWeight={600}
+                                sx={{ fontSize: `${tokens.typography.sm}px` }}
+                              >
+                                {group.totalPieces}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                              <Typography 
+                                variant="body2" 
+                                color="text.secondary"
+                                sx={{ fontSize: `${tokens.typography.sm}px` }}
+                              >
+                                Verimlilik:
+                              </Typography>
+                              <Typography 
+                                variant="body2" 
+                                fontWeight={600}
+                                sx={{ fontSize: `${tokens.typography.sm}px` }}
+                                color={group.avgEfficiency >= 90 ? ds.colors.success.main : ds.colors.warning.main}
+                              >
+                                {group.avgEfficiency.toFixed(1)}%
+                              </Typography>
+                            </Box>
+                          </Stack>
                         </CardV2>
                       </Grid>
                     ))}
@@ -1238,36 +1342,42 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 </Box>
 
                 {/* Stock Length Groups (Accordion) */}
-                <Box sx={{ mb: ds.spacing["4"] }}>
+                <Box sx={{ mb: tokens.spacing.md }}>
                   <Typography
                     variant="h6"
-                    sx={{ mb: ds.spacing["3"], fontWeight: 600 }}
+                    sx={{ 
+                      mb: tokens.spacing.sm,
+                      fontWeight: 600,
+                      fontSize: `${tokens.typography.lg}px`,
+                    }}
                   >
                     Stok Boy Bazında Kesim Planları
                   </Typography>
-                  {stockLengthGroups.map((group, idx) => (
-                    <StockLengthAccordion
-                      key={idx}
-                      stockLength={group.stockLength}
-                      algorithm={result?.algorithm || "Unknown"}
-                      count={group.plans.length}
-                      totalWaste={group.plans.reduce(
-                        (sum, plan) => sum + (plan.totalWaste || 0),
-                        0,
-                      )}
-                      cuts={group.plans.map((plan, planIdx) => ({
-                        id: plan.planId || `cut-${idx}-${planIdx}`,
-                        stockLength: plan.stockLength,
-                        usedLength: plan.stockLength - (plan.totalWaste || 0),
-                        remainingLength: plan.totalWaste || 0,
-                        segmentCount: plan.totalPieces,
-                        segments: plan.cuts[0]?.segments || [],
-                        efficiency: plan.efficiency,
-                        isReclaimable: (plan.totalWaste || 0) >= 50,
-                      }))}
-                      efficiency={group.avgEfficiency}
-                    />
-                  ))}
+                  <Stack spacing={tokens.spacing.md}>
+                    {stockLengthGroups.map((group, idx) => (
+                      <StockLengthAccordion
+                        key={idx}
+                        stockLength={group.stockLength}
+                        algorithm={result?.algorithm || "Unknown"}
+                        count={group.plans.length}
+                        totalWaste={group.plans.reduce(
+                          (sum, plan) => sum + (plan.totalWaste || 0),
+                          0,
+                        )}
+                        cuts={group.plans.map((plan, planIdx) => ({
+                          id: plan.planId || `cut-${idx}-${planIdx}`,
+                          stockLength: plan.stockLength,
+                          usedLength: plan.stockLength - (plan.totalWaste || 0),
+                          remainingLength: plan.totalWaste || 0,
+                          segmentCount: plan.totalPieces,
+                          segments: plan.cuts[0]?.segments || [],
+                          efficiency: plan.efficiency,
+                          isReclaimable: (plan.totalWaste || 0) >= 50,
+                        }))}
+                        efficiency={group.avgEfficiency}
+                      />
+                    ))}
+                  </Stack>
                 </Box>
               </>
             )}
@@ -1275,15 +1385,15 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
         )}
 
         {resultsTab === 1 && (
-          <Grid container spacing={ds.spacing["4"]}>
+          <Grid container spacing={tokens.layout.gridGap}>
             {/* Kesim Planı Görselleştirme */}
-            <Grid item xs={12} md={6} lg={4}>
+            <Grid item xs={12} sm={6} md={6} lg={4}>
               <CardV2
                 variant="glass"
                 hoverable
                 onClick={() => handlePageNavigation("cutting-plan")}
                 sx={{
-                  height: 200,
+                  minHeight: 200,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -1291,30 +1401,30 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": {
+                  "&:hover": !device.isTouch ? {
                     transform: "translateY(-4px)",
                     boxShadow: ds.shadows.soft.xl,
-                  },
+                  } : {},
                 }}
               >
                 <VisibilityIcon
                   sx={{
-                    fontSize: 48,
+                    fontSize: tokens.components.icon.xl,
                     color: ds.colors.primary.main,
-                    mb: ds.spacing["2"],
+                    mb: tokens.spacing.sm,
                   }}
                 />
                 <Typography
                   sx={{
-                    fontSize: "1.125rem",
+                    fontSize: `${tokens.typography.lg}px`,
                     fontWeight: 600,
-                    mb: ds.spacing["1"],
+                    mb: tokens.spacing.xs,
                   }}
                 >
                   Kesim Planı Görselleştirme
                 </Typography>
                 <Typography
-                  sx={{ fontSize: "0.875rem", color: ds.colors.text.secondary }}
+                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
                 >
                   3D/2D kesim planı görselleştirmesi
                 </Typography>
@@ -1322,13 +1432,13 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
             </Grid>
 
             {/* Stok Detayları */}
-            <Grid item xs={12} md={6} lg={4}>
+            <Grid item xs={12} sm={6} md={6} lg={4}>
               <CardV2
                 variant="glass"
                 hoverable
                 onClick={() => handlePageNavigation("stock-details")}
                 sx={{
-                  height: 200,
+                  minHeight: 200,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -1336,30 +1446,30 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": {
+                  "&:hover": !device.isTouch ? {
                     transform: "translateY(-4px)",
                     boxShadow: ds.shadows.soft.xl,
-                  },
+                  } : {},
                 }}
               >
                 <InventoryIcon
                   sx={{
-                    fontSize: 48,
+                    fontSize: tokens.components.icon.xl,
                     color: ds.colors.secondary.main,
-                    mb: ds.spacing["2"],
+                    mb: tokens.spacing.sm,
                   }}
                 />
                 <Typography
                   sx={{
-                    fontSize: "1.125rem",
+                    fontSize: `${tokens.typography.lg}px`,
                     fontWeight: 600,
-                    mb: ds.spacing["1"],
+                    mb: tokens.spacing.xs,
                   }}
                 >
                   Stok Detayları
                 </Typography>
                 <Typography
-                  sx={{ fontSize: "0.875rem", color: ds.colors.text.secondary }}
+                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
                 >
                   Stok bazlı detaylı analiz
                 </Typography>
@@ -1367,13 +1477,13 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
             </Grid>
 
             {/* Maliyet Dağılımı */}
-            <Grid item xs={12} md={6} lg={4}>
+            <Grid item xs={12} sm={6} md={6} lg={4}>
               <CardV2
                 variant="glass"
                 hoverable
                 onClick={() => handlePageNavigation("cost-distribution")}
                 sx={{
-                  height: 200,
+                  minHeight: 200,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -1381,30 +1491,30 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": {
+                  "&:hover": !device.isTouch ? {
                     transform: "translateY(-4px)",
                     boxShadow: ds.shadows.soft.xl,
-                  },
+                  } : {},
                 }}
               >
                 <PieChartIcon
                   sx={{
-                    fontSize: 48,
+                    fontSize: tokens.components.icon.xl,
                     color: ds.colors.warning.main,
-                    mb: ds.spacing["2"],
+                    mb: tokens.spacing.sm,
                   }}
                 />
                 <Typography
                   sx={{
-                    fontSize: "1.125rem",
+                    fontSize: `${tokens.typography.lg}px`,
                     fontWeight: 600,
-                    mb: ds.spacing["1"],
+                    mb: tokens.spacing.xs,
                   }}
                 >
                   Maliyet Dağılımı
                 </Typography>
                 <Typography
-                  sx={{ fontSize: "0.875rem", color: ds.colors.text.secondary }}
+                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
                 >
                   Maliyet analizi ve dağılımı
                 </Typography>
@@ -1412,13 +1522,13 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
             </Grid>
 
             {/* Algoritma Performansı */}
-            <Grid item xs={12} md={6} lg={4}>
+            <Grid item xs={12} sm={6} md={6} lg={4}>
               <CardV2
                 variant="glass"
                 hoverable
                 onClick={() => handlePageNavigation("algorithm-performance")}
                 sx={{
-                  height: 200,
+                  minHeight: 200,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -1426,30 +1536,30 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": {
+                  "&:hover": !device.isTouch ? {
                     transform: "translateY(-4px)",
                     boxShadow: ds.shadows.soft.xl,
-                  },
+                  } : {},
                 }}
               >
                 <SpeedIcon
                   sx={{
-                    fontSize: 48,
+                    fontSize: tokens.components.icon.xl,
                     color: ds.colors.info.main,
-                    mb: ds.spacing["2"],
+                    mb: tokens.spacing.sm,
                   }}
                 />
                 <Typography
                   sx={{
-                    fontSize: "1.125rem",
+                    fontSize: `${tokens.typography.lg}px`,
                     fontWeight: 600,
-                    mb: ds.spacing["1"],
+                    mb: tokens.spacing.xs,
                   }}
                 >
                   Algoritma Performansı
                 </Typography>
                 <Typography
-                  sx={{ fontSize: "0.875rem", color: ds.colors.text.secondary }}
+                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
                 >
                   Algoritma telemetri ve performans
                 </Typography>
@@ -1457,13 +1567,13 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
             </Grid>
 
             {/* Akıllı Öneriler */}
-            <Grid item xs={12} md={6} lg={4}>
+            <Grid item xs={12} sm={6} md={6} lg={4}>
               <CardV2
                 variant="glass"
                 hoverable
                 onClick={() => handlePageNavigation("smart-recommendations")}
                 sx={{
-                  height: 200,
+                  minHeight: 200,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -1471,30 +1581,30 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": {
+                  "&:hover": !device.isTouch ? {
                     transform: "translateY(-4px)",
                     boxShadow: ds.shadows.soft.xl,
-                  },
+                  } : {},
                 }}
               >
                 <LightbulbIcon
                   sx={{
-                    fontSize: 48,
+                    fontSize: tokens.components.icon.xl,
                     color: ds.colors.success.main,
-                    mb: ds.spacing["2"],
+                    mb: tokens.spacing.sm,
                   }}
                 />
                 <Typography
                   sx={{
-                    fontSize: "1.125rem",
+                    fontSize: `${tokens.typography.lg}px`,
                     fontWeight: 600,
-                    mb: ds.spacing["1"],
+                    mb: tokens.spacing.xs,
                   }}
                 >
                   Akıllı Öneriler
                 </Typography>
                 <Typography
-                  sx={{ fontSize: "0.875rem", color: ds.colors.text.secondary }}
+                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
                 >
                   AI destekli optimizasyon önerileri
                 </Typography>
@@ -1502,13 +1612,13 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
             </Grid>
 
             {/* Fire Analizi */}
-            <Grid item xs={12} md={6} lg={4}>
+            <Grid item xs={12} sm={6} md={6} lg={4}>
               <CardV2
                 variant="glass"
                 hoverable
                 onClick={() => handlePageNavigation("waste-analysis")}
                 sx={{
-                  height: 200,
+                  minHeight: 200,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -1516,30 +1626,30 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": {
+                  "&:hover": !device.isTouch ? {
                     transform: "translateY(-4px)",
                     boxShadow: ds.shadows.soft.xl,
-                  },
+                  } : {},
                 }}
               >
                 <RecyclingIcon
                   sx={{
-                    fontSize: 48,
+                    fontSize: tokens.components.icon.xl,
                     color: ds.colors.error.main,
-                    mb: ds.spacing["2"],
+                    mb: tokens.spacing.sm,
                   }}
                 />
                 <Typography
                   sx={{
-                    fontSize: "1.125rem",
+                    fontSize: `${tokens.typography.lg}px`,
                     fontWeight: 600,
-                    mb: ds.spacing["1"],
+                    mb: tokens.spacing.xs,
                   }}
                 >
                   Fire Analizi
                 </Typography>
                 <Typography
-                  sx={{ fontSize: "0.875rem", color: ds.colors.text.secondary }}
+                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
                 >
                   Atık analizi ve geri dönüşüm
                 </Typography>
@@ -1547,13 +1657,13 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
             </Grid>
 
             {/* Maliyet Analizi */}
-            <Grid item xs={12} md={6} lg={4}>
+            <Grid item xs={12} sm={6} md={6} lg={4}>
               <CardV2
                 variant="glass"
                 hoverable
                 onClick={() => handlePageNavigation("cost-analysis")}
                 sx={{
-                  height: 200,
+                  minHeight: 200,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -1561,30 +1671,30 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": {
+                  "&:hover": !device.isTouch ? {
                     transform: "translateY(-4px)",
                     boxShadow: ds.shadows.soft.xl,
-                  },
+                  } : {},
                 }}
               >
                 <AnalyticsIcon
                   sx={{
-                    fontSize: 48,
+                    fontSize: tokens.components.icon.xl,
                     color: ds.colors.warning.main,
-                    mb: ds.spacing["2"],
+                    mb: tokens.spacing.sm,
                   }}
                 />
                 <Typography
                   sx={{
-                    fontSize: "1.125rem",
+                    fontSize: `${tokens.typography.lg}px`,
                     fontWeight: 600,
-                    mb: ds.spacing["1"],
+                    mb: tokens.spacing.xs,
                   }}
                 >
                   Maliyet Analizi
                 </Typography>
                 <Typography
-                  sx={{ fontSize: "0.875rem", color: ds.colors.text.secondary }}
+                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
                 >
                   Detaylı maliyet analizi
                 </Typography>
@@ -1592,13 +1702,13 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
             </Grid>
 
             {/* Kalite Metrikleri */}
-            <Grid item xs={12} md={6} lg={4}>
+            <Grid item xs={12} sm={6} md={6} lg={4}>
               <CardV2
                 variant="glass"
                 hoverable
                 onClick={() => handlePageNavigation("quality-metrics")}
                 sx={{
-                  height: 200,
+                  minHeight: 200,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
@@ -1606,30 +1716,30 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": {
+                  "&:hover": !device.isTouch ? {
                     transform: "translateY(-4px)",
                     boxShadow: ds.shadows.soft.xl,
-                  },
+                  } : {},
                 }}
               >
                 <HighQualityIcon
                   sx={{
-                    fontSize: 48,
+                    fontSize: tokens.components.icon.xl,
                     color: ds.colors.success.main,
-                    mb: ds.spacing["2"],
+                    mb: tokens.spacing.sm,
                   }}
                 />
                 <Typography
                   sx={{
-                    fontSize: "1.125rem",
+                    fontSize: `${tokens.typography.lg}px`,
                     fontWeight: 600,
-                    mb: ds.spacing["1"],
+                    mb: tokens.spacing.xs,
                   }}
                 >
                   Kalite Metrikleri
                 </Typography>
                 <Typography
-                  sx={{ fontSize: "0.875rem", color: ds.colors.text.secondary }}
+                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
                 >
                   Kalite skorları ve metrikleri
                 </Typography>

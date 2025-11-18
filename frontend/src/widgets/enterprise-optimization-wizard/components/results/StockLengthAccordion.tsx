@@ -15,6 +15,7 @@ import {
   Stack,
   Chip,
   Box,
+  Grid,
   alpha,
 } from "@mui/material";
 import {
@@ -128,116 +129,132 @@ export const StockLengthAccordion: React.FC<StockLengthAccordionProps> = ({
       expanded={expanded}
       onChange={handleToggle}
       sx={{
-        mb: ds.spacing["2"],
+        mb: ds.spacing["3"],
         "&:before": { display: "none" }, // Remove default border
-        boxShadow: 1,
-        borderRadius: ds.borderRadius.md,
+        boxShadow: expanded ? ds.shadows.soft.lg : ds.shadows.soft.sm,
+        borderRadius: `${ds.borderRadius.lg}px !important`,
+        border: `1px solid ${expanded ? ds.colors.primary.main : ds.colors.neutral[200]}`,
         overflow: "hidden",
+        transition: ds.transitions.base,
       }}
     >
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
         sx={{
-          backgroundColor: ds.colors.background.paper,
+          backgroundColor: expanded ? `${ds.colors.primary.main}08` : ds.colors.background.paper,
           px: ds.spacing["4"],
-          py: ds.spacing["3"],
+          py: ds.spacing["2"],
+          minHeight: 64,
           "&:hover": {
-            backgroundColor: alpha(ds.colors.primary.main, 0.04),
+            backgroundColor: expanded ? `${ds.colors.primary.main}12` : ds.colors.neutral[50],
           },
           "&.Mui-expanded": {
-            backgroundColor: alpha(ds.colors.primary.main, 0.08),
+            minHeight: 64,
+            borderBottom: `1px solid ${ds.colors.neutral[200]}`,
+          },
+          "& .MuiAccordionSummary-content": {
+            my: ds.spacing["1"],
           },
         }}
       >
-        <Stack
-          direction="row"
-          spacing={ds.spacing["3"]}
-          alignItems="center"
-          width="100%"
-        >
+        <Grid container alignItems="center" spacing={2}>
           {/* Stock Length Label */}
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: ds.spacing["2"] }}
-          >
-            <InventoryIcon
-              sx={{ color: ds.colors.primary.main, fontSize: 20 }}
-            />
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: 600, color: ds.colors.text.primary }}
-            >
-              {stockLength.toLocaleString()}mm Profiller
-            </Typography>
-          </Box>
-
-          {/* Count Chip */}
-          <Chip
-            label={`${count} adet`}
-            size="small"
-            color="primary"
-            variant="outlined"
-            sx={{ fontWeight: 500 }}
-          />
+          <Grid item xs={12} sm={4} md={3}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: ds.spacing["2"] }}>
+              <Box
+                sx={{
+                  p: 1,
+                  borderRadius: "50%",
+                  backgroundColor: `${ds.colors.primary.main}15`,
+                  color: ds.colors.primary.main,
+                  display: "flex",
+                }}
+              >
+                <InventoryIcon sx={{ fontSize: 20 }} />
+              </Box>
+              <Box>
+                <Typography
+                  variant="subtitle1"
+                  sx={{ fontWeight: 700, color: ds.colors.text.primary, lineHeight: 1.2 }}
+                >
+                  {stockLength.toLocaleString()}mm
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {count} adet stok
+                </Typography>
+              </Box>
+            </Box>
+          </Grid>
 
           {/* Waste Metrics */}
-          <Chip
-            label={`Fire: ${totalWaste.toFixed(0)}mm (${wastePercentage.toFixed(1)}%)`}
-            color={getWasteColor(wastePercentage)}
-            size="small"
-            variant="filled"
-            sx={{
-              fontWeight: 500,
-              backgroundColor:
-                getWasteColor(wastePercentage) === "success"
-                  ? ds.colors.success[300]
-                  : getWasteColor(wastePercentage) === "warning"
-                    ? ds.colors.warning[300]
-                    : ds.colors.error[300],
-              color:
-                getWasteColor(wastePercentage) === "success"
-                  ? ds.colors.success[700]
-                  : getWasteColor(wastePercentage) === "warning"
-                    ? ds.colors.warning[700]
-                    : ds.colors.error[700],
-            }}
-          />
+          <Grid item xs={12} sm={4} md={3}>
+            <Box sx={{ display: "flex", flexDirection: "column" }}>
+              <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                TOPLAM FİRE
+              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography
+                  variant="body2"
+                  fontWeight={600}
+                  color={
+                    wastePercentage < 10 ? ds.colors.success.main : ds.colors.warning.main
+                  }
+                >
+                  {totalWaste.toFixed(0)}mm
+                </Typography>
+                <Chip
+                  label={`%${wastePercentage.toFixed(1)}`}
+                  size="small"
+                  color={getWasteColor(wastePercentage)}
+                  sx={{ height: 20, fontSize: "0.7rem", fontWeight: 600 }}
+                />
+              </Box>
+            </Box>
+          </Grid>
 
-          {/* Efficiency (if provided) */}
-          {efficiency > 0 && (
-            <Chip
-              label={`Verimlilik: ${efficiency.toFixed(1)}%`}
-              color={getEfficiencyColor(efficiency)}
-              size="small"
-              variant="outlined"
-              sx={{ fontWeight: 500 }}
-            />
-          )}
+          {/* Efficiency */}
+          <Grid item xs={12} sm={4} md={3}>
+            {efficiency > 0 && (
+              <Box sx={{ display: "flex", flexDirection: "column" }}>
+                <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                  VERİMLİLİK
+                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography
+                    variant="body2"
+                    fontWeight={600}
+                    color={getEfficiencyColor(efficiency)}
+                  >
+                    %{efficiency.toFixed(1)}
+                  </Typography>
+                  <SpeedIcon
+                    sx={{
+                      fontSize: 16,
+                      color:
+                        getEfficiencyColor(efficiency) === "success"
+                          ? ds.colors.success.main
+                          : ds.colors.warning.main,
+                    }}
+                  />
+                </Box>
+              </Box>
+            )}
+          </Grid>
 
-          {/* Average waste per stock */}
-          <Typography
-            variant="body2"
-            sx={{
-              color: ds.colors.text.secondary,
-              ml: "auto",
-              fontStyle: "italic",
-            }}
-          >
-            Ortalama: {avgWastePerStock.toFixed(0)}mm/profil
-          </Typography>
-        </Stack>
+          {/* Average */}
+          <Grid item xs={12} sm={12} md={3} sx={{ textAlign: { xs: "left", md: "right" } }}>
+            <Typography variant="caption" color="text.secondary" display="block">
+              Ortalama Fire
+            </Typography>
+            <Typography variant="body2" fontWeight={600} color="text.primary">
+              {avgWastePerStock.toFixed(0)}mm / stok
+            </Typography>
+          </Grid>
+        </Grid>
       </AccordionSummary>
 
-      <AccordionDetails
-        sx={{ p: 0, backgroundColor: ds.colors.background.default }}
-      >
-        {/* Detailed cutting plan table */}
-        <Box sx={{ p: ds.spacing["4"] }}>
-          <Typography
-            variant="subtitle1"
-            sx={{ mb: ds.spacing["3"], fontWeight: 600 }}
-          >
-            Kesim Planı Detayları
-          </Typography>
+      <AccordionDetails sx={{ p: 0 }}>
+        <Box sx={{ p: ds.spacing["4"], backgroundColor: ds.colors.neutral[50] }}>
           <CuttingPlanDataGrid plans={mappedPlans} />
         </Box>
       </AccordionDetails>

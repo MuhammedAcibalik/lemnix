@@ -4,7 +4,7 @@
  * @version 2.0.0 - Industrial Performance Focus
  */
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Box,
   Container,
@@ -12,27 +12,20 @@ import {
   Grid,
   Card,
   CardContent,
-  Fade,
-  Zoom,
   Chip,
   LinearProgress,
-  Stack,
-  IconButton,
-  Tooltip,
-  Button,
 } from "@mui/material";
 import {
   TrendingUp as TrendingUpIcon,
   Speed as SpeedIcon,
   AttachMoney as CostIcon,
   RecyclingOutlined as WasteIcon,
-  PrecisionManufacturing as ManufacturingIcon,
   Analytics as AnalyticsIcon,
   Timer as TimerIcon,
-  CheckCircle as CheckIcon,
-  PlayArrow as PlayIcon,
-  Pause as PauseIcon,
 } from "@mui/icons-material";
+import { alpha } from "@mui/material/styles";
+import { useDesignSystem, useAdaptiveUIContext } from "@/shared/hooks";
+import { FadeIn, Badge, PrimaryButton } from "@/shared";
 import { MetricsSectionProps } from "../types";
 
 /**
@@ -41,8 +34,8 @@ import { MetricsSectionProps } from "../types";
 export const MetricsSection: React.FC<MetricsSectionProps> = ({
   metrics = [],
 }) => {
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [currentMetricIndex, setCurrentMetricIndex] = useState(0);
+  const ds = useDesignSystem();
+  const { tokens } = useAdaptiveUIContext();
 
   // Industrial performance metrics
   const industrialMetrics = [
@@ -51,11 +44,9 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
       title: "Atık Azalması",
       value: 42,
       unit: "%",
-      description: "Malzeme atık oranında azalma",
-      icon: <WasteIcon sx={{ fontSize: 40 }} />,
-      color: "#10b981",
-      gradient: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-      trend: "up",
+      description: "Malzeme atık oranında belirgin azalma",
+      icon: WasteIcon,
+      color: ds.colors.success.main,
       change: "+15%",
       target: 50,
     },
@@ -65,10 +56,8 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
       value: 285000,
       unit: "TL",
       description: "Yıllık maliyet tasarrufu",
-      icon: <CostIcon sx={{ fontSize: 40 }} />,
-      color: "#3b82f6",
-      gradient: "linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)",
-      trend: "up",
+      icon: CostIcon,
+      color: ds.colors.primary.main,
       change: "+23%",
       target: 300000,
     },
@@ -77,11 +66,9 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
       title: "Üretim Hızı",
       value: 340,
       unit: "%",
-      description: "Kesim hızında artış",
-      icon: <SpeedIcon sx={{ fontSize: 40 }} />,
-      color: "#f59e0b",
-      gradient: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-      trend: "up",
+      description: "Kesim hızında önemli artış",
+      icon: SpeedIcon,
+      color: ds.colors.primary.main,
       change: "+8%",
       target: 400,
     },
@@ -90,11 +77,9 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
       title: "Doğruluk Oranı",
       value: 96.8,
       unit: "%",
-      description: "Kesim doğruluk oranı",
-      icon: <AnalyticsIcon sx={{ fontSize: 40 }} />,
-      color: "#8b5cf6",
-      gradient: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
-      trend: "up",
+      description: "Yüksek kesim doğruluğu",
+      icon: AnalyticsIcon,
+      color: ds.colors.primary.main,
       change: "+2.1%",
       target: 98,
     },
@@ -104,10 +89,8 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
       value: 78,
       unit: "%",
       description: "Genel verimlilik artışı",
-      icon: <TrendingUpIcon sx={{ fontSize: 40 }} />,
-      color: "#ef4444",
-      gradient: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
-      trend: "up",
+      icon: TrendingUpIcon,
+      color: ds.colors.primary.main,
       change: "+12%",
       target: 85,
     },
@@ -117,27 +100,24 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
       value: 45,
       unit: "%",
       description: "Kesim süresinde azalma",
-      icon: <TimerIcon sx={{ fontSize: 40 }} />,
-      color: "#06b6d4",
-      gradient: "linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)",
-      trend: "up",
+      icon: TimerIcon,
+      color: ds.colors.primary.main,
       change: "+6%",
       target: 50,
     },
   ];
 
-  // Auto-rotation effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentMetricIndex((prev) => (prev + 1) % industrialMetrics.length);
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   const formatValue = (value: number, unit: string) => {
     if (unit === "TL") {
+      // 285000 -> "285K" format (daha kompakt)
+      if (value >= 1000) {
+        return `${(value / 1000).toFixed(0)}K`;
+      }
       return value.toLocaleString("tr-TR");
+    }
+    // Sayısal değerler için ondalık kontrolü
+    if (unit === "%" && value % 1 !== 0) {
+      return value.toFixed(1);
     }
     return value.toString();
   };
@@ -145,68 +125,76 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
   return (
     <Box
       sx={{
-        py: { xs: 10, md: 15 },
-        backgroundColor: "#ffffff",
-        position: "relative",
-        overflow: "hidden",
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: `
-            radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
-            radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%)
-          `,
-        },
+        py: { xs: ds.spacing["8"], md: ds.spacing["12"] },
+        backgroundColor: ds.colors.surface.base,
       }}
     >
-      <Container maxWidth="lg" sx={{ position: "relative", zIndex: 2 }}>
+      <Container
+        maxWidth={false}
+        sx={{
+          position: "relative",
+          zIndex: 2,
+          px: {
+            xs: ds.spacing["3"],
+            sm: ds.spacing["4"],
+            md: ds.spacing["6"],
+            lg: ds.spacing["8"],
+            xl: "clamp(2rem, 5vw, 4rem)",
+          },
+          maxWidth: {
+            xs: "100%",
+            sm: "600px",
+            md: "900px",
+            lg: "1200px",
+            xl: "1400px",
+            "2xl": "1600px",
+          },
+        }}
+      >
         {/* Section Header */}
-        <Fade in timeout={800}>
-          <Box sx={{ textAlign: "center", mb: 10 }}>
-            <Chip
-              label="📊 Performans Metrikleri"
-              sx={{
-                mb: 4,
-                backgroundColor: "rgba(16, 185, 129, 0.1)",
-                color: "#10b981",
-                fontSize: "1rem",
-                fontWeight: 600,
-                px: 3,
-                py: 1,
-                border: "1px solid rgba(16, 185, 129, 0.2)",
-              }}
-            />
+        <FadeIn duration={0.4}>
+          <Box
+            sx={{
+              textAlign: "center",
+              mb: { xs: ds.spacing["8"], md: ds.spacing["10"] },
+            }}
+          >
+            <Badge variant="soft" color="success">
+              <Typography
+                sx={{
+                  fontSize: tokens.typography.xs,
+                  fontWeight: 600,
+                  letterSpacing: "0.05em",
+                  color: ds.colors.text.secondary,
+                }}
+              >
+                PERFORMANS METRİKLERİ
+              </Typography>
+            </Badge>
 
             <Typography
               variant="h2"
               sx={{
-                fontWeight: 900,
-                fontSize: { xs: "2.8rem", md: "4rem" },
-                mb: 4,
-                background:
-                  "linear-gradient(135deg, #1e293b 0%, #10b981 50%, #3b82f6 100%)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
+                fontWeight: 700,
+                fontSize: `clamp(${tokens.typography.xl * 1.2}px, 4vw + ${tokens.typography.base}px, ${tokens.typography.xxl * 1.5}px)`,
+                mb: ds.spacing["3"],
+                color: ds.colors.text.primary,
                 lineHeight: 1.2,
                 letterSpacing: "-0.02em",
+                mt: ds.spacing["3"],
               }}
             >
               Kanıtlanmış Sonuçlar
             </Typography>
 
             <Typography
-              variant="h5"
+              variant="body1"
               sx={{
-                maxWidth: 800,
+                maxWidth: { xs: "100%", sm: "700px", md: "800px", lg: "900px" },
                 mx: "auto",
-                color: "text.secondary",
-                lineHeight: 1.7,
-                fontSize: { xs: "1.2rem", md: "1.4rem" },
+                color: ds.colors.text.secondary,
+                lineHeight: 1.75,
+                fontSize: `clamp(${tokens.typography.base}px, 1vw + ${tokens.typography.base * 0.25}px, ${tokens.typography.lg}px)`,
                 fontWeight: 400,
               }}
             >
@@ -214,113 +202,132 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
               verimliliğini artıracak somut sonuçlar.
             </Typography>
           </Box>
-        </Fade>
+        </FadeIn>
 
         {/* Main Metrics Grid */}
-        <Grid container spacing={4} sx={{ mb: 8 }}>
-          {industrialMetrics.map((metric, index) => (
+        <Grid
+          container
+          spacing={{ xs: ds.spacing["3"], sm: ds.spacing["4"], md: ds.spacing["5"], lg: ds.spacing["6"] }}
+          sx={{ mb: { xs: ds.spacing["8"], md: ds.spacing["10"], lg: ds.spacing["12"] } }}
+        >
+          {industrialMetrics.map((metric, index) => {
+            const MetricIcon = metric.icon;
+            return (
             <Grid item xs={12} sm={6} lg={4} key={metric.id}>
-              <Zoom in timeout={600 + index * 200}>
+              <FadeIn delay={0.05 * index} duration={0.3}>
                 <Card
                   sx={{
                     height: "100%",
-                    background:
-                      "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)",
-                    backdropFilter: "blur(20px)",
-                    border: "1px solid rgba(0,0,0,0.08)",
-                    borderRadius: 4,
-                    boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
-                    transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+                    minHeight: { xs: "200px", sm: "240px", md: "280px" },
+                    display: "flex",
+                    flexDirection: "column",
+                    backgroundColor: ds.colors.surface.elevated1,
+                    border: `1px solid ${ds.colors.border.muted}`,
+                    borderRadius: `${ds.borderRadius.lg}px`,
+                    boxShadow: ds.shadows.soft.sm,
+                    transition: ds.transitions.base,
                     position: "relative",
-                    overflow: "hidden",
                     "&::before": {
                       content: '""',
                       position: "absolute",
                       top: 0,
                       left: 0,
                       right: 0,
-                      height: "4px",
-                      background: metric.gradient,
-                      opacity: currentMetricIndex === index ? 1 : 0,
-                      transition: "opacity 0.5s ease",
+                      height: 2,
+                      background: metric.color,
+                      borderRadius: `${ds.borderRadius.lg}px ${ds.borderRadius.lg}px 0 0`,
                     },
                     "&:hover": {
-                      transform: "translateY(-8px) scale(1.02)",
-                      boxShadow: `0 20px 60px ${metric.color}20`,
-                      "& .metric-icon": {
-                        transform: "scale(1.1) rotate(5deg)",
-                      },
+                      transform: "translateY(-2px)",
+                      boxShadow: ds.shadows.soft.md,
+                      borderColor: alpha(metric.color, 0.2),
                     },
                   }}
                 >
-                  <CardContent
-                    sx={{
-                      p: 4,
-                      height: "100%",
-                      display: "flex",
-                      flexDirection: "column",
-                    }}
-                  >
-                    {/* Header */}
+                    <CardContent
+                      sx={{
+                        p: { xs: ds.spacing["4"], sm: ds.spacing["5"] },
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        flex: 1,
+                        "&:last-child": {
+                          pb: { xs: ds.spacing["4"], sm: ds.spacing["5"] },
+                        },
+                      }}
+                    >
+                    {/* Header - Icon + Chip */}
                     <Box
                       sx={{
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "flex-start",
-                        mb: 3,
+                        mb: { xs: ds.spacing["3"], sm: ds.spacing["4"] },
                       }}
                     >
                       <Box
-                        className="metric-icon"
                         sx={{
-                          width: 60,
-                          height: 60,
-                          borderRadius: 3,
-                          background: metric.gradient,
+                          width: { xs: 40, sm: 44, md: 48 },
+                          height: { xs: 40, sm: 44, md: 48 },
+                          borderRadius: `${ds.borderRadius.md}px`,
+                          background: alpha(metric.color, 0.08),
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          boxShadow: `0 8px 24px ${metric.color}30`,
-                          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                          transition: ds.transitions.base,
+                          flexShrink: 0,
                         }}
                       >
-                        {metric.icon}
+                        <MetricIcon sx={{ fontSize: { xs: 20, sm: 22, md: 24 }, color: metric.color }} />
                       </Box>
 
                       {/* Trend Indicator */}
                       <Chip
-                        icon={<TrendingUpIcon sx={{ fontSize: 16 }} />}
+                        icon={<TrendingUpIcon sx={{ fontSize: { xs: 12, sm: 13 } }} />}
                         label={metric.change}
                         size="small"
                         sx={{
-                          backgroundColor: `${metric.color}15`,
+                          backgroundColor: alpha(metric.color, 0.08),
                           color: metric.color,
                           fontWeight: 600,
-                          fontSize: "0.8rem",
+                          fontSize: { xs: tokens.typography.xs * 0.9, sm: tokens.typography.xs },
+                          height: { xs: 24, sm: 26 },
+                          "& .MuiChip-icon": {
+                            fontSize: { xs: 12, sm: 13 },
+                          },
                         }}
                       />
                     </Box>
 
-                    {/* Value */}
-                    <Box sx={{ mb: 3 }}>
+                    {/* Value + Title */}
+                    <Box sx={{ mb: { xs: ds.spacing["2"], sm: ds.spacing["3"] }, flexGrow: 1 }}>
                       <Typography
                         variant="h3"
                         sx={{
-                          fontWeight: 900,
-                          color: metric.color,
-                          fontSize: { xs: "2.5rem", md: "3rem" },
-                          lineHeight: 1,
-                          mb: 1,
+                          fontWeight: 700,
+                          color: ds.colors.text.primary,
+                          fontSize: { 
+                            xs: `clamp(${tokens.typography.xl}px, 4vw + ${tokens.typography.base * 0.5}px, ${tokens.typography.xxl * 1.2}px)`,
+                            sm: `clamp(${tokens.typography.xl * 1.2}px, 3vw + ${tokens.typography.base}px, ${tokens.typography.xxl * 1.4}px)`,
+                            md: `clamp(${tokens.typography.xl * 1.3}px, 2.5vw + ${tokens.typography.base * 1.2}px, ${tokens.typography.xxl * 1.6}px)`
+                          },
+                          lineHeight: 1.1,
+                          letterSpacing: "-0.01em",
+                          mb: { xs: ds.spacing["1"], sm: ds.spacing["2"] },
                         }}
                       >
                         {formatValue(metric.value, metric.unit)}
                         <Typography
                           component="span"
-                          variant="h5"
                           sx={{
-                            color: "text.secondary",
+                            color: ds.colors.text.secondary,
                             fontWeight: 600,
-                            ml: 1,
+                            ml: ds.spacing["1"],
+                            fontSize: { 
+                              xs: `clamp(${tokens.typography.sm * 0.9}px, 2vw + ${tokens.typography.base * 0.3}px, ${tokens.typography.base}px)`,
+                              sm: tokens.typography.base,
+                              md: tokens.typography.lg 
+                            },
                           }}
                         >
                           {metric.unit}
@@ -330,10 +337,15 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
                       <Typography
                         variant="h6"
                         sx={{
-                          fontWeight: 700,
-                          color: "text.primary",
-                          fontSize: "1.1rem",
-                          mb: 1,
+                          fontWeight: 600,
+                          color: ds.colors.text.primary,
+                          fontSize: { 
+                            xs: `clamp(${tokens.typography.base * 0.95}px, 2vw + ${tokens.typography.base * 0.4}px, ${tokens.typography.lg}px)`,
+                            sm: tokens.typography.lg,
+                            md: tokens.typography.xl 
+                          },
+                          mb: { xs: ds.spacing["1"], sm: ds.spacing["2"] },
+                          lineHeight: 1.3,
                         }}
                       >
                         {metric.title}
@@ -342,34 +354,48 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
                       <Typography
                         variant="body2"
                         sx={{
-                          color: "text.secondary",
-                          lineHeight: 1.5,
+                          color: ds.colors.text.secondary,
+                          lineHeight: 1.6,
+                          fontSize: { 
+                            xs: tokens.typography.xs,
+                            sm: tokens.typography.sm,
+                            md: tokens.typography.base 
+                          },
+                          fontWeight: 400,
+                          display: { xs: "none", sm: "block" },
                         }}
                       >
                         {metric.description}
                       </Typography>
                     </Box>
 
-                    {/* Progress Bar */}
+                    {/* Progress Bar - Compact */}
                     <Box sx={{ mt: "auto" }}>
                       <Box
                         sx={{
                           display: "flex",
                           justifyContent: "space-between",
                           alignItems: "center",
-                          mb: 1,
+                          mb: { xs: ds.spacing["1"], sm: ds.spacing["2"] },
                         }}
                       >
                         <Typography
                           variant="caption"
-                          sx={{ color: "text.secondary", fontWeight: 600 }}
+                          sx={{
+                            color: ds.colors.text.secondary,
+                            fontWeight: 500,
+                            fontSize: { xs: tokens.typography.xs * 0.85, sm: tokens.typography.xs },
+                          }}
                         >
-                          Hedef: {metric.target}
-                          {metric.unit}
+                          Hedef: {formatValue(metric.target, metric.unit)}
                         </Typography>
                         <Typography
                           variant="caption"
-                          sx={{ color: metric.color, fontWeight: 700 }}
+                          sx={{
+                            color: metric.color,
+                            fontWeight: 600,
+                            fontSize: { xs: tokens.typography.xs * 0.85, sm: tokens.typography.xs },
+                          }}
                         >
                           {Math.round((metric.value / metric.target) * 100)}%
                         </Typography>
@@ -381,56 +407,59 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
                           100,
                         )}
                         sx={{
-                          height: 8,
-                          borderRadius: 4,
-                          backgroundColor: `${metric.color}15`,
+                          height: { xs: 4, sm: 5, md: 6 },
+                          borderRadius: ds.borderRadius.sm,
+                          backgroundColor: alpha(metric.color, 0.08),
                           "& .MuiLinearProgress-bar": {
-                            background: metric.gradient,
-                            borderRadius: 4,
+                            background: metric.color,
+                            borderRadius: ds.borderRadius.sm,
                           },
                         }}
                       />
                     </Box>
                   </CardContent>
                 </Card>
-              </Zoom>
+              </FadeIn>
             </Grid>
-          ))}
+          );
+          })}
         </Grid>
 
         {/* Summary Stats */}
-        <Fade in timeout={1200}>
+        <FadeIn delay={0.2} duration={0.4}>
           <Card
             sx={{
-              background:
-                "linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%)",
-              border: "1px solid rgba(59, 130, 246, 0.1)",
-              borderRadius: 4,
-              p: 4,
-              mb: 8,
+              backgroundColor: ds.colors.surface.elevated1,
+              border: `1px solid ${ds.colors.border.muted}`,
+              borderRadius: `${ds.borderRadius.lg}px`,
+              p: ds.spacing["5"],
+              mb: { xs: ds.spacing["8"], md: ds.spacing["10"] },
             }}
           >
-            <Grid container spacing={4} alignItems="center">
+            <Grid container spacing={ds.spacing["4"]} alignItems="center">
               <Grid item xs={12} md={8}>
                 <Typography
-                  variant="h4"
+                  variant="h5"
                   sx={{
-                    fontWeight: 800,
-                    color: "text.primary",
-                    mb: 2,
+                    fontWeight: 600,
+                    color: ds.colors.text.primary,
+                    mb: ds.spacing["3"],
+                    fontSize: { xs: tokens.typography.lg, sm: tokens.typography.xl },
                   }}
                 >
-                  🎯 Ortalama Performans Artışı
+                  Ortalama Performans Artışı
                 </Typography>
                 <Typography
-                  variant="h6"
+                  variant="body2"
                   sx={{
-                    color: "text.secondary",
-                    lineHeight: 1.6,
+                    color: ds.colors.text.secondary,
+                    lineHeight: 1.75,
+                    fontSize: { xs: tokens.typography.sm, sm: tokens.typography.base },
+                    fontWeight: 400,
                   }}
                 >
                   LEMNIX kullanan işletmeler ortalama %65 verimlilik artışı, %40
-                  atık azalması ve %280 maliyet tasarrufu elde ediyor.
+                  atık azalması ve 280 bin TL maliyet tasarrufu elde ediyor.
                 </Typography>
               </Grid>
               <Grid item xs={12} md={4}>
@@ -438,22 +467,21 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
                   <Typography
                     variant="h2"
                     sx={{
-                      fontWeight: 900,
-                      background:
-                        "linear-gradient(135deg, #10b981 0%, #3b82f6 100%)",
-                      backgroundClip: "text",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      mb: 1,
+                      fontWeight: 700,
+                      color: ds.colors.text.primary,
+                      mb: ds.spacing["2"],
+                      fontSize: { xs: `clamp(${tokens.typography.xl * 1.5}px, 3vw + ${tokens.typography.base}px, ${tokens.typography.xxl * 2}px)`, md: `clamp(${tokens.typography.xxl * 1.3}px, 3.5vw + ${tokens.typography.base}px, ${tokens.typography.xxl * 2.2}px)` },
+                      lineHeight: 1.1,
                     }}
                   >
                     %65
                   </Typography>
                   <Typography
-                    variant="h6"
+                    variant="body2"
                     sx={{
-                      color: "text.secondary",
-                      fontWeight: 600,
+                      color: ds.colors.text.secondary,
+                      fontWeight: 500,
+                      fontSize: tokens.typography.base,
                     }}
                   >
                     Ortalama Verimlilik Artışı
@@ -462,36 +490,25 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
               </Grid>
             </Grid>
           </Card>
-        </Fade>
+        </FadeIn>
 
         {/* Action CTA */}
-        <Fade in timeout={1400}>
+        <FadeIn delay={0.3} duration={0.4}>
           <Box sx={{ textAlign: "center" }}>
-            <Button
-              variant="contained"
+            <PrimaryButton
               size="large"
-              startIcon={<AnalyticsIcon />}
+              startIcon={<AnalyticsIcon sx={{ fontSize: 20 }} />}
               sx={{
-                px: 6,
-                py: 2.5,
-                fontSize: "1.2rem",
-                fontWeight: 700,
-                background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
-                borderRadius: 3,
-                boxShadow: "0 8px 32px rgba(16, 185, 129, 0.4)",
-                "&:hover": {
-                  background:
-                    "linear-gradient(135deg, #059669 0%, #047857 100%)",
-                  transform: "translateY(-3px)",
-                  boxShadow: "0 12px 40px rgba(16, 185, 129, 0.5)",
-                },
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                px: { xs: ds.spacing["8"], sm: ds.spacing["10"] },
+                py: { xs: ds.spacing["2"], sm: ds.spacing["2.5"] },
+                fontSize: { xs: tokens.typography.base, sm: tokens.typography.lg },
+                fontWeight: 600,
               }}
             >
               Detaylı Raporları İncele
-            </Button>
+            </PrimaryButton>
           </Box>
-        </Fade>
+        </FadeIn>
       </Container>
     </Box>
   );

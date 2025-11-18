@@ -402,6 +402,9 @@ export interface ParametersStepProps {
   algorithmMode?: AlgorithmMode;
   onAlgorithmModeChange?: (mode: AlgorithmMode) => void;
   itemCount?: number;
+  onStartOptimization?: () => void;
+  canStartOptimization?: boolean;
+  isOptimizing?: boolean;
 }
 
 // Re-export for convenience

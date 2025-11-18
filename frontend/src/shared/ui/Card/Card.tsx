@@ -18,7 +18,7 @@ import {
   alpha,
 } from "@mui/material";
 import { MoreVert as MoreVertIcon } from "@mui/icons-material";
-import { useDesignSystem } from "@/shared/hooks";
+import { useDesignSystem, useAdaptiveUIContext } from "@/shared/hooks";
 
 type CardVariant =
   | "elevated"
@@ -30,7 +30,7 @@ type CardVariant =
 
 type CardSize = "sm" | "md" | "lg";
 
-export interface CardProps extends Omit<MuiCardProps, "variant"> {
+export interface CardProps extends Omit<MuiCardProps, "variant" | "title"> {
   readonly variant?: CardVariant;
   readonly size?: CardSize;
   readonly hoverable?: boolean;
@@ -45,17 +45,18 @@ export interface CardProps extends Omit<MuiCardProps, "variant"> {
 }
 
 /**
- * Build variant-specific styles
+ * Build variant-specific styles (adaptive token-aware)
  */
 const buildVariantStyles = (
   ds: ReturnType<typeof useDesignSystem>,
+  tokens: ReturnType<typeof useAdaptiveUIContext>["tokens"],
   variant: CardVariant,
   hoverable: boolean,
   interactive: boolean,
   glow: boolean,
 ) => {
   const baseStyles = {
-    borderRadius: `${ds.borderRadius.card}px`,
+    borderRadius: `${tokens.borderRadius.lg}px`,
     transition: `all ${ds.duration.base}ms ${ds.easing.easeOut}`,
     overflow: "hidden" as const,
     position: "relative" as const,
@@ -162,16 +163,18 @@ const buildVariantStyles = (
  * Get size-specific padding
  */
 const getSizePadding = (
-  ds: ReturnType<typeof useDesignSystem>,
+  tokens: ReturnType<typeof useAdaptiveUIContext>["tokens"],
   size: CardSize,
 ) => {
+  // Use adaptive card padding from tokens
+  const basePadding = tokens.components.card.padding;
   const sizeMap = {
-    sm: ds.spacing["4"],
-    md: ds.spacing["6"],
-    lg: ds.spacing["8"],
+    sm: tokens.spacing.sm, // Compact padding
+    md: basePadding, // Standard card padding
+    lg: tokens.spacing.lg, // Larger padding
   };
 
-  return sizeMap[size];
+  return sizeMap[size] ?? basePadding;
 };
 
 /**
@@ -200,13 +203,14 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     ref,
   ) => {
     const ds = useDesignSystem();
+    const { tokens } = useAdaptiveUIContext();
 
     const variantStyles = useMemo(
-      () => buildVariantStyles(ds, variant, hoverable, interactive, glow),
-      [ds, variant, hoverable, interactive, glow],
+      () => buildVariantStyles(ds, tokens, variant, hoverable, interactive, glow),
+      [ds, tokens, variant, hoverable, interactive, glow],
     );
 
-    const padding = useMemo(() => getSizePadding(ds, size), [ds, size]);
+    const padding = useMemo(() => getSizePadding(tokens, size), [tokens, size]);
 
     const mergedSx = useMemo(
       () => ({
@@ -232,6 +236,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
                     sx={{
                       fontWeight: ds.fontWeight.semibold,
                       color: ds.colors.text.primary,
+                      fontSize: tokens.typography.lg,
                     }}
                   >
                     {title}
@@ -245,6 +250,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
                     sx={{
                       color: ds.colors.text.secondary,
                       mt: 0.5,
+                      fontSize: tokens.typography.sm,
                     }}
                   >
                     {subtitle}
@@ -256,7 +262,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
                 padding: `${padding}px`,
                 paddingBottom: headerDivider
                   ? `${padding}px`
-                  : `${padding / 2}px`,
+                  : `${tokens.spacing.xs}px`,
               }}
             />
             {headerDivider && (
@@ -274,9 +280,10 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           sx={{
             padding: `${padding}px`,
             paddingTop:
-              hasHeader && !headerDivider ? `${padding / 2}px` : `${padding}px`,
+              hasHeader && !headerDivider ? `${tokens.spacing.xs}px` : `${padding}px`,
             paddingBottom:
-              hasFooter && !footerDivider ? `${padding / 2}px` : `${padding}px`,
+              hasFooter && !footerDivider ? `${tokens.spacing.xs}px` : `${padding}px`,
+            fontSize: tokens.typography.base,
             "&:last-child": {
               paddingBottom: `${padding}px`,
             },

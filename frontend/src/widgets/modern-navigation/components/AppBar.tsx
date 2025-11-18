@@ -28,8 +28,9 @@ import {
 } from "@mui/icons-material";
 import { Logo } from "@/shared/ui/Logo";
 import { appConfig } from "@/shared/config/legacy/appConfig";
-import { stylingConstants, messages } from "../constants";
-import { AppBarProps } from "../types";
+import { stylingConstants, messages, navigationItems } from "../constants/index";
+import type { AppBarProps } from "../types/index";
+import { useLocation } from "react-router-dom";
 
 // Design System v2.0
 import { useDesignSystem } from "@/shared/hooks";
@@ -44,6 +45,7 @@ import { useWebGPU } from "@/shared";
 export const AppBar: React.FC<AppBarProps> = ({
   isMobile,
   currentPageItem,
+  activePage,
   onToggleSidebar,
   onCommandPaletteOpen,
   onUserMenuOpen,
@@ -51,6 +53,20 @@ export const AppBar: React.FC<AppBarProps> = ({
 }) => {
   const theme = useTheme();
   const ds = useDesignSystem();
+  const location = useLocation();
+
+  // Fallback mapping from path to human-readable page labels, in case
+  // navigation state is out of sync for any reason.
+  const pathLabelMap: Record<string, string> = {
+    "/": "Ana Sayfa",
+    "/dashboard": "Dashboard",
+    "/cutting-list": "Kesim Listesi",
+    "/enterprise-optimization": "Enterprise Optimizasyon",
+    "/statistics": "İstatistikler",
+    "/production-plan": "Üretim Planı",
+    "/profile-management": "Profil Yönetimi",
+    "/settings": "Ayarlar",
+  };
 
   // P0-7: WebGPU status
   const { isSupported, isInitialized, isLoading } = useWebGPU();
@@ -133,10 +149,20 @@ export const AppBar: React.FC<AppBarProps> = ({
     >
       <Toolbar
         sx={{
-          px: { xs: 3, md: 4 },
+          px: { 
+            xs: ds.spacing["2"], // Reduced padding on mobile
+            sm: ds.spacing["3"], 
+            md: ds.spacing["5"], 
+            lg: ds.spacing["6"],
+            xl: "clamp(1.5rem, 3vw, 2rem)",
+          },
           minHeight: `64px !important`,
           maxHeight: `64px !important`,
           height: `64px !important`,
+          overflowX: "hidden", // Prevent horizontal overflow
+          overflowY: "hidden",
+          width: "100%",
+          maxWidth: "100vw",
         }}
       >
         {/* Mobile Menu Button */}
@@ -161,7 +187,12 @@ export const AppBar: React.FC<AppBarProps> = ({
 
         {/* Logo */}
         <Box
-          sx={{ display: "flex", alignItems: "center", mr: ds.spacing["3"] }}
+          sx={{ 
+            display: "flex", 
+            alignItems: "center", 
+            mr: { xs: ds.spacing["1"], sm: ds.spacing["2"], md: ds.spacing["3"] },
+            flexShrink: 0,
+          }}
         >
           <Tooltip title={messages.navigation.brandTooltip} arrow>
             <Box>
@@ -170,8 +201,59 @@ export const AppBar: React.FC<AppBarProps> = ({
           </Tooltip>
         </Box>
 
+        {/* Mobile page title - simple, left-aligned */}
+        {(() => {
+          const resolvedPageItem =
+            currentPageItem ||
+            navigationItems.find((item) => item.id === activePage) ||
+            navigationItems.find((item) => item.path === location.pathname);
+
+          const pageLabel =
+            resolvedPageItem?.label || pathLabelMap[location.pathname];
+
+          if (!pageLabel) {
+            return null;
+          }
+
+          return (
+            <Typography
+              sx={{
+                display: { xs: "flex", md: "none" },
+                alignItems: "center",
+                fontSize: "clamp(0.875rem, 2vw + 0.5rem, 1rem)",
+                fontWeight: ds.typography.fontWeight.semibold,
+                color: ds.colors.text.primary,
+                letterSpacing: "-0.01em",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                maxWidth: { xs: "calc(100vw - 200px)", sm: "40%" }, // Dynamic maxWidth
+                flexShrink: 1,
+                minWidth: 0, // Allow shrinking
+              }}
+            >
+              {pageLabel}
+            </Typography>
+          );
+        })()}
+
         {/* Modern Breadcrumb-Style Page Title */}
-        {currentPageItem && (
+        {(() => {
+          const resolvedPageItem =
+            currentPageItem ||
+            navigationItems.find((item) => item.id === activePage) ||
+            navigationItems.find((item) => item.path === location.pathname);
+
+          const pageLabel =
+            resolvedPageItem?.label || pathLabelMap[location.pathname];
+
+          if (!pageLabel) {
+            return null;
+          }
+
+          const PageIcon = resolvedPageItem?.icon;
+
+          return (
           <Fade in={true} timeout={400}>
             <Box
               sx={{
@@ -190,9 +272,9 @@ export const AppBar: React.FC<AppBarProps> = ({
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  gap: ds.spacing["2"],
-                  px: ds.spacing["4"],
-                  py: ds.spacing["2"],
+                  gap: { xs: ds.spacing["1"], sm: ds.spacing["2"] },
+                  px: { xs: ds.spacing["3"], sm: ds.spacing["4"], md: ds.spacing["5"] },
+                  height: { xs: 36, sm: 40, md: 42 }, // Responsive height
                   background: alpha("#FFFFFF", 0.7),
                   backdropFilter: "blur(12px) saturate(130%)",
                   borderRadius: `${ds.borderRadius.lg}px`,
@@ -212,61 +294,59 @@ export const AppBar: React.FC<AppBarProps> = ({
                   },
                 }}
               >
-                {/* Page Icon */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: 32,
-                    height: 32,
-                    borderRadius: `${ds.borderRadius.md}px`,
-                    background: alpha(ds.colors.primary.main, 0.1),
-                    color: ds.colors.primary.main,
-                    transition: ds.transitions.fast,
-                  }}
-                >
-                  {currentPageItem.icon &&
-                    React.isValidElement(currentPageItem.icon) &&
-                    React.cloneElement(
-                      currentPageItem.icon as React.ReactElement<{
-                        sx?: Record<string, unknown>;
-                      }>,
-                      { sx: { fontSize: 18 } },
-                    )}
-                </Box>
+                {/* Resolve page item from props or navigation config */}
+                {/**
+                 * Fallback: if currentPageItem is undefined (e.g. activePage came
+                 * from URL but navigation state is out of sync), resolve it from
+                 * navigationItems using the activePage id.
+                 */}
+                      {/* Page Icon */}
+                      {PageIcon && (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: { xs: 28, sm: 30, md: 32 },
+                            height: { xs: 28, sm: 30, md: 32 },
+                            borderRadius: `${ds.borderRadius.md}px`,
+                            background: alpha(ds.colors.primary.main, 0.12),
+                            color: ds.colors.primary.main,
+                            transition: ds.transitions.fast,
+                          }}
+                        >
+                          <PageIcon sx={{ fontSize: { xs: 16, sm: 17, md: 18 } }} />
+                        </Box>
+                      )}
 
-                {/* Separator */}
-                <Box
-                  sx={{
-                    width: 4,
-                    height: 4,
-                    borderRadius: "50%",
-                    background: alpha(ds.colors.neutral[400], 0.4),
-                  }}
-                />
+                      {/* Separator */}
+                      <Box
+                        sx={{
+                          width: { xs: 3, sm: 4 },
+                          height: { xs: 3, sm: 4 },
+                          borderRadius: "50%",
+                          background: alpha(ds.colors.neutral[400], 0.4),
+                        }}
+                      />
 
-                {/* Page Label - Elegant Typography */}
-                <Typography
-                  sx={{
-                    fontSize: "1rem", // 16px - slightly larger
-                    fontWeight: ds.typography.fontWeight.semibold,
-                    background: ds.gradients.primary,
-                    backgroundClip: "text",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    letterSpacing: "-0.02em", // Tighter for elegance
-                    lineHeight: 1,
-                    whiteSpace: "nowrap",
-                    fontFamily: ds.typography.fontFamily?.heading || "inherit",
-                  }}
-                >
-                  {currentPageItem.label || currentPageItem.title}
-                </Typography>
+                      {/* Page Label - Elegant Typography */}
+                      <Typography
+                        sx={{
+                          fontSize: "clamp(0.9375rem, 1.5vw + 0.5rem, 1.125rem)",
+                          fontWeight: ds.typography.fontWeight.semibold,
+                          color: ds.colors.primary[800] ?? ds.colors.primary.main,
+                          letterSpacing: "-0.02em",
+                          lineHeight: 1,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {pageLabel}
+                      </Typography>
               </Box>
             </Box>
           </Fade>
-        )}
+          );
+        })()}
 
         {/* Spacer for right side */}
         <Box sx={{ flexGrow: 1 }} />
@@ -276,18 +356,20 @@ export const AppBar: React.FC<AppBarProps> = ({
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: ds.spacing["2"],
-            ml: ds.spacing["3"], // Better spacing from center
+            gap: { xs: 4, sm: ds.spacing["1"], md: ds.spacing["2"], lg: ds.spacing["3"] }, // 4px = 0.5 spacing
+            ml: { xs: ds.spacing["1"], sm: ds.spacing["2"], md: ds.spacing["3"], lg: ds.spacing["4"] },
+            flexShrink: 0, // Prevent shrinking
+            minWidth: 0, // Allow content to shrink if needed
           }}
         >
-          {/* Enhanced GPU Status Badge */}
+          {/* Enhanced GPU Status Badge - Hidden on mobile */}
           <Tooltip title="GPU Acceleration Status" arrow>
             <Box
               sx={{
-                display: "flex",
+                display: { xs: "none", sm: "flex" }, // Hide completely on mobile
                 alignItems: "center",
                 gap: ds.spacing["1"],
-                px: ds.spacing["2"],
+                px: { sm: ds.spacing["1"], md: ds.spacing["2"] },
                 py: ds.spacing["1"],
                 background:
                   isSupported && isInitialized
@@ -326,12 +408,13 @@ export const AppBar: React.FC<AppBarProps> = ({
               />
               <Typography
                 sx={{
-                  fontSize: "0.6875rem",
+                  fontSize: { sm: "0.625rem", md: "0.6875rem" },
                   fontWeight: ds.typography.fontWeight.medium,
                   color:
                     isSupported && isInitialized
                       ? ds.colors.success.main
                       : ds.colors.neutral[600],
+                  display: { sm: "none", md: "block" }, // Hide text on tablet
                 }}
               >
                 {isLoading
@@ -352,8 +435,9 @@ export const AppBar: React.FC<AppBarProps> = ({
                 backgroundColor: alpha(ds.colors.primary.main, 0.1),
                 border: `1px solid ${alpha(ds.colors.primary.main, 0.2)}`,
                 borderRadius: `${ds.borderRadius.button}px`,
-                width: 40,
-                height: 40,
+                width: { xs: 32, sm: 36, md: 40 },
+                height: { xs: 32, sm: 36, md: 40 },
+                padding: { xs: "6px", sm: "8px" },
                 transition: ds.transitions.fast,
                 "&:hover": {
                   backgroundColor: alpha(ds.colors.primary.main, 0.15),
@@ -367,20 +451,21 @@ export const AppBar: React.FC<AppBarProps> = ({
                 },
               }}
             >
-              <ZapIcon sx={{ fontSize: ds.componentSizes.icon.sm }} />
+              <ZapIcon sx={{ fontSize: { xs: 16, sm: 18, md: ds.componentSizes.icon.sm } }} />
             </IconButton>
           </Tooltip>
 
-          {/* Enhanced Notifications */}
+          {/* Enhanced Notifications - Hidden on mobile */}
           <Tooltip title={messages.navigation.notificationsTooltip} arrow>
             <IconButton
               sx={{
+                display: { xs: "none", sm: "flex" }, // Hide on mobile
                 color: ds.colors.text.secondary,
                 backgroundColor: alpha(ds.colors.neutral[500], 0.08),
                 border: `1px solid ${alpha(ds.colors.neutral[500], 0.15)}`,
                 borderRadius: `${ds.borderRadius.button}px`,
-                width: 40,
-                height: 40,
+                width: { sm: 36, md: 40 },
+                height: { sm: 36, md: 40 },
                 transition: ds.transitions.fast,
                 "&:hover": {
                   backgroundColor: alpha(ds.colors.primary.main, 0.1),
@@ -401,9 +486,9 @@ export const AppBar: React.FC<AppBarProps> = ({
                   "& .MuiBadge-badge": {
                     backgroundColor: ds.colors.error.main,
                     color: "white",
-                    fontSize: "0.625rem",
-                    minWidth: 18,
-                    height: 18,
+                    fontSize: { sm: "0.5625rem", md: "0.625rem" },
+                    minWidth: { sm: 16, md: 18 },
+                    height: { sm: 16, md: 18 },
                     fontWeight: ds.typography.fontWeight.semibold,
                     borderRadius: `${ds.borderRadius.sm}px`,
                     boxShadow: `0 2px 4px ${alpha(ds.colors.error.main, 0.3)}`,
@@ -411,7 +496,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                 }}
               >
                 <NotificationsIcon
-                  sx={{ fontSize: ds.componentSizes.icon.sm }}
+                  sx={{ fontSize: { sm: 18, md: ds.componentSizes.icon.sm } }}
                 />
               </Badge>
             </IconButton>
@@ -437,10 +522,10 @@ export const AppBar: React.FC<AppBarProps> = ({
             >
               <Avatar
                 sx={{
-                  width: 36,
-                  height: 36,
+                  width: { xs: 30, sm: 34, md: 36 },
+                  height: { xs: 30, sm: 34, md: 36 },
                   background: ds.gradients.primary,
-                  fontSize: "0.875rem",
+                  fontSize: { xs: "0.7rem", sm: "0.8125rem", md: "0.875rem" },
                   fontWeight: ds.typography.fontWeight.semibold,
                   border: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
                   boxShadow: `0 2px 8px ${alpha(ds.colors.primary.main, 0.2)}`,

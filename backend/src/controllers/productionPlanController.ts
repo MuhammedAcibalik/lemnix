@@ -9,6 +9,7 @@ import { productionPlanService } from "../services/productionPlanService";
 import { productionPlanToCuttingListService } from "../services/productionPlanToCuttingListService";
 import { statisticsService } from "../services/statisticsService";
 import { logger } from "../utils/logger";
+import { databaseManager } from "../config/database";
 
 export class ProductionPlanController {
   /**
@@ -260,6 +261,26 @@ export class ProductionPlanController {
    */
   async getProductionPlanMetrics(req: Request, res: Response): Promise<void> {
     try {
+      // If database is not connected (local dev, PostgreSQL stopped),
+      // return safe fallback metrics instead of attempting DB access.
+      if (!databaseManager.getConnectionStatus()) {
+        logger.warn(
+          "getProductionPlanMetrics: database not connected, returning fallback metrics",
+        );
+
+        res.json({
+          success: true,
+          data: {
+            totalPlans: 0,
+            totalItems: 0,
+            departments: [],
+            priorityDistribution: {},
+            upcomingDeadlines: 0,
+          },
+        });
+        return;
+      }
+
       const filters = {
         weekNumber: req.query.weekNumber
           ? Number(req.query.weekNumber)

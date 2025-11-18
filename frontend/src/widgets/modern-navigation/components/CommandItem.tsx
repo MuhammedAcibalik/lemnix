@@ -104,7 +104,7 @@ export const CommandItem: React.FC<CommandItemProps> = ({
         <Typography
           variant="body1"
           sx={{
-            fontSize: "0.875rem", // 14px - primary text
+            fontSize: "clamp(0.8125rem, 1vw + 0.5rem, 0.9375rem)",
             fontWeight: 500, // medium
             color: ds.colors.text.primary,
             mb: "2px", // Tight spacing
@@ -116,7 +116,7 @@ export const CommandItem: React.FC<CommandItemProps> = ({
         <Typography
           variant="body2"
           sx={{
-            fontSize: "0.75rem", // 12px - secondary text
+            fontSize: "clamp(0.6875rem, 0.8vw + 0.5rem, 0.8125rem)",
             color: ds.colors.text.secondary,
             lineHeight: 1.4,
           }}

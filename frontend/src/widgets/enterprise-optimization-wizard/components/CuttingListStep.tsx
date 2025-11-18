@@ -22,7 +22,7 @@ import {
   Add as AddIcon,
   CheckCircle as CheckIcon,
 } from "@mui/icons-material";
-import { useDesignSystem } from "@/shared/hooks";
+import { useDesignSystem, useAdaptiveUIContext } from "@/shared/hooks";
 import {
   CuttingListStepProps,
   CuttingListData,
@@ -39,13 +39,14 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
   onCuttingListSelect,
 }) => {
   const ds = useDesignSystem();
+  const { device, tokens } = useAdaptiveUIContext();
 
   // ❌ REMOVED: Delete functionality disabled - cutting lists should not be deleted
 
   return (
     <Box
       sx={{
-        p: ds.spacing["4"],
+        p: tokens.components.card.padding,
         height: "100%",
       }}
     >
@@ -53,17 +54,17 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
         sx={{
           display: "flex",
           flexDirection: "column",
-          gap: ds.spacing["3"],
+          gap: tokens.spacing.md,
         }}
       >
         {/* Section Header */}
         <Box
-          sx={{ display: "flex", alignItems: "center", gap: ds.spacing["2"] }}
+          sx={{ display: "flex", alignItems: "center", gap: tokens.spacing.sm }}
         >
-          <ListIcon sx={{ fontSize: 20, color: ds.colors.primary.main }} />
+          <ListIcon sx={{ fontSize: tokens.components.icon.sm, color: ds.colors.primary.main }} />
           <Typography
             sx={{
-              fontSize: "1rem",
+              fontSize: `${tokens.typography.base}px`,
               fontWeight: ds.typography.fontWeight.semibold,
               color: ds.colors.text.primary,
             }}
@@ -74,8 +75,8 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
             label={cuttingLists.length}
             size="small"
             sx={{
-              height: 20,
-              fontSize: "0.6875rem",
+              height: tokens.components.button.sm,
+              fontSize: `${tokens.typography.xs}px`,
               fontWeight: ds.typography.fontWeight.semibold,
               backgroundColor: alpha(ds.colors.primary.main, 0.1),
               color: ds.colors.primary.main,
@@ -84,7 +85,7 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
         </Box>
 
         {cuttingLists.length > 0 ? (
-          <Grid container spacing={ds.spacing["3"]}>
+          <Grid container spacing={tokens.layout.gridGap}>
             {cuttingLists.map((list: CuttingListData) => {
               const isSelected = selectedCuttingList?.id === list.id;
               const itemCount =
@@ -95,16 +96,24 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
                 ) || 0;
 
               return (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={list.id}>
+                <Grid 
+                  item 
+                  xs={12}  // Mobile: 1 column
+                  sm={6}   // Tablet: 2 columns
+                  md={4}   // Laptop: 3 columns
+                  lg={3}   // Desktop: 4 columns
+                  xl={2.4} // TV: 5 columns
+                  key={list.id}
+                >
                   <Card
                     sx={{
                       cursor: "pointer",
                       height: "100%",
                       display: "flex",
                       flexDirection: "column",
-                      position: "relative", // For delete button positioning
+                      position: "relative",
                       border: `2px solid ${isSelected ? ds.colors.primary.main : alpha(ds.colors.neutral[300], 0.5)}`,
-                      borderRadius: `${ds.borderRadius.lg}px`,
+                      borderRadius: `${tokens.borderRadius.lg}px`,
                       boxShadow: isSelected
                         ? ds.shadows.soft.md
                         : ds.shadows.soft.sm,
@@ -112,31 +121,36 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
                       background: isSelected
                         ? alpha(ds.colors.primary.main, 0.02)
                         : ds.colors.background.paper,
-                      "&:hover": {
+                      minHeight: device.isTouch ? tokens.components.minTouchTarget * 2 : undefined,
+                      "&:hover": !device.isTouch ? {
                         transform: "translateY(-4px)",
                         boxShadow: ds.shadows.soft.xl,
                         borderColor: ds.colors.primary.main,
-                      },
+                      } : {},
                     }}
                     onClick={() => onCuttingListSelect(list)}
                   >
                     <CardContent
                       sx={{
-                        p: ds.spacing["3"],
+                        p: {
+                          xs: tokens.components.card.padding,
+                          md: tokens.spacing.md,
+                        },
                         flex: 1,
                         display: "flex",
                         flexDirection: "column",
                         alignItems: "center",
                         justifyContent: "center",
                         textAlign: "center",
+                        gap: tokens.components.card.gap,
                       }}
                     >
                       {isSelected && (
                         <CheckIcon
                           sx={{
-                            fontSize: 40,
+                            fontSize: tokens.components.icon.md,
                             color: ds.colors.success.main,
-                            mb: ds.spacing["2"],
+                            mb: tokens.spacing.xs,
                           }}
                         />
                       )}
@@ -144,8 +158,11 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
                         sx={{
                           fontWeight: ds.typography.fontWeight.bold,
                           color: ds.colors.text.primary,
-                          fontSize: "1rem",
-                          mb: ds.spacing["1"],
+                          fontSize: {
+                            xs: `${tokens.typography.base}px`,
+                            md: `${tokens.typography.lg}px`,
+                          },
+                          mb: tokens.spacing.xs,
                         }}
                       >
                         {list.title || list.name}
@@ -153,9 +170,9 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
                       <Typography
                         sx={{
                           color: ds.colors.text.secondary,
-                          fontSize: "0.875rem",
+                          fontSize: `${tokens.typography.sm}px`,
                           fontWeight: ds.typography.fontWeight.normal,
-                          mb: ds.spacing["1"],
+                          mb: tokens.spacing.xs,
                         }}
                       >
                         {itemCount} öğe
@@ -165,8 +182,8 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
                           label={`Hafta ${list.weekNumber}`}
                           size="small"
                           sx={{
-                            height: 22,
-                            fontSize: "0.6875rem",
+                            height: tokens.components.button.sm,
+                            fontSize: `${tokens.typography.xs}px`,
                             fontWeight: 600,
                             backgroundColor: alpha(ds.colors.primary.main, 0.1),
                             color: ds.colors.primary.main,
@@ -185,12 +202,12 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
           <Card
             sx={{
               border: `1px solid ${alpha(ds.colors.warning.main, 0.2)}`,
-              borderRadius: `${ds.borderRadius.lg}px`,
+              borderRadius: `${tokens.borderRadius.lg}px`,
               background: alpha(ds.colors.warning.main, 0.02),
               boxShadow: ds.shadows.soft.sm,
             }}
           >
-            <CardContent sx={{ p: ds.spacing["6"] }}>
+            <CardContent sx={{ p: tokens.spacing.lg }}>
               <Box
                 sx={{
                   textAlign: "center",
@@ -198,27 +215,27 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
               >
                 <ListIcon
                   sx={{
-                    fontSize: 64,
+                    fontSize: tokens.components.icon.xl,
                     color: ds.colors.warning.main,
-                    mb: ds.spacing["3"],
+                    mb: tokens.spacing.md,
                     opacity: 0.8,
                   }}
                 />
                 <Typography
                   sx={{
-                    fontSize: "1.125rem",
+                    fontSize: `${tokens.typography.lg}px`,
                     fontWeight: ds.typography.fontWeight.semibold,
                     color: ds.colors.text.primary,
-                    mb: ds.spacing["1"],
+                    mb: tokens.spacing.xs,
                   }}
                 >
                   Henüz Kesim Listesi Yok
                 </Typography>
                 <Typography
                   sx={{
-                    fontSize: "0.875rem",
+                    fontSize: `${tokens.typography.sm}px`,
                     color: ds.colors.text.secondary,
-                    mb: ds.spacing["4"],
+                    mb: tokens.spacing.lg,
                     maxWidth: 400,
                     mx: "auto",
                   }}
@@ -231,13 +248,17 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
                   startIcon={<AddIcon />}
                   onClick={() => (window.location.href = "/cutting-list")}
                   sx={{
-                    height: 44,
-                    px: ds.spacing["4"],
+                    height: {
+                      xs: tokens.components.button.lg,
+                      md: tokens.components.button.md,
+                    },
+                    minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+                    px: tokens.spacing.lg,
                     background: ds.gradients.primary,
                     color: "white",
                     fontWeight: ds.typography.fontWeight.semibold,
-                    fontSize: "0.9375rem",
-                    borderRadius: `${ds.borderRadius.md}px`,
+                    fontSize: `${tokens.typography.base}px`,
+                    borderRadius: `${tokens.borderRadius.md}px`,
                     textTransform: "none",
                     boxShadow: ds.shadows.soft.md,
                     transition: ds.transitions.fast,

@@ -23,6 +23,8 @@ export interface ModernNavigationProps {
 export interface NavigationItem {
   id: string;
   label: string;
+  /** Route path, e.g. "/cutting-list" */
+  path: string;
   icon: React.ComponentType<{
     className?: string;
     sx?: Record<string, unknown>;
@@ -113,6 +115,8 @@ export interface NavigationHandlers {
 export interface AppBarProps {
   isMobile: boolean;
   currentPageItem: NavigationItem | undefined;
+  /** Active page id (e.g. 'home', 'cutting-list') for fallback resolution */
+  activePage?: string;
   onToggleSidebar?: () => void;
   onCommandPaletteOpen: () => void;
   onUserMenuOpen: (event: React.MouseEvent<HTMLElement>) => void;

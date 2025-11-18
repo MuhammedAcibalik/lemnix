@@ -44,6 +44,7 @@ import {
   MenuItem,
   InputLabel,
   Select,
+  alpha,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -89,6 +90,7 @@ import {
 } from "@/entities/profile-management/api/profileManagementApi";
 import { getCurrentISOWeek } from "@/shared/lib/dateUtils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useDesignSystem, useAdaptiveUIContext } from "@/shared/hooks";
 
 interface DetailedSelectionDialogProps {
   open: boolean;
@@ -124,6 +126,9 @@ interface DetailedSelectionDialogProps {
 export const DetailedSelectionDialog: React.FC<
   DetailedSelectionDialogProps
 > = ({ open, onClose, cuttingList, onConfirm, loading = false }) => {
+  const ds = useDesignSystem();
+  const { device, tokens } = useAdaptiveUIContext();
+
   // Selection state management (products only - totals calculated by useMemo)
   const [selectionState, setSelectionState] = useState<SelectionState>({
     products: {},
@@ -842,55 +847,95 @@ export const DetailedSelectionDialog: React.FC<
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="lg"
+      maxWidth={device.uiMode === "kiosk" ? "xl" : device.uiMode === "dense" ? "lg" : "lg"}
       fullWidth
       PaperProps={{
         sx: {
-          background: "#ffffff",
-          borderRadius: "20px",
-          border: "1px solid rgba(148, 163, 184, 0.35)",
-          boxShadow:
-            "0 25px 80px rgba(15, 23, 42, 0.2), 0 10px 32px rgba(0, 0, 0, 0.12)",
+          background: ds.colors.background.paper,
+          borderRadius: `${tokens.borderRadius.xl}px`,
+          border: `1px solid ${ds.colors.neutral[200]}`,
+          boxShadow: ds.shadows.soft["3xl"],
           maxHeight: "90vh",
-          minHeight: "80vh",
+          minHeight: {
+            xs: "85vh",
+            md: "80vh",
+          },
         },
       }}
     >
       {/* Header */}
       <DialogTitle
         sx={{
-          background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)",
-          color: "white",
-          fontWeight: 700,
-          fontSize: "1.5rem",
+          background: ds.gradients.primary,
+          color: ds.colors.primary.contrast,
+          fontWeight: ds.typography.fontWeight.bold,
+          fontSize: {
+            xs: `${tokens.typography.lg}px`,
+            md: `${tokens.typography.xl}px`,
+          },
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          fontFamily: "system-ui, -apple-system, sans-serif",
-          py: 3,
-          px: 4,
+          py: {
+            xs: tokens.spacing.md,
+            md: tokens.spacing.lg,
+          },
+          px: {
+            xs: tokens.spacing.md,
+            md: tokens.spacing.lg,
+          },
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: tokens.spacing.md }}>
           <Box
             sx={{
-              width: 48,
-              height: 48,
-              borderRadius: "12px",
+              width: {
+                xs: tokens.components.icon.lg,
+                md: tokens.components.icon.xl,
+              },
+              height: {
+                xs: tokens.components.icon.lg,
+                md: tokens.components.icon.xl,
+              },
+              borderRadius: `${tokens.borderRadius.md}px`,
               background: "rgba(255, 255, 255, 0.2)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 4px 16px rgba(255, 255, 255, 0.1)",
+              boxShadow: ds.shadows.soft.md,
             }}
           >
-            <CategoryIcon sx={{ fontSize: 24, color: "white" }} />
+            <CategoryIcon sx={{
+              fontSize: {
+                xs: tokens.components.icon.md,
+                md: tokens.components.icon.lg,
+              },
+              color: "white"
+            }} />
           </Box>
           <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
+            <Typography
+              sx={{
+                fontWeight: ds.typography.fontWeight.bold,
+                fontSize: {
+                  xs: `${tokens.typography.lg}px`,
+                  md: `${tokens.typography.xl}px`,
+                },
+                mb: tokens.spacing.xs,
+              }}
+            >
               Detaylı Seçim
             </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.9, fontWeight: 500 }}>
+            <Typography
+              sx={{
+                opacity: 0.9,
+                fontWeight: ds.typography.fontWeight.medium,
+                fontSize: {
+                  xs: `${tokens.typography.sm}px`,
+                  md: `${tokens.typography.base}px`,
+                },
+              }}
+            >
               {cuttingList?.title} - Ürün, İş Emri ve Profil Seçimi
             </Typography>
           </Box>
@@ -900,12 +945,14 @@ export const DetailedSelectionDialog: React.FC<
           sx={{
             color: "white",
             background: "rgba(255, 255, 255, 0.1)",
-            "&:hover": {
+            minWidth: device.isTouch ? tokens.components.minTouchTarget : undefined,
+            minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+            "&:hover": !device.isTouch ? {
               background: "rgba(255, 255, 255, 0.2)",
-            },
+            } : {},
           }}
         >
-          <CloseIcon />
+          <CloseIcon sx={{ fontSize: tokens.components.icon.md }} />
         </IconButton>
       </DialogTitle>
 
@@ -915,32 +962,46 @@ export const DetailedSelectionDialog: React.FC<
         {showStatistics && (
           <Box
             sx={{
-              p: 3,
-              background:
-                "linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(59, 130, 246, 0.08) 100%)",
+              p: {
+                xs: tokens.spacing.md,
+                md: tokens.spacing.lg,
+              },
+              background: `linear-gradient(135deg, ${alpha(ds.colors.primary.main, 0.05)} 0%, ${alpha(ds.colors.secondary.main, 0.08)} 100%)`,
             }}
           >
-            <Grid container spacing={3}>
+            <Grid container spacing={tokens.layout.gridGap}>
               <Grid item xs={12} sm={6} md={3}>
                 <Paper
                   sx={{
-                    p: 2,
+                    p: tokens.spacing.md,
                     textAlign: "center",
-                    background:
-                      "linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(59, 130, 246, 0.15) 100%)",
-                    border: "1px solid rgba(37, 99, 235, 0.2)",
-                    borderRadius: "12px",
+                    background: `linear-gradient(135deg, ${alpha(ds.colors.primary.main, 0.1)} 0%, ${alpha(ds.colors.primary[600], 0.15)} 100%)`,
+                    border: `1px solid ${alpha(ds.colors.primary.main, 0.2)}`,
+                    borderRadius: `${tokens.borderRadius.md}px`,
                   }}
                 >
                   <Typography
-                    variant="h4"
-                    sx={{ fontWeight: 800, color: "#1d4ed8", mb: 0.5 }}
+                    sx={{
+                      fontWeight: ds.typography.fontWeight.extrabold,
+                      color: ds.colors.primary[700],
+                      fontSize: {
+                        xs: `${tokens.typography.xl}px`,
+                        md: `${tokens.typography.xxl}px`,
+                      },
+                      mb: tokens.spacing.xs,
+                    }}
                   >
                     {statistics.selectedProducts}/{statistics.totalProducts}
                   </Typography>
                   <Typography
-                    variant="body2"
-                    sx={{ color: "#64748b", fontWeight: 600 }}
+                    sx={{
+                      color: ds.colors.text.secondary,
+                      fontWeight: ds.typography.fontWeight.semibold,
+                      fontSize: {
+                        xs: `${tokens.typography.xs}px`,
+                        md: `${tokens.typography.sm}px`,
+                      },
+                    }}
                   >
                     Ürün Seçildi
                   </Typography>
@@ -949,23 +1010,35 @@ export const DetailedSelectionDialog: React.FC<
               <Grid item xs={12} sm={6} md={3}>
                 <Paper
                   sx={{
-                    p: 2,
+                    p: tokens.spacing.md,
                     textAlign: "center",
-                    background:
-                      "linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(56, 189, 248, 0.15) 100%)",
-                    border: "1px solid rgba(14, 165, 233, 0.2)",
-                    borderRadius: "12px",
+                    background: `linear-gradient(135deg, ${alpha(ds.colors.info.main, 0.1)} 0%, ${alpha(ds.colors.info[600], 0.15)} 100%)`,
+                    border: `1px solid ${alpha(ds.colors.info.main, 0.2)}`,
+                    borderRadius: `${tokens.borderRadius.md}px`,
                   }}
                 >
                   <Typography
-                    variant="h4"
-                    sx={{ fontWeight: 800, color: "#0ea5e9", mb: 0.5 }}
+                    sx={{
+                      fontWeight: ds.typography.fontWeight.extrabold,
+                      color: ds.colors.info[700],
+                      fontSize: {
+                        xs: `${tokens.typography.xl}px`,
+                        md: `${tokens.typography.xxl}px`,
+                      },
+                      mb: tokens.spacing.xs,
+                    }}
                   >
                     {statistics.selectedWorkOrders}/{statistics.totalWorkOrders}
                   </Typography>
                   <Typography
-                    variant="body2"
-                    sx={{ color: "#64748b", fontWeight: 600 }}
+                    sx={{
+                      color: ds.colors.text.secondary,
+                      fontWeight: ds.typography.fontWeight.semibold,
+                      fontSize: {
+                        xs: `${tokens.typography.xs}px`,
+                        md: `${tokens.typography.sm}px`,
+                      },
+                    }}
                   >
                     İş Emri Seçildi
                   </Typography>
@@ -974,23 +1047,35 @@ export const DetailedSelectionDialog: React.FC<
               <Grid item xs={12} sm={6} md={3}>
                 <Paper
                   sx={{
-                    p: 2,
+                    p: tokens.spacing.md,
                     textAlign: "center",
-                    background:
-                      "linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(34, 197, 94, 0.15) 100%)",
-                    border: "1px solid rgba(16, 185, 129, 0.2)",
-                    borderRadius: "12px",
+                    background: `linear-gradient(135deg, ${alpha(ds.colors.success.main, 0.1)} 0%, ${alpha(ds.colors.success[600], 0.15)} 100%)`,
+                    border: `1px solid ${alpha(ds.colors.success.main, 0.2)}`,
+                    borderRadius: `${tokens.borderRadius.md}px`,
                   }}
                 >
                   <Typography
-                    variant="h4"
-                    sx={{ fontWeight: 800, color: "#10b981", mb: 0.5 }}
+                    sx={{
+                      fontWeight: ds.typography.fontWeight.extrabold,
+                      color: ds.colors.success[700],
+                      fontSize: {
+                        xs: `${tokens.typography.xl}px`,
+                        md: `${tokens.typography.xxl}px`,
+                      },
+                      mb: tokens.spacing.xs,
+                    }}
                   >
                     {statistics.selectedProfiles}/{statistics.totalProfiles}
                   </Typography>
                   <Typography
-                    variant="body2"
-                    sx={{ color: "#64748b", fontWeight: 600 }}
+                    sx={{
+                      color: ds.colors.text.secondary,
+                      fontWeight: ds.typography.fontWeight.semibold,
+                      fontSize: {
+                        xs: `${tokens.typography.xs}px`,
+                        md: `${tokens.typography.sm}px`,
+                      },
+                    }}
                   >
                     Profil Seçildi
                   </Typography>
@@ -999,23 +1084,35 @@ export const DetailedSelectionDialog: React.FC<
               <Grid item xs={12} sm={6} md={3}>
                 <Paper
                   sx={{
-                    p: 2,
+                    p: tokens.spacing.md,
                     textAlign: "center",
-                    background:
-                      "linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(251, 146, 60, 0.15) 100%)",
-                    border: "1px solid rgba(245, 158, 11, 0.2)",
-                    borderRadius: "12px",
+                    background: `linear-gradient(135deg, ${alpha(ds.colors.warning.main, 0.1)} 0%, ${alpha(ds.colors.warning[600], 0.15)} 100%)`,
+                    border: `1px solid ${alpha(ds.colors.warning.main, 0.2)}`,
+                    borderRadius: `${tokens.borderRadius.md}px`,
                   }}
                 >
                   <Typography
-                    variant="h4"
-                    sx={{ fontWeight: 800, color: "#f59e0b", mb: 0.5 }}
+                    sx={{
+                      fontWeight: ds.typography.fontWeight.extrabold,
+                      color: ds.colors.warning[700],
+                      fontSize: {
+                        xs: `${tokens.typography.xl}px`,
+                        md: `${tokens.typography.xxl}px`,
+                      },
+                      mb: tokens.spacing.xs,
+                    }}
                   >
                     {statistics.selectedQuantity.toLocaleString()}
                   </Typography>
                   <Typography
-                    variant="body2"
-                    sx={{ color: "#64748b", fontWeight: 600 }}
+                    sx={{
+                      color: ds.colors.text.secondary,
+                      fontWeight: ds.typography.fontWeight.semibold,
+                      fontSize: {
+                        xs: `${tokens.typography.xs}px`,
+                        md: `${tokens.typography.sm}px`,
+                      },
+                    }}
                   >
                     Toplam Adet
                   </Typography>
@@ -1026,47 +1123,72 @@ export const DetailedSelectionDialog: React.FC<
         )}
 
         {/* Bulk Actions */}
-        <Box sx={{ p: 3, borderBottom: "1px solid rgba(148, 163, 184, 0.2)" }}>
+        <Box sx={{
+          p: {
+            xs: tokens.spacing.md,
+            md: tokens.spacing.lg,
+          },
+          borderBottom: `1px solid ${alpha(ds.colors.neutral[300], 0.2)}`,
+        }}>
           <Stack
-            direction="row"
-            spacing={2}
-            alignItems="center"
+            direction={{ xs: "column", sm: "row" }}
+            spacing={tokens.spacing.md}
+            alignItems={{ xs: "stretch", sm: "center" }}
             justifyContent="space-between"
           >
-            <Typography variant="h6" sx={{ fontWeight: 600, color: "#0f172a" }}>
+            <Typography
+              sx={{
+                fontWeight: ds.typography.fontWeight.semibold,
+                color: ds.colors.text.primary,
+                fontSize: {
+                  xs: `${tokens.typography.base}px`,
+                  md: `${tokens.typography.lg}px`,
+                },
+              }}
+            >
               Toplu İşlemler
             </Typography>
-            <Stack direction="row" spacing={2}>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={tokens.spacing.md}>
               <Button
                 variant="outlined"
-                startIcon={<SelectAllIcon />}
+                startIcon={<SelectAllIcon sx={{ fontSize: tokens.components.icon.sm }} />}
                 onClick={handleSelectAll}
                 sx={{
-                  borderRadius: "10px",
-                  borderColor: "#10b981",
-                  color: "#10b981",
-                  fontWeight: 600,
-                  "&:hover": {
-                    borderColor: "#059669",
-                    background: "rgba(16, 185, 129, 0.05)",
+                  borderRadius: `${tokens.borderRadius.md}px`,
+                  borderColor: ds.colors.success.main,
+                  color: ds.colors.success.main,
+                  fontWeight: ds.typography.fontWeight.semibold,
+                  minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+                  fontSize: {
+                    xs: `${tokens.typography.sm}px`,
+                    md: `${tokens.typography.base}px`,
                   },
+                  "&:hover": !device.isTouch ? {
+                    borderColor: ds.colors.success[700],
+                    background: alpha(ds.colors.success.main, 0.05),
+                  } : {},
                 }}
               >
                 Tümünü Seç
               </Button>
               <Button
                 variant="outlined"
-                startIcon={<DeselectIcon />}
+                startIcon={<DeselectIcon sx={{ fontSize: tokens.components.icon.sm }} />}
                 onClick={handleSelectNone}
                 sx={{
-                  borderRadius: "10px",
-                  borderColor: "#ef4444",
-                  color: "#ef4444",
-                  fontWeight: 600,
-                  "&:hover": {
-                    borderColor: "#dc2626",
-                    background: "rgba(239, 68, 68, 0.05)",
+                  borderRadius: `${tokens.borderRadius.md}px`,
+                  borderColor: ds.colors.error.main,
+                  color: ds.colors.error.main,
+                  fontWeight: ds.typography.fontWeight.semibold,
+                  minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+                  fontSize: {
+                    xs: `${tokens.typography.sm}px`,
+                    md: `${tokens.typography.base}px`,
                   },
+                  "&:hover": !device.isTouch ? {
+                    borderColor: ds.colors.error[700],
+                    background: alpha(ds.colors.error.main, 0.05),
+                  } : {},
                 }}
               >
                 Tümünü Temizle
@@ -1076,37 +1198,44 @@ export const DetailedSelectionDialog: React.FC<
         </Box>
 
         {/* Product List */}
-        <Box sx={{ p: 3, maxHeight: "50vh", overflowY: "auto" }}>
+        <Box sx={{
+          p: {
+            xs: tokens.spacing.md,
+            md: tokens.spacing.lg,
+          },
+          maxHeight: "50vh",
+          overflowY: "auto",
+        }}>
           {Object.values(selectionState.products).map((product) => (
             <Accordion
               key={product.productId}
               expanded={product.expanded}
               sx={{
-                mb: 2,
-                borderRadius: "12px",
-                border: "1px solid rgba(148, 163, 184, 0.2)",
-                boxShadow: "0 2px 8px rgba(15, 23, 42, 0.08)",
+                mb: tokens.spacing.md,
+                borderRadius: `${tokens.borderRadius.md}px`,
+                border: `1px solid ${alpha(ds.colors.neutral[300], 0.2)}`,
+                boxShadow: ds.shadows.soft.sm,
                 "&:before": { display: "none" },
                 "&.Mui-expanded": {
-                  margin: "0 0 16px 0",
+                  margin: `0 0 ${tokens.spacing.md}px 0`,
                 },
               }}
             >
               <AccordionSummary
-                expandIcon={<ExpandMoreIcon />}
+                expandIcon={<ExpandMoreIcon sx={{ fontSize: tokens.components.icon.md }} />}
                 onClick={() => handleProductExpand(product.productId)}
                 sx={{
                   background: product.selected
-                    ? "linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(59, 130, 246, 0.15) 100%)"
-                    : "#ffffff",
-                  borderRadius: "12px",
-                  minHeight: 64,
+                    ? `linear-gradient(135deg, ${alpha(ds.colors.primary.main, 0.1)} 0%, ${alpha(ds.colors.primary[600], 0.15)} 100%)`
+                    : ds.colors.background.paper,
+                  borderRadius: `${tokens.borderRadius.md}px`,
+                  minHeight: device.isTouch ? tokens.components.minTouchTarget * 1.5 : tokens.components.button.lg,
                   "&.Mui-expanded": {
-                    minHeight: 64,
+                    minHeight: device.isTouch ? tokens.components.minTouchTarget * 1.5 : tokens.components.button.lg,
                   },
                   "& .MuiAccordionSummary-content": {
                     alignItems: "center",
-                    margin: "12px 0",
+                    margin: `${tokens.spacing.sm}px 0`,
                   },
                 }}
               >
@@ -1115,12 +1244,12 @@ export const DetailedSelectionDialog: React.FC<
                     <Checkbox
                       checked={product.selected}
                       onChange={() => handleProductToggle(product.productId)}
-                      icon={<CheckBoxOutlineBlankIcon />}
-                      checkedIcon={<CheckBoxIcon />}
+                      icon={<CheckBoxOutlineBlankIcon sx={{ fontSize: tokens.components.icon.md }} />}
+                      checkedIcon={<CheckBoxIcon sx={{ fontSize: tokens.components.icon.md }} />}
                       sx={{
-                        color: "#2563eb",
+                        color: ds.colors.primary.main,
                         "&.Mui-checked": {
-                          color: "#1d4ed8",
+                          color: ds.colors.primary[700],
                         },
                       }}
                     />
@@ -1130,19 +1259,39 @@ export const DetailedSelectionDialog: React.FC<
                       sx={{
                         display: "flex",
                         alignItems: "center",
-                        gap: 2,
-                        ml: 1,
+                        gap: tokens.spacing.md,
+                        ml: tokens.spacing.sm,
                       }}
                     >
-                      <CategoryIcon sx={{ color: "#2563eb", fontSize: 24 }} />
+                      <CategoryIcon sx={{
+                        color: ds.colors.primary.main,
+                        fontSize: {
+                          xs: tokens.components.icon.md,
+                          md: tokens.components.icon.lg,
+                        },
+                      }} />
                       <Box>
                         <Typography
-                          variant="h6"
-                          sx={{ fontWeight: 600, color: "#0f172a" }}
+                          sx={{
+                            fontWeight: ds.typography.fontWeight.semibold,
+                            color: ds.colors.text.primary,
+                            fontSize: {
+                              xs: `${tokens.typography.base}px`,
+                              md: `${tokens.typography.lg}px`,
+                            },
+                          }}
                         >
                           {product.productName}
                         </Typography>
-                        <Typography variant="body2" sx={{ color: "#64748b" }}>
+                        <Typography
+                          sx={{
+                            color: ds.colors.text.secondary,
+                            fontSize: {
+                              xs: `${tokens.typography.xs}px`,
+                              md: `${tokens.typography.sm}px`,
+                            },
+                          }}
+                        >
                           {product.workOrders.length} iş emri,{" "}
                           {product.workOrders.reduce(
                             (sum, w) => sum + w.profiles.length,
@@ -1471,26 +1620,42 @@ export const DetailedSelectionDialog: React.FC<
       {/* Actions */}
       <DialogActions
         sx={{
-          p: 3,
-          background:
-            "linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.9) 100%)",
-          borderTop: "1px solid rgba(148, 163, 184, 0.2)",
+          p: {
+            xs: tokens.spacing.md,
+            md: tokens.spacing.lg,
+          },
+          background: `linear-gradient(135deg, ${alpha(ds.colors.neutral[50], 0.8)} 0%, ${alpha(ds.colors.neutral[100], 0.9)} 100%)`,
+          borderTop: `1px solid ${alpha(ds.colors.neutral[300], 0.2)}`,
+          flexDirection: { xs: "column", sm: "row" },
+          gap: tokens.spacing.md,
         }}
       >
         <Button
           onClick={onClose}
           variant="outlined"
           sx={{
-            borderRadius: "12px",
-            borderColor: "#94a3b8",
-            color: "#475569",
-            fontWeight: 600,
-            px: 3,
-            py: 1.5,
-            "&:hover": {
-              borderColor: "#64748b",
-              background: "rgba(148, 163, 184, 0.05)",
+            borderRadius: `${tokens.borderRadius.md}px`,
+            borderColor: ds.colors.neutral[400],
+            color: ds.colors.text.secondary,
+            fontWeight: ds.typography.fontWeight.semibold,
+            px: {
+              xs: tokens.spacing.md,
+              md: tokens.spacing.lg,
             },
+            py: {
+              xs: tokens.spacing.sm,
+              md: tokens.spacing.md,
+            },
+            minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+            fontSize: {
+              xs: `${tokens.typography.sm}px`,
+              md: `${tokens.typography.base}px`,
+            },
+            width: { xs: "100%", sm: "auto" },
+            "&:hover": !device.isTouch ? {
+              borderColor: ds.colors.neutral[500],
+              background: alpha(ds.colors.neutral[400], 0.05),
+            } : {},
           }}
         >
           İptal
@@ -1500,21 +1665,33 @@ export const DetailedSelectionDialog: React.FC<
           onClick={handleConfirm}
           variant="contained"
           disabled={statistics.selectedProfiles === 0 || loading}
-          startIcon={<SaveIcon />}
+          startIcon={<SaveIcon sx={{ fontSize: tokens.components.icon.sm }} />}
           sx={{
-            borderRadius: "12px",
-            background: "linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)",
-            color: "white",
-            fontWeight: 600,
-            px: 4,
-            py: 1.5,
-            boxShadow: "0 4px 16px rgba(37, 99, 235, 0.3)",
-            "&:hover": {
-              background: "linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%)",
-              boxShadow: "0 6px 20px rgba(37, 99, 235, 0.4)",
+            borderRadius: `${tokens.borderRadius.md}px`,
+            background: ds.gradients.primary,
+            color: ds.colors.primary.contrast,
+            fontWeight: ds.typography.fontWeight.semibold,
+            px: {
+              xs: tokens.spacing.lg,
+              md: tokens.spacing.xl,
             },
+            py: {
+              xs: tokens.spacing.sm,
+              md: tokens.spacing.md,
+            },
+            minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+            fontSize: {
+              xs: `${tokens.typography.sm}px`,
+              md: `${tokens.typography.base}px`,
+            },
+            boxShadow: ds.shadows.soft.lg,
+            width: { xs: "100%", sm: "auto" },
+            "&:hover": !device.isTouch ? {
+              background: `linear-gradient(135deg, ${ds.colors.primary[700]} 0%, ${ds.colors.primary[800]} 100%)`,
+              boxShadow: ds.shadows.soft.xl,
+            } : {},
             "&:disabled": {
-              background: "#94a3b8",
+              background: ds.colors.neutral[400],
               boxShadow: "none",
             },
           }}

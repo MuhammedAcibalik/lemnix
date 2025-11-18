@@ -4,6 +4,7 @@ import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { VitePWA } from 'vite-plugin-pwa';
 import { compression } from 'vite-plugin-compression2';
+import autoprefixer from 'autoprefixer';
 
 // ============================================================================
 // ENTERPRISE-GRADE VITE CONFIGURATION
@@ -402,7 +403,7 @@ export default defineConfig(({ command, mode }) => {
       postcss: {
         plugins: [
           // Autoprefixer
-          require('autoprefixer'),
+          autoprefixer,
           
           // CSS optimization - cssnano removed for now
         ]

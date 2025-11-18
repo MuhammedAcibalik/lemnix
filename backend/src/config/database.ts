@@ -78,6 +78,14 @@ prisma.$on(
 );
 
 prisma.$on("error", (e: { message: string; target: string }) => {
+  // Ignore missing pg_stat_statements extension in dev - only affects slow-query monitoring
+  if (e.message.includes("pg_stat_statements")) {
+    logger.warn("Database monitoring extension pg_stat_statements is not available - slow query monitoring disabled", {
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
   logger.error("Database Error:", {
     message: e.message,
     timestamp: new Date().toISOString(),
@@ -121,8 +129,20 @@ export class DatabaseManager {
       this.isConnected = true;
       logger.info("Database connected successfully");
     } catch (error) {
+      // In local development we don't want the entire server to crash if the
+      // database is not reachable (e.g. PostgreSQL service stopped). Log the
+      // error and continue in degraded mode so that non-DB features still work.
       logger.error("Failed to connect to database:", error);
-      throw error;
+      this.isConnected = false;
+
+      if (process.env.NODE_ENV === "development") {
+        logger.warn(
+          "Database is not reachable. Starting API in degraded mode without PostgreSQL.",
+        );
+      } else {
+        // In non-development environments, rethrow to fail fast.
+        throw error;
+      }
     }
   }
 

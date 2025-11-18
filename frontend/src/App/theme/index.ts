@@ -5,7 +5,11 @@
  */
 
 // Import v3 theme and design system as primary exports
-export { theme, globalStyles, designSystem as DS } from "./theme.v3";
+import { theme, globalStyles, designSystem as DS } from "./theme.v3";
+
+// Export as baseTheme for adaptive theme engine (internal use)
+// Also export theme and globalStyles for backward compatibility
+export { theme as baseTheme, theme, globalStyles, DS };
 
 // Export design tokens for direct use
 export {
@@ -41,5 +45,5 @@ export {
   animations,
 } from "./responsiveUtils";
 
-// Default export
-export { theme as default } from "./theme.v3";
+// Default export (backward compatibility)
+export { theme as default };

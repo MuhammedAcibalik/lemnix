@@ -52,7 +52,7 @@ export const CommandResults: React.FC<CommandResultsProps> = ({
         <SearchIcon
           sx={{
             color: ds.colors.neutral[400],
-            fontSize: ds.componentSizes.icon.xlarge,
+            fontSize: ds.componentSizes.icon["2xl"],
             mb: ds.spacing["3"],
           }}
         />
@@ -62,7 +62,7 @@ export const CommandResults: React.FC<CommandResultsProps> = ({
             color: ds.colors.text.secondary,
             fontWeight: ds.typography.fontWeight.medium,
             mb: ds.spacing["1"],
-            fontSize: ds.typography.heading.h6.fontSize,
+            fontSize: "clamp(0.9375rem, 1.5vw + 0.5rem, 1.125rem)",
           }}
         >
           Komut bulunamadı
@@ -71,7 +71,7 @@ export const CommandResults: React.FC<CommandResultsProps> = ({
           variant="body2"
           sx={{
             color: ds.colors.text.secondary,
-            fontSize: ds.typography.body.small.fontSize,
+            fontSize: "clamp(0.8125rem, 1vw + 0.5rem, 0.9375rem)",
             opacity: 0.8,
           }}
         >

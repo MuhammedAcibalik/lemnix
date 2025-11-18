@@ -7,6 +7,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
+import { useDesignSystem } from "@/shared/hooks";
 import {
   LazyHomePage,
   LazyDashboardPage,
@@ -25,6 +26,8 @@ import { navigationConfig } from "../constants";
  * Page Content Component
  */
 export const PageContent: React.FC = () => {
+  const ds = useDesignSystem();
+
   return (
     <Box
       id="main-content"
@@ -34,7 +37,16 @@ export const PageContent: React.FC = () => {
         width: "100%",
         minHeight: "100vh",
         overflow: "auto",
-        pt: navigationConfig.useModernNavigation ? "72px" : 0,
+        pt: navigationConfig.useModernNavigation
+          ? { xs: "64px", md: "72px" }
+          : 0,
+        pb: { xs: ds.spacing["4"], md: ds.spacing["6"] },
+        px: {
+          xs: 0,
+          sm: ds.spacing["2"],
+          md: ds.spacing["4"],
+          lg: ds.spacing["6"],
+        },
       }}
     >
       <Routes>
@@ -65,10 +77,22 @@ export const PageContent: React.FC = () => {
         <Route
           path="/settings"
           element={
-            <Box sx={{ p: { xs: 2, md: 3, lg: 4 } }}>
+            <Box
+              sx={{
+                p: {
+                  xs: ds.spacing["3"],
+                  md: ds.spacing["4"],
+                  lg: ds.spacing["6"],
+                },
+              }}
+            >
               <Typography
                 variant="h4"
-                sx={{ fontWeight: 700, color: "#1a237e", mb: 2 }}
+                sx={{
+                  fontWeight: ds.typography.fontWeight.bold,
+                  color: ds.colors.text.primary,
+                  mb: ds.spacing["2"],
+                }}
               >
                 Ayarlar
               </Typography>

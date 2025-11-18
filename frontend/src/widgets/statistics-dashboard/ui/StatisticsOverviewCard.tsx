@@ -89,7 +89,7 @@ export const StatisticsOverviewCard: React.FC = () => {
       variant="glass"
       title="Genel İstatistikler"
       subtitle="Toplam performans özeti"
-      headerAction={<AssessmentIcon sx={{ color: ds.colors.primary.main }} />}
+      action={<AssessmentIcon sx={{ color: ds.colors.primary.main }} />}
     >
       {isLoading && (
         <Box display="flex" justifyContent="center" py={ds.spacing["6"]}>
@@ -137,7 +137,7 @@ export const StatisticsOverviewCard: React.FC = () => {
               icon={<MoneyIcon />}
               label="Ortalama Verimlilik"
               value={`${(data.averageEfficiency || 0).toFixed(1)}%`}
-              color={ds.colors.support.main}
+              color={ds.colors.info.main}
             />
           </Grid>
         </Grid>

@@ -273,6 +273,29 @@ router.delete(
 
 // Error handling middleware
 router.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+  // In degraded mode (e.g. database offline), some routes like metrics should
+  // not surface 500 errors to the frontend. For those, return safe fallback
+  // data instead of an error response.
+  if (req.path.startsWith("/metrics")) {
+    logger.warn("Production plan metrics route error, returning fallback data", {
+      error: error.message,
+      url: req.url,
+      method: req.method,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        totalPlans: 0,
+        totalItems: 0,
+        departments: [],
+        priorityDistribution: {},
+        upcomingDeadlines: 0,
+      },
+    });
+    return;
+  }
+
   logger.error("Production plan route error", {
     error: error.message,
     stack: error.stack,

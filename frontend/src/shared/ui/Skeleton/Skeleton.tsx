@@ -26,6 +26,9 @@ export interface SkeletonV3Props extends Omit<BoxProps, "variant"> {
   readonly glow?: boolean;
 }
 
+// Export SkeletonProps as alias for SkeletonV3Props for backward compatibility
+export type SkeletonProps = SkeletonV3Props;
+
 /**
  * SkeletonV3 Component
  *
@@ -102,6 +105,9 @@ export const SkeletonV3 = forwardRef<HTMLDivElement, SkeletonV3Props>(
       );
     }
 
+    // Extract only MuiSkeleton-compatible props, exclude BoxProps that conflict
+    const { color, border, component, ...skeletonProps } = props;
+
     return (
       <MuiSkeleton
         ref={ref}
@@ -111,9 +117,11 @@ export const SkeletonV3 = forwardRef<HTMLDivElement, SkeletonV3Props>(
         height={height}
         sx={{
           ...baseStyles,
+          ...(color && { color }),
+          ...(border && { border }),
           ...sx,
         }}
-        {...props}
+        {...skeletonProps}
       />
     );
   },
@@ -328,5 +336,8 @@ export const DashboardSkeleton = forwardRef<HTMLDivElement, BoxProps>(
 );
 
 DashboardSkeleton.displayName = "DashboardSkeleton";
+
+// Export Skeleton as alias for SkeletonV3 for backward compatibility
+export const Skeleton = SkeletonV3;
 
 export default SkeletonV3;

@@ -7,8 +7,8 @@
 import React from "react";
 import { Box, Typography, Container, Stack, alpha } from "@mui/material";
 import { AutoAwesome, ArrowForward } from "@mui/icons-material";
-import { useDesignSystem } from "@/shared/hooks";
-import { FadeIn, GradientButton, SecondaryButtonV2 } from "@/shared";
+import { useDesignSystem, useAdaptiveUIContext } from "@/shared/hooks";
+import { FadeIn, PrimaryButton, SecondaryButton } from "@/shared";
 
 interface CTASectionProps {
   onFreeTrial?: () => void;
@@ -17,100 +17,121 @@ interface CTASectionProps {
 
 const CTASection: React.FC<CTASectionProps> = ({ onFreeTrial, onViewDemo }) => {
   const ds = useDesignSystem();
+  const { tokens } = useAdaptiveUIContext();
 
   return (
     <Box
       sx={{
-        py: ds.spacing["12"],
-        background: `
-          ${ds.gradients.mesh.primary},
-          linear-gradient(180deg, ${ds.colors.surface.elevated1} 0%, ${ds.colors.surface.base} 100%)
-        `,
-        position: "relative",
-        overflow: "hidden",
-
-        // Animated overlay
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          inset: 0,
-          background: ds.gradients.premium,
-          opacity: 0.05,
-          animation: "ctaPulse 8s ease-in-out infinite",
-        },
-
-        "@keyframes ctaPulse": {
-          "0%, 100%": { opacity: 0.05 },
-          "50%": { opacity: 0.08 },
-        },
+        py: { xs: ds.spacing["5"], md: ds.spacing["6"] },
+        backgroundColor: ds.colors.surface.elevated1,
       }}
     >
-      <Container maxWidth="md">
-        <FadeIn direction="up" duration={0.6}>
+      <Container
+        maxWidth={false}
+        sx={{
+          px: {
+            xs: ds.spacing["3"],
+            sm: ds.spacing["4"],
+            md: ds.spacing["6"],
+            lg: ds.spacing["8"],
+            xl: "clamp(2rem, 5vw, 4rem)",
+          },
+          maxWidth: {
+            xs: "100%",
+            sm: "600px",
+            md: "800px",
+            lg: "900px",
+            xl: "1000px",
+          },
+        }}
+      >
+        <FadeIn duration={0.4}>
           <Stack
             alignItems="center"
             spacing={ds.spacing["4"]}
             sx={{ textAlign: "center" }}
           >
-            {/* Headline - INTERNAL TOOL */}
+            {/* Headline */}
             <Typography
+              variant="h2"
               sx={{
-                fontSize: { xs: "1.5rem", sm: "1.875rem", md: "2.25rem" },
-                fontWeight: 800,
-                background: ds.gradients.industrial,
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                maxWidth: "600px",
-                lineHeight: 1.2,
+                fontSize: `clamp(${tokens.typography.xl * 1.2}px, 3vw + ${tokens.typography.base}px, ${tokens.typography.xxl * 1.5}px)`,
+                fontWeight: 700,
+                color: ds.colors.text.primary,
+                maxWidth: { xs: "100%", sm: "550px", md: "600px", lg: "700px" },
+                lineHeight: 1.3,
               }}
             >
               Üretim Verimliliğinizi Artırın
             </Typography>
 
-            {/* Description - INTERNAL TOOL */}
+            {/* Description */}
             <Typography
+              variant="body1"
               sx={{
-                fontSize: "0.9375rem",
+                fontSize: `clamp(${tokens.typography.base}px, 1vw + ${tokens.typography.base * 0.25}px, ${tokens.typography.lg}px)`,
                 color: ds.colors.text.secondary,
-                maxWidth: "500px",
+                maxWidth: { xs: "100%", sm: "500px", md: "550px", lg: "650px" },
+                lineHeight: 1.75,
+                fontWeight: 400,
               }}
             >
-              Endüstri 4.0 optimizasyon platformu ile hemen başlayın.
+              Endüstri 4.0 standartlarında geliştirilmiş optimizasyon platformu ile üretim verimliliğinizi artırın. 
+              Hemen başlayın ve somut sonuçlar görün.
             </Typography>
 
-            {/* CTA Buttons - INTERNAL TOOL */}
+            {/* CTA Buttons */}
             <Stack
               direction={{ xs: "column", sm: "row" }}
-              spacing={ds.spacing["2"]}
-              sx={{ width: { xs: "100%", sm: "auto" } }}
+              spacing={ds.spacing["3"]}
+              sx={{ 
+                width: { xs: "100%", sm: "auto" },
+                alignItems: "center",
+              }}
             >
-              <GradientButton
-                size="medium"
+              <PrimaryButton
+                size="large"
                 onClick={onFreeTrial}
-                endIcon={<ArrowForward sx={{ fontSize: 16 }} />}
-                sx={{ px: ds.spacing["8"] }}
+                endIcon={<ArrowForward sx={{ fontSize: 20 }} />}
+                sx={{ 
+                  px: { xs: ds.spacing["8"], sm: ds.spacing["10"] },
+                  py: { xs: ds.spacing["2"], sm: ds.spacing["2.5"] },
+                  fontSize: { xs: tokens.typography.base, sm: tokens.typography.lg },
+                  fontWeight: 600,
+                  minWidth: { xs: "100%", sm: "220px" },
+                }}
               >
                 Optimizasyon Başlat
-              </GradientButton>
+              </PrimaryButton>
 
-              <SecondaryButtonV2
-                size="medium"
+              <SecondaryButton
+                size="large"
                 onClick={onViewDemo}
-                sx={{ px: ds.spacing["8"] }}
+                startIcon={<AutoAwesome sx={{ fontSize: 20 }} />}
+                sx={{ 
+                  px: { xs: ds.spacing["8"], sm: ds.spacing["10"] },
+                  py: { xs: ds.spacing["2"], sm: ds.spacing["2.5"] },
+                  fontSize: { xs: tokens.typography.base, sm: tokens.typography.lg },
+                  fontWeight: 600,
+                  minWidth: { xs: "100%", sm: "220px" },
+                }}
               >
-                Akıllı Liste Oluştur
-              </SecondaryButtonV2>
+                Kesim Listesi Oluştur
+              </SecondaryButton>
             </Stack>
 
             {/* Info Text */}
             <Typography
+              variant="caption"
               sx={{
-                fontSize: "0.75rem",
+                fontSize: { xs: tokens.typography.xs, sm: tokens.typography.sm },
                 color: ds.colors.text.secondary,
+                pt: ds.spacing["3"],
+                fontWeight: 400,
+                letterSpacing: "0.02em",
               }}
             >
-              ⚡ WebGPU Hızlandırma · 📊 Gerçek Zamanlı Analiz · 🎯 4 Algoritma
+              WebGPU Hızlandırma · Gerçek Zamanlı Analiz · 4 Gelişmiş Algoritma
             </Typography>
           </Stack>
         </FadeIn>
