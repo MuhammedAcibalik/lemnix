@@ -19,7 +19,7 @@ import {
   alpha,
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
-import { useDesignSystem } from "@/shared/hooks";
+import { useDesignSystem, useAdaptiveUIContext } from "@/shared/hooks";
 import type { StockPlan } from "./utils";
 
 interface CuttingPatternDialogProps {
@@ -34,6 +34,7 @@ export const CuttingPatternDialog: React.FC<CuttingPatternDialogProps> = ({
   plan,
 }) => {
   const ds = useDesignSystem();
+  const { tokens } = useAdaptiveUIContext();
 
   if (!plan) return null;
 
@@ -41,11 +42,17 @@ export const CuttingPatternDialog: React.FC<CuttingPatternDialogProps> = ({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="md"
+      maxWidth="xl"
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: `${ds.borderRadius.xl}px`,
+          width: "95%",
+          maxWidth: "1800px",
+          borderRadius: `${tokens.borderRadius.xl}px`,
+          minHeight: "550px",
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
         },
       }}
     >
@@ -55,44 +62,64 @@ export const CuttingPatternDialog: React.FC<CuttingPatternDialogProps> = ({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          px: tokens.spacing.xl * 2,
+          py: tokens.spacing.sm,
           background: ds.glass.background,
           backdropFilter: ds.glass.backdropFilter,
         }}
       >
         <Typography
           sx={{
-            fontSize: "1.25rem",
-            fontWeight: 700,
+            fontSize: `${tokens.typography.lg}px`,
+            fontWeight: ds.typography.fontWeight.bold,
             background: ds.gradients.primary,
             backgroundClip: "text",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
           }}
         >
-          Kesim Detayları - {plan.workOrderId}
+          Enterprise Optimizasyon
         </Typography>
-        <IconButton size="small" onClick={onClose}>
-          <CloseIcon />
+        <IconButton
+          size="small"
+          onClick={onClose}
+          sx={{
+            minWidth: tokens.components.button.sm,
+            minHeight: tokens.components.button.sm,
+          }}
+        >
+          <CloseIcon
+            sx={{
+              fontSize: tokens.components.icon.md,
+            }}
+          />
         </IconButton>
       </DialogTitle>
 
       <Divider />
 
-      <DialogContent sx={{ p: ds.spacing["4"] }}>
+      <DialogContent
+        sx={{
+          px: tokens.spacing.xl * 2,
+          py: tokens.spacing.md,
+          flex: 1,
+          overflowY: "auto",
+        }}
+      >
         {/* Plan Özeti */}
-        <Box sx={{ mb: ds.spacing["3"] }}>
+        <Box sx={{ mb: tokens.spacing.lg }}>
           <Typography
             sx={{
-              fontSize: "1rem",
-              fontWeight: 600,
-              mb: ds.spacing["2"],
+              fontSize: `${tokens.typography.base}px`,
+              fontWeight: ds.typography.fontWeight.semibold,
+              mb: tokens.spacing.sm,
               color: ds.colors.text.primary,
             }}
           >
             {plan.stockLength}mm Stok Profili
           </Typography>
 
-          <Stack direction="row" spacing={ds.spacing["3"]}>
+          <Stack direction="row" spacing={tokens.spacing.lg}>
             <Box>
               <Typography
                 sx={{ fontSize: "0.75rem", color: ds.colors.text.secondary }}
@@ -144,16 +171,16 @@ export const CuttingPatternDialog: React.FC<CuttingPatternDialogProps> = ({
           </Stack>
         </Box>
 
-        <Divider sx={{ my: ds.spacing["3"] }} />
+        <Divider sx={{ my: tokens.spacing.md }} />
 
         {/* ✅ FIX: Work Order Breakdown for Pooled Results */}
         {plan.workOrderCount && plan.workOrderCount > 1 && (
           <Box
             sx={{
-              mb: ds.spacing["3"],
-              p: ds.spacing["3"],
+              mb: tokens.spacing.md,
+              p: tokens.spacing.md,
               backgroundColor: alpha(ds.colors.primary.main, 0.05),
-              borderRadius: `${ds.borderRadius.lg}px`,
+              borderRadius: `${tokens.borderRadius.lg}px`,
               border: `1px solid ${alpha(ds.colors.primary.main, 0.2)}`,
             }}
           >
@@ -161,7 +188,7 @@ export const CuttingPatternDialog: React.FC<CuttingPatternDialogProps> = ({
               sx={{
                 fontSize: "1rem",
                 fontWeight: 600,
-                mb: ds.spacing["2"],
+                mb: tokens.spacing.sm,
                 color: ds.colors.primary.main,
               }}
             >
@@ -182,24 +209,24 @@ export const CuttingPatternDialog: React.FC<CuttingPatternDialogProps> = ({
         )}
 
         {/* 📊 Toplam Kesim Özeti - PER SEGMENT */}
-        <Box
-          sx={{
-            mb: ds.spacing["3"],
-            p: ds.spacing["3"],
-            backgroundColor: alpha(ds.colors.info.main, 0.05),
-            borderRadius: `${ds.borderRadius.lg}px`,
-            border: `1px solid ${alpha(ds.colors.info.main, 0.2)}`,
-          }}
-        >
+          <Box
+            sx={{
+              mb: tokens.spacing.md,
+              p: tokens.spacing.md,
+              backgroundColor: alpha(ds.colors.info.main, 0.05),
+              borderRadius: `${tokens.borderRadius.lg}px`,
+              border: `1px solid ${alpha(ds.colors.info.main, 0.2)}`,
+            }}
+          >
           <Typography
             sx={{
-              fontSize: "0.9375rem",
-              fontWeight: 700,
+              fontSize: `${tokens.typography.sm}px`,
+              fontWeight: ds.typography.fontWeight.bold,
               color: ds.colors.text.primary,
-              mb: ds.spacing["2"],
+              mb: tokens.spacing.sm,
               display: "flex",
               alignItems: "center",
-              gap: ds.spacing["1"],
+              gap: tokens.spacing.xs,
             }}
           >
             📊 Toplam Kesim Özeti
@@ -231,7 +258,7 @@ export const CuttingPatternDialog: React.FC<CuttingPatternDialogProps> = ({
             segmentTotals.sort((a, b) => b.length - a.length);
 
             return (
-              <Stack spacing={ds.spacing["1"]}>
+              <Stack spacing={tokens.spacing.xs}>
                 {segmentTotals.map((item, idx) => (
                   <Box
                     key={idx}
@@ -239,9 +266,9 @@ export const CuttingPatternDialog: React.FC<CuttingPatternDialogProps> = ({
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "space-between",
-                      p: ds.spacing["1"],
+                      p: tokens.spacing.xs,
                       backgroundColor: alpha(ds.colors.neutral[900], 0.02),
-                      borderRadius: `${ds.borderRadius.sm}px`,
+                      borderRadius: `${tokens.borderRadius.sm}px`,
                     }}
                   >
                     <Typography
@@ -280,114 +307,181 @@ export const CuttingPatternDialog: React.FC<CuttingPatternDialogProps> = ({
           })()}
         </Box>
 
-        <Divider sx={{ my: ds.spacing["3"] }} />
+        <Divider sx={{ my: tokens.spacing.md }} />
 
-        {/* Kesim Detayları */}
-        <Typography
-          sx={{
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            mb: ds.spacing["2"],
-            color: ds.colors.text.secondary,
-          }}
-        >
-          Kesim Planları ({plan.cuts.length} Adet)
-        </Typography>
-
-        <Stack spacing={ds.spacing["2"]}>
-          {plan.cuts.map((cutDetail, idx) => {
-            // Group segments by length
-            const groupedSegments = cutDetail.segments.reduce(
-              (acc, segment) => {
-                const existing = acc.find(
-                  (item) => item.length === segment.length,
+        <Stack spacing={tokens.spacing.sm}>
+          {(() => {
+            // Group identical cutting plans
+            const planGroups = plan.cuts.reduce(
+              (acc, cutDetail) => {
+                // Group segments by length for this cut
+                const groupedSegments = cutDetail.segments.reduce(
+                  (segAcc, segment) => {
+                    const existing = segAcc.find(
+                      (item) => item.length === segment.length,
+                    );
+                    if (existing) {
+                      existing.count += segment.quantity;
+                    } else {
+                      segAcc.push({
+                        length: segment.length,
+                        count: segment.quantity,
+                      });
+                    }
+                    return segAcc;
+                  },
+                  [] as Array<{ length: number; count: number }>,
                 );
-                if (existing) {
-                  existing.count += segment.quantity;
+
+                // Sort by length descending
+                groupedSegments.sort((a, b) => b.length - a.length);
+
+                // Create pattern key: "2×992+2×687|waste42|efficiency98.8"
+                const patternKey = [
+                  groupedSegments
+                    .map((item) => `${item.count}×${item.length}`)
+                    .join("+"),
+                  cutDetail.waste,
+                  cutDetail.efficiency,
+                ].join("|");
+
+                // Find existing group
+                const existingGroup = acc.find(
+                  (group) => group.key === patternKey,
+                );
+
+                if (existingGroup) {
+                  existingGroup.count += 1;
                 } else {
-                  acc.push({ length: segment.length, count: segment.quantity });
+                  acc.push({
+                    key: patternKey,
+                    count: 1,
+                    patternLabel: groupedSegments
+                      .map((item) => `${item.count} × ${item.length} mm`)
+                      .join(" + "),
+                    waste: cutDetail.waste,
+                    efficiency: cutDetail.efficiency,
+                  });
                 }
+
                 return acc;
               },
-              [] as Array<{ length: number; count: number }>,
+              [] as Array<{
+                key: string;
+                count: number;
+                patternLabel: string;
+                waste: number;
+                efficiency: number;
+              }>,
             );
 
-            // Sort by length descending (longest first)
-            groupedSegments.sort((a, b) => b.length - a.length);
-
-            // Format: "7 × 992 mm + 2 × 687 mm"
-            const patternLabel = groupedSegments
-              .map((item) => `${item.count} × ${item.length} mm`)
-              .join(" + ");
-
             return (
+              <>
+                {/* Kesim Detayları */}
+                <Typography
+                  sx={{
+                    fontSize: `${tokens.typography.sm}px`,
+                    fontWeight: ds.typography.fontWeight.semibold,
+                    mb: tokens.spacing.sm,
+                    color: ds.colors.text.secondary,
+                  }}
+                >
+                  Kesim Planları ({planGroups.length} Farklı Plan, {plan.cuts.length} Adet)
+                </Typography>
+
+                {planGroups.map((group, idx) => (
               <Box
-                key={idx}
+                key={group.key}
                 sx={{
-                  p: ds.spacing["2"],
+                  p: tokens.spacing.sm,
                   backgroundColor: alpha(ds.colors.primary.main, 0.03),
-                  borderRadius: `${ds.borderRadius.md}px`,
+                  borderRadius: `${tokens.borderRadius.md}px`,
                   border: `1px solid ${alpha(ds.colors.primary.main, 0.1)}`,
                 }}
               >
-                <Typography
+                <Box
                   sx={{
-                    fontSize: "0.8125rem",
-                    fontWeight: 600,
-                    mb: ds.spacing["1"],
-                    color: ds.colors.text.primary,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    mb: tokens.spacing.xs,
                   }}
                 >
-                  Kesim #{idx + 1}
-                </Typography>
+                  <Typography
+                    sx={{
+                      fontSize: `${tokens.typography.sm}px`,
+                      fontWeight: ds.typography.fontWeight.semibold,
+                      color: ds.colors.text.primary,
+                    }}
+                  >
+                    Kesim #{idx + 1}
+                  </Typography>
+                  {group.count > 1 && (
+                    <Typography
+                      sx={{
+                        fontSize: `${tokens.typography.xs}px`,
+                        fontWeight: ds.typography.fontWeight.semibold,
+                        color: ds.colors.primary.main,
+                        px: tokens.spacing.xs,
+                        py: tokens.spacing.xxs,
+                        backgroundColor: alpha(ds.colors.primary.main, 0.1),
+                        borderRadius: `${tokens.borderRadius.sm}px`,
+                      }}
+                    >
+                      {group.count} adet
+                    </Typography>
+                  )}
+                </Box>
 
                 <Typography
                   sx={{
-                    fontSize: "0.875rem",
+                    fontSize: `${tokens.typography.sm}px`,
                     color: ds.colors.text.primary,
-                    mb: ds.spacing["1"],
-                    fontWeight: 600,
+                    mb: tokens.spacing.xs,
+                    fontWeight: ds.typography.fontWeight.semibold,
                     fontFamily: "monospace",
                   }}
                 >
-                  {patternLabel}
+                  {group.patternLabel}
                 </Typography>
 
                 <Stack
                   direction="row"
-                  spacing={ds.spacing["2"]}
+                  spacing={tokens.spacing.sm}
                   alignItems="center"
                 >
                   <Typography
                     sx={{
-                      fontSize: "0.75rem",
+                      fontSize: `${tokens.typography.xs}px`,
                       color: ds.colors.text.secondary,
                     }}
                   >
-                    Atık: {cutDetail.waste}mm
+                    Atık: {group.waste}mm
                   </Typography>
                   <Typography
                     sx={{
-                      fontSize: "0.75rem",
+                      fontSize: `${tokens.typography.xs}px`,
                       color: ds.colors.success.main,
-                      fontWeight: 600,
+                      fontWeight: ds.typography.fontWeight.semibold,
                     }}
                   >
-                    Verimlilik: {cutDetail.efficiency}%
+                    Verimlilik: {group.efficiency}%
                   </Typography>
                 </Stack>
               </Box>
+                ))}
+              </>
             );
-          })}
+          })()}
         </Stack>
 
         {/* Toplam Özet */}
         <Box
           sx={{
-            mt: ds.spacing["3"],
-            p: ds.spacing["2"],
+            mt: tokens.spacing.md,
+            p: tokens.spacing.sm,
             backgroundColor: alpha(ds.colors.warning.main, 0.1),
-            borderRadius: `${ds.borderRadius.md}px`,
+            borderRadius: `${tokens.borderRadius.md}px`,
             border: `1px solid ${alpha(ds.colors.warning.main, 0.3)}`,
           }}
         >

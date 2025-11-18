@@ -134,6 +134,7 @@ export interface WorkOrder {
   stockCount: number;
   totalSegments: number;
   efficiency?: number;
+  totalWaste?: number;
   cuts: Cut[];
 }
 

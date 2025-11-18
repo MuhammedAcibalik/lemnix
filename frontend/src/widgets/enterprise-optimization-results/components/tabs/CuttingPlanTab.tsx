@@ -83,6 +83,7 @@ export const CuttingPlanTab: React.FC<CuttingPlanTabProps> = ({
         onWorkOrderClick={onWorkOrderClick}
         onCuttingPlanDetails={onCuttingPlanDetails}
         getAlgorithmProfile={getAlgorithmProfile}
+        result={result}
       />
     </Box>
   );

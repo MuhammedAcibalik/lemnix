@@ -321,6 +321,7 @@ function buildEnterpriseRows(result: OptimizationResult | null): {
       stockCount,
       totalSegments,
       efficiency: efficiencyResult.efficiency,
+      totalWaste: efficiencyResult.totalWaste,
       cuts: list.map((cut) => ({
         ...cut,
         segmentCount: cut.segmentCount || 0,

@@ -13,8 +13,6 @@ import {
   Chip,
   Stack,
   alpha,
-  IconButton,
-  Collapse,
   Typography,
 } from "@mui/material";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
@@ -22,8 +20,6 @@ import { useDesignSystem } from "@/shared/hooks";
 import { CardV2 } from "@/shared/ui/Card/Card.v2";
 import {
   Visibility as ViewIcon,
-  ExpandMore,
-  ExpandLess,
 } from "@mui/icons-material";
 import type { StockPlan } from "./utils";
 import { CuttingPatternDialog } from "./CuttingPatternDialog";
@@ -57,7 +53,6 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({
   const ds = useDesignSystem();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<StockPlan | null>(null);
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const handleOpenDialog = (plan: StockPlan) => {
     setSelectedPlan(plan);
@@ -67,18 +62,6 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({
   const handleCloseDialog = () => {
     setDialogOpen(false);
     setSelectedPlan(null);
-  };
-
-  const handleToggleExpand = (workOrderId: string) => {
-    setExpandedRows((prev) => {
-      const next = new Set(prev);
-      if (next.has(workOrderId)) {
-        next.delete(workOrderId);
-      } else {
-        next.add(workOrderId);
-      }
-      return next;
-    });
   };
 
   // Group plans by work order
@@ -125,50 +108,28 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({
         const displayLabel = params.row.workOrderId || "N/A";
 
         return (
-          <Box
-            sx={{ display: "flex", alignItems: "center", gap: ds.spacing["1"] }}
-          >
-            <IconButton
-              size="small"
-              onClick={() => handleToggleExpand(params.row.workOrderId)}
-              sx={{
-                p: 0.5,
-                color: ds.colors.text.secondary,
-                "&:hover": {
-                  color: ds.colors.primary.main,
-                  backgroundColor: alpha(ds.colors.primary.main, 0.1),
-                },
-              }}
-            >
-              {expandedRows.has(params.row.workOrderId) ? (
-                <ExpandLess />
-              ) : (
-                <ExpandMore />
-              )}
-            </IconButton>
-            <Chip
-              label={displayLabel}
-              size="small"
-              sx={{
-                height: 26,
-                fontSize: "0.8125rem",
-                fontWeight: 600,
-                background:
-                  params.row.workOrderId !== "N/A"
-                    ? alpha(ds.colors.primary.main, 0.1)
-                    : alpha(ds.colors.neutral[400], 0.1),
-                color:
-                  params.row.workOrderId !== "N/A"
-                    ? ds.colors.primary.main
-                    : ds.colors.text.secondary,
-                border: `1px solid ${
-                  params.row.workOrderId !== "N/A"
-                    ? alpha(ds.colors.primary.main, 0.2)
-                    : alpha(ds.colors.neutral[400], 0.2)
-                }`,
-              }}
-            />
-          </Box>
+          <Chip
+            label={displayLabel}
+            size="small"
+            sx={{
+              height: 26,
+              fontSize: "0.8125rem",
+              fontWeight: 600,
+              background:
+                params.row.workOrderId !== "N/A"
+                  ? alpha(ds.colors.primary.main, 0.1)
+                  : alpha(ds.colors.neutral[400], 0.1),
+              color:
+                params.row.workOrderId !== "N/A"
+                  ? ds.colors.primary.main
+                  : ds.colors.text.secondary,
+              border: `1px solid ${
+                params.row.workOrderId !== "N/A"
+                  ? alpha(ds.colors.primary.main, 0.2)
+                  : alpha(ds.colors.neutral[400], 0.2)
+              }`,
+            }}
+          />
         );
       },
     },
@@ -388,73 +349,6 @@ export const CuttingPlanDataGrid: React.FC<CuttingPlanDataGridProps> = ({
               },
             }}
           />
-
-          {/* Expandable detail rows */}
-          {groupedPlans.map((group) => (
-            <Collapse
-              key={`detail-${group.workOrderId}`}
-              in={expandedRows.has(group.workOrderId)}
-            >
-              <Box
-                sx={{
-                  mt: ds.spacing["2"],
-                  p: ds.spacing["3"],
-                  backgroundColor: alpha(ds.colors.neutral[50], 0.5),
-                  borderRadius: `${ds.borderRadius.md}px`,
-                  border: `1px solid ${alpha(ds.colors.neutral[200], 0.5)}`,
-                }}
-              >
-                <Typography
-                  variant="subtitle2"
-                  sx={{
-                    mb: ds.spacing["2"],
-                    fontWeight: ds.typography.fontWeight.semibold,
-                    color: ds.colors.text.primary,
-                  }}
-                >
-                  Kesim Detayları ({group.cuts.length} kesim)
-                </Typography>
-                {group.cuts.map((cut, idx) => (
-                  <Box
-                    key={cut.cutId}
-                    sx={{
-                      mb: ds.spacing["2"],
-                      p: ds.spacing["2"],
-                      backgroundColor: "white",
-                      borderRadius: `${ds.borderRadius.md}px`,
-                      border: `1px solid ${alpha(ds.colors.neutral[200], 0.3)}`,
-                      "&:last-child": { mb: 0 },
-                    }}
-                  >
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontWeight: ds.typography.fontWeight.medium,
-                        mb: ds.spacing["1"],
-                      }}
-                    >
-                      Kesim {idx + 1}:{" "}
-                      {cut.segments
-                        .map((s) => `${s.quantity}x${s.length}mm`)
-                        .join(" + ")}
-                    </Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: ds.colors.text.secondary,
-                        display: "flex",
-                        gap: ds.spacing["2"],
-                      }}
-                    >
-                      <span>Atık: {cut.waste}mm</span>
-                      <span>|</span>
-                      <span>Verimlilik: {cut.efficiency.toFixed(1)}%</span>
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            </Collapse>
-          ))}
         </Box>
       </CardV2>
 

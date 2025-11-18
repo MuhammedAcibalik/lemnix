@@ -32,7 +32,9 @@ import {
   TableRow,
   Alert,
   AlertTitle,
+  alpha,
 } from "@mui/material";
+import { useDesignSystem, useAdaptiveUIContext } from "@/shared/hooks";
 import {
   Engineering as EngineeringIcon,
   Assessment as AssessmentIcon,
@@ -60,6 +62,7 @@ interface TabPanelProps {
 
 function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
+  const { tokens } = useAdaptiveUIContext();
 
   return (
     <div
@@ -69,7 +72,16 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`kesim-detaylari-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+      {value === index && (
+        <Box
+          sx={{
+            px: tokens.spacing.xl * 2,
+            py: tokens.spacing.md,
+          }}
+        >
+          {children}
+        </Box>
+      )}
     </div>
   );
 }
@@ -79,6 +91,8 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
   workOrder,
   onClose,
 }) => {
+  const ds = useDesignSystem();
+  const { device, tokens } = useAdaptiveUIContext();
   const [tabValue, setTabValue] = useState(0);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -231,59 +245,94 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="lg"
+      maxWidth="xl"
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: 3,
-          background:
-            "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%)",
+          width: "95%",
+          maxWidth: "1800px",
+          borderRadius: `${tokens.borderRadius.xl}px`,
+          background: ds.colors.background.paper,
           backdropFilter: "blur(20px)",
-          border: "2px solid rgba(30,64,175,0.1)", // Industrial Harmony
-          boxShadow:
-            "0 20px 60px rgba(0,0,0,0.15), 0 8px 24px rgba(0,0,0,0.08)",
-          minHeight: "600px",
+          border: `2px solid ${alpha(ds.colors.primary.main, 0.1)}`,
+          boxShadow: ds.shadows.soft["3xl"],
+          minHeight: "550px",
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
         },
       }}
     >
       <DialogTitle
         sx={{
-          pb: 1,
-          background: "linear-gradient(135deg, #1e40af 0%, #7c3aed 100%)", // Industrial Harmony
+          px: tokens.spacing.xl * 2,
+          py: tokens.spacing.sm,
+          background: `linear-gradient(135deg, ${ds.colors.primary[600]} 0%, ${ds.colors.secondary.main} 100%)`,
           color: "white",
-          fontWeight: "bold",
+          fontWeight: ds.typography.fontWeight.bold,
           display: "flex",
           alignItems: "center",
-          gap: 1,
+          gap: tokens.spacing.sm,
+          fontSize: `${tokens.typography.lg}px`,
         }}
       >
-        <EngineeringIcon />
+        <EngineeringIcon
+          sx={{
+            fontSize: tokens.components.icon.lg,
+          }}
+        />
         İş Emri: {workOrder.workOrderId} - Kesim Detayları
       </DialogTitle>
 
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+      <Box
+        sx={{
+          borderBottom: 1,
+          borderColor: "divider",
+          px: tokens.spacing.xl * 2,
+        }}
+      >
         <Tabs
           value={tabValue}
           onChange={handleTabChange}
           aria-label="kesim detayları sekmeleri"
+          sx={{
+            "& .MuiTab-root": {
+              minHeight: device.isTouch ? tokens.components.minTouchTarget : 56,
+              fontSize: `${tokens.typography.base}px`,
+              fontWeight: ds.typography.fontWeight.semibold,
+              textTransform: "none",
+              gap: tokens.spacing.xs,
+              px: tokens.spacing.md,
+              transition: ds.transitions.fast,
+              "&.Mui-selected": {
+                color: ds.colors.primary.main,
+                fontWeight: ds.typography.fontWeight.bold,
+              },
+              "&:hover": !device.isTouch ? {
+                backgroundColor: alpha(ds.colors.primary.main, 0.04),
+              } : {},
+            },
+            "& .MuiTabs-indicator": {
+              height: 3,
+              borderRadius: `${tokens.borderRadius.sm}px 3px 0 0`,
+              background: `linear-gradient(90deg, ${ds.colors.primary.main} 0%, ${ds.colors.secondary.main} 100%)`,
+            },
+          }}
         >
           <Tab
             label="Genel Özet"
             icon={<AssessmentIcon />}
             iconPosition="start"
-            sx={{ minHeight: 60 }}
           />
           <Tab
             label="Profil Detayları"
             icon={<InventoryIcon />}
             iconPosition="start"
-            sx={{ minHeight: 60 }}
           />
           <Tab
             label="Trend Analizi"
             icon={<TrendingUpIcon />}
             iconPosition="start"
-            sx={{ minHeight: 60 }}
           />
         </Tabs>
       </Box>
@@ -292,46 +341,55 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
       <TabPanel value={tabValue} index={0}>
         {/* Stock Summary Cards - Multi-stock optimization display */}
         {stockSummary.length > 0 && (
-          <Box sx={{ mb: 4 }}>
+          <Box sx={{ mb: tokens.spacing.lg }}>
             <Typography
               variant="h5"
-              fontWeight="bold"
-              color="primary.main"
-              gutterBottom
-              sx={{ mb: 3 }}
+              sx={{
+                fontWeight: ds.typography.fontWeight.bold,
+                color: ds.colors.primary.main,
+                mb: tokens.spacing.md,
+                fontSize: {
+                  xs: `${tokens.typography.lg}px`,
+                  md: `${tokens.typography.xl}px`,
+                },
+              }}
             >
               Stok Bazında Kesim Özeti
             </Typography>
-            <Grid container spacing={3}>
+            <Grid container spacing={tokens.layout.gridGap}>
               {stockSummary.map((summary, index) => (
                 <Grid item xs={12} md={6} lg={4} key={summary.stockLength}>
                   <Card
                     sx={{
-                      background:
-                        "linear-gradient(135deg, rgba(30,64,175,0.05) 0%, rgba(124,58,237,0.05) 100%)",
-                      border: "1px solid rgba(30,64,175,0.1)",
-                      borderRadius: 3,
+                      background: ds.colors.background.paper,
+                      border: `1px solid ${alpha(ds.colors.primary.main, 0.12)}`,
+                      borderRadius: `${tokens.borderRadius.lg}px`,
                       height: "100%",
-                      transition: "all 0.3s ease",
-                      "&:hover": {
-                        transform: "translateY(-4px)",
-                        boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
-                      },
+                      transition: ds.transitions.fast,
+                      boxShadow: ds.shadows.soft.sm,
+                      "&:hover": !device.isTouch ? {
+                        transform: "translateY(-2px)",
+                        boxShadow: ds.shadows.soft.md,
+                        borderColor: alpha(ds.colors.primary.main, 0.2),
+                      } : {},
                     }}
                   >
-                    <CardContent sx={{ p: 3 }}>
+                    <CardContent sx={{ p: tokens.components.card.padding }}>
                       <Box
                         sx={{
                           display: "flex",
                           justifyContent: "space-between",
                           alignItems: "center",
-                          mb: 2,
+                          mb: tokens.spacing.sm,
                         }}
                       >
                         <Typography
                           variant="h6"
-                          fontWeight="bold"
-                          color="primary.main"
+                          sx={{
+                            fontWeight: ds.typography.fontWeight.bold,
+                            color: ds.colors.primary.main,
+                            fontSize: `${tokens.typography.lg}px`,
+                          }}
                         >
                           {summary.stockLength}mm Profil
                         </Typography>
@@ -339,21 +397,29 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                           label={`${summary.cutCount} kesim`}
                           color="primary"
                           size="small"
-                          sx={{ fontWeight: "bold" }}
+                          sx={{
+                            fontWeight: ds.typography.fontWeight.semibold,
+                            fontSize: `${tokens.typography.xs}px`,
+                            height: tokens.components.button.sm,
+                            backgroundColor: alpha(ds.colors.primary.main, 0.1),
+                            color: ds.colors.primary.main,
+                            border: `1px solid ${alpha(ds.colors.primary.main, 0.2)}`,
+                          }}
                         />
                       </Box>
 
-                      <Box sx={{ mb: 2 }}>
+                      <Box sx={{ mb: tokens.spacing.sm }}>
                         <Typography
                           variant="body2"
                           color="text.secondary"
                           gutterBottom
+                          sx={{ fontSize: `${tokens.typography.sm}px` }}
                         >
                           Kesim Desenleri:
                         </Typography>
                         <Stack
                           direction="row"
-                          spacing={1}
+                          spacing={tokens.spacing.xs}
                           flexWrap="wrap"
                           useFlexGap
                         >
@@ -363,50 +429,85 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                               label={`${pattern.pattern} (${pattern.count})`}
                               size="small"
                               variant="outlined"
-                              sx={{ fontSize: "0.75rem" }}
+                              sx={{
+                                fontSize: `${tokens.typography.xs}px`,
+                                height: tokens.components.button.sm,
+                                fontWeight: ds.typography.fontWeight.medium,
+                                borderColor: alpha(ds.colors.neutral[300], 0.5),
+                                color: ds.colors.text.secondary,
+                                "&:hover": !device.isTouch ? {
+                                  borderColor: ds.colors.primary.main,
+                                  backgroundColor: alpha(ds.colors.primary.main, 0.04),
+                                } : {},
+                              }}
                             />
                           ))}
                         </Stack>
                       </Box>
 
-                      <Divider sx={{ my: 2 }} />
+                      <Divider sx={{ my: tokens.spacing.sm }} />
 
-                      <Grid container spacing={2}>
+                      <Grid container spacing={tokens.spacing.sm}>
                         <Grid item xs={6}>
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              fontSize: `${tokens.typography.sm}px`,
+                              mb: tokens.spacing.xxs,
+                            }}
+                          >
                             Toplam Fire
                           </Typography>
                           <Typography
                             variant="h6"
-                            fontWeight="bold"
-                            color="warning.main"
+                            sx={{
+                              fontWeight: ds.typography.fontWeight.bold,
+                              color: ds.colors.warning.main,
+                              fontSize: `${tokens.typography.lg}px`,
+                            }}
                           >
                             {summary.totalWaste.toLocaleString()}mm
                           </Typography>
                         </Grid>
                         <Grid item xs={6}>
-                          <Typography variant="body2" color="text.secondary">
+                          <Typography
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              fontSize: `${tokens.typography.sm}px`,
+                              mb: tokens.spacing.xxs,
+                            }}
+                          >
                             Verimlilik
                           </Typography>
                           <Typography
                             variant="h6"
-                            fontWeight="bold"
-                            color="success.main"
+                            sx={{
+                              fontWeight: ds.typography.fontWeight.bold,
+                              color: ds.colors.success.main,
+                              fontSize: `${tokens.typography.lg}px`,
+                            }}
                           >
                             {summary.efficiency.toFixed(1)}%
                           </Typography>
                         </Grid>
                       </Grid>
 
-                      <Box sx={{ mt: 2 }}>
+                      <Box sx={{ mt: tokens.spacing.sm }}>
                         <Typography
                           variant="body2"
                           color="text.secondary"
                           gutterBottom
+                          sx={{ fontSize: `${tokens.typography.sm}px` }}
                         >
                           Ortalama Fire/Kesim
                         </Typography>
-                        <Typography variant="body1" fontWeight="bold">
+                        <Typography
+                          variant="body1"
+                          fontWeight={ds.typography.fontWeight.semibold}
+                          sx={{ fontSize: `${tokens.typography.base}px` }}
+                        >
                           {summary.avgWaste.toFixed(0)}mm
                         </Typography>
                       </Box>
@@ -418,33 +519,55 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
           </Box>
         )}
 
-        <Grid container spacing={3}>
+        <Grid container spacing={tokens.layout.gridGap}>
           {/* Toplam Parça */}
           <Grid item xs={12} sm={6} md={3}>
             <Card
               sx={{
-                background:
-                  "linear-gradient(135deg, rgba(30,64,175,0.05) 0%, rgba(124,58,237,0.05) 100%)", // Industrial Harmony
-                border: "1px solid rgba(30,64,175,0.1)", // Industrial Harmony
-                borderRadius: 3,
+                background: ds.colors.background.paper,
+                border: `1px solid ${alpha(ds.colors.primary.main, 0.12)}`,
+                borderRadius: `${tokens.borderRadius.lg}px`,
                 height: "100%",
+                transition: ds.transitions.fast,
+                boxShadow: ds.shadows.soft.sm,
+                "&:hover": !device.isTouch ? {
+                  transform: "translateY(-2px)",
+                  boxShadow: ds.shadows.soft.md,
+                  borderColor: alpha(ds.colors.primary.main, 0.2),
+                } : {},
               }}
             >
-              <CardContent sx={{ textAlign: "center", p: 3 }}>
-                <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+              <CardContent sx={{ textAlign: "center", p: tokens.components.card.padding }}>
+                <Box sx={{ display: "flex", justifyContent: "center", mb: tokens.spacing.sm }}>
                   <AssessmentIcon
-                    sx={{ fontSize: 40, color: "primary.main" }}
+                    sx={{
+                      fontSize: {
+                        xs: tokens.components.icon.lg,
+                        md: 40,
+                      },
+                      color: ds.colors.primary.main,
+                    }}
                   />
                 </Box>
                 <Typography
                   variant="h4"
-                  fontWeight="bold"
-                  color="primary.main"
-                  gutterBottom
+                  sx={{
+                    fontWeight: ds.typography.fontWeight.bold,
+                    color: ds.colors.primary.main,
+                    mb: tokens.spacing.xs,
+                    fontSize: {
+                      xs: `${tokens.typography.xl}px`,
+                      md: `${tokens.typography.xxl}px`,
+                    },
+                  }}
                 >
                   {summaryData.totalPieces}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: `${tokens.typography.sm}px` }}
+                >
                   Toplam Parça
                 </Typography>
               </CardContent>
@@ -455,26 +578,50 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
           <Grid item xs={12} sm={6} md={3}>
             <Card
               sx={{
-                background:
-                  "linear-gradient(135deg, rgba(5,150,105,0.05) 0%, rgba(34,197,94,0.05) 100%)", // Precision Green
-                border: "1px solid rgba(5,150,105,0.1)", // Precision Green
-                borderRadius: 3,
+                background: ds.colors.background.paper,
+                border: `1px solid ${alpha(ds.colors.success.main, 0.12)}`,
+                borderRadius: `${tokens.borderRadius.lg}px`,
                 height: "100%",
+                transition: ds.transitions.fast,
+                boxShadow: ds.shadows.soft.sm,
+                "&:hover": !device.isTouch ? {
+                  transform: "translateY(-2px)",
+                  boxShadow: ds.shadows.soft.md,
+                  borderColor: alpha(ds.colors.success.main, 0.2),
+                } : {},
               }}
             >
-              <CardContent sx={{ textAlign: "center", p: 3 }}>
-                <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-                  <InventoryIcon sx={{ fontSize: 40, color: "success.main" }} />
+              <CardContent sx={{ textAlign: "center", p: tokens.components.card.padding }}>
+                <Box sx={{ display: "flex", justifyContent: "center", mb: tokens.spacing.sm }}>
+                  <InventoryIcon
+                    sx={{
+                      fontSize: {
+                        xs: tokens.components.icon.lg,
+                        md: 40,
+                      },
+                      color: ds.colors.success.main,
+                    }}
+                  />
                 </Box>
                 <Typography
                   variant="h4"
-                  fontWeight="bold"
-                  color="success.main"
-                  gutterBottom
+                  sx={{
+                    fontWeight: ds.typography.fontWeight.bold,
+                    color: ds.colors.success.main,
+                    mb: tokens.spacing.xs,
+                    fontSize: {
+                      xs: `${tokens.typography.xl}px`,
+                      md: `${tokens.typography.xxl}px`,
+                    },
+                  }}
                 >
                   {summaryData.profileCount}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: `${tokens.typography.sm}px` }}
+                >
                   Profil Adedi
                 </Typography>
               </CardContent>
@@ -485,26 +632,50 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
           <Grid item xs={12} sm={6} md={3}>
             <Card
               sx={{
-                background:
-                  "linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(251,191,36,0.05) 100%)",
-                border: "1px solid rgba(245,158,11,0.1)",
-                borderRadius: 3,
+                background: ds.colors.background.paper,
+                border: `1px solid ${alpha(ds.colors.warning.main, 0.12)}`,
+                borderRadius: `${tokens.borderRadius.lg}px`,
                 height: "100%",
+                transition: ds.transitions.fast,
+                boxShadow: ds.shadows.soft.sm,
+                "&:hover": !device.isTouch ? {
+                  transform: "translateY(-2px)",
+                  boxShadow: ds.shadows.soft.md,
+                  borderColor: alpha(ds.colors.warning.main, 0.2),
+                } : {},
               }}
             >
-              <CardContent sx={{ textAlign: "center", p: 3 }}>
-                <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
-                  <WarningIcon sx={{ fontSize: 40, color: "warning.main" }} />
+              <CardContent sx={{ textAlign: "center", p: tokens.components.card.padding }}>
+                <Box sx={{ display: "flex", justifyContent: "center", mb: tokens.spacing.sm }}>
+                  <WarningIcon
+                    sx={{
+                      fontSize: {
+                        xs: tokens.components.icon.lg,
+                        md: 40,
+                      },
+                      color: ds.colors.warning.main,
+                    }}
+                  />
                 </Box>
                 <Typography
                   variant="h4"
-                  fontWeight="bold"
-                  color="warning.main"
-                  gutterBottom
+                  sx={{
+                    fontWeight: ds.typography.fontWeight.bold,
+                    color: ds.colors.warning.main,
+                    mb: tokens.spacing.xs,
+                    fontSize: {
+                      xs: `${tokens.typography.xl}px`,
+                      md: `${tokens.typography.xxl}px`,
+                    },
+                  }}
                 >
                   {summaryData.totalWaste.toLocaleString()}mm
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: `${tokens.typography.sm}px` }}
+                >
                   Toplam Fire
                 </Typography>
               </CardContent>
@@ -515,28 +686,50 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
           <Grid item xs={12} sm={6} md={3}>
             <Card
               sx={{
-                background:
-                  "linear-gradient(135deg, rgba(124,58,237,0.05) 0%, rgba(167,139,250,0.05) 100%)", // Tech Purple
-                border: "1px solid rgba(124,58,237,0.1)", // Tech Purple
-                borderRadius: 3,
+                background: ds.colors.background.paper,
+                border: `1px solid ${alpha(ds.colors.secondary.main, 0.12)}`,
+                borderRadius: `${tokens.borderRadius.lg}px`,
                 height: "100%",
+                transition: ds.transitions.fast,
+                boxShadow: ds.shadows.soft.sm,
+                "&:hover": !device.isTouch ? {
+                  transform: "translateY(-2px)",
+                  boxShadow: ds.shadows.soft.md,
+                  borderColor: alpha(ds.colors.secondary.main, 0.2),
+                } : {},
               }}
             >
-              <CardContent sx={{ textAlign: "center", p: 3 }}>
-                <Box sx={{ display: "flex", justifyContent: "center", mb: 2 }}>
+              <CardContent sx={{ textAlign: "center", p: tokens.components.card.padding }}>
+                <Box sx={{ display: "flex", justifyContent: "center", mb: tokens.spacing.sm }}>
                   <TrendingUpIcon
-                    sx={{ fontSize: 40, color: "secondary.main" }}
+                    sx={{
+                      fontSize: {
+                        xs: tokens.components.icon.lg,
+                        md: 40,
+                      },
+                      color: ds.colors.secondary.main,
+                    }}
                   />
                 </Box>
                 <Typography
                   variant="h4"
-                  fontWeight="bold"
-                  color="secondary.main"
-                  gutterBottom
+                  sx={{
+                    fontWeight: ds.typography.fontWeight.bold,
+                    color: ds.colors.secondary.main,
+                    mb: tokens.spacing.xs,
+                    fontSize: {
+                      xs: `${tokens.typography.xl}px`,
+                      md: `${tokens.typography.xxl}px`,
+                    },
+                  }}
                 >
                   {summaryData.efficiency.toFixed(1)}%
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ fontSize: `${tokens.typography.sm}px` }}
+                >
                   Verimlilik Oranı
                 </Typography>
               </CardContent>
@@ -545,27 +738,74 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
 
           {/* Detaylı Bilgiler */}
           <Grid item xs={12}>
-            <Card sx={{ mt: 2 }}>
-              <CardContent>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
+            <Card
+              sx={{
+                mt: tokens.spacing.md,
+                border: `1px solid ${alpha(ds.colors.neutral[200], 0.5)}`,
+                borderRadius: `${tokens.borderRadius.lg}px`,
+                boxShadow: ds.shadows.soft.sm,
+              }}
+            >
+              <CardContent sx={{ p: tokens.components.card.padding }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: ds.typography.fontWeight.bold,
+                    mb: tokens.spacing.sm,
+                    fontSize: {
+                      xs: `${tokens.typography.lg}px`,
+                      md: `${tokens.typography.xl}px`,
+                    },
+                  }}
+                >
                   Detaylı Analiz
                 </Typography>
-                <Grid container spacing={2}>
+                <Grid container spacing={tokens.spacing.md}>
                   <Grid item xs={12} sm={6}>
                     <Box
                       sx={{
                         display: "flex",
                         alignItems: "center",
-                        gap: 2,
-                        mb: 2,
+                        gap: tokens.spacing.md,
+                        mb: tokens.spacing.sm,
                       }}
                     >
-                      <TimelineIcon color="primary" />
+                      <Box
+                        sx={{
+                          p: tokens.spacing.xs,
+                          borderRadius: `${tokens.borderRadius.md}px`,
+                          backgroundColor: alpha(ds.colors.primary.main, 0.08),
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <TimelineIcon
+                          sx={{
+                            fontSize: tokens.components.icon.md,
+                            color: ds.colors.primary.main,
+                          }}
+                        />
+                      </Box>
                       <Box>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{
+                            fontSize: `${tokens.typography.sm}px`,
+                            mb: tokens.spacing.xxs,
+                          }}
+                        >
                           Ortalama Fire/Profil
                         </Typography>
-                        <Typography variant="h6" fontWeight="bold">
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: ds.typography.fontWeight.bold,
+                            fontSize: `${tokens.typography.lg}px`,
+                            color: ds.colors.text.primary,
+                          }}
+                        >
                           {summaryData.avgWastePerProfile}mm
                         </Typography>
                       </Box>
@@ -576,16 +816,46 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                       sx={{
                         display: "flex",
                         alignItems: "center",
-                        gap: 2,
-                        mb: 2,
+                        gap: tokens.spacing.md,
+                        mb: tokens.spacing.sm,
                       }}
                     >
-                      <CutIcon color="success" />
+                      <Box
+                        sx={{
+                          p: tokens.spacing.xs,
+                          borderRadius: `${tokens.borderRadius.md}px`,
+                          backgroundColor: alpha(ds.colors.success.main, 0.08),
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <CutIcon
+                          sx={{
+                            fontSize: tokens.components.icon.md,
+                            color: ds.colors.success.main,
+                          }}
+                        />
+                      </Box>
                       <Box>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{
+                            fontSize: `${tokens.typography.sm}px`,
+                            mb: tokens.spacing.xxs,
+                          }}
+                        >
                           Ortalama Parça/Profil
                         </Typography>
-                        <Typography variant="h6" fontWeight="bold">
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: ds.typography.fontWeight.bold,
+                            fontSize: `${tokens.typography.lg}px`,
+                            color: ds.colors.text.primary,
+                          }}
+                        >
                           {summaryData.avgPiecesPerProfile} adet
                         </Typography>
                       </Box>
@@ -594,7 +864,7 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                 </Grid>
 
                 {/* Verimlilik Progress Bar */}
-                <Box sx={{ mt: 3 }}>
+                <Box sx={{ mt: tokens.spacing.lg }}>
                   <Typography
                     variant="body2"
                     color="text.secondary"
@@ -606,17 +876,19 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                     variant="determinate"
                     value={summaryData.efficiency}
                     sx={{
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: "rgba(124,58,237,0.1)", // Tech Purple
+                      height: 10,
+                      borderRadius: `${tokens.borderRadius.md}px`,
+                      backgroundColor: alpha(ds.colors.neutral[200], 0.5),
+                      overflow: "hidden",
                       "& .MuiLinearProgress-bar": {
-                        backgroundColor:
+                        background:
                           summaryData.efficiency >= 95
-                            ? "#059669" // Precision Green
+                            ? `linear-gradient(90deg, ${ds.colors.success.main} 0%, ${ds.colors.success[600]} 100%)`
                             : summaryData.efficiency >= 90
-                              ? "#f59e0b"
-                              : "#ef4444", // Efficiency Orange
-                        borderRadius: 4,
+                              ? `linear-gradient(90deg, ${ds.colors.warning.main} 0%, ${ds.colors.warning[600]} 100%)`
+                              : `linear-gradient(90deg, ${ds.colors.error.main} 0%, ${ds.colors.error[600]} 100%)`,
+                        borderRadius: `${tokens.borderRadius.md}px`,
+                        transition: ds.transitions.fast,
                       },
                     }}
                   />
@@ -624,13 +896,43 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                     sx={{
                       display: "flex",
                       justifyContent: "space-between",
-                      mt: 1,
+                      alignItems: "center",
+                      mt: tokens.spacing.xs,
                     }}
                   >
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{
+                        fontSize: `${tokens.typography.xs}px`,
+                        fontWeight: ds.typography.fontWeight.medium,
+                      }}
+                    >
                       0%
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        fontSize: `${tokens.typography.xs}px`,
+                        fontWeight: ds.typography.fontWeight.bold,
+                        color:
+                          summaryData.efficiency >= 95
+                            ? ds.colors.success.main
+                            : summaryData.efficiency >= 90
+                              ? ds.colors.warning.main
+                              : ds.colors.error.main,
+                      }}
+                    >
+                      {summaryData.efficiency.toFixed(1)}%
+                    </Typography>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{
+                        fontSize: `${tokens.typography.xs}px`,
+                        fontWeight: ds.typography.fontWeight.medium,
+                      }}
+                    >
                       100%
                     </Typography>
                   </Box>
@@ -643,42 +945,193 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
 
       {/* Sekme 2: Profil Detayları */}
       <TabPanel value={tabValue} index={1}>
-        <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: `${tokens.borderRadius.lg}px`,
+            border: `1px solid ${alpha(ds.colors.neutral[200], 0.5)}`,
+            boxShadow: ds.shadows.soft.sm,
+            overflow: "hidden",
+          }}
+        >
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: "grey.50" }}>
-                <TableCell sx={{ fontWeight: "bold" }}>Profil #</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Stok Uzunluğu</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Kullanılan</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Fire</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Verimlilik</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Parça Sayısı</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Profil Tipi</TableCell>
+              <TableRow
+                sx={{
+                  backgroundColor: alpha(ds.colors.primary.main, 0.05),
+                  borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.1)}`,
+                }}
+              >
+                <TableCell
+                  sx={{
+                    fontWeight: ds.typography.fontWeight.bold,
+                    fontSize: `${tokens.typography.sm}px`,
+                    color: ds.colors.primary.main,
+                    py: tokens.spacing.sm,
+                  }}
+                >
+                  Profil #
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: ds.typography.fontWeight.bold,
+                    fontSize: `${tokens.typography.sm}px`,
+                    color: ds.colors.primary.main,
+                    py: tokens.spacing.sm,
+                  }}
+                >
+                  Stok Uzunluğu
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: ds.typography.fontWeight.bold,
+                    fontSize: `${tokens.typography.sm}px`,
+                    color: ds.colors.primary.main,
+                    py: tokens.spacing.sm,
+                  }}
+                >
+                  Kullanılan
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: ds.typography.fontWeight.bold,
+                    fontSize: `${tokens.typography.sm}px`,
+                    color: ds.colors.primary.main,
+                    py: tokens.spacing.sm,
+                  }}
+                >
+                  Fire
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: ds.typography.fontWeight.bold,
+                    fontSize: `${tokens.typography.sm}px`,
+                    color: ds.colors.primary.main,
+                    py: tokens.spacing.sm,
+                  }}
+                >
+                  Verimlilik
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: ds.typography.fontWeight.bold,
+                    fontSize: `${tokens.typography.sm}px`,
+                    color: ds.colors.primary.main,
+                    py: tokens.spacing.sm,
+                  }}
+                >
+                  Parça Sayısı
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: ds.typography.fontWeight.bold,
+                    fontSize: `${tokens.typography.sm}px`,
+                    color: ds.colors.primary.main,
+                    py: tokens.spacing.sm,
+                  }}
+                >
+                  Profil Tipi
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {profileDetails.map((profile, index) => (
-                <TableRow key={profile.id} hover>
-                  <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <EngineeringIcon
-                        sx={{ fontSize: 16, color: "primary.main" }}
-                      />
-                      {index + 1}
+                <TableRow
+                  key={profile.id}
+                  hover
+                  sx={{
+                    transition: ds.transitions.fast,
+                    "&:hover": !device.isTouch ? {
+                      backgroundColor: alpha(ds.colors.primary.main, 0.02),
+                    } : {},
+                    borderBottom: `1px solid ${alpha(ds.colors.neutral[200], 0.3)}`,
+                  }}
+                >
+                  <TableCell
+                    sx={{
+                      py: tokens.spacing.sm,
+                      fontSize: `${tokens.typography.sm}px`,
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: tokens.spacing.xs,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          p: tokens.spacing.xxs,
+                          borderRadius: `${tokens.borderRadius.sm}px`,
+                          backgroundColor: alpha(ds.colors.primary.main, 0.1),
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <EngineeringIcon
+                          sx={{
+                            fontSize: tokens.components.icon.xs,
+                            color: ds.colors.primary.main,
+                          }}
+                        />
+                      </Box>
+                      <Typography
+                        sx={{
+                          fontWeight: ds.typography.fontWeight.semibold,
+                          color: ds.colors.text.primary,
+                        }}
+                      >
+                        {index + 1}
+                      </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell>{profile.stockLength}mm</TableCell>
-                  <TableCell>
-                    <Typography color="success.main" fontWeight="bold">
+                  <TableCell
+                    sx={{
+                      py: tokens.spacing.sm,
+                      fontSize: `${tokens.typography.sm}px`,
+                      color: ds.colors.text.primary,
+                      fontWeight: ds.typography.fontWeight.medium,
+                    }}
+                  >
+                    {profile.stockLength}mm
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      py: tokens.spacing.sm,
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        color: ds.colors.success.main,
+                        fontWeight: ds.typography.fontWeight.semibold,
+                        fontSize: `${tokens.typography.sm}px`,
+                      }}
+                    >
                       {profile.usedLength}mm
                     </Typography>
                   </TableCell>
-                  <TableCell>
-                    <Typography color="warning.main" fontWeight="bold">
+                  <TableCell
+                    sx={{
+                      py: tokens.spacing.sm,
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        color: ds.colors.warning.main,
+                        fontWeight: ds.typography.fontWeight.semibold,
+                        fontSize: `${tokens.typography.sm}px`,
+                      }}
+                    >
                       {profile.wasteLength}mm
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell
+                    sx={{
+                      py: tokens.spacing.sm,
+                    }}
+                  >
                     <Chip
                       label={`${profile.efficiency.toFixed(1)}%`}
                       color={
@@ -689,18 +1142,44 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                             : "error"
                       }
                       size="small"
+                      sx={{
+                        fontWeight: ds.typography.fontWeight.semibold,
+                        fontSize: `${tokens.typography.xs}px`,
+                        height: tokens.components.button.sm,
+                      }}
                     />
                   </TableCell>
-                  <TableCell>
-                    <Typography fontWeight="bold">
+                  <TableCell
+                    sx={{
+                      py: tokens.spacing.sm,
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        fontWeight: ds.typography.fontWeight.semibold,
+                        fontSize: `${tokens.typography.sm}px`,
+                        color: ds.colors.text.primary,
+                      }}
+                    >
                       {profile.segmentCount} adet
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  <TableCell
+                    sx={{
+                      py: tokens.spacing.sm,
+                    }}
+                  >
                     <Chip
                       label={profile.profileType}
                       variant="outlined"
                       size="small"
+                      sx={{
+                        fontSize: `${tokens.typography.xs}px`,
+                        height: tokens.components.button.sm,
+                        fontWeight: ds.typography.fontWeight.medium,
+                        borderColor: alpha(ds.colors.neutral[300], 0.5),
+                        color: ds.colors.text.secondary,
+                      }}
                     />
                   </TableCell>
                 </TableRow>
@@ -710,40 +1189,105 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
         </TableContainer>
 
         {/* Özet Kartları */}
-        <Grid container spacing={2} sx={{ mt: 2 }}>
+        <Grid container spacing={tokens.spacing.md} sx={{ mt: tokens.spacing.md }}>
           <Grid item xs={12} sm={4}>
-            <Paper sx={{ p: 2, textAlign: "center", bgcolor: "primary.50" }}>
-              <Typography variant="h6" color="primary.main" fontWeight="bold">
+            <Paper
+              sx={{
+                p: tokens.spacing.md,
+                textAlign: "center",
+                bgcolor: alpha(ds.colors.primary.main, 0.05),
+                borderRadius: `${tokens.borderRadius.md}px`,
+              }}
+            >
+              <Typography
+                variant="h6"
+                sx={{
+                  color: ds.colors.primary.main,
+                  fontWeight: ds.typography.fontWeight.bold,
+                  fontSize: {
+                    xs: `${tokens.typography.lg}px`,
+                    md: `${tokens.typography.xl}px`,
+                  },
+                  mb: tokens.spacing.xxs,
+                }}
+              >
                 {profileDetails
                   .reduce((sum, p) => sum + p.usedLength, 0)
                   .toLocaleString()}
                 mm
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ fontSize: `${tokens.typography.xs}px` }}
+              >
                 Toplam Kullanılan
               </Typography>
             </Paper>
           </Grid>
           <Grid item xs={12} sm={4}>
-            <Paper sx={{ p: 2, textAlign: "center", bgcolor: "warning.50" }}>
-              <Typography variant="h6" color="warning.main" fontWeight="bold">
+            <Paper
+              sx={{
+                p: tokens.spacing.md,
+                textAlign: "center",
+                bgcolor: alpha(ds.colors.warning.main, 0.05),
+                borderRadius: `${tokens.borderRadius.md}px`,
+              }}
+            >
+              <Typography
+                variant="h6"
+                sx={{
+                  color: ds.colors.warning.main,
+                  fontWeight: ds.typography.fontWeight.bold,
+                  fontSize: {
+                    xs: `${tokens.typography.lg}px`,
+                    md: `${tokens.typography.xl}px`,
+                  },
+                }}
+              >
                 {profileDetails
                   .reduce((sum, p) => sum + p.wasteLength, 0)
                   .toLocaleString()}
                 mm
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ fontSize: `${tokens.typography.xs}px` }}
+              >
                 Toplam Fire
               </Typography>
             </Paper>
           </Grid>
           <Grid item xs={12} sm={4}>
-            <Paper sx={{ p: 2, textAlign: "center", bgcolor: "success.50" }}>
-              <Typography variant="h6" color="success.main" fontWeight="bold">
+            <Paper
+              sx={{
+                p: tokens.spacing.md,
+                textAlign: "center",
+                bgcolor: alpha(ds.colors.success.main, 0.05),
+                borderRadius: `${tokens.borderRadius.md}px`,
+              }}
+            >
+              <Typography
+                variant="h6"
+                sx={{
+                  color: ds.colors.success.main,
+                  fontWeight: ds.typography.fontWeight.bold,
+                  fontSize: {
+                    xs: `${tokens.typography.lg}px`,
+                    md: `${tokens.typography.xl}px`,
+                  },
+                  mb: tokens.spacing.xxs,
+                }}
+              >
                 {profileDetails.reduce((sum, p) => sum + p.segmentCount, 0)}{" "}
                 adet
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ fontSize: `${tokens.typography.xs}px` }}
+              >
                 Toplam Parça
               </Typography>
             </Paper>
@@ -754,79 +1298,213 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
       {/* Sekme 3: Trend Analizi */}
       <TabPanel value={tabValue} index={2}>
         {trendData ? (
-          <Stack spacing={3}>
+          <Stack spacing={tokens.spacing.lg}>
             {/* Trend Özeti */}
-            <Grid container spacing={3}>
+            <Grid container spacing={tokens.layout.gridGap}>
               <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ textAlign: "center", p: 2 }}>
-                  <AnalyticsIcon
-                    sx={{ fontSize: 40, color: "primary.main", mb: 1 }}
-                  />
+                <Card
+                  sx={{
+                    textAlign: "center",
+                    p: tokens.spacing.md,
+                    borderRadius: `${tokens.borderRadius.lg}px`,
+                    border: `1px solid ${alpha(ds.colors.primary.main, 0.12)}`,
+                    boxShadow: ds.shadows.soft.sm,
+                    transition: ds.transitions.fast,
+                    "&:hover": !device.isTouch ? {
+                      transform: "translateY(-2px)",
+                      boxShadow: ds.shadows.soft.md,
+                    } : {},
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      mb: tokens.spacing.sm,
+                    }}
+                  >
+                    <AnalyticsIcon
+                      sx={{
+                        fontSize: tokens.components.icon.xl,
+                        color: ds.colors.primary.main,
+                      }}
+                    />
+                  </Box>
                   <Typography
                     variant="h5"
-                    fontWeight="bold"
-                    color="primary.main"
+                    sx={{
+                      fontWeight: ds.typography.fontWeight.bold,
+                      color: ds.colors.primary.main,
+                      fontSize: `${tokens.typography.xl}px`,
+                      mb: tokens.spacing.xs,
+                    }}
                   >
                     {trendData.avgEfficiency.toFixed(1)}%
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: `${tokens.typography.xs}px` }}
+                  >
                     7 Günlük Ort. Verimlilik
                   </Typography>
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ textAlign: "center", p: 2 }}>
-                  <ShowChartIcon
+                <Card
+                  sx={{
+                    textAlign: "center",
+                    p: tokens.spacing.md,
+                    borderRadius: `${tokens.borderRadius.lg}px`,
+                    border: `1px solid ${alpha(
+                      trendData.improvement >= 0
+                        ? ds.colors.success.main
+                        : ds.colors.error.main,
+                      0.12
+                    )}`,
+                    boxShadow: ds.shadows.soft.sm,
+                    transition: ds.transitions.fast,
+                    "&:hover": !device.isTouch ? {
+                      transform: "translateY(-2px)",
+                      boxShadow: ds.shadows.soft.md,
+                    } : {},
+                  }}
+                >
+                  <Box
                     sx={{
-                      fontSize: 40,
-                      color:
-                        trendData.improvement >= 0
-                          ? "success.main"
-                          : "error.main",
-                      mb: 1,
+                      display: "flex",
+                      justifyContent: "center",
+                      mb: tokens.spacing.sm,
                     }}
-                  />
+                  >
+                    <ShowChartIcon
+                      sx={{
+                        fontSize: tokens.components.icon.xl,
+                        color:
+                          trendData.improvement >= 0
+                            ? ds.colors.success.main
+                            : ds.colors.error.main,
+                      }}
+                    />
+                  </Box>
                   <Typography
                     variant="h5"
-                    fontWeight="bold"
-                    color={
-                      trendData.improvement >= 0 ? "success.main" : "error.main"
-                    }
+                    sx={{
+                      fontWeight: ds.typography.fontWeight.bold,
+                      color:
+                        trendData.improvement >= 0
+                          ? ds.colors.success.main
+                          : ds.colors.error.main,
+                      fontSize: `${tokens.typography.xl}px`,
+                      mb: tokens.spacing.xs,
+                    }}
                   >
                     {trendData.improvement >= 0 ? "+" : ""}
                     {trendData.improvement.toFixed(1)}%
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: `${tokens.typography.xs}px` }}
+                  >
                     Verimlilik Değişimi
                   </Typography>
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ textAlign: "center", p: 2 }}>
-                  <WarningIcon
-                    sx={{ fontSize: 40, color: "warning.main", mb: 1 }}
-                  />
+                <Card
+                  sx={{
+                    textAlign: "center",
+                    p: tokens.spacing.md,
+                    borderRadius: `${tokens.borderRadius.lg}px`,
+                    border: `1px solid ${alpha(ds.colors.warning.main, 0.12)}`,
+                    boxShadow: ds.shadows.soft.sm,
+                    transition: ds.transitions.fast,
+                    "&:hover": !device.isTouch ? {
+                      transform: "translateY(-2px)",
+                      boxShadow: ds.shadows.soft.md,
+                    } : {},
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      mb: tokens.spacing.sm,
+                    }}
+                  >
+                    <WarningIcon
+                      sx={{
+                        fontSize: tokens.components.icon.xl,
+                        color: ds.colors.warning.main,
+                      }}
+                    />
+                  </Box>
                   <Typography
                     variant="h5"
-                    fontWeight="bold"
-                    color="warning.main"
+                    sx={{
+                      fontWeight: ds.typography.fontWeight.bold,
+                      color: ds.colors.warning.main,
+                      fontSize: `${tokens.typography.xl}px`,
+                      mb: tokens.spacing.xs,
+                    }}
                   >
                     {Math.round(trendData.totalWaste)}mm
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: `${tokens.typography.xs}px` }}
+                  >
                     7 Günlük Toplam Fire
                   </Typography>
                 </Card>
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
-                <Card sx={{ textAlign: "center", p: 2 }}>
-                  <AssessmentIcon
-                    sx={{ fontSize: 40, color: "info.main", mb: 1 }}
-                  />
-                  <Typography variant="h5" fontWeight="bold" color="info.main">
+                <Card
+                  sx={{
+                    textAlign: "center",
+                    p: tokens.spacing.md,
+                    borderRadius: `${tokens.borderRadius.lg}px`,
+                    border: `1px solid ${alpha(ds.colors.info.main, 0.12)}`,
+                    boxShadow: ds.shadows.soft.sm,
+                    transition: ds.transitions.fast,
+                    "&:hover": !device.isTouch ? {
+                      transform: "translateY(-2px)",
+                      boxShadow: ds.shadows.soft.md,
+                    } : {},
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      mb: tokens.spacing.sm,
+                    }}
+                  >
+                    <AssessmentIcon
+                      sx={{
+                        fontSize: tokens.components.icon.xl,
+                        color: ds.colors.info.main,
+                      }}
+                    />
+                  </Box>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: ds.typography.fontWeight.bold,
+                      color: ds.colors.info.main,
+                      fontSize: `${tokens.typography.xl}px`,
+                      mb: tokens.spacing.xs,
+                    }}
+                  >
                     {trendData.totalPieces}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: `${tokens.typography.xs}px` }}
+                  >
                     7 Günlük Toplam Parça
                   </Typography>
                 </Card>
@@ -834,33 +1512,120 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
             </Grid>
 
             {/* Günlük Trend Tablosu */}
-            <Card>
-              <CardContent>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
+            <Card
+              sx={{
+                border: `1px solid ${alpha(ds.colors.neutral[200], 0.5)}`,
+                borderRadius: `${tokens.borderRadius.lg}px`,
+                boxShadow: ds.shadows.soft.sm,
+              }}
+            >
+              <CardContent sx={{ p: tokens.components.card.padding }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: ds.typography.fontWeight.bold,
+                    mb: tokens.spacing.md,
+                    fontSize: {
+                      xs: `${tokens.typography.lg}px`,
+                      md: `${tokens.typography.xl}px`,
+                    },
+                    color: ds.colors.text.primary,
+                  }}
+                >
                   Son 7 Gün Trend Analizi
                 </Typography>
-                <TableContainer>
+                <TableContainer
+                  sx={{
+                    borderRadius: `${tokens.borderRadius.md}px`,
+                    border: `1px solid ${alpha(ds.colors.neutral[200], 0.3)}`,
+                    overflow: "hidden",
+                  }}
+                >
                   <Table size="small">
                     <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ fontWeight: "bold" }}>Tarih</TableCell>
-                        <TableCell sx={{ fontWeight: "bold" }}>
+                      <TableRow
+                        sx={{
+                          backgroundColor: alpha(ds.colors.primary.main, 0.05),
+                        }}
+                      >
+                        <TableCell
+                          sx={{
+                            fontWeight: ds.typography.fontWeight.bold,
+                            fontSize: `${tokens.typography.sm}px`,
+                            color: ds.colors.primary.main,
+                            py: tokens.spacing.sm,
+                          }}
+                        >
+                          Tarih
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            fontWeight: ds.typography.fontWeight.bold,
+                            fontSize: `${tokens.typography.sm}px`,
+                            color: ds.colors.primary.main,
+                            py: tokens.spacing.sm,
+                          }}
+                        >
                           Verimlilik
                         </TableCell>
-                        <TableCell sx={{ fontWeight: "bold" }}>Fire</TableCell>
-                        <TableCell sx={{ fontWeight: "bold" }}>
+                        <TableCell
+                          sx={{
+                            fontWeight: ds.typography.fontWeight.bold,
+                            fontSize: `${tokens.typography.sm}px`,
+                            color: ds.colors.primary.main,
+                            py: tokens.spacing.sm,
+                          }}
+                        >
+                          Fire
+                        </TableCell>
+                        <TableCell
+                          sx={{
+                            fontWeight: ds.typography.fontWeight.bold,
+                            fontSize: `${tokens.typography.sm}px`,
+                            color: ds.colors.primary.main,
+                            py: tokens.spacing.sm,
+                          }}
+                        >
                           Parça Sayısı
                         </TableCell>
-                        <TableCell sx={{ fontWeight: "bold" }}>Trend</TableCell>
+                        <TableCell
+                          sx={{
+                            fontWeight: ds.typography.fontWeight.bold,
+                            fontSize: `${tokens.typography.sm}px`,
+                            color: ds.colors.primary.main,
+                            py: tokens.spacing.sm,
+                          }}
+                        >
+                          Trend
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {trendData.last7Days.map((day, index) => (
-                        <TableRow key={day.date}>
-                          <TableCell>
+                        <TableRow
+                          key={day.date}
+                          sx={{
+                            transition: ds.transitions.fast,
+                            "&:hover": !device.isTouch ? {
+                              backgroundColor: alpha(ds.colors.primary.main, 0.02),
+                            } : {},
+                            borderBottom: `1px solid ${alpha(ds.colors.neutral[200], 0.3)}`,
+                          }}
+                        >
+                          <TableCell
+                            sx={{
+                              py: tokens.spacing.sm,
+                              fontSize: `${tokens.typography.sm}px`,
+                              color: ds.colors.text.primary,
+                            }}
+                          >
                             {new Date(day.date).toLocaleDateString("tr-TR")}
                           </TableCell>
-                          <TableCell>
+                          <TableCell
+                            sx={{
+                              py: tokens.spacing.sm,
+                            }}
+                          >
                             <Chip
                               label={`${day.efficiency.toFixed(1)}%`}
                               color={
@@ -871,21 +1636,50 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                                     : "error"
                               }
                               size="small"
+                              sx={{
+                                fontWeight: ds.typography.fontWeight.semibold,
+                                fontSize: `${tokens.typography.xs}px`,
+                                height: tokens.components.button.sm,
+                              }}
                             />
                           </TableCell>
-                          <TableCell>{day.waste.toFixed(0)}mm</TableCell>
-                          <TableCell>{day.pieces} adet</TableCell>
-                          <TableCell>
+                          <TableCell
+                            sx={{
+                              py: tokens.spacing.sm,
+                              fontSize: `${tokens.typography.sm}px`,
+                              color: ds.colors.text.primary,
+                              fontWeight: ds.typography.fontWeight.medium,
+                            }}
+                          >
+                            {day.waste.toFixed(0)}mm
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              py: tokens.spacing.sm,
+                              fontSize: `${tokens.typography.sm}px`,
+                              color: ds.colors.text.primary,
+                              fontWeight: ds.typography.fontWeight.medium,
+                            }}
+                          >
+                            {day.pieces} adet
+                          </TableCell>
+                          <TableCell
+                            sx={{
+                              py: tokens.spacing.sm,
+                            }}
+                          >
                             <TrendingUpIcon
                               sx={{
+                                fontSize: tokens.components.icon.sm,
                                 color:
                                   day.efficiency >= 95
-                                    ? "success.main"
-                                    : "warning.main",
+                                    ? ds.colors.success.main
+                                    : ds.colors.warning.main,
                                 transform:
                                   day.efficiency >= 95
                                     ? "none"
                                     : "rotate(180deg)",
+                                transition: ds.transitions.fast,
                               }}
                             />
                           </TableCell>
@@ -906,46 +1700,103 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                     ? "warning"
                     : "error"
               }
+              sx={{
+                borderRadius: `${tokens.borderRadius.lg}px`,
+                border: `1px solid ${alpha(
+                  trendData.avgEfficiency >= 95
+                    ? ds.colors.success.main
+                    : trendData.avgEfficiency >= 90
+                      ? ds.colors.warning.main
+                      : ds.colors.error.main,
+                  0.2
+                )}`,
+              }}
             >
-              <AlertTitle>
+              <AlertTitle
+                sx={{
+                  fontWeight: ds.typography.fontWeight.bold,
+                  fontSize: `${tokens.typography.base}px`,
+                  mb: tokens.spacing.xs,
+                }}
+              >
                 {trendData.avgEfficiency >= 95
                   ? "Mükemmel Performans!"
                   : trendData.avgEfficiency >= 90
                     ? "İyi Performans"
                     : "İyileştirme Gerekli"}
               </AlertTitle>
-              {trendData.avgEfficiency >= 95
-                ? "Verimlilik oranınız çok yüksek. Bu seviyeyi koruyun!"
-                : trendData.avgEfficiency >= 90
-                  ? "Verimlilik oranınız iyi seviyede. %95 hedefine odaklanın."
-                  : "Verimlilik oranınızı artırmak için profil optimizasyonu önerilir."}
+              <Typography
+                sx={{
+                  fontSize: `${tokens.typography.sm}px`,
+                  color: ds.colors.text.secondary,
+                }}
+              >
+                {trendData.avgEfficiency >= 95
+                  ? "Verimlilik oranınız çok yüksek. Bu seviyeyi koruyun!"
+                  : trendData.avgEfficiency >= 90
+                    ? "Verimlilik oranınız iyi seviyede. %95 hedefine odaklanın."
+                    : "Verimlilik oranınızı artırmak için profil optimizasyonu önerilir."}
+              </Typography>
             </Alert>
           </Stack>
         ) : (
-          <Alert severity="info">
-            <AlertTitle>Trend Verisi Yok</AlertTitle>
-            Bu iş emri için henüz trend verisi bulunmuyor.
+          <Alert
+            severity="info"
+            sx={{
+              borderRadius: `${tokens.borderRadius.lg}px`,
+              border: `1px solid ${alpha(ds.colors.info.main, 0.2)}`,
+            }}
+          >
+            <AlertTitle
+              sx={{
+                fontWeight: ds.typography.fontWeight.bold,
+                fontSize: `${tokens.typography.base}px`,
+                mb: tokens.spacing.xs,
+              }}
+            >
+              Trend Verisi Yok
+            </AlertTitle>
+            <Typography
+              sx={{
+                fontSize: `${tokens.typography.sm}px`,
+                color: ds.colors.text.secondary,
+              }}
+            >
+              Bu iş emri için henüz trend verisi bulunmuyor.
+            </Typography>
           </Alert>
         )}
       </TabPanel>
 
-      <DialogActions sx={{ p: 3, pt: 0 }}>
+      <DialogActions
+        sx={{
+          px: tokens.spacing.xl * 2,
+          py: tokens.spacing.sm,
+          borderTop: `1px solid ${alpha(ds.colors.neutral[200], 0.5)}`,
+        }}
+      >
         <Button
           onClick={onClose}
           variant="contained"
           sx={{
-            background: "linear-gradient(135deg, #1e40af 0%, #7c3aed 100%)", // Industrial Harmony
+            background: `linear-gradient(135deg, ${ds.colors.primary[600]} 0%, ${ds.colors.secondary.main} 100%)`,
             color: "white",
-            fontWeight: "bold",
-            px: 3,
-            py: 1,
-            borderRadius: 2,
-            boxShadow: "0 4px 12px rgba(30,64,175,0.3)", // Industrial Harmony
-            "&:hover": {
-              background: "linear-gradient(135deg, #7c3aed 0%, #1e40af 100%)", // Industrial Harmony
-              transform: "translateY(-2px)",
-              boxShadow: "0 6px 16px rgba(30,64,175,0.4)", // Industrial Harmony
+            fontWeight: ds.typography.fontWeight.semibold,
+            px: tokens.spacing.xl,
+            py: tokens.spacing.sm,
+            borderRadius: `${tokens.borderRadius.md}px`,
+            minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+            fontSize: {
+              xs: `${tokens.typography.sm}px`,
+              md: `${tokens.typography.base}px`,
             },
+            boxShadow: ds.shadows.soft.md,
+            "&:hover": !device.isTouch ? {
+              background: `linear-gradient(135deg, ${ds.colors.primary[700]} 0%, ${ds.colors.secondary[700]} 100%)`,
+              transform: "translateY(-2px)",
+              boxShadow: ds.shadows.soft.lg,
+            } : {},
+            transition: ds.transitions.fast,
           }}
         >
           Kapat
