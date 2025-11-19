@@ -12,9 +12,6 @@ import { PDFExportService } from "../services/export/pdfExportService";
 import { ExcelExportService } from "../services/export/excelExportService";
 import { ProfileSuggestionService } from "../services/suggestions/profileSuggestionService";
 import { QuantityCalculationService } from "../services/suggestions/quantityCalculationService";
-// ⚠️ DEPRECATED: Use UnifiedSuggestionService instead
-// import { EnterpriseProfileSuggestionService } from '../services/suggestions/enterpriseProfileSuggestionService';
-// import smartSuggestionService from '../services/suggestions/smartSuggestionService';
 import {
   UnifiedSuggestionService,
   SmartSuggestion,
@@ -147,7 +144,6 @@ export class CuttingListController {
   private readonly excelExportService: ExcelExportService;
   private readonly profileSuggestionService: ProfileSuggestionService;
   private readonly quantityCalculationService: QuantityCalculationService;
-  // ⚠️ DEPRECATED: private readonly enterpriseProfileService: EnterpriseProfileSuggestionService;
   private static processListenersRegistered = false;
 
   constructor() {
@@ -198,7 +194,6 @@ export class CuttingListController {
     this.excelExportService = new ExcelExportService();
     this.profileSuggestionService = new ProfileSuggestionService();
     this.quantityCalculationService = new QuantityCalculationService();
-    // ⚠️ DEPRECATED: this.enterpriseProfileService = new EnterpriseProfileSuggestionService();
     this.loadFromStorage();
 
     // Analyze existing cutting lists for profile suggestions
@@ -1413,11 +1408,12 @@ export class CuttingListController {
     async (req: Request, res: Response): Promise<void> => {
       const requestId = this.generateRequestId();
       const { cuttingListId } = req.params;
-      const { productName } = req.body;
+      const { productName, productCategory } = req.body;
 
       logger.info(`[${requestId}] 📦 ADD PRODUCT SECTION REQUEST`, {
         cuttingListId,
         productName,
+        productCategory,
         path: req.path,
         method: req.method,
       });
@@ -1465,11 +1461,43 @@ export class CuttingListController {
           return;
         }
 
+        // Determine product category
+        let finalProductCategory: string | undefined = productCategory;
+
+        // If category not provided, try to get from existing mapping
+        if (!finalProductCategory) {
+          const { productCategoryRepository } = await import(
+            "../repositories/ProductCategoryRepository"
+          );
+          const existingCategory =
+            await productCategoryRepository.getCategoryByProductName(
+              productName.trim(),
+            );
+          if (existingCategory) {
+            finalProductCategory = existingCategory.name;
+          }
+        }
+
+        // If still no category, require it (frontend should send it for new products)
+        if (!finalProductCategory) {
+          res
+            .status(400)
+            .json(
+              this.createResponse(
+                false,
+                undefined,
+                "Product category is required for new products",
+              ),
+            );
+          return;
+        }
+
         // Create new product section in database
         const newSection = await cuttingListRepository.addProductSection(
           cuttingListId,
           {
             productName: productName.trim(),
+            productCategory: finalProductCategory,
           },
         );
 
@@ -1769,13 +1797,17 @@ export class CuttingListController {
 
   /**
    * Delete product section
+   * ✅ FIXED: Now deletes from database using repository
    */
   public deleteProductSection = this.asyncHandler(
     async (req: Request, res: Response): Promise<void> => {
       const requestId = this.generateRequestId();
       const { cuttingListId, sectionId } = req.params;
 
-      console.log(`[${requestId}] Deleting product section: ${sectionId}`);
+      logger.info(`[${requestId}] Deleting product section`, {
+        cuttingListId,
+        sectionId,
+      });
 
       try {
         // Validate input
@@ -1792,44 +1824,13 @@ export class CuttingListController {
           return;
         }
 
-        const cuttingList = this.cuttingLists.get(cuttingListId);
+        // ✅ FIXED: Delete from database using repository
+        await cuttingListRepository.deleteSection(cuttingListId, sectionId);
 
-        if (!cuttingList) {
-          res
-            .status(404)
-            .json(
-              this.createResponse(false, undefined, "Cutting list not found"),
-            );
-          return;
-        }
-
-        const updatedSections = cuttingList.sections.filter(
-          (s) => s.id !== sectionId,
-        );
-
-        if (updatedSections.length === cuttingList.sections.length) {
-          res
-            .status(404)
-            .json(
-              this.createResponse(
-                false,
-                undefined,
-                "Product section not found",
-              ),
-            );
-          return;
-        }
-
-        const updatedCuttingList: CuttingList = {
-          ...cuttingList,
-          sections: updatedSections,
-          updatedAt: new Date().toISOString(),
-        };
-
-        this.cuttingLists.set(cuttingListId, updatedCuttingList);
-        this.saveToStorage();
-
-        console.log(`[${requestId}] Product section deleted: ${sectionId}`);
+        logger.info(`[${requestId}] Product section deleted successfully`, {
+          cuttingListId,
+          sectionId,
+        });
 
         res.json(
           this.createResponse(true, {
@@ -1837,7 +1838,11 @@ export class CuttingListController {
           }),
         );
       } catch (error) {
-        console.error(`[${requestId}] Error deleting product section:`, error);
+        logger.error(`[${requestId}] Error deleting product section`, {
+          cuttingListId,
+          sectionId,
+          error,
+        });
 
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error";
@@ -3183,13 +3188,12 @@ export class CuttingListController {
 
       console.log(`[${requestId}] Excel import completed`);
 
-      // ⚠️ DEPRECATED: Smart suggestion database update (now handled by PostgreSQL)
-      // Trigger smart suggestion database update in background after Excel import
+      // Smart suggestion learning is handled automatically by UnifiedSuggestionService
+      // Pattern learning happens when items are added via learnFromPattern()
       setTimeout(() => {
         try {
-          // smartSuggestionService.reloadDatabase();
           console.log(
-            `[SMART-LEARNING] [DEPRECATED] Database update skipped - using PostgreSQL now: ${cuttingListId}`,
+            `[SMART-LEARNING] Pattern learning handled by UnifiedSuggestionService: ${cuttingListId}`,
           );
         } catch (error) {
           console.error(
@@ -3450,8 +3454,8 @@ const getSmartProductSuggestionsLegacy = async (
 
     const { query = "", limit = 10 } = req.query;
 
-    // ⚠️ DEPRECATED: Legacy code kept for reference only
-    const suggestions = { data: [], success: true }; // smartSuggestionService.getProductSuggestions(...)
+    // Legacy endpoint - returns empty data
+    const suggestions = { data: [], success: true };
 
     console.log(
       `[REQ-${requestId}] Found ${suggestions.data.length} product suggestions`,
@@ -3547,8 +3551,8 @@ const getSmartSizeSuggestionsLegacy = async (
 
     const { productName, query = "", limit = 10 } = req.query;
 
-    // ⚠️ DEPRECATED: Legacy code kept for reference only
-    const suggestions = { data: [], success: true }; // smartSuggestionService.getSizeSuggestions(...)
+    // Legacy endpoint - returns empty data
+    const suggestions = { data: [], success: true };
 
     console.log(
       `[REQ-${requestId}] Found ${suggestions.data.length} size suggestions`,
@@ -3647,8 +3651,8 @@ const getSmartProfileSuggestionsLegacy = async (
 
     const { productName, size, query = "", limit = 10 } = req.query;
 
-    // ⚠️ DEPRECATED: Legacy code kept for reference only
-    const suggestions = { data: [], success: true }; // smartSuggestionService.getProfileSuggestions(...)
+    // Legacy endpoint - returns empty data
+    const suggestions = { data: [], success: true };
 
     console.log(
       `[REQ-${requestId}] Found ${suggestions.data.length} profile suggestions`,
@@ -3714,8 +3718,8 @@ export const getAutoCompleteSuggestions = async (
       return;
     }
 
-    // ⚠️ DEPRECATED: Legacy code - return empty for now
-    const suggestions: string[] = []; // smartSuggestionService.getAutoCompleteSuggestions(...)
+    // Legacy endpoint - returns empty data
+    const suggestions: string[] = [];
 
     console.log(
       `[REQ-${requestId}] Found ${suggestions.length} auto-complete suggestions`,
@@ -3801,8 +3805,8 @@ export const reloadSmartSuggestionDatabase = async (
       `[REQ-${requestId}] [DEPRECATED] Reloading smart suggestion database - Use PostgreSQL now`,
     );
 
-    // ⚠️ DEPRECATED: Using legacy service
-    const success = true; // smartSuggestionService.reloadDatabase();
+    // Legacy endpoint - UnifiedSuggestionService uses PostgreSQL and doesn't need explicit reload
+    const success = true;
 
     if (success) {
       console.log(

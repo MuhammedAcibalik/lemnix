@@ -180,6 +180,15 @@ function responseErrorInterceptor(
     return Promise.reject(error);
   }
 
+  // ✅ ROOT CAUSE FIX: Silently ignore 404 for product category lookup (expected when product has no category)
+  const url = error.config?.url || "";
+  const isProductCategoryLookup = url.includes("/product-categories/product/");
+  if (error.response?.status === 404 && isProductCategoryLookup) {
+    // This is expected - product may not have a category yet
+    // Don't log to console or show toast
+    return Promise.reject(error);
+  }
+
   let userMessage = "Beklenmeyen bir hata oluştu";
   const shouldShowToast = true;
 
@@ -188,11 +197,14 @@ function responseErrorInterceptor(
     const status = error.response.status;
     const data = error.response.data;
 
-    console.error(`[API] ${status} Error:`, {
-      url: error.config?.url,
-      error: data?.error,
-      fullData: data,
-    });
+    // ✅ ROOT CAUSE FIX: Don't log 404 errors for product category lookup
+    if (!(status === 404 && isProductCategoryLookup)) {
+      console.error(`[API] ${status} Error:`, {
+        url: error.config?.url,
+        error: data?.error,
+        fullData: data,
+      });
+    }
 
     // ✅ P2-10: User-friendly error messages
     if (status === 401) {

@@ -11,7 +11,7 @@
  * ✅ Consistent with other dialogs
  */
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +27,11 @@ import {
   CircularProgress,
   InputAdornment,
   alpha,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
 } from "@mui/material";
 import {
   Category as CategoryIcon,
@@ -37,11 +42,17 @@ import {
 } from "@mui/icons-material";
 
 import { useDesignSystem } from "@/shared/hooks";
+import { useDebounce } from "@/shared/lib/hooks";
+import {
+  useProductCategories,
+  useCategoryByProduct,
+  useMapProductToCategory,
+} from "@/shared/api/productCategoryQueries";
 
 interface NewProductDialogProps {
   open: boolean;
   onClose: () => void;
-  onAddProduct: (productName: string) => void;
+  onAddProduct: (productName: string, productCategory: string) => void;
   isLoading?: boolean;
 }
 
@@ -53,9 +64,75 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
 }) => {
   const ds = useDesignSystem();
   const [productName, setProductName] = useState("");
-  const [errors, setErrors] = useState<{ productName?: string }>({});
+  const [productCategory, setProductCategory] = useState<string>("");
+  const [errors, setErrors] = useState<{
+    productName?: string;
+    productCategory?: string;
+  }>({});
 
-  // Validation logic
+  // ✅ ROOT CAUSE FIX: Debounce product name to avoid excessive API calls
+  // Only query after user stops typing for 500ms
+  const debouncedProductName = useDebounce(productName.trim(), 500);
+
+  // ✅ ROOT CAUSE FIX: Minimum character requirement for category lookup
+  // Only query if product name has at least 3 characters (reduces false positives)
+  const shouldQueryCategory = useMemo(
+    () => debouncedProductName.length >= 3,
+    [debouncedProductName],
+  );
+
+  // Fetch categories and check for existing category
+  const { data: categories = [], isLoading: categoriesLoading } =
+    useProductCategories();
+  const { data: existingCategory, isLoading: checkingCategory } =
+    useCategoryByProduct(shouldQueryCategory ? debouncedProductName : undefined);
+  const mapProductMutation = useMapProductToCategory();
+
+  // ✅ FIX: Track if user manually selected a category
+  const [userManuallySelected, setUserManuallySelected] = useState(false);
+  
+  // ✅ FIX: Track last auto-selected category to prevent re-selection
+  const lastAutoSelectedRef = useRef<string | null>(null);
+
+  // ✅ ROOT CAUSE FIX: Auto-select category if found (using debounced product name)
+  // Only auto-select if user hasn't manually chosen a category
+  // ✅ FIX: Prevent redundant updates to avoid re-renders
+  useEffect(() => {
+    if (
+      existingCategory && 
+      !userManuallySelected && 
+      lastAutoSelectedRef.current !== existingCategory.name
+    ) {
+      lastAutoSelectedRef.current = existingCategory.name;
+      setProductCategory(existingCategory.name);
+      setErrors((prev) => ({ ...prev, productCategory: undefined }));
+    }
+  }, [existingCategory, userManuallySelected]);
+
+  // ✅ FIX: Inline validation to avoid unnecessary useCallback dependencies
+  const handleProductNameChange = useCallback(
+    (value: string) => {
+      // Auto-convert to uppercase
+      const upperValue = value.toUpperCase();
+      setProductName(upperValue);
+      
+      // ✅ FIX: Inline validation - no external function dependency
+      const trimmed = upperValue.trim();
+      let error: string | undefined;
+      if (!trimmed) {
+        error = "Ürün adı gereklidir";
+      } else if (trimmed.length < 2) {
+        error = "Ürün adı en az 2 karakter olmalı";
+      } else if (trimmed.length > 50) {
+        error = "Ürün adı en fazla 50 karakter olabilir";
+      }
+      
+      setErrors((prev) => ({ ...prev, productName: error }));
+    },
+    [], // ✅ No dependencies = stable reference
+  );
+
+  // Validation logic (for form submission only)
   const validateProductName = useCallback(
     (value: string): string | undefined => {
       const trimmed = value.trim();
@@ -67,42 +144,117 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
     [],
   );
 
-  // Real-time validation with auto-uppercase
-  const handleProductNameChange = useCallback(
+  // ✅ FIX: Product category change handler with validation
+  const handleProductCategoryChange = useCallback(
     (value: string) => {
-      // Auto-convert to uppercase
-      const upperValue = value.toUpperCase();
-      setProductName(upperValue);
-      const error = validateProductName(upperValue);
-      setErrors((prev) => ({ ...prev, productName: error }));
+      setProductCategory(value);
+      setUserManuallySelected(true); // ✅ Mark as manually selected
+      // Clear error when category is selected
+      if (value.trim()) {
+        setErrors((prev) => ({ ...prev, productCategory: undefined }));
+      }
     },
-    [validateProductName],
+    [],
   );
 
   const isFormValid = useMemo(() => {
-    return !errors.productName && productName.trim().length > 0;
-  }, [errors, productName]);
+    return (
+      !errors.productName &&
+      !errors.productCategory &&
+      productName.trim().length > 0 &&
+      productCategory.trim().length > 0
+    );
+  }, [errors, productName, productCategory]);
+
+  // ✅ FIX: Memoize adornments to prevent TextField re-renders
+  const productNameStartAdornment = useMemo(() => (
+    <InputAdornment position="start">
+      <CategoryIcon
+        sx={{
+          color: errors.productName
+            ? ds.colors.error.main
+            : ds.colors.primary.main,
+          fontSize: ds.componentSizes.icon.medium,
+        }}
+      />
+    </InputAdornment>
+  ), [errors.productName, ds.colors.error.main, ds.colors.primary.main, ds.componentSizes.icon.medium]);
+  
+  const productNameEndAdornment = useMemo(() => {
+    if (!productName.trim() || errors.productName) return null;
+    
+    return (
+      <InputAdornment position="end">
+        {checkingCategory ? (
+          <CircularProgress size={16} />
+        ) : (
+          <CheckCircleIcon
+            sx={{
+              color: ds.colors.success.main,
+              fontSize: ds.componentSizes.icon.small,
+            }}
+          />
+        )}
+      </InputAdornment>
+    );
+  }, [productName, errors.productName, checkingCategory, ds.colors.success.main, ds.componentSizes.icon.small]);
 
   const handleClose = useCallback(() => {
     setProductName("");
+    setProductCategory("");
+    setUserManuallySelected(false); // ✅ Reset manual selection flag
+    lastAutoSelectedRef.current = null; // ✅ Reset last auto-selected ref
     setErrors({});
     onClose();
   }, [onClose]);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     // Final validation
     const nameError = validateProductName(productName);
+    const categoryError = !productCategory.trim()
+      ? "Ürün grubu seçimi zorunludur"
+      : undefined;
 
-    if (nameError) {
-      setErrors({ productName: nameError });
+    if (nameError || categoryError) {
+      setErrors({
+        productName: nameError,
+        productCategory: categoryError,
+      });
       return;
     }
 
-    if (productName.trim()) {
-      onAddProduct(productName.trim());
+    if (productName.trim() && productCategory.trim()) {
+      // Map product to category if it's a new product
+      if (!existingCategory) {
+        try {
+          const selectedCategory = categories.find(
+            (cat) => cat.name === productCategory,
+          );
+          if (selectedCategory) {
+            await mapProductMutation.mutateAsync({
+              productName: productName.trim(),
+              categoryId: selectedCategory.id,
+            });
+          }
+        } catch (error) {
+          // Log error but continue with product creation
+          console.error("Failed to map product to category:", error);
+        }
+      }
+
+      onAddProduct(productName.trim(), productCategory.trim());
       handleClose();
     }
-  }, [productName, validateProductName, onAddProduct, handleClose]);
+  }, [
+    productName,
+    productCategory,
+    validateProductName,
+    onAddProduct,
+    handleClose,
+    existingCategory,
+    categories,
+    mapProductMutation,
+  ]);
 
   // Keyboard shortcuts
   const handleKeyDown = useCallback(
@@ -232,35 +384,14 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
               required
               fullWidth
               autoFocus
-              disabled={isLoading}
+              disabled={isLoading} // ✅ FIX: Removed checkingCategory - don't disable while checking!
               error={!!errors.productName}
               helperText={
                 errors.productName || `${productName.length}/50 karakter`
               }
               InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <CategoryIcon
-                      sx={{
-                        color: errors.productName
-                          ? ds.colors.error.main
-                          : ds.colors.primary.main,
-                        fontSize: ds.componentSizes.icon.medium,
-                      }}
-                    />
-                  </InputAdornment>
-                ),
-                endAdornment:
-                  productName.trim() && !errors.productName ? (
-                    <InputAdornment position="end">
-                      <CheckCircleIcon
-                        sx={{
-                          color: ds.colors.success.main,
-                          fontSize: ds.componentSizes.icon.small,
-                        }}
-                      />
-                    </InputAdornment>
-                  ) : null,
+                startAdornment: productNameStartAdornment, // ✅ FIX: Use memoized startAdornment
+                endAdornment: productNameEndAdornment, // ✅ FIX: Use memoized endAdornment
               }}
               sx={{
                 "& .MuiOutlinedInput-root": {
@@ -268,6 +399,44 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
                 },
               }}
             />
+
+            <FormControl
+              fullWidth
+              required
+              error={!!errors.productCategory}
+              disabled={isLoading || categoriesLoading}
+            >
+              <InputLabel id="product-category-label">Ürün Grubu</InputLabel>
+              <Select
+                labelId="product-category-label"
+                value={productCategory}
+                onChange={(e) => {
+                  setProductCategory(e.target.value);
+                  setErrors((prev) => ({
+                    ...prev,
+                    productCategory: undefined,
+                  }));
+                }}
+                label="Ürün Grubu"
+                sx={{
+                  borderRadius: `${ds.borderRadius.md}px`,
+                }}
+              >
+                {categories.map((category) => (
+                  <MenuItem key={category.id} value={category.name}>
+                    {category.name}
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.productCategory && (
+                <FormHelperText>{errors.productCategory}</FormHelperText>
+              )}
+              {existingCategory && !errors.productCategory && (
+                <FormHelperText sx={{ color: ds.colors.success.main }}>
+                  Bu ürün için kategori otomatik seçildi
+                </FormHelperText>
+              )}
+            </FormControl>
           </Stack>
 
           {/* Live Preview */}

@@ -75,6 +75,7 @@ export interface CreateCuttingListRequest {
  */
 export interface AddProductSectionRequest {
   readonly productName: string;
+  readonly productCategory?: string;
 }
 
 /**

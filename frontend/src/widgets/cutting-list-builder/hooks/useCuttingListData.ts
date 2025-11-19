@@ -4,7 +4,7 @@
  * @version 1.1.0 - Migrated to FSD API Client
  */
 
-import { useCallback, useRef } from "react";
+import React, { useCallback, useRef } from "react";
 import {
   addItemToSection as addItemToSectionAPI,
   createCuttingList as createCuttingListApi,
@@ -23,7 +23,7 @@ import {
 interface UseCuttingListDataProps {
   cuttingList: CuttingList | null;
   setCuttingList: (list: CuttingList | null) => void;
-  setCuttingLists: (lists: CuttingList[]) => void;
+  setCuttingLists: React.Dispatch<React.SetStateAction<CuttingList[]>>; // ✅ CRITICAL FIX: Proper React state setter type
   cuttingLists: CuttingList[];
   title: string;
   selectedWeekNumber: number;
@@ -222,9 +222,13 @@ export const useCuttingListData = ({
   ]);
 
   const addProductSection = useCallback(
-    async (productNameParam?: string): Promise<void> => {
-      // ✅ CRITICAL FIX: Accept productName as parameter to avoid race condition
+    async (
+      productNameParam?: string,
+      productCategoryParam?: string,
+    ): Promise<void> => {
+      // ✅ CRITICAL FIX: Accept productName and productCategory as parameters
       const effectiveProductName = productNameParam ?? productName;
+      const effectiveProductCategory = productCategoryParam;
 
       if (!effectiveProductName.trim() || !cuttingList) {
         handleError(
@@ -241,6 +245,7 @@ export const useCuttingListData = ({
       const optimisticSection: ProductSection = {
         id: `temp-${Date.now()}`,
         productName: effectiveProductName.trim(),
+        productCategory: effectiveProductCategory,
         items: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -256,6 +261,7 @@ export const useCuttingListData = ({
 
         const realSection = await addProductSection(cuttingList.id, {
           productName: effectiveProductName.trim(),
+          productCategory: effectiveProductCategory,
         });
 
         // ✅ DIRECT UPDATE: No optimistic update, direct real data
@@ -271,7 +277,16 @@ export const useCuttingListData = ({
           updatedAt: new Date().toISOString(),
         };
 
+        // ✅ FIX: Update BOTH cuttingList and cuttingLists
         setCuttingList(updatedCuttingList);
+        
+        // ✅ CRITICAL FIX: Use functional update to avoid stale closure
+        setCuttingLists((prevLists) =>
+          prevLists.map((list) =>
+            list.id === cuttingList.id ? updatedCuttingList : list
+          )
+        );
+
         setShowNewProductDialog(false);
         setSuccess("Ürün bölümü eklendi");
         setLoadingState(LoadingState.SUCCESS);
@@ -336,7 +351,14 @@ export const useCuttingListData = ({
         return section;
       });
 
-      setCuttingList({ ...cuttingList, sections: updatedSections });
+      const updatedList = { ...cuttingList, sections: updatedSections };
+      setCuttingList(updatedList);
+      
+      // ✅ CRITICAL FIX: Use functional update to avoid stale closure
+      setCuttingLists((prevLists) =>
+        prevLists.map((list) => (list.id === cuttingList.id ? updatedList : list))
+      );
+      
       resetNewItemForm();
       setShowNewItemDialog(false);
       setSuccess("İş emri eklendi");
@@ -444,7 +466,14 @@ export const useCuttingListData = ({
           return section;
         });
 
-        setCuttingList({ ...cuttingList, sections: updatedSections });
+        const updatedList = { ...cuttingList, sections: updatedSections };
+        setCuttingList(updatedList);
+        
+        // ✅ CRITICAL FIX: Use functional update to avoid stale closure
+        setCuttingLists((prevLists) =>
+          prevLists.map((list) => (list.id === cuttingList.id ? updatedList : list))
+        );
+        
         resetNewItemForm();
         setEditingItem(null);
         setShowEditItemDialog(false);
@@ -491,7 +520,14 @@ export const useCuttingListData = ({
           return section;
         });
 
-        setCuttingList({ ...cuttingList, sections: updatedSections });
+        const updatedList = { ...cuttingList, sections: updatedSections };
+        setCuttingList(updatedList);
+        
+        // ✅ CRITICAL FIX: Use functional update to avoid stale closure
+        setCuttingLists((prevLists) =>
+          prevLists.map((list) => (list.id === cuttingList.id ? updatedList : list))
+        );
+        
         setSuccess("İş emri silindi");
         setLoadingState(LoadingState.SUCCESS);
       } catch (error) {
@@ -516,7 +552,14 @@ export const useCuttingListData = ({
         const updatedSections = cuttingList.sections.filter(
           (section) => section.id !== sectionId,
         );
-        setCuttingList({ ...cuttingList, sections: updatedSections });
+        const updatedList = { ...cuttingList, sections: updatedSections };
+        setCuttingList(updatedList);
+        
+        // ✅ CRITICAL FIX: Use functional update to avoid stale closure
+        setCuttingLists((prevLists) =>
+          prevLists.map((list) => (list.id === cuttingList.id ? updatedList : list))
+        );
+        
         setSuccess("Ürün kategorisi silindi");
         setLoadingState(LoadingState.SUCCESS);
       } catch (error) {

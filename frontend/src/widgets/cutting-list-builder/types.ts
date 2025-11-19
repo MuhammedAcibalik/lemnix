@@ -34,6 +34,7 @@ export interface WorkOrderItem {
 export interface ProductSection {
   id: string;
   productName: string;
+  productCategory?: string;
   items: WorkOrderItem[];
   createdAt: string;
   updatedAt: string;
@@ -203,4 +204,16 @@ export interface StyledChipProps {
   size?: "small" | "medium";
   sx?: Record<string, unknown>;
   [key: string]: unknown;
+}
+
+// ============================================================================
+// PRODUCT CATEGORY TYPES
+// ============================================================================
+
+export interface ProductCategory {
+  readonly id: string;
+  readonly name: string;
+  readonly description?: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
 }

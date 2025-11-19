@@ -389,11 +389,11 @@ export const CuttingListBuilder: React.FC = () => {
       <NewProductDialog
         open={showNewProductDialog}
         onClose={() => setShowNewProductDialog(false)}
-        onAddProduct={async (productName: string) => {
-          // ✅ CRITICAL FIX: Pass productName directly to avoid race condition
+        onAddProduct={async (productName: string, productCategory: string) => {
+          // ✅ CRITICAL FIX: Pass productName and productCategory directly to avoid race condition
           // React state updates are async - can't rely on setProductName completing first
           setProductName(productName);
-          await addProductSection(productName);
+          await addProductSection(productName, productCategory);
         }}
         isLoading={loadingState === LoadingState.LOADING}
       />

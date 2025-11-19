@@ -78,26 +78,28 @@ export const TextField = forwardRef<HTMLDivElement, TextFieldProps>(
     const currentLength = typeof value === "string" ? value.length : 0;
     const showCount = characterCount && (maxCharacters || focused);
 
-    // Size configurations
+    // Size configurations with safe fallbacks
     const sizeConfig = {
       sm: {
         height: 36,
-        fontSize: ds.fontSize.sm,
-        padding: `${ds.spacing["2"]}px ${ds.spacing["3"]}px`,
+        fontSize: ds.fontSize?.sm || "0.875rem", // 14px fallback
+        padding: `${ds.spacing?.["2"] || 8}px ${ds.spacing?.["3"] || 12}px`,
       },
       md: {
         height: 44,
-        fontSize: ds.fontSize.base,
-        padding: `${ds.spacing["2.5"]}px ${ds.spacing["3"]}px`,
+        fontSize: ds.fontSize?.base || "1rem", // 16px fallback
+        padding: `${ds.spacing?.["2.5"] || 10}px ${ds.spacing?.["3"] || 12}px`,
       },
       lg: {
         height: 52,
-        fontSize: ds.fontSize.lg,
-        padding: `${ds.spacing["3"]}px ${ds.spacing["4"]}px`,
+        fontSize: ds.fontSize?.lg || "1.125rem", // 18px fallback
+        padding: `${ds.spacing?.["3"] || 12}px ${ds.spacing?.["4"] || 16}px`,
       },
     };
 
-    const currentSize = sizeConfig[size];
+    // Ensure size is valid, fallback to 'md'
+    const validSize: TextFieldSize = size && sizeConfig[size] ? size : "md";
+    const currentSize = sizeConfig[validSize];
 
     // Variant styles
     const variantStyles = {

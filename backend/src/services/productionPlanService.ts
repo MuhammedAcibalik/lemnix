@@ -106,30 +106,59 @@ export class ProductionPlanService {
       //   };
       // }
 
-      const createdPlan = await this.prisma.$transaction(async (tx) => {
-        const plan = await tx.productionPlan.create({
-          data: {
-            weekNumber,
-            year,
-            uploadedBy,
-            metadata: {
-              totalItems: parsedData.length,
-              validRows: parsedSummary.validRows,
-              invalidRows: parsedSummary.invalidRows,
-              uploadedAt: new Date().toISOString(),
+      // Use extended timeout for large batch operations (30 seconds)
+      const createdPlan = await this.prisma.$transaction(
+        async (tx) => {
+          const plan = await tx.productionPlan.create({
+            data: {
+              weekNumber,
+              year,
+              uploadedBy,
+              metadata: {
+                totalItems: parsedData.length,
+                validRows: parsedSummary.validRows,
+                invalidRows: parsedSummary.invalidRows,
+                uploadedAt: new Date().toISOString(),
+              },
             },
-          },
-        });
+          });
 
-        await tx.productionPlanItem.createMany({
-          data: parsedData.map((item) => mapProductionPlanItem(item, plan.id)),
-        });
+          // Process items in batches to avoid timeout and improve performance
+          const BATCH_SIZE = 100;
+          const itemsToCreate = parsedData.map((item) =>
+            mapProductionPlanItem(item, plan.id),
+          );
 
-        return tx.productionPlan.findUnique({
-          where: { id: plan.id },
-          include: { items: true },
-        });
-      });
+          const totalBatches = Math.ceil(itemsToCreate.length / BATCH_SIZE);
+          logger.info("Processing production plan items in batches", {
+            totalItems: itemsToCreate.length,
+            batchSize: BATCH_SIZE,
+            totalBatches,
+          });
+
+          for (let i = 0; i < itemsToCreate.length; i += BATCH_SIZE) {
+            const batch = itemsToCreate.slice(i, i + BATCH_SIZE);
+            const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
+            await tx.productionPlanItem.createMany({
+              data: batch,
+            });
+            logger.debug("Batch processed", {
+              batchNumber,
+              totalBatches,
+              itemsInBatch: batch.length,
+            });
+          }
+
+          return tx.productionPlan.findUnique({
+            where: { id: plan.id },
+            include: { items: true },
+          });
+        },
+        {
+          maxWait: 30000, // 30 seconds max wait for transaction to start
+          timeout: 30000, // 30 seconds timeout for transaction to complete
+        },
+      );
 
       logger.info("Production plan created", {
         weekNumber,

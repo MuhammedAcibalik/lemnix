@@ -34,6 +34,7 @@ import productionPlanRoutes from "../routes/productionPlanRoutes";
 import { materialProfileMappingRoutes } from "../routes/materialProfileMappingRoutes";
 import { createProgressiveRoutes } from "../routes/progressiveRoutes";
 import profileManagementRoutes from "../routes/profileManagementRoutes";
+import productCategoryRoutes from "../routes/productCategoryRoutes";
 import { env, isDevelopment } from "../config/env";
 import { loggerMiddleware } from "./requestLogger";
 
@@ -226,6 +227,7 @@ function registerRoutes(app: Express, io: SocketIOServer): void {
   app.use("/api/production-plan", createProgressiveRoutes(io));
   app.use("/api/material-profile-mappings", materialProfileMappingRoutes);
   app.use("/api/profile-management", profileManagementRoutes);
+  app.use("/api/product-categories", productCategoryRoutes);
 }
 
 function registerRootEndpoint(app: Express): void {

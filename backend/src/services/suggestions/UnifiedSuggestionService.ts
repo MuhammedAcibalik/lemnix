@@ -3,7 +3,6 @@
  * @module services/suggestions/UnifiedSuggestionService
  * @version 1.0.0
  *
- * Merges EnterpriseProfileSuggestionService and SmartSuggestionService
  * Single source of truth for all smart suggestions
  * Uses PostgreSQL, ML-based scoring, and follows SOLID principles
  */
@@ -12,10 +11,13 @@ import { SuggestionPatternRepository } from "../../repositories/SuggestionPatter
 import { ScoringService } from "./ScoringService";
 import { logger } from "../logger";
 import {
+  normalizeProfile,
+  normalizeMeasurement,
   createContextKey,
   createPatternKey,
 } from "../../utils/stringNormalizer";
 import { cacheService } from "../cache/RedisCache";
+import { prisma } from "../../config/database";
 
 // Use the repository's SuggestionPattern type
 type SuggestionPattern = Record<string, unknown>;
@@ -664,13 +666,208 @@ export class UnifiedSuggestionService {
   // ==========================================================================
 
   /**
+   * Calculate profile match score for pattern selection
+   * Higher score = better match
+   */
+  private calculateProfileMatchScore(
+    patternProfile: string,
+    requestedProfile?: string,
+  ): number {
+    if (!requestedProfile) return 0;
+
+    const normalizedPattern = normalizeProfile(patternProfile);
+    const normalizedRequested = normalizeProfile(requestedProfile);
+
+    // Exact match: 100 points
+    if (normalizedPattern === normalizedRequested) return 100;
+
+    // Contains match (either direction): 50 points
+    if (
+      normalizedPattern.includes(normalizedRequested) ||
+      normalizedRequested.includes(normalizedPattern)
+    ) {
+      return 50;
+    }
+
+    // No match: 0 points
+    return 0;
+  }
+
+  /**
+   * Calculate ratios from historical cutting list items
+   * This is used when ratioHistory is empty to get real ratios from database
+   * ✅ OPTIMIZED: Uses CuttingListItem table directly for better performance
+   */
+  private async calculateRatiosFromHistory(
+    productName: string,
+    size: string,
+    profile: string,
+    measurement: string,
+  ): Promise<Array<{ orderQty: number; profileQty: number; ratio: number }>> {
+    try {
+      // Normalize inputs for matching
+      const normalizedSize = size.toUpperCase().trim();
+      const normalizedProfile = normalizeProfile(profile);
+      const normalizedMeasurement = normalizeMeasurement(measurement);
+      const normalizedProductName = productName.toUpperCase().trim();
+
+      // Get all cutting lists with sections to find productName
+      const cuttingLists = await prisma.cuttingList.findMany({
+        select: {
+          id: true,
+          sections: true,
+        },
+      });
+
+      // Build a map of cuttingListId -> productName from sections
+      const cuttingListProductMap = new Map<string, string>();
+      for (const cuttingList of cuttingLists) {
+        if (!cuttingList.sections || typeof cuttingList.sections !== "object") {
+          continue;
+        }
+
+        const sections = cuttingList.sections as unknown as Array<{
+          productName?: string;
+        }>;
+
+        if (!Array.isArray(sections)) {
+          continue;
+        }
+
+        for (const section of sections) {
+          const sectionProductName = section.productName?.toUpperCase().trim() || "";
+          if (sectionProductName.includes(normalizedProductName)) {
+            cuttingListProductMap.set(cuttingList.id, sectionProductName);
+            break; // Found matching product, no need to check other sections
+          }
+        }
+      }
+
+      if (cuttingListProductMap.size === 0) {
+        logger.info("No cutting lists found with matching product name", {
+          productName,
+        });
+        return [];
+      }
+
+      // Get all CuttingListItem records that match size and profile
+      const matchingItems = await prisma.cuttingListItem.findMany({
+        where: {
+          cuttingListId: {
+            in: Array.from(cuttingListProductMap.keys()),
+          },
+          size: {
+            contains: normalizedSize,
+            mode: "insensitive",
+          },
+          profileType: {
+            // Use contains for partial match
+            contains: normalizedProfile,
+            mode: "insensitive",
+          },
+          orderQuantity: {
+            not: null,
+            gt: 0,
+          },
+          quantity: {
+            gt: 0,
+          },
+        },
+        select: {
+          workOrderId: true,
+          orderQuantity: true,
+          quantity: true,
+          length: true,
+          size: true,
+          profileType: true,
+          cuttingListId: true,
+        },
+      });
+
+      const ratios: Array<{ orderQty: number; profileQty: number; ratio: number }> = [];
+      // Track processed workOrderId+profile+measurement combinations to avoid duplicates
+      const processedCombinations = new Set<string>();
+
+      for (const item of matchingItems) {
+        // Check if product name matches (from cuttingListProductMap)
+        if (!cuttingListProductMap.has(item.cuttingListId)) {
+          continue;
+        }
+
+        // Normalize item values for comparison
+        const itemSize = item.size.toUpperCase().trim();
+        if (!itemSize.includes(normalizedSize)) {
+          continue;
+        }
+
+        const itemProfile = normalizeProfile(item.profileType);
+        if (itemProfile !== normalizedProfile) {
+          continue;
+        }
+
+        // Convert length to measurement string for comparison
+        const itemMeasurement = normalizeMeasurement(`${item.length}mm`);
+        if (itemMeasurement !== normalizedMeasurement) {
+          continue;
+        }
+
+        const orderQty = item.orderQuantity || 0;
+        if (orderQty <= 0) {
+          continue;
+        }
+
+        const profileQty = item.quantity || 0;
+        if (profileQty <= 0) {
+          continue;
+        }
+
+        // Create unique key for workOrderId+profile+measurement combination
+        // This ensures we get one ratio per order per profile+measurement
+        const combinationKey = `${item.workOrderId}|${itemProfile}|${itemMeasurement}`;
+        if (!processedCombinations.has(combinationKey)) {
+          processedCombinations.add(combinationKey);
+          const ratio = profileQty / orderQty;
+          ratios.push({
+            orderQty,
+            profileQty,
+            ratio,
+          });
+        }
+      }
+
+      logger.info("Calculated ratios from historical cutting list items", {
+        productName,
+        size,
+        profile,
+        measurement,
+        ratioCount: ratios.length,
+        itemCount: matchingItems.length,
+      });
+
+      return ratios;
+    } catch (error) {
+      logger.error("Failed to calculate ratios from history", {
+        error,
+        productName,
+        size,
+        profile,
+        measurement,
+      });
+      return [];
+    }
+  }
+
+  /**
    * Apply smart suggestion - returns complete profiles with calculated quantities
    * This is the ONE-CLICK magic: user enters orderQuantity, we calculate all profile quantities
+   * 
+   * ✅ FIXED: Added requestedProfile parameter for profile type matching
    */
   async applySmartSuggestion(
     productName: string,
     size: string,
     orderQuantity: number,
+    requestedProfile?: string,
   ): Promise<{
     profiles: Array<{
       profile: string;
@@ -710,49 +907,213 @@ export class UnifiedSuggestionService {
         patterns: SuggestionPattern[];
       }> = [];
 
+      // ✅ FIXED: Use normalized profile and measurement for key matching
       for (const pattern of patterns) {
-        const key = `${pattern.profile as string}|${pattern.measurement as string}`;
+        const normalizedProfile = normalizeProfile(
+          (pattern.profile as string) || "",
+        );
+        const normalizedMeasurement = normalizeMeasurement(
+          (pattern.measurement as string) || "",
+        );
+        const key = `${normalizedProfile}|${normalizedMeasurement}`;
 
         if (!seenKeys.has(key)) {
           seenKeys.add(key);
-          // Get all patterns with same key
-          const matchingPatterns = patterns.filter(
-            (p) => `${p.profile as string}|${p.measurement as string}` === key,
-          );
+          // Get all patterns with same normalized key
+          const matchingPatterns = patterns.filter((p) => {
+            const pProfile = normalizeProfile((p.profile as string) || "");
+            const pMeasurement = normalizeMeasurement(
+              (p.measurement as string) || "",
+            );
+            return `${pProfile}|${pMeasurement}` === key;
+          });
           uniquePatterns.push({ key, patterns: matchingPatterns });
         }
       }
 
       // Calculate quantities for each profile+measurement using ratio
-      const profiles = uniquePatterns.map(
-        ({ key, patterns: profilePatterns }) => {
-          // ✅ FIXED: Type-safe pattern sorting with validation
+      const profiles = await Promise.all(
+        uniquePatterns.map(async ({ key, patterns: profilePatterns }) => {
+          // ✅ FIXED: Pattern sorting with profile match priority
+          // Priority: Profile Match > Confidence > Frequency
           const bestPattern = profilePatterns.sort((a, b) => {
+            // 1. Profile match score (if requestedProfile provided)
+            if (requestedProfile) {
+              const aMatch = this.calculateProfileMatchScore(
+                (a.profile as string) || "",
+                requestedProfile,
+              );
+              const bMatch = this.calculateProfileMatchScore(
+                (b.profile as string) || "",
+                requestedProfile,
+              );
+
+              if (aMatch !== bMatch) {
+                return bMatch - aMatch; // Higher match score = better
+              }
+            }
+
+            // 2. Confidence score
             const aConfidence =
               typeof a.confidence === "number" ? a.confidence : 0;
             const bConfidence =
               typeof b.confidence === "number" ? b.confidence : 0;
+            const confDiff = bConfidence - aConfidence;
+            if (confDiff !== 0) return confDiff;
+
+            // 3. Frequency (tiebreaker)
             const aFrequency =
               typeof a.frequency === "number" ? a.frequency : 0;
             const bFrequency =
               typeof b.frequency === "number" ? b.frequency : 0;
-
-            const confDiff = bConfidence - aConfidence;
-            if (confDiff !== 0) return confDiff;
             return bFrequency - aFrequency;
           })[0];
 
-          // ✅ FIXED: Type-safe ratio calculation with validation
-          const averageRatio =
-            typeof bestPattern.averageRatio === "number"
-              ? bestPattern.averageRatio
-              : 0;
-          if (isNaN(averageRatio) || averageRatio <= 0) {
-            logger.warn("Invalid averageRatio for pattern", {
+          // ✅ FIXED: Combine ratio histories from all patterns for accurate calculation
+          // Tüm pattern'lerin ratioHistory'lerini birleştir
+          const combinedRatioHistory: Array<{
+            orderQty: number;
+            profileQty: number;
+            ratio: number;
+          }> = [];
+
+          let totalFrequency = 0;
+          let totalConfidence = 0;
+
+          for (const pattern of profilePatterns) {
+            // Collect ratio history from each pattern
+            const ratioHistory =
+              (pattern.ratioHistory as unknown as Array<{
+                orderQty: number;
+                profileQty: number;
+                ratio: number;
+              }>) || [];
+
+            if (Array.isArray(ratioHistory) && ratioHistory.length > 0) {
+              combinedRatioHistory.push(...ratioHistory);
+            }
+
+            // Sum up frequency and confidence for weighted calculation
+            totalFrequency +=
+              typeof pattern.frequency === "number" ? pattern.frequency : 0;
+            totalConfidence +=
+              typeof pattern.confidence === "number" ? pattern.confidence : 0;
+          }
+
+          // ✅ FIXED: Calculate combined average ratio from all ratio histories
+          let combinedAverageRatio = 0;
+          let reasoning = "";
+
+          if (combinedRatioHistory.length > 0) {
+            // Calculate average ratio from all combined ratio histories
+            const totalRatio = combinedRatioHistory.reduce(
+              (sum, r) => sum + r.ratio,
+              0,
+            );
+            combinedAverageRatio = totalRatio / combinedRatioHistory.length;
+
+            reasoning = `Ratio: ${combinedAverageRatio.toFixed(3)} (from ${combinedRatioHistory.length} historical uses across ${profilePatterns.length} pattern${profilePatterns.length > 1 ? "s" : ""})`;
+          } else {
+            // ✅ FIXED: Try to use averageRatio from all patterns if ratioHistory is empty
+            // This handles cases where pattern was created before ratioHistory was implemented
+            const validRatios: number[] = [];
+            
+            for (const pattern of profilePatterns) {
+              const avgRatio =
+                typeof pattern.averageRatio === "number"
+                  ? pattern.averageRatio
+                  : 0;
+              if (avgRatio > 0 && !isNaN(avgRatio) && avgRatio !== 1.0) {
+                // Only use if not fallback value (1.0)
+                validRatios.push(avgRatio);
+              }
+            }
+
+            if (validRatios.length > 0) {
+              // Use average of all valid averageRatio values
+              combinedAverageRatio =
+                validRatios.reduce((sum, r) => sum + r, 0) / validRatios.length;
+              reasoning = `Ratio: ${combinedAverageRatio.toFixed(3)} (from ${validRatios.length} pattern averageRatio${validRatios.length > 1 ? "s" : ""}, no ratioHistory)`;
+            } else {
+              // ✅ FIXED: Calculate ratios from historical cutting lists
+              // This gets real ratios from database when ratioHistory is empty
+              const historicalRatios = await this.calculateRatiosFromHistory(
+                productName,
+                size,
+                bestPattern.profile as string,
+                bestPattern.measurement as string,
+              );
+
+              if (historicalRatios.length > 0) {
+                // Use average of historical ratios
+                const totalRatio = historicalRatios.reduce(
+                  (sum, r) => sum + r.ratio,
+                  0,
+                );
+                combinedAverageRatio = totalRatio / historicalRatios.length;
+                reasoning = `Ratio: ${combinedAverageRatio.toFixed(3)} (calculated from ${historicalRatios.length} historical order${historicalRatios.length > 1 ? "s" : ""} in cutting lists)`;
+
+                // ✅ BONUS: Update pattern with calculated ratioHistory for future use
+                try {
+                  const patternToUpdate = profilePatterns[0];
+                  if (patternToUpdate.id) {
+                    await this.patternRepo.update(patternToUpdate.id as string, {
+                      averageRatio: combinedAverageRatio,
+                      ratioHistory: historicalRatios,
+                    });
+                    logger.info("Updated pattern with calculated ratioHistory", {
+                      patternId: patternToUpdate.id,
+                      ratioCount: historicalRatios.length,
+                    });
+                  }
+                } catch (updateError) {
+                  logger.warn("Failed to update pattern with ratioHistory", {
+                    error: updateError,
+                  });
+                  // Non-critical, continue
+                }
+              } else {
+                // Fallback: Try to calculate ratio from quantity/orderQuantity fields
+                const calculatedRatios: number[] = [];
+                
+                for (const pattern of profilePatterns) {
+                  const patternQuantity =
+                    typeof pattern.quantity === "number" ? pattern.quantity : 0;
+                  const patternOrderQuantity =
+                    typeof pattern.orderQuantity === "number"
+                      ? pattern.orderQuantity
+                      : 0;
+                  
+                  if (patternOrderQuantity > 0 && patternQuantity > 0) {
+                    const calculatedRatio = patternQuantity / patternOrderQuantity;
+                    if (calculatedRatio > 0 && !isNaN(calculatedRatio)) {
+                      calculatedRatios.push(calculatedRatio);
+                    }
+                  }
+                }
+
+                if (calculatedRatios.length > 0) {
+                  // Use average of calculated ratios
+                  combinedAverageRatio =
+                    calculatedRatios.reduce((sum, r) => sum + r, 0) /
+                    calculatedRatios.length;
+                  reasoning = `Ratio: ${combinedAverageRatio.toFixed(3)} (calculated from ${calculatedRatios.length} pattern${calculatedRatios.length > 1 ? "s" : " quantity/orderQuantity fields"})`;
+                } else {
+                  // Last resort: Fallback ratio
+                  combinedAverageRatio = 1.0;
+                  reasoning = `Fallback ratio 1:1 (no historical ratio data available)`;
+                }
+              }
+            }
+          }
+
+          if (isNaN(combinedAverageRatio) || combinedAverageRatio <= 0) {
+            logger.warn("Invalid combined averageRatio", {
               profile: bestPattern.profile,
               measurement: bestPattern.measurement,
-              averageRatio,
-              patternId: bestPattern.id,
+              combinedAverageRatio,
+              ratioHistoryCount: combinedRatioHistory.length,
+              patternCount: profilePatterns.length,
             });
             // Use fallback ratio of 1:1
             const fallbackRatio = 1.0;
@@ -774,19 +1135,45 @@ export class UnifiedSuggestionService {
                     ? bestPattern.confidence
                     : 0) * 100,
                 ) / 100,
-              reasoning: `Fallback ratio 1:1 (invalid historical ratio: ${averageRatio})`,
+              reasoning: `Fallback ratio 1:1 (invalid combined ratio: ${combinedAverageRatio})`,
             };
           }
 
-          // Calculate quantity using historical ratio
-          const predictedQuantity = Math.round(orderQuantity * averageRatio);
+          // Calculate quantity using combined average ratio
+          const predictedQuantity = Math.round(
+            orderQuantity * combinedAverageRatio,
+          );
+
+          // Calculate average confidence
+          const avgConfidence =
+            profilePatterns.length > 0
+              ? totalConfidence / profilePatterns.length
+              : typeof bestPattern.confidence === "number"
+                ? bestPattern.confidence
+                : 0;
 
           logger.info("Calculating quantity for pattern", {
             profile: bestPattern.profile,
             measurement: bestPattern.measurement,
             orderQuantity,
-            averageRatio: bestPattern.averageRatio,
+            combinedAverageRatio,
             predictedQuantity,
+            ratioHistoryCount: combinedRatioHistory.length,
+            patternCount: profilePatterns.length,
+            ratioHistoryDetails: combinedRatioHistory.map((r) => ({
+              orderQty: r.orderQty,
+              profileQty: r.profileQty,
+              ratio: r.ratio,
+            })),
+            allPatternRatios: profilePatterns.map((p) => ({
+              profile: p.profile,
+              measurement: p.measurement,
+              averageRatio: p.averageRatio,
+              frequency: p.frequency,
+              ratioHistoryCount: Array.isArray(p.ratioHistory)
+                ? (p.ratioHistory as unknown[]).length
+                : 0,
+            })),
           });
 
           return {
@@ -799,15 +1186,10 @@ export class UnifiedSuggestionService {
                 ? bestPattern.measurement
                 : "Unknown",
             quantity: predictedQuantity,
-            confidence:
-              Math.round(
-                (typeof bestPattern.confidence === "number"
-                  ? bestPattern.confidence
-                  : 0) * 100,
-              ) / 100,
-            reasoning: `Ratio: ${averageRatio.toFixed(2)} (from ${typeof bestPattern.frequency === "number" ? bestPattern.frequency : 0} historical uses)`,
+            confidence: Math.round(avgConfidence * 100) / 100,
+            reasoning,
           };
-        },
+        }),
       );
 
       // ✅ FIXED: Sort by original creation order (stable sort)
@@ -821,6 +1203,7 @@ export class UnifiedSuggestionService {
         productName,
         size,
         orderQuantity,
+        requestedProfile: requestedProfile || "none",
         profileCount: profiles.length,
         totalConfidence: avgConfidence.toFixed(2),
       });

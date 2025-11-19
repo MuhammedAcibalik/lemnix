@@ -432,3 +432,28 @@ model WorkOrderProfileMapping {
   @@index([workOrderId, weekNumber, year])
   @@map("work_order_profile_mappings")
 }
+
+model ProductCategory {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  products    ProductMapping[]
+
+  @@index([name])
+  @@map("product_categories")
+}
+
+model ProductMapping {
+  id          String          @id @default(cuid())
+  productName String          @unique
+  categoryId  String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  category    ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([productName])
+  @@index([categoryId])
+  @@map("product_mappings")
+}

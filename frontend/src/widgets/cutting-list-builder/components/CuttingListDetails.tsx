@@ -4,7 +4,7 @@
  * @version 3.0.0 - Final UX Polish
  */
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Stack,
   Typography,
@@ -30,6 +30,7 @@ import {
   LoadingState,
 } from "../types";
 import { ProductSection as ProductSectionComponent } from "./ProductSection";
+import { ProductGroupCard } from "./ProductGroupCard";
 import { ProductDetailsDialog } from "./ProductDetailsDialog";
 
 interface CuttingListDetailsProps {
@@ -86,6 +87,27 @@ export const CuttingListDetails: React.FC<CuttingListDetailsProps> = ({
     (acc, section) => acc + section.items.length,
     0,
   );
+
+  // ✅ Group sections by product category
+  // ✅ CRITICAL FIX: Group and sort in single useMemo to avoid cascading re-renders
+  const { groupedSections, sortedCategories } = useMemo(() => {
+    const groups = new Map<string, ProductSection[]>();
+    for (const section of cuttingList.sections) {
+      const category = section.productCategory || "Diğer";
+      const existing = groups.get(category) || [];
+      groups.set(category, [...existing, section]);
+    }
+    
+    // Sort categories alphabetically in the same memo
+    const sorted = Array.from(groups.keys()).sort((a, b) => {
+      // "Diğer" should always be last
+      if (a === "Diğer") return 1;
+      if (b === "Diğer") return -1;
+      return a.localeCompare(b, "tr");
+    });
+    
+    return { groupedSections: groups, sortedCategories: sorted };
+  }, [cuttingList.sections]);
 
   return (
     <FadeIn>
@@ -187,11 +209,12 @@ export const CuttingListDetails: React.FC<CuttingListDetailsProps> = ({
                     onClick={onAddProduct}
                     size="small"
                     sx={{
-                      background: ds.gradients.primary,
+                      background: ds.colors.primary.main,
                       color: ds.colors.text.inverse,
                       "&:hover": {
+                        background: ds.colors.primary.dark,
                         transform: "scale(1.05)",
-                        boxShadow: ds.shadows.soft.sm,
+                        boxShadow: ds.shadows.soft.md,
                       },
                     }}
                   >
@@ -263,19 +286,22 @@ export const CuttingListDetails: React.FC<CuttingListDetailsProps> = ({
             </CardV2>
           </ScaleIn>
         ) : (
-          <Stack spacing={ds.spacing["2"]}>
-            {cuttingList.sections.map((section) => (
-              <ScaleIn key={section.id} delay={0}>
-                <ProductSectionComponent
-                  section={section}
+          <Stack spacing={ds.spacing["3"]}>
+            {sortedCategories.map((categoryName) => {
+              const sections = groupedSections.get(categoryName) || [];
+              return (
+                <ProductGroupCard
+                  key={categoryName} // ✅ FIX: Removed ScaleIn delay - render all categories immediately
+                  categoryName={categoryName}
+                  sections={sections}
                   onAddItem={onAddItem}
                   onEditItem={onEditItem}
                   onDeleteItem={onDeleteItem}
                   onCopyItem={onCopyItem}
-                  onViewDetails={handleViewDetails}
+                  onDeleteSection={onDeleteSection}
                 />
-              </ScaleIn>
-            ))}
+              );
+            })}
           </Stack>
         )}
 

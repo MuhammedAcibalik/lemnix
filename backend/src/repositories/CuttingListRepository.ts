@@ -28,6 +28,7 @@ import {
 interface CuttingListSection {
   id: string;
   productName: string;
+  productCategory?: string;
   items: PrismaCuttingListItem[];
   createdAt: string;
   updatedAt: string;
@@ -422,7 +423,7 @@ export class CuttingListRepository {
    */
   public async addProductSection(
     cuttingListId: string,
-    data: { productName: string },
+    data: { productName: string; productCategory?: string },
   ): Promise<CuttingListSection> {
     try {
       // Check if cutting list exists
@@ -439,6 +440,7 @@ export class CuttingListRepository {
       const newSection = {
         id: `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         productName: data.productName,
+        productCategory: data.productCategory,
         items: [],
         createdAt: now.toISOString(),
         updatedAt: now.toISOString(),
@@ -1171,6 +1173,114 @@ export class CuttingListRepository {
       await this.invalidateCache(cuttingListId, "system-user");
     } catch (error) {
       logger.error("Failed to add item", { cuttingListId, itemData, error });
+      throw error;
+    }
+  }
+
+  /**
+   * Delete product section from cutting list
+   * Also deletes all CuttingListItem records associated with items in this section
+   */
+  public async deleteSection(
+    cuttingListId: string,
+    sectionId: string,
+  ): Promise<void> {
+    try {
+      // Get cutting list
+      const cuttingList = await prisma.cuttingList.findUnique({
+        where: { id: cuttingListId },
+      });
+
+      if (!cuttingList) {
+        throw new Error("Cutting list not found");
+      }
+
+      // Parse sections
+      const sections = (cuttingList.sections as unknown as Array<CuttingListSection>) || [];
+
+      // Find section index
+      const sectionIndex = sections.findIndex((s) => s.id === sectionId);
+
+      if (sectionIndex === -1) {
+        logger.error("Section not found for deletion", {
+          sectionId,
+          availableSections: sections.map((s) => s.id),
+        });
+        throw new Error("Product section not found");
+      }
+
+      const targetSection = sections[sectionIndex];
+
+      // ✅ CRITICAL: Delete all CuttingListItem records associated with items in this section
+      // Each item in the section may have multiple CuttingListItem records (one per profile)
+      if (targetSection.items && Array.isArray(targetSection.items)) {
+        const itemIds = targetSection.items.map((item) => item.id);
+        const workOrderIds = targetSection.items.map((item) => item.workOrderId);
+
+        // Delete by item IDs (these are the IDs used in CuttingListItem records)
+        // Format: `${itemId}-${profile.id}` or just `itemId`
+        for (const itemId of itemIds) {
+          // Delete all CuttingListItem records that start with this itemId
+          await prisma.cuttingListItem.deleteMany({
+            where: {
+              cuttingListId: cuttingListId,
+              id: {
+                startsWith: itemId,
+              },
+            },
+          });
+        }
+
+        // Also delete by workOrderId as fallback (in case itemId format is different)
+        for (const workOrderId of workOrderIds) {
+          await prisma.cuttingListItem.deleteMany({
+            where: {
+              cuttingListId: cuttingListId,
+              workOrderId: workOrderId,
+            },
+          });
+        }
+
+        logger.info("Deleted CuttingListItem records for section", {
+          cuttingListId,
+          sectionId,
+          itemCount: itemIds.length,
+        });
+      }
+
+      // Remove section from sections array
+      const updatedSections = sections.filter((s) => s.id !== sectionId);
+
+      // Update cutting list in PostgreSQL
+      const now = new Date();
+      await prisma.cuttingList.update({
+        where: { id: cuttingListId },
+        data: {
+          sections: updatedSections as unknown as Prisma.InputJsonValue,
+          updatedAt: now,
+        },
+      });
+
+      // Invalidate cache (non-blocking)
+      try {
+        await this.invalidateCache(cuttingListId, "system-user");
+      } catch (cacheError) {
+        logger.warn("Cache invalidation failed (non-critical)", {
+          cuttingListId,
+          cacheError,
+        });
+      }
+
+      logger.info("Section deleted successfully", {
+        cuttingListId,
+        sectionId,
+      });
+    } catch (error) {
+      logger.error("Failed to delete section", {
+        cuttingListId,
+        sectionId,
+        error,
+      });
       throw error;
     }
   }

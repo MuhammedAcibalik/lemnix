@@ -4,13 +4,13 @@
  */
 
 export { ProfileSuggestionService } from './profileSuggestionService';
-export { EnterpriseProfileSuggestionService } from './enterpriseProfileSuggestionService';
 export { QuantityCalculationService } from './quantityCalculationService';
-export type { 
-  SmartSuggestionResponse, 
-  SmartSuggestion, 
-  AutoCompleteSuggestion, 
-  ProfileSuggestionResponse, 
-  ProfileSuggestionItem 
-} from './smartSuggestionService';
+export { UnifiedSuggestionService } from './UnifiedSuggestionService';
+export type {
+  SmartSuggestion,
+  ProfileSuggestion,
+  AlternativeSuggestion,
+  CombinationSuggestion,
+  SuggestionStatistics,
+} from './UnifiedSuggestionService';
 

@@ -227,10 +227,11 @@ router.get(
  * - product: string (required)
  * - size: string (required)
  * - orderQuantity: number (required)
+ * - requestedProfile?: string (optional) - Profile type to prioritize
  */
 router.post("/apply", async (req: Request, res: Response): Promise<void> => {
   try {
-    const { product, size, orderQuantity } = req.body;
+    const { product, size, orderQuantity, requestedProfile } = req.body;
 
     if (!product || !size || !orderQuantity) {
       res.status(400).json({
@@ -244,6 +245,7 @@ router.post("/apply", async (req: Request, res: Response): Promise<void> => {
       product as string,
       size as string,
       parseInt(orderQuantity as string, 10),
+      requestedProfile as string | undefined, // ✅ FIXED: Optional profile type filter
     );
 
     res.json({
