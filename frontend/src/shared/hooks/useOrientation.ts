@@ -9,6 +9,16 @@ import { useState, useEffect } from 'react';
 
 export type Orientation = 'portrait' | 'landscape';
 
+export type OrientationLockType = 
+  | 'any'
+  | 'natural'
+  | 'landscape'
+  | 'portrait'
+  | 'portrait-primary'
+  | 'portrait-secondary'
+  | 'landscape-primary'
+  | 'landscape-secondary';
+
 export interface OrientationState {
   /** Current orientation */
   orientation: Orientation;
@@ -121,7 +131,7 @@ export function useOrientation(): OrientationState {
  *   
  *   const enterFullscreen = async () => {
  *     await document.body.requestFullscreen();
- *     await lock('landscape');
+ *     await lock('landscape-primary');
  *   };
  *   
  *   return <button onClick={enterFullscreen}>Play Fullscreen</button>;
@@ -130,12 +140,13 @@ export function useOrientation(): OrientationState {
  */
 export function useOrientationLock() {
   const lock = async (lockType: OrientationLockType) => {
-    if (typeof window === 'undefined' || !window.screen?.orientation?.lock) {
+    if (typeof window === 'undefined' || !window.screen?.orientation) {
       console.warn('Screen orientation lock is not supported');
       return false;
     }
 
     try {
+      // @ts-expect-error - lock() is not in all TypeScript definitions
       await window.screen.orientation.lock(lockType);
       return true;
     } catch (error) {
@@ -145,7 +156,7 @@ export function useOrientationLock() {
   };
 
   const unlock = () => {
-    if (typeof window === 'undefined' || !window.screen?.orientation?.unlock) {
+    if (typeof window === 'undefined' || !window.screen?.orientation) {
       console.warn('Screen orientation unlock is not supported');
       return;
     }
