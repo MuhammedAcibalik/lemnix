@@ -97,7 +97,7 @@ export const CuttingListDetails: React.FC<CuttingListDetailsProps> = ({
       const existing = groups.get(category) || [];
       groups.set(category, [...existing, section]);
     }
-    
+
     // Sort categories alphabetically in the same memo
     const sorted = Array.from(groups.keys()).sort((a, b) => {
       // "Diğer" should always be last
@@ -105,7 +105,7 @@ export const CuttingListDetails: React.FC<CuttingListDetailsProps> = ({
       if (b === "Diğer") return -1;
       return a.localeCompare(b, "tr");
     });
-    
+
     return { groupedSections: groups, sortedCategories: sorted };
   }, [cuttingList.sections]);
 

@@ -112,7 +112,9 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ className }) => {
                 spacing={ds.spacing["2"]}
                 alignItems="center"
               >
-                <AutoAwesome sx={{ fontSize: 14, color: ds.colors.primary.main }} />
+                <AutoAwesome
+                  sx={{ fontSize: 14, color: ds.colors.primary.main }}
+                />
                 <Typography
                   sx={{
                     fontSize: tokens.typography.xs,
@@ -149,16 +151,21 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ className }) => {
                 fontWeight: 400,
               }}
             >
-              Endüstri 4.0 standartlarında geliştirilmiş, kapsamlı üretim optimizasyon platformu ile 
-              iş süreçlerinizi dijitalleştirin ve verimliliği artırın.
+              Endüstri 4.0 standartlarında geliştirilmiş, kapsamlı üretim
+              optimizasyon platformu ile iş süreçlerinizi dijitalleştirin ve
+              verimliliği artırın.
             </Typography>
           </Stack>
         </FadeIn>
 
         {/* Feature Cards Grid */}
-        <Grid 
-          container 
-          spacing={{ xs: ds.spacing["4"], sm: ds.spacing["5"], md: ds.spacing["6"] }}
+        <Grid
+          container
+          spacing={{
+            xs: ds.spacing["4"],
+            sm: ds.spacing["5"],
+            md: ds.spacing["6"],
+          }}
         >
           {features.map((feature, index) => (
             <Grid key={feature.title} item xs={12} md={6} lg={4}>
@@ -202,7 +209,10 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ className }) => {
 
                       <Badge variant="outline" color="primary">
                         <Typography
-                          sx={{ fontSize: tokens.typography.xs, fontWeight: 600 }}
+                          sx={{
+                            fontSize: tokens.typography.xs,
+                            fontWeight: 600,
+                          }}
                         >
                           {feature.badge}
                         </Typography>
@@ -227,7 +237,10 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ className }) => {
                     <Typography
                       variant="body2"
                       sx={{
-                        fontSize: { xs: tokens.typography.sm, sm: tokens.typography.base },
+                        fontSize: {
+                          xs: tokens.typography.sm,
+                          sm: tokens.typography.base,
+                        },
                         color: ds.colors.text.secondary,
                         lineHeight: 1.65,
                         fontWeight: 400,

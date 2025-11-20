@@ -293,7 +293,7 @@ const getSizeStyles = (
   // Use adaptive heights, fallback to design system if needed
   const adaptiveHeight = heightMap[size] ?? tokens.components.button.md;
   const adaptiveFontSize = fontSizeMap[size] ?? tokens.typography.base;
-  
+
   // Touch devices: ensure minimum interaction size
   const finalHeight = device.isTouch
     ? Math.max(adaptiveHeight, tokens.components.minTouchTarget * 0.9)
@@ -314,7 +314,8 @@ const getSizeStyles = (
   return {
     height: finalHeight,
     minHeight: finalHeight,
-    padding: paddingMap[size] ?? `${tokens.spacing.fn(2)} ${tokens.spacing.fn(2.5)}`,
+    padding:
+      paddingMap[size] ?? `${tokens.spacing.fn(2)} ${tokens.spacing.fn(2.5)}`,
     fontSize: adaptiveFontSize,
     gap: tokens.spacing.fn(1),
     borderRadius: tokens.borderRadius.md,
@@ -373,24 +374,28 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         sx={mergedSx}
         {...props}
       >
-        {loading && (() => {
-          const { icon } = tokens.components;
-          const loadingSize = 
-            size === "xs" || size === "small" ? icon.sm * 0.8 :
-            size === "sm" ? icon.sm :
-            size === "lg" || size === "xl" || size === "large" ? icon.md :
-            icon.sm * 1.1;
-          
-          return (
-            <CircularProgress
-              size={loadingSize}
-              sx={{
-                color: "currentColor",
-                marginRight: tokens.spacing.fn(1),
-              }}
-            />
-          );
-        })()}
+        {loading &&
+          (() => {
+            const { icon } = tokens.components;
+            const loadingSize =
+              size === "xs" || size === "small"
+                ? icon.sm * 0.8
+                : size === "sm"
+                  ? icon.sm
+                  : size === "lg" || size === "xl" || size === "large"
+                    ? icon.md
+                    : icon.sm * 1.1;
+
+            return (
+              <CircularProgress
+                size={loadingSize}
+                sx={{
+                  color: "currentColor",
+                  marginRight: tokens.spacing.fn(1),
+                }}
+              />
+            );
+          })()}
         {!loading && leftIcon && (
           <Box
             component="span"
@@ -435,7 +440,7 @@ Button.displayName = "Button";
  * PrimaryButton - Pre-configured primary button variant
  */
 export const PrimaryButton = forwardRef<HTMLButtonElement, ButtonProps>(
-  (props, ref) => <Button ref={ref} variant="primary" {...props} />
+  (props, ref) => <Button ref={ref} variant="primary" {...props} />,
 );
 
 PrimaryButton.displayName = "PrimaryButton";
@@ -444,7 +449,7 @@ PrimaryButton.displayName = "PrimaryButton";
  * SecondaryButton - Pre-configured secondary button variant
  */
 export const SecondaryButton = forwardRef<HTMLButtonElement, ButtonProps>(
-  (props, ref) => <Button ref={ref} variant="secondary" {...props} />
+  (props, ref) => <Button ref={ref} variant="secondary" {...props} />,
 );
 
 SecondaryButton.displayName = "SecondaryButton";
@@ -453,7 +458,7 @@ SecondaryButton.displayName = "SecondaryButton";
  * TextButton - Pre-configured text/link button variant
  */
 export const TextButton = forwardRef<HTMLButtonElement, ButtonProps>(
-  (props, ref) => <Button ref={ref} variant="link" {...props} />
+  (props, ref) => <Button ref={ref} variant="link" {...props} />,
 );
 
 TextButton.displayName = "TextButton";
@@ -462,7 +467,7 @@ TextButton.displayName = "TextButton";
  * DangerButton - Pre-configured danger button variant
  */
 export const DangerButton = forwardRef<HTMLButtonElement, ButtonProps>(
-  (props, ref) => <Button ref={ref} variant="danger" {...props} />
+  (props, ref) => <Button ref={ref} variant="danger" {...props} />,
 );
 
 DangerButton.displayName = "DangerButton";
@@ -471,7 +476,7 @@ DangerButton.displayName = "DangerButton";
  * SuccessButton - Pre-configured success button variant
  */
 export const SuccessButton = forwardRef<HTMLButtonElement, ButtonProps>(
-  (props, ref) => <Button ref={ref} variant="success" {...props} />
+  (props, ref) => <Button ref={ref} variant="success" {...props} />,
 );
 
 SuccessButton.displayName = "SuccessButton";
@@ -480,7 +485,7 @@ SuccessButton.displayName = "SuccessButton";
  * GhostButton - Pre-configured ghost button variant
  */
 export const GhostButton = forwardRef<HTMLButtonElement, ButtonProps>(
-  (props, ref) => <Button ref={ref} variant="ghost" {...props} />
+  (props, ref) => <Button ref={ref} variant="ghost" {...props} />,
 );
 
 GhostButton.displayName = "GhostButton";
@@ -489,7 +494,7 @@ GhostButton.displayName = "GhostButton";
  * GradientButton - Pre-configured gradient button variant
  */
 export const GradientButton = forwardRef<HTMLButtonElement, ButtonProps>(
-  (props, ref) => <Button ref={ref} variant="gradient" {...props} />
+  (props, ref) => <Button ref={ref} variant="gradient" {...props} />,
 );
 
 GradientButton.displayName = "GradientButton";
@@ -498,7 +503,7 @@ GradientButton.displayName = "GradientButton";
  * SoftButton - Pre-configured soft button variant
  */
 export const SoftButton = forwardRef<HTMLButtonElement, ButtonProps>(
-  (props, ref) => <Button ref={ref} variant="soft" {...props} />
+  (props, ref) => <Button ref={ref} variant="soft" {...props} />,
 );
 
 SoftButton.displayName = "SoftButton";
@@ -507,7 +512,7 @@ SoftButton.displayName = "SoftButton";
  * LinkButton - Pre-configured link button variant (alias for TextButton)
  */
 export const LinkButton = forwardRef<HTMLButtonElement, ButtonProps>(
-  (props, ref) => <Button ref={ref} variant="link" {...props} />
+  (props, ref) => <Button ref={ref} variant="link" {...props} />,
 );
 
 LinkButton.displayName = "LinkButton";

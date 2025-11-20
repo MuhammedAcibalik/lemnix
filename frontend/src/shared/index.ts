@@ -96,10 +96,7 @@ export type {
 } from "./hooks";
 
 // Adaptive UI Context
-export {
-  AdaptiveUIProvider,
-  useAdaptiveUIContext,
-} from "./contexts";
+export { AdaptiveUIProvider, useAdaptiveUIContext } from "./contexts";
 export type { AdaptiveUIContextValue } from "./contexts";
 
 // ============================================================================

@@ -15,9 +15,7 @@ import {
   Box,
   alpha,
 } from "@mui/material";
-import {
-  Visibility as VisibilityIcon,
-} from "@mui/icons-material";
+import { Visibility as VisibilityIcon } from "@mui/icons-material";
 import { useDesignSystem, useAdaptiveUIContext } from "@/shared/hooks";
 
 interface WorkOrderRowProps {
@@ -49,12 +47,14 @@ export const WorkOrderRow: React.FC<WorkOrderRowProps> = ({
           background: ds.colors.background.paper,
           borderBottom: `1px solid ${alpha(ds.colors.neutral[200], 0.3)}`,
           position: "relative",
-          "&:hover": !device.isTouch ? {
-            background: alpha(ds.colors.primary.main, 0.02),
-            transform: "translateY(-1px)",
-            boxShadow: ds.shadows.soft.sm,
-            zIndex: 0,
-          } : {},
+          "&:hover": !device.isTouch
+            ? {
+                background: alpha(ds.colors.primary.main, 0.02),
+                transform: "translateY(-1px)",
+                boxShadow: ds.shadows.soft.sm,
+                zIndex: 0,
+              }
+            : {},
           transition: ds.transitions.fast,
         }}
       >
@@ -291,19 +291,23 @@ export const WorkOrderRow: React.FC<WorkOrderRowProps> = ({
                   xs: 150,
                   md: 170,
                 },
-                minHeight: device.isTouch ? tokens.components.minTouchTarget : tokens.components.button.md,
+                minHeight: device.isTouch
+                  ? tokens.components.minTouchTarget
+                  : tokens.components.button.md,
                 boxShadow: ds.shadows.soft.md,
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
                 position: "relative",
                 zIndex: 3,
-                "&:hover": !device.isTouch ? {
-                  background: `linear-gradient(135deg, #9333ea 0%, #7c3aed 100%)`,
-                  boxShadow: ds.shadows.soft.lg,
-                  transform: "translateY(-1px)",
-                  zIndex: 4,
-                } : {},
+                "&:hover": !device.isTouch
+                  ? {
+                      background: `linear-gradient(135deg, #9333ea 0%, #7c3aed 100%)`,
+                      boxShadow: ds.shadows.soft.lg,
+                      transform: "translateY(-1px)",
+                      zIndex: 4,
+                    }
+                  : {},
                 transition: ds.transitions.fast,
                 "& .MuiButton-root": {
                   padding: 0,
@@ -334,7 +338,7 @@ export const WorkOrderRow: React.FC<WorkOrderRowProps> = ({
                 },
               }}
               startIcon={
-                <VisibilityIcon 
+                <VisibilityIcon
                   sx={{
                     fontSize: {
                       xs: tokens.components.icon.xs,
@@ -344,7 +348,7 @@ export const WorkOrderRow: React.FC<WorkOrderRowProps> = ({
                     padding: 0,
                     display: "flex",
                     alignItems: "center",
-                  }} 
+                  }}
                 />
               }
             >
@@ -356,4 +360,3 @@ export const WorkOrderRow: React.FC<WorkOrderRowProps> = ({
     </React.Fragment>
   );
 };
-

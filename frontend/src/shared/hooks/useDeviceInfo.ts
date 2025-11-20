@@ -142,7 +142,9 @@ export function useDeviceInfo(): DeviceInfo {
 
     // Listen to resize and orientation change
     window.addEventListener("resize", throttledHandleResize, { passive: true });
-    window.addEventListener("orientationchange", handleResize, { passive: true });
+    window.addEventListener("orientationchange", handleResize, {
+      passive: true,
+    });
 
     // Initial check
     handleResize();
@@ -155,4 +157,3 @@ export function useDeviceInfo(): DeviceInfo {
 
   return info;
 }
-

@@ -201,7 +201,11 @@ export const DetailedSelectionDialog: React.FC<
         queryKey: ["profile-management", "active"],
       });
       queryClient.invalidateQueries({
-        queryKey: ["workOrderProfileMappings", weekRef.current, yearRef.current],
+        queryKey: [
+          "workOrderProfileMappings",
+          weekRef.current,
+          yearRef.current,
+        ],
       });
       refetchActiveProfiles();
       refetchMappings();
@@ -315,7 +319,10 @@ export const DetailedSelectionDialog: React.FC<
     return {
       totalProducts: products.length,
       selectedProducts,
-      totalWorkOrders: products.reduce((sum, p) => sum + p.workOrders.length, 0),
+      totalWorkOrders: products.reduce(
+        (sum, p) => sum + p.workOrders.length,
+        0,
+      ),
       selectedWorkOrders,
       totalProfiles,
       selectedProfiles,
@@ -412,133 +419,139 @@ export const DetailedSelectionDialog: React.FC<
     }));
   }, []);
 
-  const handleWorkOrderToggle = useCallback((productId: string, workOrderId: string) => {
-    setSelectionState((prev) => {
-      const product = prev.products[productId];
-      if (!product) {
-        return prev;
-      }
+  const handleWorkOrderToggle = useCallback(
+    (productId: string, workOrderId: string) => {
+      setSelectionState((prev) => {
+        const product = prev.products[productId];
+        if (!product) {
+          return prev;
+        }
 
-      const workOrderIndex = product.workOrders.findIndex(
-        (w) => w.workOrderId === workOrderId,
-      );
-      if (workOrderIndex === -1) {
-        return prev;
-      }
+        const workOrderIndex = product.workOrders.findIndex(
+          (w) => w.workOrderId === workOrderId,
+        );
+        if (workOrderIndex === -1) {
+          return prev;
+        }
 
-      const workOrder = product.workOrders[workOrderIndex];
-      const newSelected = !workOrder.selected;
+        const workOrder = product.workOrders[workOrderIndex];
+        const newSelected = !workOrder.selected;
 
-      // ✅ FIX: Create completely new profile array with new objects
-      const updatedProfiles = Array.isArray(workOrder.profiles)
-        ? workOrder.profiles.map((profile) => ({
-            ...profile, // Create new profile object
-            selected: newSelected,
-          }))
-        : [];
+        // ✅ FIX: Create completely new profile array with new objects
+        const updatedProfiles = Array.isArray(workOrder.profiles)
+          ? workOrder.profiles.map((profile) => ({
+              ...profile, // Create new profile object
+              selected: newSelected,
+            }))
+          : [];
 
-      // ✅ FIX: Create completely new workOrder object
-      const updatedWorkOrder = {
-        ...workOrder,
-        selected: newSelected,
-        profiles: updatedProfiles, // New profiles array
-      };
+        // ✅ FIX: Create completely new workOrder object
+        const updatedWorkOrder = {
+          ...workOrder,
+          selected: newSelected,
+          profiles: updatedProfiles, // New profiles array
+        };
 
-      // ✅ FIX: Create new workOrders array
-      const updatedWorkOrders = [...product.workOrders];
-      updatedWorkOrders[workOrderIndex] = updatedWorkOrder;
+        // ✅ FIX: Create new workOrders array
+        const updatedWorkOrders = [...product.workOrders];
+        updatedWorkOrders[workOrderIndex] = updatedWorkOrder;
 
-      // Check if all work orders are selected
-      const allWorkOrdersSelected = updatedWorkOrders.every((w) => w.selected);
+        // Check if all work orders are selected
+        const allWorkOrdersSelected = updatedWorkOrders.every(
+          (w) => w.selected,
+        );
 
-      const newState = {
-        ...prev,
-        products: {
-          ...prev.products,
-          [productId]: {
-            ...product,
-            selected: allWorkOrdersSelected,
-            workOrders: updatedWorkOrders, // New workOrders array
+        const newState = {
+          ...prev,
+          products: {
+            ...prev.products,
+            [productId]: {
+              ...product,
+              selected: allWorkOrdersSelected,
+              workOrders: updatedWorkOrders, // New workOrders array
+            },
           },
-        },
-      };
+        };
 
-      return newState;
-    });
-  }, []);
+        return newState;
+      });
+    },
+    [],
+  );
 
-  const handleProfileToggle = useCallback((
-    productId: string,
-    workOrderId: string,
-    profileId: string,
-  ) => {
-    setSelectionState((prev) => {
-      const product = prev.products[productId];
-      if (!product) {
-        return prev;
-      }
+  const handleProfileToggle = useCallback(
+    (productId: string, workOrderId: string, profileId: string) => {
+      setSelectionState((prev) => {
+        const product = prev.products[productId];
+        if (!product) {
+          return prev;
+        }
 
-      const workOrderIndex = product.workOrders.findIndex(
-        (w) => w.workOrderId === workOrderId,
-      );
-      if (workOrderIndex === -1) {
-        return prev;
-      }
+        const workOrderIndex = product.workOrders.findIndex(
+          (w) => w.workOrderId === workOrderId,
+        );
+        if (workOrderIndex === -1) {
+          return prev;
+        }
 
-      const workOrder = product.workOrders[workOrderIndex];
-      if (!Array.isArray(workOrder.profiles)) {
-        return prev;
-      }
+        const workOrder = product.workOrders[workOrderIndex];
+        if (!Array.isArray(workOrder.profiles)) {
+          return prev;
+        }
 
-      const profileIndex = workOrder.profiles.findIndex(
-        (p) => p.profileId === profileId,
-      );
-      if (profileIndex === -1) {
-        return prev;
-      }
+        const profileIndex = workOrder.profiles.findIndex(
+          (p) => p.profileId === profileId,
+        );
+        if (profileIndex === -1) {
+          return prev;
+        }
 
-      const profile = workOrder.profiles[profileIndex];
-      const newSelected = !profile.selected;
+        const profile = workOrder.profiles[profileIndex];
+        const newSelected = !profile.selected;
 
-      // ✅ FIX: Create completely new nested objects for immutability
-      const updatedProfile = {
-        ...profile,
-        selected: newSelected,
-      };
+        // ✅ FIX: Create completely new nested objects for immutability
+        const updatedProfile = {
+          ...profile,
+          selected: newSelected,
+        };
 
-      const updatedProfiles = [...workOrder.profiles];
-      updatedProfiles[profileIndex] = updatedProfile;
+        const updatedProfiles = [...workOrder.profiles];
+        updatedProfiles[profileIndex] = updatedProfile;
 
-      // Check if all profiles in work order are selected
-      const allProfilesSelected = updatedProfiles.every((p) => p.selected);
+        // Check if all profiles in work order are selected
+        const allProfilesSelected = updatedProfiles.every((p) => p.selected);
 
-      const updatedWorkOrder = {
-        ...workOrder,
-        selected: allProfilesSelected,
-        profiles: updatedProfiles,
-      };
+        const updatedWorkOrder = {
+          ...workOrder,
+          selected: allProfilesSelected,
+          profiles: updatedProfiles,
+        };
 
-      const updatedWorkOrders = [...product.workOrders];
-      updatedWorkOrders[workOrderIndex] = updatedWorkOrder;
+        const updatedWorkOrders = [...product.workOrders];
+        updatedWorkOrders[workOrderIndex] = updatedWorkOrder;
 
-      // Check if all work orders in product are selected
-      const allWorkOrdersSelected = updatedWorkOrders.every((w) => w.selected);
+        // Check if all work orders in product are selected
+        const allWorkOrdersSelected = updatedWorkOrders.every(
+          (w) => w.selected,
+        );
 
-      const newState = {
-        ...prev,
-        products: {
-          ...prev.products,
-          [productId]: {
-            ...product,
-            selected: allWorkOrdersSelected,
-            workOrders: updatedWorkOrders,
+        const newState = {
+          ...prev,
+          products: {
+            ...prev.products,
+            [productId]: {
+              ...product,
+              selected: allWorkOrdersSelected,
+              workOrders: updatedWorkOrders,
+            },
           },
-        },
-      };
+        };
 
-      return newState;
-    });
-  }, []);
+        return newState;
+      });
+    },
+    [],
+  );
 
   // Bulk selection handlers
   const handleSelectAll = useCallback(() => {
@@ -644,7 +657,13 @@ export const DetailedSelectionDialog: React.FC<
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth={device.uiMode === "kiosk" ? "xl" : device.uiMode === "dense" ? "lg" : "lg"}
+      maxWidth={
+        device.uiMode === "kiosk"
+          ? "xl"
+          : device.uiMode === "dense"
+            ? "lg"
+            : "lg"
+      }
       fullWidth
       PaperProps={{
         sx: {
@@ -685,7 +704,9 @@ export const DetailedSelectionDialog: React.FC<
           boxShadow: `0 2px 8px ${alpha(ds.colors.primary.main, 0.2)}`,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: tokens.spacing.md }}>
+        <Box
+          sx={{ display: "flex", alignItems: "center", gap: tokens.spacing.md }}
+        >
           <Box
             sx={{
               width: {
@@ -704,13 +725,15 @@ export const DetailedSelectionDialog: React.FC<
               boxShadow: ds.shadows.soft.md,
             }}
           >
-            <CategoryIcon sx={{
-              fontSize: {
-                xs: tokens.components.icon.md,
-                md: tokens.components.icon.lg,
-              },
-              color: "white"
-            }} />
+            <CategoryIcon
+              sx={{
+                fontSize: {
+                  xs: tokens.components.icon.md,
+                  md: tokens.components.icon.lg,
+                },
+                color: "white",
+              }}
+            />
           </Box>
           <Box>
             <Typography
@@ -744,11 +767,17 @@ export const DetailedSelectionDialog: React.FC<
           sx={{
             color: "white",
             background: "rgba(255, 255, 255, 0.1)",
-            minWidth: device.isTouch ? tokens.components.minTouchTarget : undefined,
-            minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
-            "&:hover": !device.isTouch ? {
-              background: "rgba(255, 255, 255, 0.2)",
-            } : {},
+            minWidth: device.isTouch
+              ? tokens.components.minTouchTarget
+              : undefined,
+            minHeight: device.isTouch
+              ? tokens.components.minTouchTarget
+              : undefined,
+            "&:hover": !device.isTouch
+              ? {
+                  background: "rgba(255, 255, 255, 0.2)",
+                }
+              : {},
           }}
         >
           <CloseIcon sx={{ fontSize: tokens.components.icon.md }} />
@@ -952,16 +981,18 @@ export const DetailedSelectionDialog: React.FC<
         )}
 
         {/* Bulk Actions */}
-        <Box sx={{
-          p: {
-            xs: tokens.spacing.md,
-            md: tokens.spacing.lg,
-          },
-          borderTop: `2px solid ${ds.colors.neutral[200]}`,
-          borderBottom: `2px solid ${ds.colors.neutral[200]}`,
-          background: `linear-gradient(135deg, ${alpha(ds.colors.neutral[50], 0.5)} 0%, ${alpha(ds.colors.neutral[100], 0.3)} 100%)`,
-          boxShadow: `inset 0 1px 0 ${alpha(ds.colors.neutral[300], 0.3)}, inset 0 -1px 0 ${alpha(ds.colors.neutral[300], 0.3)}`,
-        }}>
+        <Box
+          sx={{
+            p: {
+              xs: tokens.spacing.md,
+              md: tokens.spacing.lg,
+            },
+            borderTop: `2px solid ${ds.colors.neutral[200]}`,
+            borderBottom: `2px solid ${ds.colors.neutral[200]}`,
+            background: `linear-gradient(135deg, ${alpha(ds.colors.neutral[50], 0.5)} 0%, ${alpha(ds.colors.neutral[100], 0.3)} 100%)`,
+            boxShadow: `inset 0 1px 0 ${alpha(ds.colors.neutral[300], 0.3)}, inset 0 -1px 0 ${alpha(ds.colors.neutral[300], 0.3)}`,
+          }}
+        >
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={tokens.spacing.md}
@@ -980,47 +1011,62 @@ export const DetailedSelectionDialog: React.FC<
             >
               Toplu İşlemler
             </Typography>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={tokens.spacing.md}>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={tokens.spacing.md}
+            >
               <Button
                 variant="outlined"
-                startIcon={<SelectAllIcon sx={{ fontSize: tokens.components.icon.sm }} />}
+                startIcon={
+                  <SelectAllIcon sx={{ fontSize: tokens.components.icon.sm }} />
+                }
                 onClick={handleSelectAll}
                 sx={{
                   borderRadius: `${tokens.borderRadius.md}px`,
                   borderColor: ds.colors.success.main,
                   color: ds.colors.success.main,
                   fontWeight: ds.typography.fontWeight.semibold,
-                  minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+                  minHeight: device.isTouch
+                    ? tokens.components.minTouchTarget
+                    : undefined,
                   fontSize: {
                     xs: `${tokens.typography.sm}px`,
                     md: `${tokens.typography.base}px`,
                   },
-                  "&:hover": !device.isTouch ? {
-                    borderColor: ds.colors.success[700],
-                    background: alpha(ds.colors.success.main, 0.05),
-                  } : {},
+                  "&:hover": !device.isTouch
+                    ? {
+                        borderColor: ds.colors.success[700],
+                        background: alpha(ds.colors.success.main, 0.05),
+                      }
+                    : {},
                 }}
               >
                 Tümünü Seç
               </Button>
               <Button
                 variant="outlined"
-                startIcon={<DeselectIcon sx={{ fontSize: tokens.components.icon.sm }} />}
+                startIcon={
+                  <DeselectIcon sx={{ fontSize: tokens.components.icon.sm }} />
+                }
                 onClick={handleSelectNone}
                 sx={{
                   borderRadius: `${tokens.borderRadius.md}px`,
                   borderColor: ds.colors.error.main,
                   color: ds.colors.error.main,
                   fontWeight: ds.typography.fontWeight.semibold,
-                  minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+                  minHeight: device.isTouch
+                    ? tokens.components.minTouchTarget
+                    : undefined,
                   fontSize: {
                     xs: `${tokens.typography.sm}px`,
                     md: `${tokens.typography.base}px`,
                   },
-                  "&:hover": !device.isTouch ? {
-                    borderColor: ds.colors.error[700],
-                    background: alpha(ds.colors.error.main, 0.05),
-                  } : {},
+                  "&:hover": !device.isTouch
+                    ? {
+                        borderColor: ds.colors.error[700],
+                        background: alpha(ds.colors.error.main, 0.05),
+                      }
+                    : {},
                 }}
               >
                 Tümünü Temizle
@@ -1030,14 +1076,16 @@ export const DetailedSelectionDialog: React.FC<
         </Box>
 
         {/* Product List */}
-        <Box sx={{
-          p: {
-            xs: tokens.spacing.md,
-            md: tokens.spacing.lg,
-          },
-          maxHeight: "50vh",
-          overflowY: "auto",
-        }}>
+        <Box
+          sx={{
+            p: {
+              xs: tokens.spacing.md,
+              md: tokens.spacing.lg,
+            },
+            maxHeight: "50vh",
+            overflowY: "auto",
+          }}
+        >
           {Object.values(selectionState.products).map((product) => (
             <Accordion
               key={product.productId}
@@ -1046,7 +1094,7 @@ export const DetailedSelectionDialog: React.FC<
                 mb: tokens.spacing.md,
                 borderRadius: `${tokens.borderRadius.md}px`,
                 border: `2px solid ${product.selected ? ds.colors.primary.main : ds.colors.neutral[300]}`,
-                boxShadow: product.selected 
+                boxShadow: product.selected
                   ? `0 4px 12px ${alpha(ds.colors.primary.main, 0.2)}`
                   : `0 2px 8px ${alpha(ds.colors.neutral[900], 0.1)}`,
                 "&:before": { display: "none" },
@@ -1055,7 +1103,9 @@ export const DetailedSelectionDialog: React.FC<
                 },
                 transition: "all 0.2s ease",
                 "&:hover": {
-                  borderColor: product.selected ? ds.colors.primary.dark : ds.colors.neutral[400],
+                  borderColor: product.selected
+                    ? ds.colors.primary.dark
+                    : ds.colors.neutral[400],
                   boxShadow: product.selected
                     ? `0 6px 16px ${alpha(ds.colors.primary.main, 0.3)}`
                     : `0 4px 12px ${alpha(ds.colors.neutral[900], 0.15)}`,
@@ -1063,16 +1113,24 @@ export const DetailedSelectionDialog: React.FC<
               }}
             >
               <AccordionSummary
-                expandIcon={<ExpandMoreIcon sx={{ fontSize: tokens.components.icon.md }} />}
+                expandIcon={
+                  <ExpandMoreIcon
+                    sx={{ fontSize: tokens.components.icon.md }}
+                  />
+                }
                 onClick={() => handleProductExpand(product.productId)}
                 sx={{
                   background: product.selected
                     ? `linear-gradient(135deg, ${alpha(ds.colors.primary.main, 0.1)} 0%, ${alpha(ds.colors.primary[600], 0.15)} 100%)`
                     : ds.colors.background.paper,
                   borderRadius: `${tokens.borderRadius.md}px`,
-                  minHeight: device.isTouch ? tokens.components.minTouchTarget * 1.5 : tokens.components.button.lg,
+                  minHeight: device.isTouch
+                    ? tokens.components.minTouchTarget * 1.5
+                    : tokens.components.button.lg,
                   "&.Mui-expanded": {
-                    minHeight: device.isTouch ? tokens.components.minTouchTarget * 1.5 : tokens.components.button.lg,
+                    minHeight: device.isTouch
+                      ? tokens.components.minTouchTarget * 1.5
+                      : tokens.components.button.lg,
                   },
                   "& .MuiAccordionSummary-content": {
                     alignItems: "center",
@@ -1085,8 +1143,16 @@ export const DetailedSelectionDialog: React.FC<
                     <Checkbox
                       checked={product.selected}
                       onChange={() => handleProductToggle(product.productId)}
-                      icon={<CheckBoxOutlineBlankIcon sx={{ fontSize: tokens.components.icon.md }} />}
-                      checkedIcon={<CheckBoxIcon sx={{ fontSize: tokens.components.icon.md }} />}
+                      icon={
+                        <CheckBoxOutlineBlankIcon
+                          sx={{ fontSize: tokens.components.icon.md }}
+                        />
+                      }
+                      checkedIcon={
+                        <CheckBoxIcon
+                          sx={{ fontSize: tokens.components.icon.md }}
+                        />
+                      }
                       sx={{
                         color: ds.colors.primary.main,
                         "&.Mui-checked": {
@@ -1104,13 +1170,15 @@ export const DetailedSelectionDialog: React.FC<
                         ml: tokens.spacing.sm,
                       }}
                     >
-                      <CategoryIcon sx={{
-                        color: ds.colors.primary.main,
-                        fontSize: {
-                          xs: tokens.components.icon.md,
-                          md: tokens.components.icon.lg,
-                        },
-                      }} />
+                      <CategoryIcon
+                        sx={{
+                          color: ds.colors.primary.main,
+                          fontSize: {
+                            xs: tokens.components.icon.md,
+                            md: tokens.components.icon.lg,
+                          },
+                        }}
+                      />
                       <Box>
                         <Typography
                           sx={{
@@ -1147,10 +1215,19 @@ export const DetailedSelectionDialog: React.FC<
                 />
               </AccordionSummary>
 
-              <AccordionDetails sx={{ p: 0, background: "#fafbfc", borderTop: `1px solid ${ds.colors.neutral[200]}` }}>
+              <AccordionDetails
+                sx={{
+                  p: 0,
+                  background: "#fafbfc",
+                  borderTop: `1px solid ${ds.colors.neutral[200]}`,
+                }}
+              >
                 <Box sx={{ p: tokens.spacing.md }}>
                   {product.workOrders.map((workOrder) => (
-                    <Box key={workOrder.workOrderId} sx={{ mb: tokens.spacing.md }}>
+                    <Box
+                      key={workOrder.workOrderId}
+                      sx={{ mb: tokens.spacing.md }}
+                    >
                       <Card
                         sx={{
                           borderRadius: `${tokens.borderRadius.lg}px`,
@@ -1165,7 +1242,9 @@ export const DetailedSelectionDialog: React.FC<
                             : `0 2px 6px ${alpha(ds.colors.neutral[900], 0.08)}`,
                           transition: "all 0.2s ease",
                           "&:hover": {
-                            borderColor: workOrder.selected ? ds.colors.success.dark : ds.colors.neutral[400],
+                            borderColor: workOrder.selected
+                              ? ds.colors.success.dark
+                              : ds.colors.neutral[400],
                             boxShadow: workOrder.selected
                               ? `0 6px 16px ${alpha(ds.colors.success.main, 0.3)}`
                               : `0 4px 10px ${alpha(ds.colors.neutral[900], 0.12)}`,
@@ -1223,7 +1302,10 @@ export const DetailedSelectionDialog: React.FC<
                                       label={workOrder.workOrderItem.color}
                                       size="small"
                                       sx={{
-                                        background: alpha(ds.colors.info.main, 0.1),
+                                        background: alpha(
+                                          ds.colors.info.main,
+                                          0.1,
+                                        ),
                                         color: ds.colors.info.main,
                                         border: `1px solid ${alpha(ds.colors.info.main, 0.2)}`,
                                         fontWeight: 500,
@@ -1234,7 +1316,10 @@ export const DetailedSelectionDialog: React.FC<
                                       label={workOrder.workOrderItem.size}
                                       size="small"
                                       sx={{
-                                        background: alpha(ds.colors.success.main, 0.1),
+                                        background: alpha(
+                                          ds.colors.success.main,
+                                          0.1,
+                                        ),
                                         color: ds.colors.success.main,
                                         border: `1px solid ${alpha(ds.colors.success.main, 0.2)}`,
                                         fontWeight: 500,
@@ -1245,7 +1330,10 @@ export const DetailedSelectionDialog: React.FC<
                                       label={workOrder.workOrderItem.date}
                                       size="small"
                                       sx={{
-                                        background: alpha(ds.colors.warning.main, 0.1),
+                                        background: alpha(
+                                          ds.colors.warning.main,
+                                          0.1,
+                                        ),
                                         color: ds.colors.warning.main,
                                         border: `1px solid ${alpha(ds.colors.warning.main, 0.2)}`,
                                         fontWeight: 500,
@@ -1263,7 +1351,9 @@ export const DetailedSelectionDialog: React.FC<
                                   }}
                                   variant="outlined"
                                   size="small"
-                                  startIcon={<BuildIcon sx={{ fontSize: 16 }} />}
+                                  startIcon={
+                                    <BuildIcon sx={{ fontSize: 16 }} />
+                                  }
                                   sx={{
                                     borderRadius: `${tokens.borderRadius.md}px`,
                                     borderColor: ds.colors.primary.main,
@@ -1274,7 +1364,10 @@ export const DetailedSelectionDialog: React.FC<
                                     fontSize: "0.8125rem",
                                     "&:hover": {
                                       borderColor: ds.colors.primary.dark,
-                                      background: alpha(ds.colors.primary.main, 0.08),
+                                      background: alpha(
+                                        ds.colors.primary.main,
+                                        0.08,
+                                      ),
                                     },
                                   }}
                                 >
@@ -1284,7 +1377,6 @@ export const DetailedSelectionDialog: React.FC<
                             }
                             sx={{ margin: 0, width: "100%" }}
                           />
-
                         </CardContent>
                       </Card>
                     </Box>
@@ -1326,16 +1418,20 @@ export const DetailedSelectionDialog: React.FC<
               xs: tokens.spacing.sm,
               md: tokens.spacing.md,
             },
-            minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+            minHeight: device.isTouch
+              ? tokens.components.minTouchTarget
+              : undefined,
             fontSize: {
               xs: `${tokens.typography.sm}px`,
               md: `${tokens.typography.base}px`,
             },
             width: { xs: "100%", sm: "auto" },
-            "&:hover": !device.isTouch ? {
-              borderColor: ds.colors.neutral[500],
-              background: alpha(ds.colors.neutral[400], 0.05),
-            } : {},
+            "&:hover": !device.isTouch
+              ? {
+                  borderColor: ds.colors.neutral[500],
+                  background: alpha(ds.colors.neutral[400], 0.05),
+                }
+              : {},
           }}
         >
           İptal
@@ -1359,17 +1455,21 @@ export const DetailedSelectionDialog: React.FC<
               xs: tokens.spacing.sm,
               md: tokens.spacing.md,
             },
-            minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+            minHeight: device.isTouch
+              ? tokens.components.minTouchTarget
+              : undefined,
             fontSize: {
               xs: `${tokens.typography.sm}px`,
               md: `${tokens.typography.base}px`,
             },
             boxShadow: ds.shadows.soft.lg,
             width: { xs: "100%", sm: "auto" },
-            "&:hover": !device.isTouch ? {
-              background: `linear-gradient(135deg, ${ds.colors.primary[700]} 0%, ${ds.colors.primary[800]} 100%)`,
-              boxShadow: ds.shadows.soft.xl,
-            } : {},
+            "&:hover": !device.isTouch
+              ? {
+                  background: `linear-gradient(135deg, ${ds.colors.primary[700]} 0%, ${ds.colors.primary[800]} 100%)`,
+                  boxShadow: ds.shadows.soft.xl,
+                }
+              : {},
             "&:disabled": {
               background: ds.colors.neutral[400],
               boxShadow: "none",
@@ -1570,10 +1670,11 @@ export const DetailedSelectionDialog: React.FC<
                               workOrder: prev.workOrder
                                 ? {
                                     ...prev.workOrder,
-                                    profiles: prev.workOrder.profiles.map((p) =>
-                                      p.profileId === profile.profileId
-                                        ? { ...p, selected: !p.selected }
-                                        : p,
+                                    profiles: prev.workOrder.profiles.map(
+                                      (p) =>
+                                        p.profileId === profile.profileId
+                                          ? { ...p, selected: !p.selected }
+                                          : p,
                                     ),
                                   }
                                 : null,
@@ -1634,7 +1735,8 @@ export const DetailedSelectionDialog: React.FC<
                             <InputLabel>Profil Tanımı Seç</InputLabel>
                             <Select
                               value={
-                                selectedProfiles[profile.profile]?.profileId || ""
+                                selectedProfiles[profile.profile]?.profileId ||
+                                ""
                               }
                               onChange={(e) => {
                                 const selectedProfile = activeProfiles?.find(
@@ -1652,29 +1754,36 @@ export const DetailedSelectionDialog: React.FC<
                               </MenuItem>
                               {(() => {
                                 const allowedProfileIds =
-                                  profileTypeToProfileIds.get(profile.profile) ||
-                                  [];
+                                  profileTypeToProfileIds.get(
+                                    profile.profile,
+                                  ) || [];
                                 return activeProfiles
                                   ?.filter((pro) =>
                                     allowedProfileIds.includes(pro.profileId),
                                   )
                                   .map((pro) => (
-                                    <MenuItem key={pro.profileId} value={pro.profileId}>
+                                    <MenuItem
+                                      key={pro.profileId}
+                                      value={pro.profileId}
+                                    >
                                       <Box
                                         sx={{
                                           display: "flex",
                                           flexDirection: "column",
                                         }}
                                       >
-                                        <Typography variant="body2" fontWeight={600}>
+                                        <Typography
+                                          variant="body2"
+                                          fontWeight={600}
+                                        >
                                           {pro.profileCode}
                                         </Typography>
                                         <Typography
                                           variant="caption"
                                           color="text.secondary"
                                         >
-                                          {pro.profileName} - {pro.stockLengths.length}{" "}
-                                          stok boyu
+                                          {pro.profileName} -{" "}
+                                          {pro.stockLengths.length} stok boyu
                                         </Typography>
                                       </Box>
                                     </MenuItem>

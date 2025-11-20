@@ -127,12 +127,12 @@ export async function getCategoryByProduct(
         validateStatus: (status) => status === 200 || status === 404,
       },
     );
-    
+
     // 404 response means no category found, which is acceptable
     if (response.status === 404) {
       return null;
     }
-    
+
     return response.data.data || null;
   } catch (error) {
     // Additional safety check for 404 errors
@@ -180,4 +180,3 @@ export async function getProductsByCategory(
   );
   return response.data.data || [];
 }
-

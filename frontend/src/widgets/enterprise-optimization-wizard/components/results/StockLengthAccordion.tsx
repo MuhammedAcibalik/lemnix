@@ -141,12 +141,16 @@ export const StockLengthAccordion: React.FC<StockLengthAccordionProps> = ({
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
         sx={{
-          backgroundColor: expanded ? `${ds.colors.primary.main}08` : ds.colors.background.paper,
+          backgroundColor: expanded
+            ? `${ds.colors.primary.main}08`
+            : ds.colors.background.paper,
           px: ds.spacing["4"],
           py: ds.spacing["2"],
           minHeight: 64,
           "&:hover": {
-            backgroundColor: expanded ? `${ds.colors.primary.main}12` : ds.colors.neutral[50],
+            backgroundColor: expanded
+              ? `${ds.colors.primary.main}12`
+              : ds.colors.neutral[50],
           },
           "&.Mui-expanded": {
             minHeight: 64,
@@ -160,7 +164,13 @@ export const StockLengthAccordion: React.FC<StockLengthAccordionProps> = ({
         <Grid container alignItems="center" spacing={2}>
           {/* Stock Length Label */}
           <Grid item xs={12} sm={4} md={3}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: ds.spacing["2"] }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: ds.spacing["2"],
+              }}
+            >
               <Box
                 sx={{
                   p: 1,
@@ -175,7 +185,11 @@ export const StockLengthAccordion: React.FC<StockLengthAccordionProps> = ({
               <Box>
                 <Typography
                   variant="subtitle1"
-                  sx={{ fontWeight: 700, color: ds.colors.text.primary, lineHeight: 1.2 }}
+                  sx={{
+                    fontWeight: 700,
+                    color: ds.colors.text.primary,
+                    lineHeight: 1.2,
+                  }}
                 >
                   {stockLength.toLocaleString()}mm
                 </Typography>
@@ -189,7 +203,11 @@ export const StockLengthAccordion: React.FC<StockLengthAccordionProps> = ({
           {/* Waste Metrics */}
           <Grid item xs={12} sm={4} md={3}>
             <Box sx={{ display: "flex", flexDirection: "column" }}>
-              <Typography variant="caption" color="text.secondary" fontWeight={500}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                fontWeight={500}
+              >
                 TOPLAM FİRE
               </Typography>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -197,7 +215,9 @@ export const StockLengthAccordion: React.FC<StockLengthAccordionProps> = ({
                   variant="body2"
                   fontWeight={600}
                   color={
-                    wastePercentage < 10 ? ds.colors.success.main : ds.colors.warning.main
+                    wastePercentage < 10
+                      ? ds.colors.success.main
+                      : ds.colors.warning.main
                   }
                 >
                   {totalWaste.toFixed(0)}mm
@@ -216,7 +236,11 @@ export const StockLengthAccordion: React.FC<StockLengthAccordionProps> = ({
           <Grid item xs={12} sm={4} md={3}>
             {efficiency > 0 && (
               <Box sx={{ display: "flex", flexDirection: "column" }}>
-                <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  fontWeight={500}
+                >
                   VERİMLİLİK
                 </Typography>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -242,8 +266,18 @@ export const StockLengthAccordion: React.FC<StockLengthAccordionProps> = ({
           </Grid>
 
           {/* Average */}
-          <Grid item xs={12} sm={12} md={3} sx={{ textAlign: { xs: "left", md: "right" } }}>
-            <Typography variant="caption" color="text.secondary" display="block">
+          <Grid
+            item
+            xs={12}
+            sm={12}
+            md={3}
+            sx={{ textAlign: { xs: "left", md: "right" } }}
+          >
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              display="block"
+            >
               Ortalama Fire
             </Typography>
             <Typography variant="body2" fontWeight={600} color="text.primary">
@@ -254,7 +288,9 @@ export const StockLengthAccordion: React.FC<StockLengthAccordionProps> = ({
       </AccordionSummary>
 
       <AccordionDetails sx={{ p: 0 }}>
-        <Box sx={{ p: ds.spacing["4"], backgroundColor: ds.colors.neutral[50] }}>
+        <Box
+          sx={{ p: ds.spacing["4"], backgroundColor: ds.colors.neutral[50] }}
+        >
           <CuttingPlanDataGrid plans={mappedPlans} />
         </Box>
       </AccordionDetails>

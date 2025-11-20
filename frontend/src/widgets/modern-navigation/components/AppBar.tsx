@@ -28,7 +28,11 @@ import {
 } from "@mui/icons-material";
 import { Logo } from "@/shared/ui/Logo";
 import { appConfig } from "@/shared/config/legacy/appConfig";
-import { stylingConstants, messages, navigationItems } from "../constants/index";
+import {
+  stylingConstants,
+  messages,
+  navigationItems,
+} from "../constants/index";
 import type { AppBarProps } from "../types/index";
 import { useLocation } from "react-router-dom";
 
@@ -149,10 +153,10 @@ export const AppBar: React.FC<AppBarProps> = ({
     >
       <Toolbar
         sx={{
-          px: { 
+          px: {
             xs: ds.spacing["2"], // Reduced padding on mobile
-            sm: ds.spacing["3"], 
-            md: ds.spacing["5"], 
+            sm: ds.spacing["3"],
+            md: ds.spacing["5"],
             lg: ds.spacing["6"],
             xl: "clamp(1.5rem, 3vw, 2rem)",
           },
@@ -187,10 +191,14 @@ export const AppBar: React.FC<AppBarProps> = ({
 
         {/* Logo */}
         <Box
-          sx={{ 
-            display: "flex", 
-            alignItems: "center", 
-            mr: { xs: ds.spacing["1"], sm: ds.spacing["2"], md: ds.spacing["3"] },
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            mr: {
+              xs: ds.spacing["1"],
+              sm: ds.spacing["2"],
+              md: ds.spacing["3"],
+            },
             flexShrink: 0,
           }}
         >
@@ -254,97 +262,101 @@ export const AppBar: React.FC<AppBarProps> = ({
           const PageIcon = resolvedPageItem?.icon;
 
           return (
-          <Fade in={true} timeout={400}>
-            <Box
-              sx={{
-                position: "absolute",
-                left: "50%",
-                top: "50%",
-                transform: "translate(-50%, -50%)",
-                zIndex: 1,
-                display: { xs: "none", md: "flex" }, // Hide on mobile
-                alignItems: "center",
-                gap: ds.spacing["2"],
-              }}
-            >
-              {/* Breadcrumb Container */}
+            <Fade in={true} timeout={400}>
               <Box
                 sx={{
-                  display: "flex",
+                  position: "absolute",
+                  left: "50%",
+                  top: "50%",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 1,
+                  display: { xs: "none", md: "flex" }, // Hide on mobile
                   alignItems: "center",
-                  gap: { xs: ds.spacing["1"], sm: ds.spacing["2"] },
-                  px: { xs: ds.spacing["3"], sm: ds.spacing["4"], md: ds.spacing["5"] },
-                  height: { xs: 36, sm: 40, md: 42 }, // Responsive height
-                  background: alpha("#FFFFFF", 0.7),
-                  backdropFilter: "blur(12px) saturate(130%)",
-                  borderRadius: `${ds.borderRadius.lg}px`,
-                  border: `1px solid ${alpha(ds.colors.neutral[300], 0.3)}`,
-                  boxShadow: `
+                  gap: ds.spacing["2"],
+                }}
+              >
+                {/* Breadcrumb Container */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: { xs: ds.spacing["1"], sm: ds.spacing["2"] },
+                    px: {
+                      xs: ds.spacing["3"],
+                      sm: ds.spacing["4"],
+                      md: ds.spacing["5"],
+                    },
+                    height: { xs: 36, sm: 40, md: 42 }, // Responsive height
+                    background: alpha("#FFFFFF", 0.7),
+                    backdropFilter: "blur(12px) saturate(130%)",
+                    borderRadius: `${ds.borderRadius.lg}px`,
+                    border: `1px solid ${alpha(ds.colors.neutral[300], 0.3)}`,
+                    boxShadow: `
                     0 2px 8px ${alpha(ds.colors.neutral[900], 0.04)},
                     0 1px 2px ${alpha(ds.colors.neutral[900], 0.06)}
                   `,
-                  transition: ds.transitions.fast,
+                    transition: ds.transitions.fast,
 
-                  "&:hover": {
-                    borderColor: alpha(ds.colors.primary.main, 0.3),
-                    boxShadow: `
+                    "&:hover": {
+                      borderColor: alpha(ds.colors.primary.main, 0.3),
+                      boxShadow: `
                       0 4px 12px ${alpha(ds.colors.primary.main, 0.08)},
                       0 2px 4px ${alpha(ds.colors.neutral[900], 0.06)}
                     `,
-                  },
-                }}
-              >
-                {/* Resolve page item from props or navigation config */}
-                {/**
-                 * Fallback: if currentPageItem is undefined (e.g. activePage came
-                 * from URL but navigation state is out of sync), resolve it from
-                 * navigationItems using the activePage id.
-                 */}
-                      {/* Page Icon */}
-                      {PageIcon && (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: { xs: 28, sm: 30, md: 32 },
-                            height: { xs: 28, sm: 30, md: 32 },
-                            borderRadius: `${ds.borderRadius.md}px`,
-                            background: alpha(ds.colors.primary.main, 0.12),
-                            color: ds.colors.primary.main,
-                            transition: ds.transitions.fast,
-                          }}
-                        >
-                          <PageIcon sx={{ fontSize: { xs: 16, sm: 17, md: 18 } }} />
-                        </Box>
-                      )}
+                    },
+                  }}
+                >
+                  {/* Resolve page item from props or navigation config */}
+                  {/**
+                   * Fallback: if currentPageItem is undefined (e.g. activePage came
+                   * from URL but navigation state is out of sync), resolve it from
+                   * navigationItems using the activePage id.
+                   */}
+                  {/* Page Icon */}
+                  {PageIcon && (
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: { xs: 28, sm: 30, md: 32 },
+                        height: { xs: 28, sm: 30, md: 32 },
+                        borderRadius: `${ds.borderRadius.md}px`,
+                        background: alpha(ds.colors.primary.main, 0.12),
+                        color: ds.colors.primary.main,
+                        transition: ds.transitions.fast,
+                      }}
+                    >
+                      <PageIcon sx={{ fontSize: { xs: 16, sm: 17, md: 18 } }} />
+                    </Box>
+                  )}
 
-                      {/* Separator */}
-                      <Box
-                        sx={{
-                          width: { xs: 3, sm: 4 },
-                          height: { xs: 3, sm: 4 },
-                          borderRadius: "50%",
-                          background: alpha(ds.colors.neutral[400], 0.4),
-                        }}
-                      />
+                  {/* Separator */}
+                  <Box
+                    sx={{
+                      width: { xs: 3, sm: 4 },
+                      height: { xs: 3, sm: 4 },
+                      borderRadius: "50%",
+                      background: alpha(ds.colors.neutral[400], 0.4),
+                    }}
+                  />
 
-                      {/* Page Label - Elegant Typography */}
-                      <Typography
-                        sx={{
-                          fontSize: "clamp(0.9375rem, 1.5vw + 0.5rem, 1.125rem)",
-                          fontWeight: ds.typography.fontWeight.semibold,
-                          color: ds.colors.primary[800] ?? ds.colors.primary.main,
-                          letterSpacing: "-0.02em",
-                          lineHeight: 1,
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {pageLabel}
-                      </Typography>
+                  {/* Page Label - Elegant Typography */}
+                  <Typography
+                    sx={{
+                      fontSize: "clamp(0.9375rem, 1.5vw + 0.5rem, 1.125rem)",
+                      fontWeight: ds.typography.fontWeight.semibold,
+                      color: ds.colors.primary[800] ?? ds.colors.primary.main,
+                      letterSpacing: "-0.02em",
+                      lineHeight: 1,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {pageLabel}
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
-          </Fade>
+            </Fade>
           );
         })()}
 
@@ -356,8 +368,18 @@ export const AppBar: React.FC<AppBarProps> = ({
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: { xs: 4, sm: ds.spacing["1"], md: ds.spacing["2"], lg: ds.spacing["3"] }, // 4px = 0.5 spacing
-            ml: { xs: ds.spacing["1"], sm: ds.spacing["2"], md: ds.spacing["3"], lg: ds.spacing["4"] },
+            gap: {
+              xs: 4,
+              sm: ds.spacing["1"],
+              md: ds.spacing["2"],
+              lg: ds.spacing["3"],
+            }, // 4px = 0.5 spacing
+            ml: {
+              xs: ds.spacing["1"],
+              sm: ds.spacing["2"],
+              md: ds.spacing["3"],
+              lg: ds.spacing["4"],
+            },
             flexShrink: 0, // Prevent shrinking
             minWidth: 0, // Allow content to shrink if needed
           }}
@@ -451,7 +473,11 @@ export const AppBar: React.FC<AppBarProps> = ({
                 },
               }}
             >
-              <ZapIcon sx={{ fontSize: { xs: 16, sm: 18, md: ds.componentSizes.icon.sm } }} />
+              <ZapIcon
+                sx={{
+                  fontSize: { xs: 16, sm: 18, md: ds.componentSizes.icon.sm },
+                }}
+              />
             </IconButton>
           </Tooltip>
 

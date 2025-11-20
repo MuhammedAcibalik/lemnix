@@ -207,43 +207,54 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
         {/* Main Metrics Grid */}
         <Grid
           container
-          spacing={{ xs: ds.spacing["3"], sm: ds.spacing["4"], md: ds.spacing["5"], lg: ds.spacing["6"] }}
-          sx={{ mb: { xs: ds.spacing["8"], md: ds.spacing["10"], lg: ds.spacing["12"] } }}
+          spacing={{
+            xs: ds.spacing["3"],
+            sm: ds.spacing["4"],
+            md: ds.spacing["5"],
+            lg: ds.spacing["6"],
+          }}
+          sx={{
+            mb: {
+              xs: ds.spacing["8"],
+              md: ds.spacing["10"],
+              lg: ds.spacing["12"],
+            },
+          }}
         >
           {industrialMetrics.map((metric, index) => {
             const MetricIcon = metric.icon;
             return (
-            <Grid item xs={12} sm={6} lg={4} key={metric.id}>
-              <FadeIn delay={0.05 * index} duration={0.3}>
-                <Card
-                  sx={{
-                    height: "100%",
-                    minHeight: { xs: "200px", sm: "240px", md: "280px" },
-                    display: "flex",
-                    flexDirection: "column",
-                    backgroundColor: ds.colors.surface.elevated1,
-                    border: `1px solid ${ds.colors.border.muted}`,
-                    borderRadius: `${ds.borderRadius.lg}px`,
-                    boxShadow: ds.shadows.soft.sm,
-                    transition: ds.transitions.base,
-                    position: "relative",
-                    "&::before": {
-                      content: '""',
-                      position: "absolute",
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: 2,
-                      background: metric.color,
-                      borderRadius: `${ds.borderRadius.lg}px ${ds.borderRadius.lg}px 0 0`,
-                    },
-                    "&:hover": {
-                      transform: "translateY(-2px)",
-                      boxShadow: ds.shadows.soft.md,
-                      borderColor: alpha(metric.color, 0.2),
-                    },
-                  }}
-                >
+              <Grid item xs={12} sm={6} lg={4} key={metric.id}>
+                <FadeIn delay={0.05 * index} duration={0.3}>
+                  <Card
+                    sx={{
+                      height: "100%",
+                      minHeight: { xs: "200px", sm: "240px", md: "280px" },
+                      display: "flex",
+                      flexDirection: "column",
+                      backgroundColor: ds.colors.surface.elevated1,
+                      border: `1px solid ${ds.colors.border.muted}`,
+                      borderRadius: `${ds.borderRadius.lg}px`,
+                      boxShadow: ds.shadows.soft.sm,
+                      transition: ds.transitions.base,
+                      position: "relative",
+                      "&::before": {
+                        content: '""',
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: 2,
+                        background: metric.color,
+                        borderRadius: `${ds.borderRadius.lg}px ${ds.borderRadius.lg}px 0 0`,
+                      },
+                      "&:hover": {
+                        transform: "translateY(-2px)",
+                        boxShadow: ds.shadows.soft.md,
+                        borderColor: alpha(metric.color, 0.2),
+                      },
+                    }}
+                  >
                     <CardContent
                       sx={{
                         p: { xs: ds.spacing["4"], sm: ds.spacing["5"] },
@@ -256,172 +267,195 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
                         },
                       }}
                     >
-                    {/* Header - Icon + Chip */}
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        mb: { xs: ds.spacing["3"], sm: ds.spacing["4"] },
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: { xs: 40, sm: 44, md: 48 },
-                          height: { xs: 40, sm: 44, md: 48 },
-                          borderRadius: `${ds.borderRadius.md}px`,
-                          background: alpha(metric.color, 0.08),
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          transition: ds.transitions.base,
-                          flexShrink: 0,
-                        }}
-                      >
-                        <MetricIcon sx={{ fontSize: { xs: 20, sm: 22, md: 24 }, color: metric.color }} />
-                      </Box>
-
-                      {/* Trend Indicator */}
-                      <Chip
-                        icon={<TrendingUpIcon sx={{ fontSize: { xs: 12, sm: 13 } }} />}
-                        label={metric.change}
-                        size="small"
-                        sx={{
-                          backgroundColor: alpha(metric.color, 0.08),
-                          color: metric.color,
-                          fontWeight: 600,
-                          fontSize: { xs: tokens.typography.xs * 0.9, sm: tokens.typography.xs },
-                          height: { xs: 24, sm: 26 },
-                          "& .MuiChip-icon": {
-                            fontSize: { xs: 12, sm: 13 },
-                          },
-                        }}
-                      />
-                    </Box>
-
-                    {/* Value + Title */}
-                    <Box sx={{ mb: { xs: ds.spacing["2"], sm: ds.spacing["3"] }, flexGrow: 1 }}>
-                      <Typography
-                        variant="h3"
-                        sx={{
-                          fontWeight: 700,
-                          color: ds.colors.text.primary,
-                          fontSize: { 
-                            xs: `clamp(${tokens.typography.xl}px, 4vw + ${tokens.typography.base * 0.5}px, ${tokens.typography.xxl * 1.2}px)`,
-                            sm: `clamp(${tokens.typography.xl * 1.2}px, 3vw + ${tokens.typography.base}px, ${tokens.typography.xxl * 1.4}px)`,
-                            md: `clamp(${tokens.typography.xl * 1.3}px, 2.5vw + ${tokens.typography.base * 1.2}px, ${tokens.typography.xxl * 1.6}px)`
-                          },
-                          lineHeight: 1.1,
-                          letterSpacing: "-0.01em",
-                          mb: { xs: ds.spacing["1"], sm: ds.spacing["2"] },
-                        }}
-                      >
-                        {formatValue(metric.value, metric.unit)}
-                        <Typography
-                          component="span"
-                          sx={{
-                            color: ds.colors.text.secondary,
-                            fontWeight: 600,
-                            ml: ds.spacing["1"],
-                            fontSize: { 
-                              xs: `clamp(${tokens.typography.sm * 0.9}px, 2vw + ${tokens.typography.base * 0.3}px, ${tokens.typography.base}px)`,
-                              sm: tokens.typography.base,
-                              md: tokens.typography.lg 
-                            },
-                          }}
-                        >
-                          {metric.unit}
-                        </Typography>
-                      </Typography>
-
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontWeight: 600,
-                          color: ds.colors.text.primary,
-                          fontSize: { 
-                            xs: `clamp(${tokens.typography.base * 0.95}px, 2vw + ${tokens.typography.base * 0.4}px, ${tokens.typography.lg}px)`,
-                            sm: tokens.typography.lg,
-                            md: tokens.typography.xl 
-                          },
-                          mb: { xs: ds.spacing["1"], sm: ds.spacing["2"] },
-                          lineHeight: 1.3,
-                        }}
-                      >
-                        {metric.title}
-                      </Typography>
-
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: ds.colors.text.secondary,
-                          lineHeight: 1.6,
-                          fontSize: { 
-                            xs: tokens.typography.xs,
-                            sm: tokens.typography.sm,
-                            md: tokens.typography.base 
-                          },
-                          fontWeight: 400,
-                          display: { xs: "none", sm: "block" },
-                        }}
-                      >
-                        {metric.description}
-                      </Typography>
-                    </Box>
-
-                    {/* Progress Bar - Compact */}
-                    <Box sx={{ mt: "auto" }}>
+                      {/* Header - Icon + Chip */}
                       <Box
                         sx={{
                           display: "flex",
                           justifyContent: "space-between",
-                          alignItems: "center",
-                          mb: { xs: ds.spacing["1"], sm: ds.spacing["2"] },
+                          alignItems: "flex-start",
+                          mb: { xs: ds.spacing["3"], sm: ds.spacing["4"] },
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: { xs: 40, sm: 44, md: 48 },
+                            height: { xs: 40, sm: 44, md: 48 },
+                            borderRadius: `${ds.borderRadius.md}px`,
+                            background: alpha(metric.color, 0.08),
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            transition: ds.transitions.base,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <MetricIcon
+                            sx={{
+                              fontSize: { xs: 20, sm: 22, md: 24 },
+                              color: metric.color,
+                            }}
+                          />
+                        </Box>
+
+                        {/* Trend Indicator */}
+                        <Chip
+                          icon={
+                            <TrendingUpIcon
+                              sx={{ fontSize: { xs: 12, sm: 13 } }}
+                            />
+                          }
+                          label={metric.change}
+                          size="small"
+                          sx={{
+                            backgroundColor: alpha(metric.color, 0.08),
+                            color: metric.color,
+                            fontWeight: 600,
+                            fontSize: {
+                              xs: tokens.typography.xs * 0.9,
+                              sm: tokens.typography.xs,
+                            },
+                            height: { xs: 24, sm: 26 },
+                            "& .MuiChip-icon": {
+                              fontSize: { xs: 12, sm: 13 },
+                            },
+                          }}
+                        />
+                      </Box>
+
+                      {/* Value + Title */}
+                      <Box
+                        sx={{
+                          mb: { xs: ds.spacing["2"], sm: ds.spacing["3"] },
+                          flexGrow: 1,
                         }}
                       >
                         <Typography
-                          variant="caption"
+                          variant="h3"
+                          sx={{
+                            fontWeight: 700,
+                            color: ds.colors.text.primary,
+                            fontSize: {
+                              xs: `clamp(${tokens.typography.xl}px, 4vw + ${tokens.typography.base * 0.5}px, ${tokens.typography.xxl * 1.2}px)`,
+                              sm: `clamp(${tokens.typography.xl * 1.2}px, 3vw + ${tokens.typography.base}px, ${tokens.typography.xxl * 1.4}px)`,
+                              md: `clamp(${tokens.typography.xl * 1.3}px, 2.5vw + ${tokens.typography.base * 1.2}px, ${tokens.typography.xxl * 1.6}px)`,
+                            },
+                            lineHeight: 1.1,
+                            letterSpacing: "-0.01em",
+                            mb: { xs: ds.spacing["1"], sm: ds.spacing["2"] },
+                          }}
+                        >
+                          {formatValue(metric.value, metric.unit)}
+                          <Typography
+                            component="span"
+                            sx={{
+                              color: ds.colors.text.secondary,
+                              fontWeight: 600,
+                              ml: ds.spacing["1"],
+                              fontSize: {
+                                xs: `clamp(${tokens.typography.sm * 0.9}px, 2vw + ${tokens.typography.base * 0.3}px, ${tokens.typography.base}px)`,
+                                sm: tokens.typography.base,
+                                md: tokens.typography.lg,
+                              },
+                            }}
+                          >
+                            {metric.unit}
+                          </Typography>
+                        </Typography>
+
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 600,
+                            color: ds.colors.text.primary,
+                            fontSize: {
+                              xs: `clamp(${tokens.typography.base * 0.95}px, 2vw + ${tokens.typography.base * 0.4}px, ${tokens.typography.lg}px)`,
+                              sm: tokens.typography.lg,
+                              md: tokens.typography.xl,
+                            },
+                            mb: { xs: ds.spacing["1"], sm: ds.spacing["2"] },
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {metric.title}
+                        </Typography>
+
+                        <Typography
+                          variant="body2"
                           sx={{
                             color: ds.colors.text.secondary,
-                            fontWeight: 500,
-                            fontSize: { xs: tokens.typography.xs * 0.85, sm: tokens.typography.xs },
+                            lineHeight: 1.6,
+                            fontSize: {
+                              xs: tokens.typography.xs,
+                              sm: tokens.typography.sm,
+                              md: tokens.typography.base,
+                            },
+                            fontWeight: 400,
+                            display: { xs: "none", sm: "block" },
                           }}
                         >
-                          Hedef: {formatValue(metric.target, metric.unit)}
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: metric.color,
-                            fontWeight: 600,
-                            fontSize: { xs: tokens.typography.xs * 0.85, sm: tokens.typography.xs },
-                          }}
-                        >
-                          {Math.round((metric.value / metric.target) * 100)}%
+                          {metric.description}
                         </Typography>
                       </Box>
-                      <LinearProgress
-                        variant="determinate"
-                        value={Math.min(
-                          (metric.value / metric.target) * 100,
-                          100,
-                        )}
-                        sx={{
-                          height: { xs: 4, sm: 5, md: 6 },
-                          borderRadius: ds.borderRadius.sm,
-                          backgroundColor: alpha(metric.color, 0.08),
-                          "& .MuiLinearProgress-bar": {
-                            background: metric.color,
+
+                      {/* Progress Bar - Compact */}
+                      <Box sx={{ mt: "auto" }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            mb: { xs: ds.spacing["1"], sm: ds.spacing["2"] },
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: ds.colors.text.secondary,
+                              fontWeight: 500,
+                              fontSize: {
+                                xs: tokens.typography.xs * 0.85,
+                                sm: tokens.typography.xs,
+                              },
+                            }}
+                          >
+                            Hedef: {formatValue(metric.target, metric.unit)}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: metric.color,
+                              fontWeight: 600,
+                              fontSize: {
+                                xs: tokens.typography.xs * 0.85,
+                                sm: tokens.typography.xs,
+                              },
+                            }}
+                          >
+                            {Math.round((metric.value / metric.target) * 100)}%
+                          </Typography>
+                        </Box>
+                        <LinearProgress
+                          variant="determinate"
+                          value={Math.min(
+                            (metric.value / metric.target) * 100,
+                            100,
+                          )}
+                          sx={{
+                            height: { xs: 4, sm: 5, md: 6 },
                             borderRadius: ds.borderRadius.sm,
-                          },
-                        }}
-                      />
-                    </Box>
-                  </CardContent>
-                </Card>
-              </FadeIn>
-            </Grid>
-          );
+                            backgroundColor: alpha(metric.color, 0.08),
+                            "& .MuiLinearProgress-bar": {
+                              background: metric.color,
+                              borderRadius: ds.borderRadius.sm,
+                            },
+                          }}
+                        />
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </FadeIn>
+              </Grid>
+            );
           })}
         </Grid>
 
@@ -444,7 +478,10 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
                     fontWeight: 600,
                     color: ds.colors.text.primary,
                     mb: ds.spacing["3"],
-                    fontSize: { xs: tokens.typography.lg, sm: tokens.typography.xl },
+                    fontSize: {
+                      xs: tokens.typography.lg,
+                      sm: tokens.typography.xl,
+                    },
                   }}
                 >
                   Ortalama Performans Artışı
@@ -454,7 +491,10 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
                   sx={{
                     color: ds.colors.text.secondary,
                     lineHeight: 1.75,
-                    fontSize: { xs: tokens.typography.sm, sm: tokens.typography.base },
+                    fontSize: {
+                      xs: tokens.typography.sm,
+                      sm: tokens.typography.base,
+                    },
                     fontWeight: 400,
                   }}
                 >
@@ -470,7 +510,10 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
                       fontWeight: 700,
                       color: ds.colors.text.primary,
                       mb: ds.spacing["2"],
-                      fontSize: { xs: `clamp(${tokens.typography.xl * 1.5}px, 3vw + ${tokens.typography.base}px, ${tokens.typography.xxl * 2}px)`, md: `clamp(${tokens.typography.xxl * 1.3}px, 3.5vw + ${tokens.typography.base}px, ${tokens.typography.xxl * 2.2}px)` },
+                      fontSize: {
+                        xs: `clamp(${tokens.typography.xl * 1.5}px, 3vw + ${tokens.typography.base}px, ${tokens.typography.xxl * 2}px)`,
+                        md: `clamp(${tokens.typography.xxl * 1.3}px, 3.5vw + ${tokens.typography.base}px, ${tokens.typography.xxl * 2.2}px)`,
+                      },
                       lineHeight: 1.1,
                     }}
                   >
@@ -501,7 +544,10 @@ export const MetricsSection: React.FC<MetricsSectionProps> = ({
               sx={{
                 px: { xs: ds.spacing["8"], sm: ds.spacing["10"] },
                 py: { xs: ds.spacing["2"], sm: ds.spacing["2.5"] },
-                fontSize: { xs: tokens.typography.base, sm: tokens.typography.lg },
+                fontSize: {
+                  xs: tokens.typography.base,
+                  sm: tokens.typography.lg,
+                },
                 fontWeight: 600,
               }}
             >

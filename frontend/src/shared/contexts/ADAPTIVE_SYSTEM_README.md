@@ -2,17 +2,17 @@
 
 ## Genel Bakış
 
-Full Adaptive System, sadece genişliğe göre değil, **kullanım senaryosuna** göre UI'yi modlara bölen akıllı bir katman. 
+Full Adaptive System, sadece genişliğe göre değil, **kullanım senaryosuna** göre UI'yi modlara bölen akıllı bir katman.
 
 ### "Responsive" ile Farkı
 
-| Özellik | Klasik Responsive | Full Adaptive System |
-|---------|-------------------|---------------------|
-| Tek kriter | `width` breakpoints | width + height + dpr + orientation + pointer |
-| Çıktı | Sadece layout değişir | UI modu + density + scale + typography |
-| TV / Kiosk modu | Genelde yok | Doğrudan `uiMode = kiosk` |
-| Dashboard yoğunluğu | Sabit | Cihaza göre kart sayısı, veri yoğunluğu |
-| Tasarım dili | Statik | Mod bazlı (mobile, desktop, tv, kiosk…) |
+| Özellik             | Klasik Responsive     | Full Adaptive System                         |
+| ------------------- | --------------------- | -------------------------------------------- |
+| Tek kriter          | `width` breakpoints   | width + height + dpr + orientation + pointer |
+| Çıktı               | Sadece layout değişir | UI modu + density + scale + typography       |
+| TV / Kiosk modu     | Genelde yok           | Doğrudan `uiMode = kiosk`                    |
+| Dashboard yoğunluğu | Sabit                 | Cihaza göre kart sayısı, veri yoğunluğu      |
+| Tasarım dili        | Statik                | Mod bazlı (mobile, desktop, tv, kiosk…)      |
 
 ## Kullanım
 
@@ -23,7 +23,9 @@ import React from "react";
 import { useAdaptiveUIContext } from "@/shared";
 import { Grid, Box } from "@mui/material";
 
-export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { device, tokens } = useAdaptiveUIContext();
 
   // Device type kontrolü
@@ -33,11 +35,15 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 
   // UI mode kontrolü - MUI Grid için column span hesaplama
   const columnSpan =
-    device.uiMode === "kiosk" ? 3 :   // 12/4 = 3 (4 kolon)
-    device.uiMode === "dense" ? 3 :   // 12/4 = 3 (4 kolon)
-    device.uiMode === "standard" ? 4 : // 12/3 = 4 (3 kolon)
-    device.uiMode === "compact" ? 6 :  // 12/2 = 6 (2 kolon)
-    12; // 12/1 = 12 (1 kolon - mobile)
+    device.uiMode === "kiosk"
+      ? 3 // 12/4 = 3 (4 kolon)
+      : device.uiMode === "dense"
+        ? 3 // 12/4 = 3 (4 kolon)
+        : device.uiMode === "standard"
+          ? 4 // 12/3 = 4 (3 kolon)
+          : device.uiMode === "compact"
+            ? 6 // 12/2 = 6 (2 kolon)
+            : 12; // 12/1 = 12 (1 kolon - mobile)
 
   return (
     <Box
@@ -65,7 +71,10 @@ export const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ child
 import { useAdaptiveUI } from "@/shared";
 import { Card, Typography } from "@mui/material";
 
-export const StatCard: React.FC<{ title: string; value: string }> = ({ title, value }) => {
+export const StatCard: React.FC<{ title: string; value: string }> = ({
+  title,
+  value,
+}) => {
   const { device, tokens } = useAdaptiveUI();
 
   const titleSize = tokens.baseFontSize * (device.uiMode === "kiosk" ? 1.2 : 1);
@@ -106,7 +115,7 @@ export const Component: React.FC = () => {
         // Mouse-optimized UI
         <Button size="medium" />
       )}
-      
+
       {/* High DPI kontrolü */}
       {isHighDPI && (
         <Box sx={{ fontSize: "0.875rem" }}>
@@ -138,20 +147,21 @@ export const Component: React.FC = () => {
 
 ```typescript
 interface AdaptiveTokens {
-  baseFontSize: number;        // Temel font boyutu
-  scale: number;               // Genel ölçek faktörü
-  spacingUnit: number;         // Spacing birimi (8px base)
-  borderRadius: number;        // Border radius
-  density: "low" | "medium" | "high";  // Yoğunluk seviyesi
-  maxContentWidth: number;     // Maksimum içerik genişliği
-  typographyScale: number;     // Typography ölçek faktörü
-  interactionSize: number;     // Minimum dokunma hedefi boyutu
+  baseFontSize: number; // Temel font boyutu
+  scale: number; // Genel ölçek faktörü
+  spacingUnit: number; // Spacing birimi (8px base)
+  borderRadius: number; // Border radius
+  density: "low" | "medium" | "high"; // Yoğunluk seviyesi
+  maxContentWidth: number; // Maksimum içerik genişliği
+  typographyScale: number; // Typography ölçek faktörü
+  interactionSize: number; // Minimum dokunma hedefi boyutu
 }
 ```
 
 ## Örnek Senaryolar
 
 ### TV / Kiosk Modu
+
 ```tsx
 import { useAdaptiveUIContext } from "@/shared";
 import { Box } from "@mui/material";
@@ -161,14 +171,13 @@ const { device, tokens } = useAdaptiveUIContext();
 if (device.uiMode === "kiosk") {
   // Büyük font, az kart, full-screen chart
   return (
-    <Box sx={{ fontSize: tokens.baseFontSize * 1.5 }}>
-      {/* Kiosk UI */}
-    </Box>
+    <Box sx={{ fontSize: tokens.baseFontSize * 1.5 }}>{/* Kiosk UI */}</Box>
   );
 }
 ```
 
 ### Dense Dashboard
+
 ```tsx
 import { Grid } from "@mui/material";
 import { useAdaptiveUIContext } from "@/shared";
@@ -179,7 +188,7 @@ if (device.uiMode === "dense") {
   // Aynı ekrana daha çok widget (mühendis masasında)
   // 4 kolon için: 12/4 = 3
   const columnSpan = 3;
-  
+
   return (
     <Grid container spacing={tokens.spacingUnit}>
       {items.map((item, idx) => (
@@ -193,6 +202,7 @@ if (device.uiMode === "dense") {
 ```
 
 ### Touch vs Mouse
+
 ```tsx
 import { useAdaptiveUIContext } from "@/shared";
 import { Button } from "@mui/material";
@@ -203,7 +213,7 @@ const { device, tokens } = useAdaptiveUIContext();
 <Button
   size={device.isTouch ? "large" : "medium"}
   sx={{ minHeight: tokens.interactionSize }}
-/>
+/>;
 ```
 
 ## Mevcut Design System ile Entegrasyon
@@ -223,13 +233,13 @@ export const Component: React.FC = () => {
       sx={{
         // Design system renkleri
         backgroundColor: ds.colors.primary.main,
-        
+
         // Adaptive spacing
         padding: tokens.spacingUnit * 2,
-        
+
         // Adaptive typography
         fontSize: tokens.baseFontSize,
-        
+
         // Design system shadows
         boxShadow: ds.shadows.soft.md,
       }}
@@ -254,4 +264,3 @@ Provider zaten `App/index.tsx` içinde eklendi:
 ```
 
 Artık tüm component'lerde `useAdaptiveUIContext()` kullanılabilir.
-

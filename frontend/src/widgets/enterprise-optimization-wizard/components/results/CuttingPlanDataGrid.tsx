@@ -7,20 +7,11 @@
  */
 
 import React, { useState, useMemo } from "react";
-import {
-  Box,
-  Button,
-  Chip,
-  Stack,
-  alpha,
-  Typography,
-} from "@mui/material";
+import { Box, Button, Chip, Stack, alpha, Typography } from "@mui/material";
 import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { useDesignSystem } from "@/shared/hooks";
 import { CardV2 } from "@/shared/ui/Card/Card.v2";
-import {
-  Visibility as ViewIcon,
-} from "@mui/icons-material";
+import { Visibility as ViewIcon } from "@mui/icons-material";
 import type { StockPlan } from "./utils";
 import { CuttingPatternDialog } from "./CuttingPatternDialog";
 
