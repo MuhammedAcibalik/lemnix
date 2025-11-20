@@ -46,7 +46,7 @@ export {
   layouts,
   componentVariants,
   animations,
-} from "@/App/theme";
+} from "@/app/theme";
 
 // Export permission hooks
 export {
@@ -114,3 +114,10 @@ export type { AdaptiveTokens, AdaptiveVariantOptions } from "./useAdaptiveUI";
 
 // Export adaptive UI context (from contexts layer)
 export { useAdaptiveUIContext } from "../contexts";
+
+// Export FSD responsive utilities (note: useBreakpoint also available from useResponsive)
+export { useMediaQuery as useMediaQueryFSD } from "./useMediaQuery";
+export { useBreakpoint as useBreakpointFSD } from "./useBreakpoint";
+
+// Export progressive upload hook
+export { useProgressiveUpload } from "./useProgressiveUpload";
