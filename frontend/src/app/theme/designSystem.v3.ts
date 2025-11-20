@@ -582,6 +582,50 @@ export const typography = {
 } as const;
 
 // ============================================================================
+// FLUID TYPOGRAPHY - Responsive font sizes using CSS clamp()
+// ============================================================================
+
+/**
+ * Fluid typography scales smoothly between breakpoints using CSS clamp()
+ * Formula: clamp(minSize, preferredSize, maxSize)
+ * 
+ * Benefits:
+ * - Smooth scaling between breakpoints
+ * - No sudden jumps in font size
+ * - Better readability across all screen sizes
+ * - Reduces need for multiple media queries
+ */
+export const fluidTypography = {
+  // Display - Hero sections
+  display: {
+    "2xl": "clamp(3rem, 2rem + 5vw, 8rem)", // 48px → 128px
+    xl: "clamp(2.5rem, 1.5rem + 4vw, 6rem)", // 40px → 96px
+    lg: "clamp(2rem, 1rem + 3.5vw, 4.5rem)", // 32px → 72px
+    md: "clamp(1.75rem, 1rem + 3vw, 3.75rem)", // 28px → 60px
+    sm: "clamp(1.5rem, 1rem + 2.5vw, 3rem)", // 24px → 48px
+  },
+  
+  // Headings - Page sections
+  heading: {
+    h1: "clamp(1.875rem, 1.5rem + 1.5vw, 2.25rem)", // 30px → 36px
+    h2: "clamp(1.5rem, 1.25rem + 1.25vw, 1.875rem)", // 24px → 30px
+    h3: "clamp(1.25rem, 1.125rem + 0.625vw, 1.5rem)", // 20px → 24px
+    h4: "clamp(1.125rem, 1rem + 0.5vw, 1.25rem)", // 18px → 20px
+    h5: "clamp(1rem, 0.875rem + 0.5vw, 1.125rem)", // 16px → 18px
+    h6: "clamp(0.875rem, 0.875rem + 0.25vw, 1rem)", // 14px → 16px
+  },
+  
+  // Body - Content text
+  body: {
+    xl: "clamp(1.125rem, 1rem + 0.5vw, 1.25rem)", // 18px → 20px
+    lg: "clamp(1rem, 0.875rem + 0.5vw, 1.125rem)", // 16px → 18px
+    base: "clamp(0.875rem, 0.875rem + 0.25vw, 1rem)", // 14px → 16px
+    sm: "clamp(0.8125rem, 0.8125rem + 0.125vw, 0.875rem)", // 13px → 14px
+    xs: "clamp(0.75rem, 0.75rem + 0.125vw, 0.8125rem)", // 12px → 13px
+  },
+} as const;
+
+// ============================================================================
 // BORDER RADIUS SYSTEM
 // ============================================================================
 
@@ -831,13 +875,41 @@ export const zIndex = {
 // BREAKPOINT SYSTEM - Responsive design
 // ============================================================================
 
+/**
+ * Enhanced breakpoint system for comprehensive responsive design
+ * Covers all screen sizes from mobile (320px) to ultra-wide displays (2560px+)
+ * 
+ * @breakpoints
+ * - xs: 320px   - Mobile small (iPhone SE)
+ * - sm: 480px   - Mobile large
+ * - md: 768px   - Tablet
+ * - lg: 1024px  - Laptop small
+ * - xl: 1366px  - Desktop standard (HD)
+ * - xxl: 1920px - Desktop large (Full HD)
+ * - xxxl: 2560px - Desktop ultra-wide (2K/QHD)
+ */
 export const breakpoints = {
-  xs: 0,
-  sm: 640,
+  xs: 320,
+  sm: 480,
   md: 768,
   lg: 1024,
-  xl: 1280,
-  "2xl": 1536,
+  xl: 1366,
+  xxl: 1920,
+  xxxl: 2560,
+} as const;
+
+/**
+ * Container max-widths for each breakpoint
+ * Content should be centered with these max-widths to prevent over-stretching
+ */
+export const containerMaxWidths = {
+  xs: "100%",
+  sm: "100%",
+  md: 720,
+  lg: 960,
+  xl: 1200,
+  xxl: 1440,
+  xxxl: 1920,
 } as const;
 
 // ============================================================================
@@ -995,12 +1067,14 @@ export const designTokens = {
   spacingScale,
   colors,
   typography,
+  fluidTypography,
   borderRadius,
   shadows,
   gradients,
   transitions,
   zIndex,
   breakpoints,
+  containerMaxWidths,
   componentSizes,
   glass,
   focus,
