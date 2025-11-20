@@ -86,13 +86,14 @@ export class AsyncEncryptionService extends EventEmitter {
       // Process items in batches
       for (let i = 0; i < items.length; i += batchSize) {
         const batch = items.slice(i, i + batchSize);
-        const batchPromises = batch.map((item, index) =>
-          this.encryptSingleItem(item, i + index, progress, options),
+        const batchTasks = batch.map(
+          (item, index) => () =>
+            this.encryptSingleItem(item, i + index, progress, options),
         );
 
         // Process batch with concurrency control
         const batchResults = await this.processWithConcurrency(
-          batchPromises,
+          batchTasks,
           concurrency,
         );
 
@@ -192,13 +193,14 @@ export class AsyncEncryptionService extends EventEmitter {
       // Process items in batches
       for (let i = 0; i < items.length; i += batchSize) {
         const batch = items.slice(i, i + batchSize);
-        const batchPromises = batch.map((item, index) =>
-          this.decryptSingleItem(item, i + index, progress, options),
+        const batchTasks = batch.map(
+          (item, index) => () =>
+            this.decryptSingleItem(item, i + index, progress, options),
         );
 
         // Process batch with concurrency control
         const batchResults = await this.processWithConcurrency(
-          batchPromises,
+          batchTasks,
           concurrency,
         );
 
@@ -406,18 +408,66 @@ export class AsyncEncryptionService extends EventEmitter {
    * Process promises with concurrency control
    */
   private async processWithConcurrency<T>(
-    promises: Promise<T>[],
+    taskFactories: Array<() => Promise<T>>,
     concurrency: number,
   ): Promise<T[]> {
-    const results: T[] = [];
-
-    for (let i = 0; i < promises.length; i += concurrency) {
-      const batch = promises.slice(i, i + concurrency);
-      const batchResults = await Promise.all(batch);
-      results.push(...batchResults);
+    if (taskFactories.length === 0) {
+      return [];
     }
 
-    return results;
+    const maxConcurrency = Math.max(1, Math.floor(concurrency) || 1);
+    const results: T[] = new Array(taskFactories.length);
+    let nextIndex = 0;
+    let activeCount = 0;
+    let hasError = false;
+
+    return new Promise<T[]>((resolve, reject) => {
+      const schedule = () => {
+        if (hasError) {
+          return;
+        }
+
+        if (nextIndex >= taskFactories.length && activeCount === 0) {
+          resolve(results);
+          return;
+        }
+
+        while (
+          activeCount < maxConcurrency &&
+          nextIndex < taskFactories.length
+        ) {
+          const currentIndex = nextIndex++;
+          let task: Promise<T>;
+
+          try {
+            task = Promise.resolve(taskFactories[currentIndex]());
+          } catch (error) {
+            hasError = true;
+            reject(error);
+            return;
+          }
+
+          activeCount++;
+
+          task
+            .then((value) => {
+              results[currentIndex] = value;
+            })
+            .catch((error) => {
+              if (!hasError) {
+                hasError = true;
+                reject(error);
+              }
+            })
+            .finally(() => {
+              activeCount--;
+              schedule();
+            });
+        }
+      };
+
+      schedule();
+    });
   }
 
   /**
