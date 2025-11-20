@@ -36,7 +36,11 @@ import {
   Check as CheckIcon,
   Info as InfoIcon,
 } from "@mui/icons-material";
-import { useDesignSystem, useAdaptiveUIContext, useAdaptiveVariant } from "@/shared/hooks";
+import {
+  useDesignSystem,
+  useAdaptiveUIContext,
+  useAdaptiveVariant,
+} from "@/shared/hooks";
 import { AlgorithmModeSelector } from "@/widgets/algorithm-selector";
 import type { ParametersStepProps, AlgorithmType } from "../types";
 
@@ -147,10 +151,12 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
               position: "relative",
               overflow: "hidden",
               transition: ds.transitions.base,
-              "&:hover": !device.isTouch ? {
-                borderColor: alpha(ds.colors.primary.main, 0.15),
-                boxShadow: ds.shadows.soft.xl,
-              } : {},
+              "&:hover": !device.isTouch
+                ? {
+                    borderColor: alpha(ds.colors.primary.main, 0.15),
+                    boxShadow: ds.shadows.soft.xl,
+                  }
+                : {},
               "&::before": {
                 content: '""',
                 position: "absolute",
@@ -162,13 +168,17 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
               },
             }}
           >
-            <CardContent sx={{ p: useAdaptiveVariant({
-              mobile: tokens.components.card.padding,
-              compact: tokens.spacing.md,
-              standard: tokens.spacing.lg,
-              dense: tokens.spacing.xl,
-              kiosk: tokens.spacing.xxl,
-            }) }}>
+            <CardContent
+              sx={{
+                p: useAdaptiveVariant({
+                  mobile: tokens.components.card.padding,
+                  compact: tokens.spacing.md,
+                  standard: tokens.spacing.lg,
+                  dense: tokens.spacing.xl,
+                  kiosk: tokens.spacing.xxl,
+                }),
+              }}
+            >
               {/* Header */}
               <Box
                 sx={{
@@ -197,12 +207,12 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                     }}
                   >
                     <PsychologyIcon
-                      sx={{ 
+                      sx={{
                         fontSize: {
                           xs: tokens.components.icon.md,
                           md: tokens.components.icon.lg,
                         },
-                        color: ds.colors.primary.main 
+                        color: ds.colors.primary.main,
                       }}
                     />
                   </Box>
@@ -299,7 +309,12 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   >
                     Gelişmiş Mod Aktif
                   </Typography>
-                  <Typography sx={{ fontSize: `${tokens.typography.xs}px`, lineHeight: 1.5 }}>
+                  <Typography
+                    sx={{
+                      fontSize: `${tokens.typography.xs}px`,
+                      lineHeight: 1.5,
+                    }}
+                  >
                     Çok hedefli optimizasyon için{" "}
                     <strong>NSGA-II algoritması</strong> kullanılacaktır. Bu mod
                     Pareto front analizi ve alternatif çözümler sağlar.
@@ -355,10 +370,10 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   const isDisabled = algorithmMode === "advanced"; // Disable in advanced mode
 
                   return (
-                    <Grid 
-                      item 
-                      xs={6}   // Mobile: 2 columns
-                      sm={4}   // Tablet: 3 columns
+                    <Grid
+                      item
+                      xs={6} // Mobile: 2 columns
+                      sm={4} // Tablet: 3 columns
                       md={2.4} // Desktop: 5 columns
                       key={algorithm.id}
                     >
@@ -375,14 +390,15 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                           position: "relative",
                           opacity: isDisabled ? 0.5 : 1,
                           pointerEvents: isDisabled ? "none" : "auto",
-                          "&:hover": !isDisabled && !device.isTouch
-                            ? {
-                                borderColor: algorithm.color,
-                                background: `linear-gradient(135deg, ${alpha(algorithm.color, 0.05)} 0%, ${alpha(algorithm.color, 0.02)} 100%)`,
-                                transform: "translateY(-4px)",
-                                boxShadow: ds.shadows.soft.lg,
-                              }
-                            : {},
+                          "&:hover":
+                            !isDisabled && !device.isTouch
+                              ? {
+                                  borderColor: algorithm.color,
+                                  background: `linear-gradient(135deg, ${alpha(algorithm.color, 0.05)} 0%, ${alpha(algorithm.color, 0.02)} 100%)`,
+                                  transform: "translateY(-4px)",
+                                  boxShadow: ds.shadows.soft.lg,
+                                }
+                              : {},
                         }}
                         onClick={() =>
                           !isDisabled &&
@@ -408,7 +424,12 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                               zIndex: 1,
                             }}
                           >
-                            <CheckIcon sx={{ fontSize: tokens.components.icon.xs, color: "white" }} />
+                            <CheckIcon
+                              sx={{
+                                fontSize: tokens.components.icon.xs,
+                                color: "white",
+                              }}
+                            />
                           </Box>
                         )}
 
@@ -513,7 +534,6 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   );
                 })}
               </Grid>
-
             </CardContent>
           </Card>
         </Grid>
@@ -528,19 +548,25 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                 boxShadow: ds.shadows.soft.lg,
                 background: `linear-gradient(135deg, ${alpha(ds.colors.secondary.main, 0.02)} 0%, ${alpha(ds.colors.primary.main, 0.02)} 100%)`,
                 transition: ds.transitions.base,
-                "&:hover": !device.isTouch ? {
-                  borderColor: alpha(ds.colors.secondary.main, 0.15),
-                  boxShadow: ds.shadows.soft.xl,
-                } : {},
+                "&:hover": !device.isTouch
+                  ? {
+                      borderColor: alpha(ds.colors.secondary.main, 0.15),
+                      boxShadow: ds.shadows.soft.xl,
+                    }
+                  : {},
               }}
             >
-              <CardContent sx={{ p: useAdaptiveVariant({
-                mobile: tokens.components.card.padding,
-                compact: tokens.spacing.md,
-                standard: tokens.spacing.lg,
-                dense: tokens.spacing.xl,
-                kiosk: tokens.spacing.xxl,
-              }) }}>
+              <CardContent
+                sx={{
+                  p: useAdaptiveVariant({
+                    mobile: tokens.components.card.padding,
+                    compact: tokens.spacing.md,
+                    standard: tokens.spacing.lg,
+                    dense: tokens.spacing.xl,
+                    kiosk: tokens.spacing.xxl,
+                  }),
+                }}
+              >
                 <AlgorithmModeSelector
                   value={algorithmMode}
                   onChange={onAlgorithmModeChange}
@@ -560,19 +586,25 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
               boxShadow: ds.shadows.soft.lg,
               background: `linear-gradient(135deg, ${alpha(ds.colors.secondary.main, 0.03)} 0%, ${alpha(ds.colors.success.main, 0.02)} 100%)`,
               transition: ds.transitions.base,
-              "&:hover": !device.isTouch ? {
-                borderColor: alpha(ds.colors.secondary.main, 0.15),
-                boxShadow: ds.shadows.soft.xl,
-              } : {},
+              "&:hover": !device.isTouch
+                ? {
+                    borderColor: alpha(ds.colors.secondary.main, 0.15),
+                    boxShadow: ds.shadows.soft.xl,
+                  }
+                : {},
             }}
           >
-            <CardContent sx={{ p: useAdaptiveVariant({
-              mobile: tokens.components.card.padding,
-              compact: tokens.spacing.md,
-              standard: tokens.spacing.lg,
-              dense: tokens.spacing.xl,
-              kiosk: tokens.spacing.xxl,
-            }) }}>
+            <CardContent
+              sx={{
+                p: useAdaptiveVariant({
+                  mobile: tokens.components.card.padding,
+                  compact: tokens.spacing.md,
+                  standard: tokens.spacing.lg,
+                  dense: tokens.spacing.xl,
+                  kiosk: tokens.spacing.xxl,
+                }),
+              }}
+            >
               {/* Header */}
               <Box
                 sx={{
@@ -594,12 +626,12 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   }}
                 >
                   <SettingsIcon
-                    sx={{ 
+                    sx={{
                       fontSize: {
                         xs: tokens.components.icon.md,
                         md: tokens.components.icon.lg,
                       },
-                      color: ds.colors.secondary.main 
+                      color: ds.colors.secondary.main,
                     }}
                   />
                 </Box>
@@ -634,15 +666,19 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
               </Box>
 
               {/* Objectives Grid */}
-              <Grid container spacing={tokens.layout.sectionSpacing} justifyContent="center">
+              <Grid
+                container
+                spacing={tokens.layout.sectionSpacing}
+                justifyContent="center"
+              >
                 {objectives.map((objective) => {
                   const isSelected = isObjectiveSelected(objective.key);
                   return (
-                    <Grid 
-                      item 
-                      xs={12}  // Mobile: 1 column
-                      sm={6}   // Tablet: 2 columns
-                      md={3}   // Desktop: 4 columns
+                    <Grid
+                      item
+                      xs={12} // Mobile: 1 column
+                      sm={6} // Tablet: 2 columns
+                      md={3} // Desktop: 4 columns
                       key={objective.key}
                     >
                       <Card
@@ -658,12 +694,14 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                           height: "auto",
                           display: "flex",
                           flexDirection: "column",
-                          "&:hover": !device.isTouch ? {
-                            borderColor: objective.color,
-                            background: `linear-gradient(135deg, ${alpha(objective.color, 0.05)} 0%, ${alpha(objective.color, 0.02)} 100%)`,
-                            transform: "translateY(-4px)",
-                            boxShadow: ds.shadows.soft.lg,
-                          } : {},
+                          "&:hover": !device.isTouch
+                            ? {
+                                borderColor: objective.color,
+                                background: `linear-gradient(135deg, ${alpha(objective.color, 0.05)} 0%, ${alpha(objective.color, 0.02)} 100%)`,
+                                transform: "translateY(-4px)",
+                                boxShadow: ds.shadows.soft.lg,
+                              }
+                            : {},
                         }}
                         onClick={() => handleObjectiveToggle(objective.key)}
                       >
@@ -684,7 +722,17 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                             alignItems: "center",
                           }}
                         >
-                          <Box sx={{ position: "relative", width: "100%", display: "flex", flexDirection: "column", alignItems: "center", flex: 1, justifyContent: "center" }}>
+                          <Box
+                            sx={{
+                              position: "relative",
+                              width: "100%",
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              flex: 1,
+                              justifyContent: "center",
+                            }}
+                          >
                             <Box
                               sx={{
                                 width: {
@@ -728,9 +776,9 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                                   }}
                                 >
                                   <CheckIcon
-                                    sx={{ 
+                                    sx={{
                                       fontSize: tokens.components.icon.xs,
-                                      color: "white" 
+                                      color: "white",
                                     }}
                                   />
                                 </Box>
@@ -783,7 +831,6 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   );
                 })}
               </Grid>
-
             </CardContent>
           </Card>
         </Grid>
@@ -797,19 +844,25 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
               boxShadow: ds.shadows.soft.lg,
               background: `linear-gradient(135deg, ${alpha(ds.colors.info.main, 0.02)} 0%, ${alpha(ds.colors.neutral[50], 0.5)} 100%)`,
               transition: ds.transitions.base,
-              "&:hover": !device.isTouch ? {
-                borderColor: alpha(ds.colors.info.main, 0.15),
-                boxShadow: ds.shadows.soft.xl,
-              } : {},
+              "&:hover": !device.isTouch
+                ? {
+                    borderColor: alpha(ds.colors.info.main, 0.15),
+                    boxShadow: ds.shadows.soft.xl,
+                  }
+                : {},
             }}
           >
-            <CardContent sx={{ p: useAdaptiveVariant({
-              mobile: tokens.components.card.padding,
-              compact: tokens.spacing.md,
-              standard: tokens.spacing.lg,
-              dense: tokens.spacing.xl,
-              kiosk: tokens.spacing.xxl,
-            }) }}>
+            <CardContent
+              sx={{
+                p: useAdaptiveVariant({
+                  mobile: tokens.components.card.padding,
+                  compact: tokens.spacing.md,
+                  standard: tokens.spacing.lg,
+                  dense: tokens.spacing.xl,
+                  kiosk: tokens.spacing.xxl,
+                }),
+              }}
+            >
               {/* Header */}
               <Box
                 sx={{
@@ -835,12 +888,12 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   }}
                 >
                   <RulerIcon
-                    sx={{ 
+                    sx={{
                       fontSize: {
                         xs: tokens.components.icon.md,
                         md: tokens.components.icon.lg,
                       },
-                      color: ds.colors.info.main 
+                      color: ds.colors.info.main,
                     }}
                   />
                 </Box>
@@ -901,7 +954,9 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                   <Chip
                     key={length}
                     label={`${length} mm`}
-                    icon={<RulerIcon sx={{ fontSize: tokens.components.icon.xs }} />}
+                    icon={
+                      <RulerIcon sx={{ fontSize: tokens.components.icon.xs }} />
+                    }
                     sx={{
                       height: {
                         xs: tokens.components.button.sm,
@@ -963,9 +1018,9 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
             <AccordionSummary
               expandIcon={
                 <ExpandMoreIcon
-                  sx={{ 
+                  sx={{
                     fontSize: tokens.components.icon.md,
-                    color: ds.colors.warning.main 
+                    color: ds.colors.warning.main,
                   }}
                 />
               }
@@ -1002,12 +1057,12 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                 }}
               >
                 <RulerIcon
-                  sx={{ 
+                  sx={{
                     fontSize: {
                       xs: tokens.components.icon.md,
                       md: tokens.components.icon.lg,
                     },
-                    color: ds.colors.warning.main 
+                    color: ds.colors.warning.main,
                   }}
                 />
               </Box>
@@ -1055,19 +1110,21 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                 }}
               />
             </AccordionSummary>
-            <AccordionDetails sx={{ 
-              px: useAdaptiveVariant({
-                mobile: tokens.components.card.padding,
-                compact: tokens.spacing.md,
-                standard: tokens.spacing.lg,
-                dense: tokens.spacing.xl,
-                kiosk: tokens.spacing.xxl,
-              }),
-              pb: {
-                xs: tokens.spacing.md,
-                md: tokens.spacing.lg,
-              },
-            }}>
+            <AccordionDetails
+              sx={{
+                px: useAdaptiveVariant({
+                  mobile: tokens.components.card.padding,
+                  compact: tokens.spacing.md,
+                  standard: tokens.spacing.lg,
+                  dense: tokens.spacing.xl,
+                  kiosk: tokens.spacing.xxl,
+                }),
+                pb: {
+                  xs: tokens.spacing.md,
+                  md: tokens.spacing.lg,
+                },
+              }}
+            >
               <Grid container spacing={tokens.layout.sectionSpacing}>
                 <Grid item xs={12} sm={6}>
                   <Box sx={{ mb: tokens.spacing.md }}>
@@ -1225,7 +1282,6 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
             </AccordionDetails>
           </Accordion>
         </Grid>
-
       </Grid>
     </Box>
   );

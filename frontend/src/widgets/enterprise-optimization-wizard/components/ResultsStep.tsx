@@ -304,7 +304,10 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
           Optimizasyon Çalışıyor...
         </Typography>
         <Typography
-          sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
+          sx={{
+            fontSize: `${tokens.typography.sm}px`,
+            color: ds.colors.text.secondary,
+          }}
         >
           Lütfen bekleyin, bu işlem birkaç dakika sürebilir
         </Typography>
@@ -361,7 +364,9 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
           startIcon={<RefreshIcon />}
           onClick={onNewOptimization}
           sx={{
-            minHeight: device.isTouch ? tokens.components.minTouchTarget : tokens.components.button.md,
+            minHeight: device.isTouch
+              ? tokens.components.minTouchTarget
+              : tokens.components.button.md,
           }}
         >
           Yeniden Dene
@@ -430,14 +435,18 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
             variant="outlined"
             startIcon={<ArrowBackIcon />}
             onClick={handleBackToOverview}
-            sx={{ 
+            sx={{
               textTransform: "none",
-              minHeight: device.isTouch ? tokens.components.minTouchTarget : tokens.components.button.md,
+              minHeight: device.isTouch
+                ? tokens.components.minTouchTarget
+                : tokens.components.button.md,
             }}
           >
             ← Geri
           </Button>
-          <Typography sx={{ fontSize: `${tokens.typography.xl}px`, fontWeight: 600 }}>
+          <Typography
+            sx={{ fontSize: `${tokens.typography.xl}px`, fontWeight: 600 }}
+          >
             {currentPage === "cutting-plan" && "Kesim Planı Görselleştirme"}
             {currentPage === "stock-details" && "Stok Detayları"}
             {currentPage === "cost-distribution" && "Maliyet Dağılımı"}
@@ -474,7 +483,9 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 label="Toplam Stok"
                 value={stockBreakdown.length}
                 color="primary"
-                icon={<InventoryIcon sx={{ fontSize: tokens.components.icon.sm }} />}
+                icon={
+                  <InventoryIcon sx={{ fontSize: tokens.components.icon.sm }} />
+                }
               />
             </Grid>
             <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -557,7 +568,9 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 value={(costBreakdown?.materialCost || 0).toFixed(2)}
                 unit="₺"
                 color="primary"
-                icon={<PieChartIcon sx={{ fontSize: tokens.components.icon.sm }} />}
+                icon={
+                  <PieChartIcon sx={{ fontSize: tokens.components.icon.sm }} />
+                }
               />
             </Grid>
             <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -601,7 +614,9 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 value={(result as WizardOptimizationResult).executionTime || 0}
                 unit="ms"
                 color="info"
-                icon={<SpeedIcon sx={{ fontSize: tokens.components.icon.sm }} />}
+                icon={
+                  <SpeedIcon sx={{ fontSize: tokens.components.icon.sm }} />
+                }
               />
             </Grid>
             <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -671,7 +686,9 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   ).length
                 }
                 color="error"
-                icon={<LightbulbIcon sx={{ fontSize: tokens.components.icon.sm }} />}
+                icon={
+                  <LightbulbIcon sx={{ fontSize: tokens.components.icon.sm }} />
+                }
               />
             </Grid>
             <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -750,7 +767,9 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 ).toFixed(2)}
                 unit="mm"
                 color="error"
-                icon={<RecyclingIcon sx={{ fontSize: tokens.components.icon.sm }} />}
+                icon={
+                  <RecyclingIcon sx={{ fontSize: tokens.components.icon.sm }} />
+                }
               />
             </Grid>
             <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -871,7 +890,9 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 value={(costBreakdown?.totalCost || 0).toFixed(2)}
                 unit="₺"
                 color="primary"
-                icon={<AnalyticsIcon sx={{ fontSize: tokens.components.icon.sm }} />}
+                icon={
+                  <AnalyticsIcon sx={{ fontSize: tokens.components.icon.sm }} />
+                }
               />
             </Grid>
             <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -921,7 +942,11 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 ).toFixed(1)}
                 unit="/100"
                 color="success"
-                icon={<HighQualityIcon sx={{ fontSize: tokens.components.icon.sm }} />}
+                icon={
+                  <HighQualityIcon
+                    sx={{ fontSize: tokens.components.icon.sm }}
+                  />
+                }
               />
             </Grid>
             <Grid item xs={12} sm={6} md={4} lg={3}>
@@ -1023,7 +1048,9 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
               textTransform: "none",
               fontWeight: 600,
               fontSize: `${tokens.typography.base}px`,
-              minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+              minHeight: device.isTouch
+                ? tokens.components.minTouchTarget
+                : undefined,
             },
           }}
         >
@@ -1041,18 +1068,20 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
       </Box>
 
       {/* Tab Content */}
-      <Box sx={{ 
-        px: {
-          xs: tokens.spacing.md,
-          sm: tokens.spacing.lg,
-          md: tokens.spacing.xl,
-          lg: tokens.spacing.xl * 1.5,
-        },
-        py: {
-          xs: tokens.spacing.sm,
-          md: tokens.spacing.md,
-        },
-      }}>
+      <Box
+        sx={{
+          px: {
+            xs: tokens.spacing.md,
+            sm: tokens.spacing.lg,
+            md: tokens.spacing.xl,
+            lg: tokens.spacing.xl * 1.5,
+          },
+          py: {
+            xs: tokens.spacing.sm,
+            md: tokens.spacing.md,
+          },
+        }}
+      >
         {resultsTab === 0 && (
           <Box sx={{ width: "100%" }}>
             {stockLengthGroups.length === 0 ? (
@@ -1088,9 +1117,11 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   variant="outlined"
                   startIcon={<RefreshIcon />}
                   onClick={() => window.location.reload()}
-                  sx={{ 
+                  sx={{
                     textTransform: "none",
-                    minHeight: device.isTouch ? tokens.components.minTouchTarget : tokens.components.button.md,
+                    minHeight: device.isTouch
+                      ? tokens.components.minTouchTarget
+                      : tokens.components.button.md,
                   }}
                 >
                   Sayfayı Yenile
@@ -1148,13 +1179,17 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                                 ? "white"
                                 : ds.colors.text.secondary,
                             fontWeight: 600,
-                            minWidth: device.isTouch ? tokens.components.minTouchTarget : undefined,
-                            "&:hover": !device.isTouch ? {
-                              backgroundColor:
-                                globalUnit === unit
-                                  ? ds.colors.primary[700]
-                                  : ds.colors.neutral[200],
-                            } : {},
+                            minWidth: device.isTouch
+                              ? tokens.components.minTouchTarget
+                              : undefined,
+                            "&:hover": !device.isTouch
+                              ? {
+                                  backgroundColor:
+                                    globalUnit === unit
+                                      ? ds.colors.primary[700]
+                                      : ds.colors.neutral[200],
+                                }
+                              : {},
                           }}
                         />
                       ))}
@@ -1175,13 +1210,21 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 )}
 
                 {/* Summary Metrics Cards - Single Row 5 Cards - Standard Spacing */}
-                <Grid container spacing={tokens.layout.gridGap} sx={{ mb: tokens.spacing.md }}>
+                <Grid
+                  container
+                  spacing={tokens.layout.gridGap}
+                  sx={{ mb: tokens.spacing.md }}
+                >
                   <Grid item xs={12} sm={6} md={4} lg={2.4}>
                     <MetricCard
                       label="Toplam Profil"
                       value={result?.stockCount || 0}
                       unit="ADT"
-                      icon={<InventoryIcon sx={{ fontSize: tokens.components.icon.md }} />}
+                      icon={
+                        <InventoryIcon
+                          sx={{ fontSize: tokens.components.icon.md }}
+                        />
+                      }
                       color="primary"
                       subtitle="Stok"
                       detail={`${result?.cuts?.length || 0} kesim`}
@@ -1192,7 +1235,11 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                       label="Fire Oranı"
                       value={(result?.wastePercentage || 0).toFixed(1)}
                       unit="%"
-                      icon={<RecyclingIcon sx={{ fontSize: tokens.components.icon.md }} />}
+                      icon={
+                        <RecyclingIcon
+                          sx={{ fontSize: tokens.components.icon.md }}
+                        />
+                      }
                       color={
                         (result?.wastePercentage || 0) < 10
                           ? "success"
@@ -1207,7 +1254,11 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                       label="Verimlilik"
                       value={(result?.efficiency || 0).toFixed(1)}
                       unit="%"
-                      icon={<SpeedIcon sx={{ fontSize: tokens.components.icon.md }} />}
+                      icon={
+                        <SpeedIcon
+                          sx={{ fontSize: tokens.components.icon.md }}
+                        />
+                      }
                       color={
                         (result?.efficiency || 0) >= 90 ? "success" : "info"
                       }
@@ -1220,7 +1271,11 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                       label="Kesim Sayısı"
                       value={result?.cuts?.length || 0}
                       unit="ADT"
-                      icon={<SpeedIcon sx={{ fontSize: tokens.components.icon.md }} />}
+                      icon={
+                        <SpeedIcon
+                          sx={{ fontSize: tokens.components.icon.md }}
+                        />
+                      }
                       color="success"
                       subtitle="Plan"
                       detail={`${result?.stockCount || 0} stok`}
@@ -1238,7 +1293,11 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                         globalUnit,
                       ).toFixed(globalUnit === "mm" ? 0 : 1)}
                       unit={globalUnit}
-                      icon={<InventoryIcon sx={{ fontSize: tokens.components.icon.md }} />}
+                      icon={
+                        <InventoryIcon
+                          sx={{ fontSize: tokens.components.icon.md }}
+                        />
+                      }
                       color="info"
                       subtitle="Uzunluk"
                       detail={`${result?.stockCount || 0} stok`}
@@ -1250,7 +1309,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 <Box sx={{ mb: tokens.spacing.md }}>
                   <Typography
                     variant="h6"
-                    sx={{ 
+                    sx={{
                       mb: tokens.spacing.sm,
                       fontWeight: 600,
                       fontSize: `${tokens.typography.lg}px`,
@@ -1261,8 +1320,21 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   <Grid container spacing={tokens.layout.gridGap}>
                     {stockLengthGroups.map((group) => (
                       <Grid item xs={12} sm={6} md={4} key={group.stockLength}>
-                        <CardV2 variant="elevated" sx={{ p: tokens.components.card.padding, height: "100%" }}>
-                          <Box sx={{ display: "flex", alignItems: "center", gap: tokens.spacing.sm, mb: tokens.spacing.xs }}>
+                        <CardV2
+                          variant="elevated"
+                          sx={{
+                            p: tokens.components.card.padding,
+                            height: "100%",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: tokens.spacing.sm,
+                              mb: tokens.spacing.xs,
+                            }}
+                          >
                             <Box
                               sx={{
                                 p: tokens.spacing.sm,
@@ -1271,7 +1343,9 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                                 color: ds.colors.primary.main,
                               }}
                             >
-                              <RulerIcon sx={{ fontSize: tokens.components.icon.md }} />
+                              <RulerIcon
+                                sx={{ fontSize: tokens.components.icon.md }}
+                              />
                             </Box>
                             <Typography
                               variant="h5"
@@ -1285,51 +1359,70 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                             </Typography>
                           </Box>
                           <Stack spacing={tokens.spacing.xs}>
-                            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                              <Typography 
-                                variant="body2" 
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <Typography
+                                variant="body2"
                                 color="text.secondary"
                                 sx={{ fontSize: `${tokens.typography.sm}px` }}
                               >
                                 Toplam Stok:
                               </Typography>
-                              <Typography 
-                                variant="body2" 
+                              <Typography
+                                variant="body2"
                                 fontWeight={600}
                                 sx={{ fontSize: `${tokens.typography.sm}px` }}
                               >
                                 {group.totalStocks} Adet
                               </Typography>
                             </Box>
-                            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                              <Typography 
-                                variant="body2" 
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <Typography
+                                variant="body2"
                                 color="text.secondary"
                                 sx={{ fontSize: `${tokens.typography.sm}px` }}
                               >
                                 Toplam Parça:
                               </Typography>
-                              <Typography 
-                                variant="body2" 
+                              <Typography
+                                variant="body2"
                                 fontWeight={600}
                                 sx={{ fontSize: `${tokens.typography.sm}px` }}
                               >
                                 {group.totalPieces}
                               </Typography>
                             </Box>
-                            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                              <Typography 
-                                variant="body2" 
+                            <Box
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                              }}
+                            >
+                              <Typography
+                                variant="body2"
                                 color="text.secondary"
                                 sx={{ fontSize: `${tokens.typography.sm}px` }}
                               >
                                 Verimlilik:
                               </Typography>
-                              <Typography 
-                                variant="body2" 
+                              <Typography
+                                variant="body2"
                                 fontWeight={600}
                                 sx={{ fontSize: `${tokens.typography.sm}px` }}
-                                color={group.avgEfficiency >= 90 ? ds.colors.success.main : ds.colors.warning.main}
+                                color={
+                                  group.avgEfficiency >= 90
+                                    ? ds.colors.success.main
+                                    : ds.colors.warning.main
+                                }
                               >
                                 {group.avgEfficiency.toFixed(1)}%
                               </Typography>
@@ -1345,7 +1438,7 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 <Box sx={{ mb: tokens.spacing.md }}>
                   <Typography
                     variant="h6"
-                    sx={{ 
+                    sx={{
                       mb: tokens.spacing.sm,
                       fontWeight: 600,
                       fontSize: `${tokens.typography.lg}px`,
@@ -1401,10 +1494,12 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": !device.isTouch ? {
-                    transform: "translateY(-4px)",
-                    boxShadow: ds.shadows.soft.xl,
-                  } : {},
+                  "&:hover": !device.isTouch
+                    ? {
+                        transform: "translateY(-4px)",
+                        boxShadow: ds.shadows.soft.xl,
+                      }
+                    : {},
                 }}
               >
                 <VisibilityIcon
@@ -1424,7 +1519,10 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   Kesim Planı Görselleştirme
                 </Typography>
                 <Typography
-                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
+                  sx={{
+                    fontSize: `${tokens.typography.sm}px`,
+                    color: ds.colors.text.secondary,
+                  }}
                 >
                   3D/2D kesim planı görselleştirmesi
                 </Typography>
@@ -1446,10 +1544,12 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": !device.isTouch ? {
-                    transform: "translateY(-4px)",
-                    boxShadow: ds.shadows.soft.xl,
-                  } : {},
+                  "&:hover": !device.isTouch
+                    ? {
+                        transform: "translateY(-4px)",
+                        boxShadow: ds.shadows.soft.xl,
+                      }
+                    : {},
                 }}
               >
                 <InventoryIcon
@@ -1469,7 +1569,10 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   Stok Detayları
                 </Typography>
                 <Typography
-                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
+                  sx={{
+                    fontSize: `${tokens.typography.sm}px`,
+                    color: ds.colors.text.secondary,
+                  }}
                 >
                   Stok bazlı detaylı analiz
                 </Typography>
@@ -1491,10 +1594,12 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": !device.isTouch ? {
-                    transform: "translateY(-4px)",
-                    boxShadow: ds.shadows.soft.xl,
-                  } : {},
+                  "&:hover": !device.isTouch
+                    ? {
+                        transform: "translateY(-4px)",
+                        boxShadow: ds.shadows.soft.xl,
+                      }
+                    : {},
                 }}
               >
                 <PieChartIcon
@@ -1514,7 +1619,10 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   Maliyet Dağılımı
                 </Typography>
                 <Typography
-                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
+                  sx={{
+                    fontSize: `${tokens.typography.sm}px`,
+                    color: ds.colors.text.secondary,
+                  }}
                 >
                   Maliyet analizi ve dağılımı
                 </Typography>
@@ -1536,10 +1644,12 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": !device.isTouch ? {
-                    transform: "translateY(-4px)",
-                    boxShadow: ds.shadows.soft.xl,
-                  } : {},
+                  "&:hover": !device.isTouch
+                    ? {
+                        transform: "translateY(-4px)",
+                        boxShadow: ds.shadows.soft.xl,
+                      }
+                    : {},
                 }}
               >
                 <SpeedIcon
@@ -1559,7 +1669,10 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   Algoritma Performansı
                 </Typography>
                 <Typography
-                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
+                  sx={{
+                    fontSize: `${tokens.typography.sm}px`,
+                    color: ds.colors.text.secondary,
+                  }}
                 >
                   Algoritma telemetri ve performans
                 </Typography>
@@ -1581,10 +1694,12 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": !device.isTouch ? {
-                    transform: "translateY(-4px)",
-                    boxShadow: ds.shadows.soft.xl,
-                  } : {},
+                  "&:hover": !device.isTouch
+                    ? {
+                        transform: "translateY(-4px)",
+                        boxShadow: ds.shadows.soft.xl,
+                      }
+                    : {},
                 }}
               >
                 <LightbulbIcon
@@ -1604,7 +1719,10 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   Akıllı Öneriler
                 </Typography>
                 <Typography
-                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
+                  sx={{
+                    fontSize: `${tokens.typography.sm}px`,
+                    color: ds.colors.text.secondary,
+                  }}
                 >
                   AI destekli optimizasyon önerileri
                 </Typography>
@@ -1626,10 +1744,12 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": !device.isTouch ? {
-                    transform: "translateY(-4px)",
-                    boxShadow: ds.shadows.soft.xl,
-                  } : {},
+                  "&:hover": !device.isTouch
+                    ? {
+                        transform: "translateY(-4px)",
+                        boxShadow: ds.shadows.soft.xl,
+                      }
+                    : {},
                 }}
               >
                 <RecyclingIcon
@@ -1649,7 +1769,10 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   Fire Analizi
                 </Typography>
                 <Typography
-                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
+                  sx={{
+                    fontSize: `${tokens.typography.sm}px`,
+                    color: ds.colors.text.secondary,
+                  }}
                 >
                   Atık analizi ve geri dönüşüm
                 </Typography>
@@ -1671,10 +1794,12 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": !device.isTouch ? {
-                    transform: "translateY(-4px)",
-                    boxShadow: ds.shadows.soft.xl,
-                  } : {},
+                  "&:hover": !device.isTouch
+                    ? {
+                        transform: "translateY(-4px)",
+                        boxShadow: ds.shadows.soft.xl,
+                      }
+                    : {},
                 }}
               >
                 <AnalyticsIcon
@@ -1694,7 +1819,10 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   Maliyet Analizi
                 </Typography>
                 <Typography
-                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
+                  sx={{
+                    fontSize: `${tokens.typography.sm}px`,
+                    color: ds.colors.text.secondary,
+                  }}
                 >
                   Detaylı maliyet analizi
                 </Typography>
@@ -1716,10 +1844,12 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   textAlign: "center",
                   cursor: "pointer",
                   transition: ds.transitions.base,
-                  "&:hover": !device.isTouch ? {
-                    transform: "translateY(-4px)",
-                    boxShadow: ds.shadows.soft.xl,
-                  } : {},
+                  "&:hover": !device.isTouch
+                    ? {
+                        transform: "translateY(-4px)",
+                        boxShadow: ds.shadows.soft.xl,
+                      }
+                    : {},
                 }}
               >
                 <HighQualityIcon
@@ -1739,7 +1869,10 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                   Kalite Metrikleri
                 </Typography>
                 <Typography
-                  sx={{ fontSize: `${tokens.typography.sm}px`, color: ds.colors.text.secondary }}
+                  sx={{
+                    fontSize: `${tokens.typography.sm}px`,
+                    color: ds.colors.text.secondary,
+                  }}
                 >
                   Kalite skorları ve metrikleri
                 </Typography>

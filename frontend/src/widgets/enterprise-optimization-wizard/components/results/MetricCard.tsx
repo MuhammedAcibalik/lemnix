@@ -132,7 +132,14 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       }}
     >
       {/* Label with Subtitle */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: ds.spacing["2"], mb: ds.spacing["2"] }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: ds.spacing["2"],
+          mb: ds.spacing["2"],
+        }}
+      >
         {icon && (
           <Box
             sx={{
@@ -240,7 +247,14 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       </Box>
 
       {/* Detail & Change */}
-      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mt: "auto" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mt: "auto",
+        }}
+      >
         {detail && (
           <Typography
             variant="caption"
@@ -278,7 +292,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                 change >= 0
                   ? `${ds.colors.success.main}15`
                   : `${ds.colors.error.main}15`,
-              color: change >= 0 ? ds.colors.success.main : ds.colors.error.main,
+              color:
+                change >= 0 ? ds.colors.success.main : ds.colors.error.main,
               "& .MuiChip-icon": {
                 color: "inherit",
               },

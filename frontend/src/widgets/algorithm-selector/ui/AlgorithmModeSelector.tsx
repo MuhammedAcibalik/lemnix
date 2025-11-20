@@ -60,7 +60,7 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
   disabled = false,
 }) => {
   const ds = useDesignSystem();
-  
+
   // Get recommendation based on item count
   const recommendedMode =
     itemCount !== undefined ? getRecommendedMode(itemCount) : "standard";
@@ -121,7 +121,11 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
               sx={{
                 flexDirection: "column",
                 alignItems: "flex-start",
-                p: { xs: ds.spacing["2"], md: ds.spacing["2.5"], lg: ds.spacing["3"] }, // ✅ Padding azaltıldı
+                p: {
+                  xs: ds.spacing["2"],
+                  md: ds.spacing["2.5"],
+                  lg: ds.spacing["3"],
+                }, // ✅ Padding azaltıldı
                 textAlign: "left",
                 minHeight: { xs: 100, md: 120, lg: 140 }, // ✅ Min height azaltıldı
                 backgroundColor: isSelected
@@ -149,7 +153,9 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
                 <IconComponent
                   sx={{
                     fontSize: { xs: 20, md: 24, lg: 28 }, // ✅ Icon küçültüldü
-                    color: isSelected ? ds.colors.primary.main : ds.colors.text.secondary,
+                    color: isSelected
+                      ? ds.colors.primary.main
+                      : ds.colors.text.secondary,
                   }}
                 />
                 {isRecommended && config.badge && (
@@ -171,7 +177,9 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
                 sx={{
                   fontSize: { xs: "0.875rem", md: "0.9375rem", lg: "1rem" }, // ✅ Font size küçültüldü
                   fontWeight: ds.typography.fontWeight.bold,
-                  color: isSelected ? ds.colors.primary.main : ds.colors.text.primary,
+                  color: isSelected
+                    ? ds.colors.primary.main
+                    : ds.colors.text.primary,
                   mb: ds.spacing["0.5"],
                 }}
               >

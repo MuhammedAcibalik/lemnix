@@ -61,22 +61,33 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({
     // Get first work order's stock length (assuming all have same stock length)
     const firstWorkOrder = aggregatedWorkOrders[0];
     const stockLength = firstWorkOrder.cuts?.[0]?.stockLength || 0;
-    const totalStock = aggregatedWorkOrders.reduce((sum, wo) => sum + wo.stockCount, 0);
-    
+    const totalStock = aggregatedWorkOrders.reduce(
+      (sum, wo) => sum + wo.stockCount,
+      0,
+    );
+
     // Calculate total waste across all work orders
-    const totalWaste = aggregatedWorkOrders.reduce((sum, wo) => sum + (wo.totalWaste || 0), 0);
-    
+    const totalWaste = aggregatedWorkOrders.reduce(
+      (sum, wo) => sum + (wo.totalWaste || 0),
+      0,
+    );
+
     // Calculate total stock length
     const totalStockLength = totalStock * stockLength;
-    
+
     // Calculate waste percentage
-    const wastePercentage = totalStockLength > 0 ? (totalWaste / totalStockLength) * 100 : 0;
-    
+    const wastePercentage =
+      totalStockLength > 0 ? (totalWaste / totalStockLength) * 100 : 0;
+
     // Calculate efficiency
-    const totalEfficiency = aggregatedWorkOrders.length > 0
-      ? aggregatedWorkOrders.reduce((sum, wo) => sum + (wo.efficiency || 0), 0) / aggregatedWorkOrders.length
-      : 0;
-    
+    const totalEfficiency =
+      aggregatedWorkOrders.length > 0
+        ? aggregatedWorkOrders.reduce(
+            (sum, wo) => sum + (wo.efficiency || 0),
+            0,
+          ) / aggregatedWorkOrders.length
+        : 0;
+
     // Calculate average waste per stock
     const avgWastePerStock = totalStock > 0 ? totalWaste / totalStock : 0;
 
@@ -115,7 +126,13 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({
             flexWrap="wrap"
           >
             {/* Stock Length & Count */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: tokens.spacing.sm }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: tokens.spacing.sm,
+              }}
+            >
               <Box
                 sx={{
                   p: tokens.spacing.sm,
@@ -157,7 +174,13 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({
             </Box>
 
             {/* Total Waste */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: tokens.spacing.sm }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: tokens.spacing.sm,
+              }}
+            >
               <Typography
                 sx={{
                   fontSize: `${tokens.typography.sm}px`,
@@ -190,7 +213,13 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({
             </Box>
 
             {/* Efficiency */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: tokens.spacing.sm }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: tokens.spacing.sm,
+              }}
+            >
               <Typography
                 sx={{
                   fontSize: `${tokens.typography.sm}px`,
@@ -226,7 +255,13 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({
             </Box>
 
             {/* Average Waste */}
-            <Box sx={{ display: "flex", alignItems: "center", gap: tokens.spacing.sm }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: tokens.spacing.sm,
+              }}
+            >
               <Typography
                 sx={{
                   fontSize: `${tokens.typography.sm}px`,
@@ -236,7 +271,13 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({
               >
                 Ortalama Fire
               </Typography>
-              <Box sx={{ display: "flex", alignItems: "center", gap: tokens.spacing.xs }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: tokens.spacing.xs,
+                }}
+              >
                 <Typography
                   sx={{
                     fontSize: `${tokens.typography.base}px`,
@@ -265,10 +306,16 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({
           border: `1px solid ${alpha(ds.colors.neutral[200], 0.5)}`,
           borderRadius: `${tokens.borderRadius.lg}px`,
           boxShadow: ds.shadows.soft.md,
-          overflow: "hidden",
+          overflow: "auto",
+          maxWidth: "100%",
         }}
       >
-        <Table sx={{ tableLayout: "fixed" }}>
+        <Table
+          sx={{
+            tableLayout: "fixed",
+            minWidth: { xs: "600px", md: "100%" },
+          }}
+        >
           <TableHead>
             <TableRow
               sx={{
@@ -277,304 +324,316 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({
                 zIndex: 2,
               }}
             >
-            <TableCell
-              sx={{
-                width: "16%",
-                textAlign: "center",
-                fontWeight: ds.typography.fontWeight.bold,
-                color: ds.colors.primary.main,
-                fontSize: {
-                  xs: `${tokens.typography.xs}px`,
-                  md: `${tokens.typography.sm}px`,
-                },
-                py: {
-                  xs: tokens.spacing.sm,
-                  md: tokens.spacing.md,
-                },
-                borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
-              }}
-            >
-              İŞ EMRİ
-            </TableCell>
-            <TableCell
-              sx={{
-                width: "14%",
-                textAlign: "center",
-                fontWeight: ds.typography.fontWeight.bold,
-                color: ds.colors.primary.main,
-                fontSize: {
-                  xs: `${tokens.typography.xs}px`,
-                  md: `${tokens.typography.sm}px`,
-                },
-                py: {
-                  xs: tokens.spacing.sm,
-                  md: tokens.spacing.md,
-                },
-                borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
-              }}
-            >
-              ALGORİTMA
-            </TableCell>
-            <TableCell
-              sx={{
-                width: "14%",
-                textAlign: "center",
-                fontWeight: ds.typography.fontWeight.bold,
-                color: ds.colors.primary.main,
-                fontSize: {
-                  xs: `${tokens.typography.xs}px`,
-                  md: `${tokens.typography.sm}px`,
-                },
-                py: {
-                  xs: tokens.spacing.sm,
-                  md: tokens.spacing.md,
-                },
-                borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
-              }}
-            >
-              KULLANILAN STOK
-            </TableCell>
-            <TableCell
-              sx={{
-                width: "14%",
-                textAlign: "center",
-                fontWeight: ds.typography.fontWeight.bold,
-                color: ds.colors.primary.main,
-                fontSize: {
-                  xs: `${tokens.typography.xs}px`,
-                  md: `${tokens.typography.sm}px`,
-                },
-                py: {
-                  xs: tokens.spacing.sm,
-                  md: tokens.spacing.md,
-                },
-                borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
-              }}
-            >
-              TOPLAM PARÇA
-            </TableCell>
-            <TableCell
-              sx={{
-                width: "14%",
-                textAlign: "center",
-                fontWeight: ds.typography.fontWeight.bold,
-                color: ds.colors.primary.main,
-                fontSize: {
-                  xs: `${tokens.typography.xs}px`,
-                  md: `${tokens.typography.sm}px`,
-                },
-                py: {
-                  xs: tokens.spacing.sm,
-                  md: tokens.spacing.md,
-                },
-                borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
-              }}
-            >
-              VERİMLİLİK
-            </TableCell>
-            <TableCell
-              sx={{
-                width: "14%",
-                textAlign: "center",
-                fontWeight: ds.typography.fontWeight.bold,
-                color: ds.colors.primary.main,
-                fontSize: {
-                  xs: `${tokens.typography.xs}px`,
-                  md: `${tokens.typography.sm}px`,
-                },
-                py: {
-                  xs: tokens.spacing.sm,
-                  md: tokens.spacing.md,
-                },
-                borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
-              }}
-            >
-              TOPLAM ATIK
-            </TableCell>
-            <TableCell
-              sx={{
-                width: "14%",
-                textAlign: "center",
-                fontWeight: ds.typography.fontWeight.bold,
-                color: ds.colors.primary.main,
-                fontSize: {
-                  xs: `${tokens.typography.xs}px`,
-                  md: `${tokens.typography.sm}px`,
-                },
-                py: {
-                  xs: tokens.spacing.sm,
-                  md: tokens.spacing.md,
-                },
-                borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
-              }}
-            >
-              DETAYLAR
-            </TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {aggregatedWorkOrders.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} sx={{ textAlign: "center", py: 4 }}>
-                <Alert severity="warning">
-                  <AlertTitle>Sonuç Bulunamadı</AlertTitle>
-                  Geçerli filtrelerle sonuç bulunamadı.
-                </Alert>
+              <TableCell
+                sx={{
+                  width: "16%",
+                  textAlign: "center",
+                  fontWeight: ds.typography.fontWeight.bold,
+                  color: ds.colors.primary.main,
+                  fontSize: {
+                    xs: `${tokens.typography.xs}px`,
+                    md: `${tokens.typography.sm}px`,
+                  },
+                  py: {
+                    xs: tokens.spacing.sm,
+                    md: tokens.spacing.md,
+                  },
+                  borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
+                }}
+              >
+                İŞ EMRİ
+              </TableCell>
+              <TableCell
+                sx={{
+                  width: "14%",
+                  textAlign: "center",
+                  fontWeight: ds.typography.fontWeight.bold,
+                  color: ds.colors.primary.main,
+                  fontSize: {
+                    xs: `${tokens.typography.xs}px`,
+                    md: `${tokens.typography.sm}px`,
+                  },
+                  py: {
+                    xs: tokens.spacing.sm,
+                    md: tokens.spacing.md,
+                  },
+                  borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
+                }}
+              >
+                ALGORİTMA
+              </TableCell>
+              <TableCell
+                sx={{
+                  width: "14%",
+                  textAlign: "center",
+                  fontWeight: ds.typography.fontWeight.bold,
+                  color: ds.colors.primary.main,
+                  fontSize: {
+                    xs: `${tokens.typography.xs}px`,
+                    md: `${tokens.typography.sm}px`,
+                  },
+                  py: {
+                    xs: tokens.spacing.sm,
+                    md: tokens.spacing.md,
+                  },
+                  borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
+                }}
+              >
+                KULLANILAN STOK
+              </TableCell>
+              <TableCell
+                sx={{
+                  width: "14%",
+                  textAlign: "center",
+                  fontWeight: ds.typography.fontWeight.bold,
+                  color: ds.colors.primary.main,
+                  fontSize: {
+                    xs: `${tokens.typography.xs}px`,
+                    md: `${tokens.typography.sm}px`,
+                  },
+                  py: {
+                    xs: tokens.spacing.sm,
+                    md: tokens.spacing.md,
+                  },
+                  borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
+                }}
+              >
+                TOPLAM PARÇA
+              </TableCell>
+              <TableCell
+                sx={{
+                  width: "14%",
+                  textAlign: "center",
+                  fontWeight: ds.typography.fontWeight.bold,
+                  color: ds.colors.primary.main,
+                  fontSize: {
+                    xs: `${tokens.typography.xs}px`,
+                    md: `${tokens.typography.sm}px`,
+                  },
+                  py: {
+                    xs: tokens.spacing.sm,
+                    md: tokens.spacing.md,
+                  },
+                  borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
+                }}
+              >
+                VERİMLİLİK
+              </TableCell>
+              <TableCell
+                sx={{
+                  width: "14%",
+                  textAlign: "center",
+                  fontWeight: ds.typography.fontWeight.bold,
+                  color: ds.colors.primary.main,
+                  fontSize: {
+                    xs: `${tokens.typography.xs}px`,
+                    md: `${tokens.typography.sm}px`,
+                  },
+                  py: {
+                    xs: tokens.spacing.sm,
+                    md: tokens.spacing.md,
+                  },
+                  borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
+                }}
+              >
+                TOPLAM ATIK
+              </TableCell>
+              <TableCell
+                sx={{
+                  width: "14%",
+                  textAlign: "center",
+                  fontWeight: ds.typography.fontWeight.bold,
+                  color: ds.colors.primary.main,
+                  fontSize: {
+                    xs: `${tokens.typography.xs}px`,
+                    md: `${tokens.typography.sm}px`,
+                  },
+                  py: {
+                    xs: tokens.spacing.sm,
+                    md: tokens.spacing.md,
+                  },
+                  borderBottom: `2px solid ${alpha(ds.colors.primary.main, 0.2)}`,
+                }}
+              >
+                DETAYLAR
               </TableCell>
             </TableRow>
-          ) : (
-            aggregatedWorkOrders.map((workOrder: WorkOrder) => {
-              const isExpanded =
-                expandedWorkOrder === String(workOrder.workOrderId);
+          </TableHead>
+          <TableBody>
+            {aggregatedWorkOrders.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} sx={{ textAlign: "center", py: 4 }}>
+                  <Alert severity="warning">
+                    <AlertTitle>Sonuç Bulunamadı</AlertTitle>
+                    Geçerli filtrelerle sonuç bulunamadı.
+                  </Alert>
+                </TableCell>
+              </TableRow>
+            ) : (
+              aggregatedWorkOrders.map((workOrder: WorkOrder) => {
+                const isExpanded =
+                  expandedWorkOrder === String(workOrder.workOrderId);
 
-              return (
-                <React.Fragment key={workOrder.workOrderId}>
-                  {/* Summary Bar - Table Row içinde */}
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      sx={{
-                        py: 0,
-                        px: 0,
-                        borderBottom: "none",
-                      }}
-                    >
-                      <Paper
+                return (
+                  <React.Fragment key={workOrder.workOrderId}>
+                    {/* Summary Bar - Table Row içinde */}
+                    <TableRow>
+                      <TableCell
+                        colSpan={7}
                         sx={{
-                          p: {
-                            xs: tokens.spacing.sm,
-                            md: tokens.spacing.md,
-                          },
-                          mb: tokens.spacing.xs,
-                          background: ds.colors.background.paper,
-                          border: `1px solid ${alpha(ds.colors.neutral[200], 0.5)}`,
-                          borderRadius: `${tokens.borderRadius.lg}px`,
-                          boxShadow: ds.shadows.soft.sm,
+                          py: 0,
+                          px: 0,
+                          borderBottom: "none",
                         }}
                       >
-                        <Stack
-                          direction={{ xs: "column", sm: "row" }}
-                          spacing={{ xs: tokens.spacing.sm, sm: tokens.spacing.md }}
-                          alignItems="center"
-                          justifyContent="space-between"
-                          flexWrap="wrap"
+                        <Paper
+                          sx={{
+                            p: {
+                              xs: tokens.spacing.sm,
+                              md: tokens.spacing.md,
+                            },
+                            mb: tokens.spacing.xs,
+                            background: ds.colors.background.paper,
+                            border: `1px solid ${alpha(ds.colors.neutral[200], 0.5)}`,
+                            borderRadius: `${tokens.borderRadius.lg}px`,
+                            boxShadow: ds.shadows.soft.sm,
+                          }}
                         >
-                          {/* Left Side - WorkOrder & Algorithm */}
                           <Stack
-                            direction="row"
-                            spacing={tokens.spacing.sm}
+                            direction={{ xs: "column", sm: "row" }}
+                            spacing={{
+                              xs: tokens.spacing.sm,
+                              sm: tokens.spacing.md,
+                            }}
                             alignItems="center"
+                            justifyContent="space-between"
                             flexWrap="wrap"
                           >
-                            {/* WorkOrder Chip */}
-                            <Chip
-                              label={String(workOrder.workOrderId)}
-                              size="small"
-                              sx={{
-                                fontWeight: ds.typography.fontWeight.semibold,
-                                fontSize: `${tokens.typography.sm}px`,
-                                height: tokens.components.button.md,
-                                backgroundColor: alpha(ds.colors.primary.main, 0.1),
-                                color: ds.colors.primary.main,
-                                border: `1px solid ${alpha(ds.colors.primary.main, 0.2)}`,
-                              }}
-                            />
+                            {/* Left Side - WorkOrder & Algorithm */}
+                            <Stack
+                              direction="row"
+                              spacing={tokens.spacing.sm}
+                              alignItems="center"
+                              flexWrap="wrap"
+                            >
+                              {/* WorkOrder Chip */}
+                              <Chip
+                                label={String(workOrder.workOrderId)}
+                                size="small"
+                                sx={{
+                                  fontWeight: ds.typography.fontWeight.semibold,
+                                  fontSize: `${tokens.typography.sm}px`,
+                                  height: tokens.components.button.md,
+                                  backgroundColor: alpha(
+                                    ds.colors.primary.main,
+                                    0.1,
+                                  ),
+                                  color: ds.colors.primary.main,
+                                  border: `1px solid ${alpha(ds.colors.primary.main, 0.2)}`,
+                                }}
+                              />
 
-                            {/* Algorithm Chip */}
-                            <Chip
-                              label={getAlgorithmProfile(workOrder.algorithm).label}
-                              color="primary"
-                              variant="filled"
-                              size="small"
-                              sx={{
-                                fontWeight: ds.typography.fontWeight.semibold,
-                                fontSize: `${tokens.typography.sm}px`,
-                                height: tokens.components.button.md,
-                                background: `linear-gradient(135deg, ${ds.colors.primary[600]} 0%, ${ds.colors.primary[700]} 100%)`,
-                                color: "white",
-                                boxShadow: ds.shadows.soft.sm,
+                              {/* Algorithm Chip */}
+                              <Chip
+                                label={
+                                  getAlgorithmProfile(workOrder.algorithm).label
+                                }
+                                color="primary"
+                                variant="filled"
+                                size="small"
+                                sx={{
+                                  fontWeight: ds.typography.fontWeight.semibold,
+                                  fontSize: `${tokens.typography.sm}px`,
+                                  height: tokens.components.button.md,
+                                  background: `linear-gradient(135deg, ${ds.colors.primary[600]} 0%, ${ds.colors.primary[700]} 100%)`,
+                                  color: "white",
+                                  boxShadow: ds.shadows.soft.sm,
+                                }}
+                              />
+                            </Stack>
+
+                            {/* Center - Metrics */}
+                            <Stack
+                              direction="row"
+                              spacing={{
+                                xs: tokens.spacing.sm,
+                                md: tokens.spacing.lg,
                               }}
-                            />
+                              alignItems="center"
+                              flexWrap="wrap"
+                            >
+                              {/* Stock Count */}
+                              <Typography
+                                sx={{
+                                  fontSize: `${tokens.typography.base}px`,
+                                  fontWeight: ds.typography.fontWeight.semibold,
+                                  color: ds.colors.text.primary,
+                                }}
+                              >
+                                {workOrder.stockCount} Adet
+                              </Typography>
+
+                              {/* Total Segments */}
+                              <Typography
+                                sx={{
+                                  fontSize: `${tokens.typography.base}px`,
+                                  fontWeight: ds.typography.fontWeight.semibold,
+                                  color: ds.colors.primary.main,
+                                }}
+                              >
+                                {workOrder.totalSegments} Parça
+                              </Typography>
+
+                              {/* Efficiency */}
+                              <Chip
+                                label={`${workOrder.efficiency?.toFixed(1) ?? "—"}%`}
+                                color={
+                                  (workOrder.efficiency ?? 0) >= 95
+                                    ? "success"
+                                    : (workOrder.efficiency ?? 0) >= 90
+                                      ? "warning"
+                                      : "error"
+                                }
+                                variant="filled"
+                                size="small"
+                                sx={{
+                                  fontWeight: ds.typography.fontWeight.semibold,
+                                  fontSize: `${tokens.typography.sm}px`,
+                                  height: tokens.components.button.md,
+                                }}
+                              />
+
+                              {/* Total Waste */}
+                              <Typography
+                                sx={{
+                                  fontSize: `${tokens.typography.base}px`,
+                                  fontWeight: ds.typography.fontWeight.semibold,
+                                  color: ds.colors.error.main,
+                                }}
+                              >
+                                {workOrder.totalWaste?.toLocaleString() ?? "—"}
+                                mm
+                              </Typography>
+                            </Stack>
                           </Stack>
+                        </Paper>
+                      </TableCell>
+                    </TableRow>
 
-                          {/* Center - Metrics */}
-                          <Stack
-                            direction="row"
-                            spacing={{ xs: tokens.spacing.sm, md: tokens.spacing.lg }}
-                            alignItems="center"
-                            flexWrap="wrap"
-                          >
-                            {/* Stock Count */}
-                            <Typography
-                              sx={{
-                                fontSize: `${tokens.typography.base}px`,
-                                fontWeight: ds.typography.fontWeight.semibold,
-                                color: ds.colors.text.primary,
-                              }}
-                            >
-                              {workOrder.stockCount} Adet
-                            </Typography>
-
-                            {/* Total Segments */}
-                            <Typography
-                              sx={{
-                                fontSize: `${tokens.typography.base}px`,
-                                fontWeight: ds.typography.fontWeight.semibold,
-                                color: ds.colors.primary.main,
-                              }}
-                            >
-                              {workOrder.totalSegments} Parça
-                            </Typography>
-
-                            {/* Efficiency */}
-                            <Chip
-                              label={`${workOrder.efficiency?.toFixed(1) ?? "—"}%`}
-                              color={
-                                (workOrder.efficiency ?? 0) >= 95
-                                  ? "success"
-                                  : (workOrder.efficiency ?? 0) >= 90
-                                    ? "warning"
-                                    : "error"
-                              }
-                              variant="filled"
-                              size="small"
-                              sx={{
-                                fontWeight: ds.typography.fontWeight.semibold,
-                                fontSize: `${tokens.typography.sm}px`,
-                                height: tokens.components.button.md,
-                              }}
-                            />
-
-                            {/* Total Waste */}
-                            <Typography
-                              sx={{
-                                fontSize: `${tokens.typography.base}px`,
-                                fontWeight: ds.typography.fontWeight.semibold,
-                                color: ds.colors.error.main,
-                              }}
-                            >
-                              {workOrder.totalWaste?.toLocaleString() ?? "—"}mm
-                            </Typography>
-                          </Stack>
-                        </Stack>
-                      </Paper>
-                    </TableCell>
-                  </TableRow>
-
-                  {/* Table Row */}
-                  <WorkOrderRow
-                    workOrder={workOrder}
-                    isExpanded={isExpanded}
-                    onWorkOrderClick={onWorkOrderClick}
-                    getAlgorithmProfile={getAlgorithmProfile}
-                  />
-                </React.Fragment>
-              );
-            })
-          )}
-        </TableBody>
-      </Table>
-    </TableContainer>
+                    {/* Table Row */}
+                    <WorkOrderRow
+                      workOrder={workOrder}
+                      isExpanded={isExpanded}
+                      onWorkOrderClick={onWorkOrderClick}
+                      getAlgorithmProfile={getAlgorithmProfile}
+                    />
+                  </React.Fragment>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Box>
   );
 };

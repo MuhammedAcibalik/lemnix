@@ -166,7 +166,13 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({ cuts }) => {
         Kesim Planı Tablosu
       </Typography>
 
-      <Box sx={{ height: 500, width: "100%" }}>
+      <Box
+        sx={{
+          height: 500,
+          width: "100%",
+          overflowX: { xs: "auto", md: "hidden" },
+        }}
+      >
         <DataGrid
           rows={rows}
           columns={columns}
@@ -180,12 +186,13 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({ cuts }) => {
           sx={{
             border: `1px solid ${ds.colors.neutral[200]}`,
             borderRadius: `${ds.borderRadius.md}px`,
+            minWidth: { xs: "600px", md: "100%" },
             "& .MuiDataGrid-cell": {
-              fontSize: "0.8125rem",
+              fontSize: { xs: "0.75rem", md: "0.8125rem" },
             },
             "& .MuiDataGrid-columnHeaders": {
               backgroundColor: alpha(ds.colors.neutral[100], 0.5),
-              fontSize: "0.75rem",
+              fontSize: { xs: "0.6875rem", md: "0.75rem" },
               fontWeight: 600,
             },
           }}

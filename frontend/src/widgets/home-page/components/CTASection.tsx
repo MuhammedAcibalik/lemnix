@@ -76,15 +76,16 @@ const CTASection: React.FC<CTASectionProps> = ({ onFreeTrial, onViewDemo }) => {
                 fontWeight: 400,
               }}
             >
-              Endüstri 4.0 standartlarında geliştirilmiş optimizasyon platformu ile üretim verimliliğinizi artırın. 
-              Hemen başlayın ve somut sonuçlar görün.
+              Endüstri 4.0 standartlarında geliştirilmiş optimizasyon platformu
+              ile üretim verimliliğinizi artırın. Hemen başlayın ve somut
+              sonuçlar görün.
             </Typography>
 
             {/* CTA Buttons */}
             <Stack
               direction={{ xs: "column", sm: "row" }}
               spacing={ds.spacing["3"]}
-              sx={{ 
+              sx={{
                 width: { xs: "100%", sm: "auto" },
                 alignItems: "center",
               }}
@@ -93,10 +94,13 @@ const CTASection: React.FC<CTASectionProps> = ({ onFreeTrial, onViewDemo }) => {
                 size="large"
                 onClick={onFreeTrial}
                 endIcon={<ArrowForward sx={{ fontSize: 20 }} />}
-                sx={{ 
+                sx={{
                   px: { xs: ds.spacing["8"], sm: ds.spacing["10"] },
                   py: { xs: ds.spacing["2"], sm: ds.spacing["2.5"] },
-                  fontSize: { xs: tokens.typography.base, sm: tokens.typography.lg },
+                  fontSize: {
+                    xs: tokens.typography.base,
+                    sm: tokens.typography.lg,
+                  },
                   fontWeight: 600,
                   minWidth: { xs: "100%", sm: "220px" },
                 }}
@@ -108,10 +112,13 @@ const CTASection: React.FC<CTASectionProps> = ({ onFreeTrial, onViewDemo }) => {
                 size="large"
                 onClick={onViewDemo}
                 startIcon={<AutoAwesome sx={{ fontSize: 20 }} />}
-                sx={{ 
+                sx={{
                   px: { xs: ds.spacing["8"], sm: ds.spacing["10"] },
                   py: { xs: ds.spacing["2"], sm: ds.spacing["2.5"] },
-                  fontSize: { xs: tokens.typography.base, sm: tokens.typography.lg },
+                  fontSize: {
+                    xs: tokens.typography.base,
+                    sm: tokens.typography.lg,
+                  },
                   fontWeight: 600,
                   minWidth: { xs: "100%", sm: "220px" },
                 }}
@@ -124,7 +131,10 @@ const CTASection: React.FC<CTASectionProps> = ({ onFreeTrial, onViewDemo }) => {
             <Typography
               variant="caption"
               sx={{
-                fontSize: { xs: tokens.typography.xs, sm: tokens.typography.sm },
+                fontSize: {
+                  xs: tokens.typography.xs,
+                  sm: tokens.typography.sm,
+                },
                 color: ds.colors.text.secondary,
                 pt: ds.spacing["3"],
                 fontWeight: 400,

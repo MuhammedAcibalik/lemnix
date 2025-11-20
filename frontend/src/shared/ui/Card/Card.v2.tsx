@@ -6,5 +6,3 @@
 
 export { Card as CardV2 } from "./Card";
 export type { CardProps as CardV2Props } from "./Card";
-
-

@@ -133,7 +133,13 @@ export const StockLengthConfigDialog: React.FC<
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth={device.uiMode === "kiosk" ? "lg" : device.uiMode === "dense" ? "md" : "md"}
+      maxWidth={
+        device.uiMode === "kiosk"
+          ? "lg"
+          : device.uiMode === "dense"
+            ? "md"
+            : "md"
+      }
       fullWidth
       PaperProps={{
         sx: {
@@ -195,12 +201,18 @@ export const StockLengthConfigDialog: React.FC<
           sx={{
             color: ds.colors.text.secondary,
             transition: ds.transitions.fast,
-            minWidth: device.isTouch ? tokens.components.minTouchTarget : undefined,
-            minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
-            "&:hover": !device.isTouch ? {
-              color: ds.colors.text.primary,
-              backgroundColor: `rgba(0, 0, 0, 0.04)`,
-            } : {},
+            minWidth: device.isTouch
+              ? tokens.components.minTouchTarget
+              : undefined,
+            minHeight: device.isTouch
+              ? tokens.components.minTouchTarget
+              : undefined,
+            "&:hover": !device.isTouch
+              ? {
+                  color: ds.colors.text.primary,
+                  backgroundColor: `rgba(0, 0, 0, 0.04)`,
+                }
+              : {},
           }}
         >
           <CloseIcon sx={{ fontSize: tokens.components.icon.sm }} />
@@ -208,13 +220,15 @@ export const StockLengthConfigDialog: React.FC<
       </Box>
 
       {/* Content */}
-      <DialogContent sx={{
-        px: {
-          xs: tokens.spacing.md,
-          md: tokens.spacing.lg,
-        },
-        py: tokens.spacing.sm,
-      }}>
+      <DialogContent
+        sx={{
+          px: {
+            xs: tokens.spacing.md,
+            md: tokens.spacing.lg,
+          },
+          py: tokens.spacing.sm,
+        }}
+      >
         <Stack spacing={tokens.spacing.md}>
           {/* Description */}
           <Typography
@@ -272,30 +286,41 @@ export const StockLengthConfigDialog: React.FC<
                         xs: `${tokens.typography.xs}px`,
                         md: `${tokens.typography.sm}px`,
                       },
-                      minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+                      minHeight: device.isTouch
+                        ? tokens.components.minTouchTarget
+                        : undefined,
                       ...(isPresetAdded[index]
                         ? {
                             borderColor: ds.colors.success.main,
                             color: ds.colors.success.main,
-                            "&:hover": !device.isTouch ? {
-                              borderColor: ds.colors.success.main,
-                              backgroundColor: alpha(ds.colors.success.main, 0.04),
-                            } : {},
+                            "&:hover": !device.isTouch
+                              ? {
+                                  borderColor: ds.colors.success.main,
+                                  backgroundColor: alpha(
+                                    ds.colors.success.main,
+                                    0.04,
+                                  ),
+                                }
+                              : {},
                           }
                         : {
                             background: ds.gradients.primary,
-                            "&:hover": !device.isTouch ? {
-                              background: ds.gradients.primary,
-                              opacity: 0.9,
-                            } : {},
+                            "&:hover": !device.isTouch
+                              ? {
+                                  background: ds.gradients.primary,
+                                  opacity: 0.9,
+                                }
+                              : {},
                           }),
                     }}
                   >
                     {isPresetAdded[index] && (
-                      <CheckCircleIcon sx={{
-                        fontSize: tokens.components.icon.xs,
-                        mr: tokens.spacing.xs,
-                      }} />
+                      <CheckCircleIcon
+                        sx={{
+                          fontSize: tokens.components.icon.xs,
+                          mr: tokens.spacing.xs,
+                        }}
+                      />
                     )}
                     {length} mm
                   </Button>
@@ -319,7 +344,10 @@ export const StockLengthConfigDialog: React.FC<
             >
               Manuel Girdi
             </Typography>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={tokens.spacing.sm}>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={tokens.spacing.sm}
+            >
               <TextField
                 label="Stok Boyu"
                 placeholder="Örn: 5000"
@@ -372,7 +400,9 @@ export const StockLengthConfigDialog: React.FC<
                       xs: `${tokens.typography.sm}px`,
                       md: `${tokens.typography.base}px`,
                     },
-                    height: device.isTouch ? tokens.components.minTouchTarget : tokens.components.input.md,
+                    height: device.isTouch
+                      ? tokens.components.minTouchTarget
+                      : tokens.components.input.md,
                     "& .MuiOutlinedInput-notchedOutline": {
                       borderWidth: "2px",
                     },
@@ -396,13 +426,17 @@ export const StockLengthConfigDialog: React.FC<
                     sm: 100,
                   },
                   borderRadius: `${tokens.borderRadius.md}px`,
-                  minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+                  minHeight: device.isTouch
+                    ? tokens.components.minTouchTarget
+                    : undefined,
                   fontSize: {
                     xs: `${tokens.typography.sm}px`,
                     md: `${tokens.typography.base}px`,
                   },
                 }}
-                startIcon={<AddIcon sx={{ fontSize: tokens.components.icon.sm }} />}
+                startIcon={
+                  <AddIcon sx={{ fontSize: tokens.components.icon.sm }} />
+                }
               >
                 Ekle
               </Button>
@@ -460,11 +494,19 @@ export const StockLengthConfigDialog: React.FC<
                     key={length}
                     label={`${length} mm`}
                     onDelete={() => handleRemove(length)}
-                    deleteIcon={<CloseIcon sx={{
-                      fontSize: tokens.components.icon.xs,
-                      minWidth: device.isTouch ? tokens.components.minTouchTarget : undefined,
-                      minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
-                    }} />}
+                    deleteIcon={
+                      <CloseIcon
+                        sx={{
+                          fontSize: tokens.components.icon.xs,
+                          minWidth: device.isTouch
+                            ? tokens.components.minTouchTarget
+                            : undefined,
+                          minHeight: device.isTouch
+                            ? tokens.components.minTouchTarget
+                            : undefined,
+                        }}
+                      />
+                    }
                     sx={{
                       height: {
                         xs: tokens.components.button.sm,
@@ -479,13 +521,17 @@ export const StockLengthConfigDialog: React.FC<
                       color: "white",
                       "& .MuiChip-deleteIcon": {
                         color: "rgba(255, 255, 255, 0.7)",
-                        "&:hover": !device.isTouch ? {
-                          color: "white",
-                        } : {},
+                        "&:hover": !device.isTouch
+                          ? {
+                              color: "white",
+                            }
+                          : {},
                       },
-                      "&:hover": !device.isTouch ? {
-                        backgroundColor: ds.colors.primary[600],
-                      } : {},
+                      "&:hover": !device.isTouch
+                        ? {
+                            backgroundColor: ds.colors.primary[600],
+                          }
+                        : {},
                     }}
                   />
                 ))}
@@ -528,7 +574,9 @@ export const StockLengthConfigDialog: React.FC<
           onClick={onClose}
           sx={{
             textTransform: "none",
-            minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+            minHeight: device.isTouch
+              ? tokens.components.minTouchTarget
+              : undefined,
             fontSize: {
               xs: `${tokens.typography.sm}px`,
               md: `${tokens.typography.base}px`,
@@ -542,20 +590,26 @@ export const StockLengthConfigDialog: React.FC<
           variant="contained"
           onClick={handleConfirm}
           disabled={stockLengths.length === 0}
-          startIcon={<CheckCircleIcon sx={{ fontSize: tokens.components.icon.sm }} />}
+          startIcon={
+            <CheckCircleIcon sx={{ fontSize: tokens.components.icon.sm }} />
+          }
           sx={{
             background: ds.gradients.primary,
             textTransform: "none",
-            minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+            minHeight: device.isTouch
+              ? tokens.components.minTouchTarget
+              : undefined,
             fontSize: {
               xs: `${tokens.typography.sm}px`,
               md: `${tokens.typography.base}px`,
             },
             width: { xs: "100%", sm: "auto" },
-            "&:hover": !device.isTouch ? {
-              background: ds.gradients.primary,
-              opacity: 0.9,
-            } : {},
+            "&:hover": !device.isTouch
+              ? {
+                  background: ds.gradients.primary,
+                  opacity: 0.9,
+                }
+              : {},
           }}
         >
           Devam Et

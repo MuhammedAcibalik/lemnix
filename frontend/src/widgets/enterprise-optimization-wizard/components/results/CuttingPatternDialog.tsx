@@ -209,15 +209,15 @@ export const CuttingPatternDialog: React.FC<CuttingPatternDialogProps> = ({
         )}
 
         {/* 📊 Toplam Kesim Özeti - PER SEGMENT */}
-          <Box
-            sx={{
-              mb: tokens.spacing.md,
-              p: tokens.spacing.md,
-              backgroundColor: alpha(ds.colors.info.main, 0.05),
-              borderRadius: `${tokens.borderRadius.lg}px`,
-              border: `1px solid ${alpha(ds.colors.info.main, 0.2)}`,
-            }}
-          >
+        <Box
+          sx={{
+            mb: tokens.spacing.md,
+            p: tokens.spacing.md,
+            backgroundColor: alpha(ds.colors.info.main, 0.05),
+            borderRadius: `${tokens.borderRadius.lg}px`,
+            border: `1px solid ${alpha(ds.colors.info.main, 0.2)}`,
+          }}
+        >
           <Typography
             sx={{
               fontSize: `${tokens.typography.sm}px`,
@@ -386,89 +386,90 @@ export const CuttingPatternDialog: React.FC<CuttingPatternDialogProps> = ({
                     color: ds.colors.text.secondary,
                   }}
                 >
-                  Kesim Planları ({planGroups.length} Farklı Plan, {plan.cuts.length} Adet)
+                  Kesim Planları ({planGroups.length} Farklı Plan,{" "}
+                  {plan.cuts.length} Adet)
                 </Typography>
 
                 {planGroups.map((group, idx) => (
-              <Box
-                key={group.key}
-                sx={{
-                  p: tokens.spacing.sm,
-                  backgroundColor: alpha(ds.colors.primary.main, 0.03),
-                  borderRadius: `${tokens.borderRadius.md}px`,
-                  border: `1px solid ${alpha(ds.colors.primary.main, 0.1)}`,
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    mb: tokens.spacing.xs,
-                  }}
-                >
-                  <Typography
+                  <Box
+                    key={group.key}
                     sx={{
-                      fontSize: `${tokens.typography.sm}px`,
-                      fontWeight: ds.typography.fontWeight.semibold,
-                      color: ds.colors.text.primary,
+                      p: tokens.spacing.sm,
+                      backgroundColor: alpha(ds.colors.primary.main, 0.03),
+                      borderRadius: `${tokens.borderRadius.md}px`,
+                      border: `1px solid ${alpha(ds.colors.primary.main, 0.1)}`,
                     }}
                   >
-                    Kesim #{idx + 1}
-                  </Typography>
-                  {group.count > 1 && (
-                    <Typography
+                    <Box
                       sx={{
-                        fontSize: `${tokens.typography.xs}px`,
-                        fontWeight: ds.typography.fontWeight.semibold,
-                        color: ds.colors.primary.main,
-                        px: tokens.spacing.xs,
-                        py: tokens.spacing.xxs,
-                        backgroundColor: alpha(ds.colors.primary.main, 0.1),
-                        borderRadius: `${tokens.borderRadius.sm}px`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        mb: tokens.spacing.xs,
                       }}
                     >
-                      {group.count} adet
+                      <Typography
+                        sx={{
+                          fontSize: `${tokens.typography.sm}px`,
+                          fontWeight: ds.typography.fontWeight.semibold,
+                          color: ds.colors.text.primary,
+                        }}
+                      >
+                        Kesim #{idx + 1}
+                      </Typography>
+                      {group.count > 1 && (
+                        <Typography
+                          sx={{
+                            fontSize: `${tokens.typography.xs}px`,
+                            fontWeight: ds.typography.fontWeight.semibold,
+                            color: ds.colors.primary.main,
+                            px: tokens.spacing.xs,
+                            py: tokens.spacing.xxs,
+                            backgroundColor: alpha(ds.colors.primary.main, 0.1),
+                            borderRadius: `${tokens.borderRadius.sm}px`,
+                          }}
+                        >
+                          {group.count} adet
+                        </Typography>
+                      )}
+                    </Box>
+
+                    <Typography
+                      sx={{
+                        fontSize: `${tokens.typography.sm}px`,
+                        color: ds.colors.text.primary,
+                        mb: tokens.spacing.xs,
+                        fontWeight: ds.typography.fontWeight.semibold,
+                        fontFamily: "monospace",
+                      }}
+                    >
+                      {group.patternLabel}
                     </Typography>
-                  )}
-                </Box>
 
-                <Typography
-                  sx={{
-                    fontSize: `${tokens.typography.sm}px`,
-                    color: ds.colors.text.primary,
-                    mb: tokens.spacing.xs,
-                    fontWeight: ds.typography.fontWeight.semibold,
-                    fontFamily: "monospace",
-                  }}
-                >
-                  {group.patternLabel}
-                </Typography>
-
-                <Stack
-                  direction="row"
-                  spacing={tokens.spacing.sm}
-                  alignItems="center"
-                >
-                  <Typography
-                    sx={{
-                      fontSize: `${tokens.typography.xs}px`,
-                      color: ds.colors.text.secondary,
-                    }}
-                  >
-                    Atık: {group.waste}mm
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: `${tokens.typography.xs}px`,
-                      color: ds.colors.success.main,
-                      fontWeight: ds.typography.fontWeight.semibold,
-                    }}
-                  >
-                    Verimlilik: {group.efficiency}%
-                  </Typography>
-                </Stack>
-              </Box>
+                    <Stack
+                      direction="row"
+                      spacing={tokens.spacing.sm}
+                      alignItems="center"
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: `${tokens.typography.xs}px`,
+                          color: ds.colors.text.secondary,
+                        }}
+                      >
+                        Atık: {group.waste}mm
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: `${tokens.typography.xs}px`,
+                          color: ds.colors.success.main,
+                          fontWeight: ds.typography.fontWeight.semibold,
+                        }}
+                      >
+                        Verimlilik: {group.efficiency}%
+                      </Typography>
+                    </Stack>
+                  </Box>
                 ))}
               </>
             );

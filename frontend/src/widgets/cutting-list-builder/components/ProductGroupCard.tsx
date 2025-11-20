@@ -108,8 +108,7 @@ export const ProductGroupCard: React.FC<ProductGroupCardProps> = ({
                   mt: 0.5,
                 }}
               >
-                {sections.length} ürün • {totalItems} öğe • {totalQuantity}{" "}
-                adet
+                {sections.length} ürün • {totalItems} öğe • {totalQuantity} adet
               </Typography>
             </Box>
           </Stack>
@@ -145,4 +144,3 @@ export const ProductGroupCard: React.FC<ProductGroupCardProps> = ({
     </CardV2>
   );
 };
-
