@@ -15,7 +15,7 @@ import {
   setupProgressiveWebSocket,
 } from "../controllers/progressiveController";
 import { authenticateToken } from "../middleware/authentication";
-import { validateSession } from "../middleware/sessionValidation";
+import { validateSession } from "../middleware/authentication";
 import { logRequestDetails } from "../middleware/requestLogging";
 import { Server as SocketIOServer } from "socket.io";
 
