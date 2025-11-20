@@ -107,3 +107,16 @@ export type { SkipLinkProps } from "./SkipLink";
 
 export { ConfirmationDialog } from "./ConfirmationDialog";
 export { YearWeekPicker } from "./YearWeekPicker";
+
+// ============================================================================
+// RESPONSIVE LAYOUT COMPONENTS (FSD)
+// ============================================================================
+
+export { Container } from "./Container";
+export type { ContainerProps } from "./Container";
+
+export { Grid } from "./Grid";
+export type { GridProps } from "./Grid";
+
+export { Stack } from "./Stack";
+export type { StackProps } from "./Stack";

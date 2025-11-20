@@ -15,3 +15,11 @@ export {
   DATE_FORMATS,
   REGEX,
 } from "./constants";
+
+// Export responsive breakpoints
+export {
+  breakpoints,
+  mediaQuery,
+  getCurrentBreakpoint,
+  type Breakpoint,
+} from "./breakpoints";
