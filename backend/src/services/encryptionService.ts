@@ -11,6 +11,8 @@
  */
 
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 import { logger } from "./logger";
 import { isProduction } from "../config/env";
 
@@ -41,8 +43,13 @@ const ENCRYPTION_CONFIG: EncryptionConfig = {
 export class EncryptionService {
   private readonly masterKey: Buffer;
   private readonly keyDerivationIterations = 100000;
+  private readonly devKeyFilePath: string;
+  private readonly backendRoot: string;
 
   constructor() {
+    this.backendRoot = path.resolve(__dirname, "..", "..");
+    this.devKeyFilePath = path.resolve(this.backendRoot, ".dev-encryption-key");
+
     const masterKeyString = process.env.ENCRYPTION_MASTER_KEY;
 
     if (!masterKeyString) {
@@ -52,27 +59,130 @@ export class EncryptionService {
         );
       }
 
-      const ephemeralKey = crypto.randomBytes(ENCRYPTION_CONFIG.keyLength);
-      this.masterKey = ephemeralKey;
+      const developmentKey = this.loadDevelopmentMasterKey();
+      this.masterKey = Buffer.from(developmentKey, "utf8");
       logger.warn(
-        "ENCRYPTION_MASTER_KEY missing - using ephemeral development key",
+        "ENCRYPTION_MASTER_KEY missing - using deterministic development key",
       );
-      return;
-    }
+    } else {
+      if (masterKeyString.length < 32) {
+        throw new Error(
+          "ENCRYPTION_MASTER_KEY must be at least 32 characters long",
+        );
+      }
 
-    if (masterKeyString.length < 32) {
-      throw new Error(
-        "ENCRYPTION_MASTER_KEY must be at least 32 characters long",
-      );
+      this.masterKey = Buffer.from(masterKeyString, "utf8");
     }
-
-    this.masterKey = Buffer.from(masterKeyString, "utf8");
 
     logger.info("Encryption service initialized", {
       algorithm: ENCRYPTION_CONFIG.algorithm,
       keyLength: ENCRYPTION_CONFIG.keyLength,
       mode: isProduction ? "production" : "development",
     });
+  }
+
+  private loadDevelopmentMasterKey(): string {
+    const keyFromEnvLocal = this.readKeyFromEnvFile(
+      path.resolve(this.backendRoot, ".env.local"),
+    );
+
+    if (keyFromEnvLocal) {
+      this.persistDevelopmentKey(keyFromEnvLocal);
+      return keyFromEnvLocal;
+    }
+
+    if (fs.existsSync(this.devKeyFilePath)) {
+      const persistedKey = fs.readFileSync(this.devKeyFilePath, "utf8").trim();
+      if (persistedKey.length >= 32) {
+        return persistedKey;
+      }
+      logger.warn(
+        "Persisted development encryption key is invalid - regenerating from sample",
+      );
+    }
+
+    const derivedKey = this.deriveKeyFromSampleEnv();
+    this.persistDevelopmentKey(derivedKey);
+    return derivedKey;
+  }
+
+  private readKeyFromEnvFile(filePath: string): string | undefined {
+    try {
+      if (!fs.existsSync(filePath)) {
+        return undefined;
+      }
+
+      const fileContents = fs.readFileSync(filePath, "utf8");
+      const match = fileContents.match(/^ENCRYPTION_MASTER_KEY\s*=\s*(.+)$/m);
+
+      if (!match) {
+        return undefined;
+      }
+
+      const value = match[1]?.trim();
+      if (value && value.length >= 32) {
+        return value;
+      }
+
+      logger.warn(
+        `${path.basename(filePath)} contains an ENCRYPTION_MASTER_KEY but it does not meet minimum length requirements`,
+      );
+      return undefined;
+    } catch (error) {
+      logger.warn(`Failed to read encryption key from ${filePath}`, {
+        error: (error as Error).message,
+      });
+      return undefined;
+    }
+  }
+
+  private deriveKeyFromSampleEnv(): string {
+    const sampleEnvPath = path.resolve(this.backendRoot, ".env.example");
+
+    if (!fs.existsSync(sampleEnvPath)) {
+      throw new Error(
+        "Missing .env.local and .env.example files - cannot establish development encryption key",
+      );
+    }
+
+    const fileContents = fs.readFileSync(sampleEnvPath, "utf8");
+    const match = fileContents.match(
+      /^ENCRYPTION_MASTER_KEY_SAMPLE\s*=\s*(.+)$/m,
+    );
+
+    if (!match || !match[1]) {
+      throw new Error(
+        "ENCRYPTION_MASTER_KEY_SAMPLE is not defined in backend/.env.example",
+      );
+    }
+
+    const sampleValue = match[1].trim();
+    if (sampleValue.length === 0) {
+      throw new Error(
+        "ENCRYPTION_MASTER_KEY_SAMPLE in backend/.env.example must not be empty",
+      );
+    }
+
+    const derivedKey = crypto
+      .createHash("sha256")
+      .update(sampleValue)
+      .digest("hex");
+
+    return derivedKey;
+  }
+
+  private persistDevelopmentKey(key: string): void {
+    try {
+      fs.writeFileSync(this.devKeyFilePath, key, {
+        encoding: "utf8",
+        mode: 0o600,
+      });
+    } catch (error) {
+      logger.warn("Unable to persist development encryption key", {
+        error: (error as Error).message,
+        path: this.devKeyFilePath,
+      });
+    }
   }
 
   private deriveKey(salt: Buffer): Buffer {

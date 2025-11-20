@@ -10,6 +10,9 @@ Add these variables to your `.env` file:
 # ============================================================================
 
 # Master encryption key (REQUIRED - Generate with: openssl rand -base64 32)
+# ⚠️ Development mode falls back to `.env.local` or hashes `ENCRYPTION_MASTER_KEY_SAMPLE`
+# from `backend/.env.example`. Always set a reusable key in `.env.local` to avoid
+# rotating the derived fallback unexpectedly.
 ENCRYPTION_MASTER_KEY=your-32-character-encryption-key-here
 
 # ============================================================================
@@ -105,6 +108,15 @@ openssl rand -base64 64
 # Generate backup encryption key
 openssl rand -base64 32
 ```
+
+## Development Encryption Key Fallback
+
+- Create a `.env.local` file with a persistent `ENCRYPTION_MASTER_KEY` for all local
+  developers.
+- When the variable is missing, the backend hashes `ENCRYPTION_MASTER_KEY_SAMPLE`
+  from `backend/.env.example` and persists the derived value to
+  `backend/.dev-encryption-key` to avoid random key rotation between restarts.
+- Update the sample value only when you intend to rotate the shared fallback key.
 
 ## Security Checklist
 
