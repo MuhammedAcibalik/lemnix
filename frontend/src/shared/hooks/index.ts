@@ -119,5 +119,14 @@ export { useAdaptiveUIContext } from "../contexts";
 export { useMediaQuery as useMediaQueryFSD } from "./useMediaQuery";
 export { useBreakpoint as useBreakpointFSD } from "./useBreakpoint";
 
+// Export new responsive hooks (v3.0)
+export { useResponsiveValue, useResponsiveValues } from "./useResponsiveValue";
+export { useContainerQuery, useContainerWidth } from "./useContainerQuery";
+export type { ContainerSize, ContainerQueryOptions } from "./useContainerQuery";
+export { useOrientation, useOrientationLock } from "./useOrientation";
+export type { Orientation, OrientationState } from "./useOrientation";
+export { useTouchDevice, useTouchTargetSize, useHoverCapability } from "./useTouchDevice";
+export type { TouchDeviceState } from "./useTouchDevice";
+
 // Export progressive upload hook
 export { useProgressiveUpload } from "./useProgressiveUpload";

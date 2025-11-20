@@ -1,6 +1,203 @@
-# Quick Reference - FSD Responsive System
+# 📱 Responsive Design Quick Reference v3.0
 
-## Quick Start
+> Quick reference guide for the LEMNİX responsive design system v3.0
+
+## 🎯 Breakpoints
+
+```typescript
+xs:   320px  // Mobile small
+sm:   480px  // Mobile large
+md:   768px  // Tablet
+lg:   1024px // Laptop
+xl:   1366px // Desktop HD
+xxl:  1920px // Desktop FHD
+xxxl: 2560px // Ultra-wide
+```
+
+## 🪝 Common Hooks
+
+```tsx
+// Responsive state
+const { isMobile, isTablet, isDesktop, width } = useResponsive();
+
+// Responsive values
+const cols = useResponsiveValue({ mobile: 1, tablet: 2, desktop: 3 });
+
+// Container queries
+const { ref, isSmall } = useContainerQuery();
+
+// Touch detection
+const { isTouch } = useTouchDevice();
+const size = useTouchTargetSize(32); // Returns 44 on touch
+
+// Orientation
+const { isPortrait, isLandscape } = useOrientation();
+```
+
+## 🎨 Fluid Typography
+
+```tsx
+import { fluidTypography } from '@/app/theme/designSystem.v3';
+
+// Display (hero)
+fontSize: fluidTypography.display.lg  // 32px → 72px
+
+// Headings
+fontSize: fluidTypography.heading.h1  // 30px → 36px
+
+// Body
+fontSize: fluidTypography.body.base   // 14px → 16px
+```
+
+## 📐 Responsive Spacing
+
+```tsx
+import { responsive } from '@/app/theme';
+
+// Padding (xs, sm, md, lg, xl, xxl, xxxl)
+sx={responsive.padding(2, 3, 4, 5, 6, 7, 8)}
+// Result: 8px → 12px → 16px → 20px → 24px → 28px → 32px
+
+// Margin
+sx={responsive.margin(1, 2, 3)}
+// Result: 4px → 8px → 12px
+```
+
+## 📦 Grid Layouts
+
+```tsx
+import { gridSizes } from '@/app/theme';
+
+<Grid container spacing={3}>
+  <Grid {...gridSizes.featureCard}>
+    {/* 12 → 6 → 4 → 3 cols */}
+  </Grid>
+  
+  <Grid {...gridSizes.statCard}>
+    {/* 12 → 6 → 3 cols */}
+  </Grid>
+</Grid>
+```
+
+## 🎯 MUI Responsive Props
+
+```tsx
+// Spacing
+<Box sx={{ p: { xs: 2, md: 4, lg: 6 } }}>
+
+// Display
+<Box sx={{ display: { xs: 'none', md: 'block' } }}>
+
+// Flex direction
+<Box sx={{ flexDirection: { xs: 'column', md: 'row' } }}>
+
+// Width
+<Box sx={{ width: { xs: '100%', md: 600 } }}>
+
+// Font size
+<Typography sx={{ fontSize: { xs: '14px', md: '16px' } }}>
+```
+
+## 📱 Touch Targets
+
+```tsx
+// Minimum (WCAG AA)
+minWidth: 44, minHeight: 44
+
+// Using constant
+import { touchTargets } from '@/app/theme';
+minWidth: touchTargets.minimum  // 44px
+```
+
+## 🎪 Media Queries
+
+```tsx
+import { mediaQuery } from '@/app/theme';
+
+// Styled component
+const MyComponent = styled.div`
+  padding: 16px;
+  
+  ${mediaQuery.up('md')} {
+    padding: 24px;
+  }
+  
+  ${mediaQuery.between('md', 'lg')} {
+    padding: 20px;
+  }
+`;
+```
+
+## 📦 Container
+
+```tsx
+import { container } from '@/app/theme';
+
+<Box sx={container('xl')}>
+  {/* Max-width 1200px with responsive padding */}
+</Box>
+```
+
+## 🎨 Layout Presets
+
+```tsx
+import { layouts } from '@/app/theme';
+
+// Hero section
+<Box sx={layouts.hero}>
+
+// Standard section
+<Box sx={layouts.section}>
+
+// Dashboard
+<Box sx={layouts.dashboard.container}>
+  <Grid {...layouts.dashboard.grid}>
+```
+
+## 🚀 Quick Start
+
+```tsx
+// 1. Import what you need
+import { useResponsive, useResponsiveValue } from '@/shared/hooks';
+import { responsive, gridSizes, layouts } from '@/app/theme';
+import { fluidTypography } from '@/app/theme/designSystem.v3';
+
+// 2. Use in component
+function MyPage() {
+  const { isMobile, isDesktop } = useResponsive();
+  const columns = useResponsiveValue({ mobile: 1, desktop: 3 });
+  
+  return (
+    <Box sx={layouts.section}>
+      <Typography sx={{ fontSize: fluidTypography.heading.h1 }}>
+        Page Title
+      </Typography>
+      
+      <Grid container spacing={3}>
+        {items.map(item => (
+          <Grid key={item.id} {...gridSizes.featureCard}>
+            <Card sx={responsive.padding(2, 3, 4)}>
+              {item.content}
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
+  );
+}
+```
+
+## 📚 Full Documentation
+
+For complete documentation, see:
+- **User Guide**: `frontend/RESPONSIVE_DESIGN_SYSTEM.md`
+- **Implementation**: `RESPONSIVE_DESIGN_SYSTEM_IMPLEMENTATION_SUMMARY.md`
+
+---
+
+## Legacy FSD System (Below)
+
+
 
 ### Import Layout Components
 ```typescript
