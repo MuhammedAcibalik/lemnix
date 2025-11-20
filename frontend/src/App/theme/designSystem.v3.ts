@@ -699,6 +699,7 @@ export const gradients = {
     reverse: `linear-gradient(135deg, ${brandColors.accent[600]} 0%, ${brandColors.primary[700]} 100%)`,
     soft: `linear-gradient(135deg, ${brandColors.primary[500]} 0%, ${brandColors.accent[500]} 100%)`,
     subtle: `linear-gradient(135deg, rgba(29, 78, 216, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%)`,
+    hover: `linear-gradient(135deg, ${brandColors.primary[800]} 0%, ${brandColors.accent[700]} 100%)`,
   },
   secondary: {
     default: `linear-gradient(135deg, ${brandColors.secondary[600]} 0%, ${brandColors.secondary[500]} 100%)`,
@@ -712,6 +713,12 @@ export const gradients = {
     soft: `linear-gradient(135deg, ${brandColors.accent[400]} 0%, ${brandColors.accent[500]} 100%)`,
     subtle: `linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(168, 85, 247, 0.1) 100%)`,
   },
+
+  // Convenience shortcuts
+  primarySoft: `linear-gradient(135deg, ${brandColors.primary[500]} 0%, ${brandColors.accent[500]} 100%)`,
+  primaryHover: `linear-gradient(135deg, ${brandColors.primary[800]} 0%, ${brandColors.accent[700]} 100%)`,
+  secondaryReverse: `linear-gradient(135deg, ${brandColors.secondary[500]} 0%, ${brandColors.secondary[600]} 100%)`,
+  premium: `linear-gradient(135deg, ${brandColors.accent[600]} 0%, ${brandColors.primary[700]} 40%, ${brandColors.accent[600]} 100%)`,
 
   // Mesh gradients - Background overlays
   mesh: {
@@ -753,11 +760,6 @@ export const gradients = {
     ${semanticColors.warning[500]} 50%, 
     ${brandColors.secondary[500]} 75%, 
     ${brandColors.primary[500]} 100%)`,
-
-  // Additional hover and premium gradients
-  primaryHover: `linear-gradient(135deg, ${brandColors.primary[600]} 0%, ${brandColors.accent[500]} 100%)`,
-  secondaryReverse: `linear-gradient(135deg, ${brandColors.secondary[500]} 0%, ${brandColors.secondary[600]} 100%)`,
-  premium: `linear-gradient(135deg, ${brandColors.accent[600]} 0%, ${brandColors.primary[600]} 50%, ${brandColors.secondary[600]} 100%)`,
 } as const;
 
 // ============================================================================

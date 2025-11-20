@@ -150,7 +150,7 @@ export const useDesignSystem = () => {
    */
   const getTransition = (
     type: keyof typeof DS.transitions,
-  ): string | Record<string, string> => {
+  ): string | Record<string, string | number> => {
     return DS.transitions[type];
   };
 
