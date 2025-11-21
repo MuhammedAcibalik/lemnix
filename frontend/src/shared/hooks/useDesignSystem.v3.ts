@@ -7,7 +7,7 @@
  */
 
 import { useTheme } from "@mui/material";
-import * as DS from "@/App/theme/designSystem.v3";
+import * as DS from "@/app/theme/designSystem.v3";
 
 // Helper type for nested object access
 type NestedObject = {
@@ -150,7 +150,7 @@ export const useDesignSystem = () => {
    */
   const getTransition = (
     type: keyof typeof DS.transitions,
-  ): string | Record<string, string> => {
+  ): string | Record<string, string | number> => {
     return DS.transitions[type];
   };
 
@@ -280,4 +280,4 @@ export {
   withOpacity,
   createGradient,
   createGlow,
-} from "@/App/theme/designSystem.v3";
+} from "@/app/theme/designSystem.v3";

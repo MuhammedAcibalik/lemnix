@@ -283,17 +283,22 @@ export const ProductionPlanTable: React.FC<ProductionPlanTableProps> = ({
         component={Paper}
         elevation={0}
         sx={{
-          overflow: "hidden",
+          overflow: "auto",
+          maxWidth: "100%",
           "&::-webkit-scrollbar": {
-            display: "none",
+            height: "8px",
+            width: "8px",
           },
-          "&": {
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: alpha(theme.palette.grey[400], 0.5),
+            borderRadius: "4px",
+          },
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: theme.palette.grey[100],
           },
         }}
       >
-        <Table>
+        <Table sx={{ minWidth: { xs: "800px", md: "100%" } }}>
           <TableHead>
             <TableRow sx={{ backgroundColor: theme.palette.grey[50] }}>
               <TableCell

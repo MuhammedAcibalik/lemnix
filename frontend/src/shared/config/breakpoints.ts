@@ -22,7 +22,11 @@ export const breakpoints = {
   wide: 1280,
   xl: 1280,
   /** Large desktop (1536px+) */
+<<<<<<< HEAD
   "2xl": 1536,
+=======
+  '2xl': 1536,
+>>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
 } as const;
 
 export type Breakpoint = keyof typeof breakpoints;
@@ -39,17 +43,30 @@ export const mediaQuery = {
   lg: `(min-width: ${breakpoints.lg}px)`,
   wide: `(min-width: ${breakpoints.wide}px)`,
   xl: `(min-width: ${breakpoints.xl}px)`,
+<<<<<<< HEAD
   "2xl": `(min-width: ${breakpoints["2xl"]}px)`,
+=======
+  '2xl': `(min-width: ${breakpoints['2xl']}px)`,
+>>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
 } as const;
 
 /**
  * Get current breakpoint name based on window width
  */
 export function getCurrentBreakpoint(width: number): Breakpoint {
+<<<<<<< HEAD
   if (width >= breakpoints["2xl"]) return "2xl";
   if (width >= breakpoints.xl) return "xl";
   if (width >= breakpoints.lg) return "lg";
   if (width >= breakpoints.md) return "md";
   if (width >= breakpoints.sm) return "sm";
   return "mobile";
+=======
+  if (width >= breakpoints['2xl']) return '2xl';
+  if (width >= breakpoints.xl) return 'xl';
+  if (width >= breakpoints.lg) return 'lg';
+  if (width >= breakpoints.md) return 'md';
+  if (width >= breakpoints.sm) return 'sm';
+  return 'mobile';
+>>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
 }

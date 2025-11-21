@@ -167,11 +167,20 @@ export const AppBar: React.FC<AppBarProps> = ({
     >
       <Toolbar
         sx={{
+<<<<<<< HEAD
           // ✅ Fluid height that scales with zoom
           minHeight: {
             xs: fluidHeight(pxToRem(60), pxToRem(68), pxToRem(64)), // Mobile: 60-68px, preferred 64px
             sm: fluidHeight(pxToRem(64), pxToRem(72), pxToRem(68)), // Tablet: 64-72px, preferred 68px
             md: fluidHeight(pxToRem(68), pxToRem(76), pxToRem(72)), // Desktop: 68-76px, preferred 72px
+=======
+          px: {
+            xs: ds.spacing["2"], // Reduced padding on mobile
+            sm: ds.spacing["3"],
+            md: ds.spacing["5"],
+            lg: ds.spacing["6"],
+            xl: "clamp(1.5rem, 3vw, 2rem)",
+>>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
           },
           maxHeight: {
             xs: fluidHeight(pxToRem(60), pxToRem(68), pxToRem(64)),
@@ -191,6 +200,7 @@ export const AppBar: React.FC<AppBarProps> = ({
       >
         {/* Native div wrapper: Responsive container with proper breakpoints */}
         <Box
+<<<<<<< HEAD
           component="div"
           sx={{
             // ✅ Responsive container max-width pattern
@@ -226,6 +236,17 @@ export const AppBar: React.FC<AppBarProps> = ({
             // ✅ Overflow control to prevent horizontal scroll
             overflow: "hidden",
             minWidth: 0, // Allow flex items to shrink below content size
+=======
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            mr: {
+              xs: ds.spacing["1"],
+              sm: ds.spacing["2"],
+              md: ds.spacing["3"],
+            },
+            flexShrink: 0,
+>>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
           }}
         >
           {/* Mobile Menu Button */}
@@ -282,6 +303,7 @@ export const AppBar: React.FC<AppBarProps> = ({
               return null;
             }
 
+<<<<<<< HEAD
             const PageIcon = resolvedPageItem?.icon;
 
             return (
@@ -333,10 +355,66 @@ export const AppBar: React.FC<AppBarProps> = ({
                   }}
                 >
                   <Fade in={true} timeout={400}>
+=======
+          return (
+            <Fade in={true} timeout={400}>
+              <Box
+                sx={{
+                  position: "absolute",
+                  left: "50%",
+                  top: "50%",
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 1,
+                  display: { xs: "none", md: "flex" }, // Hide on mobile
+                  alignItems: "center",
+                  gap: ds.spacing["2"],
+                }}
+              >
+                {/* Breadcrumb Container */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: { xs: ds.spacing["1"], sm: ds.spacing["2"] },
+                    px: {
+                      xs: ds.spacing["3"],
+                      sm: ds.spacing["4"],
+                      md: ds.spacing["5"],
+                    },
+                    height: { xs: 36, sm: 40, md: 42 }, // Responsive height
+                    background: alpha("#FFFFFF", 0.7),
+                    backdropFilter: "blur(12px) saturate(130%)",
+                    borderRadius: `${ds.borderRadius.lg}px`,
+                    border: `1px solid ${alpha(ds.colors.neutral[300], 0.3)}`,
+                    boxShadow: `
+                    0 2px 8px ${alpha(ds.colors.neutral[900], 0.04)},
+                    0 1px 2px ${alpha(ds.colors.neutral[900], 0.06)}
+                  `,
+                    transition: ds.transitions.fast,
+
+                    "&:hover": {
+                      borderColor: alpha(ds.colors.primary.main, 0.3),
+                      boxShadow: `
+                      0 4px 12px ${alpha(ds.colors.primary.main, 0.08)},
+                      0 2px 4px ${alpha(ds.colors.neutral[900], 0.06)}
+                    `,
+                    },
+                  }}
+                >
+                  {/* Resolve page item from props or navigation config */}
+                  {/**
+                   * Fallback: if currentPageItem is undefined (e.g. activePage came
+                   * from URL but navigation state is out of sync), resolve it from
+                   * navigationItems using the activePage id.
+                   */}
+                  {/* Page Icon */}
+                  {PageIcon && (
+>>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
                     <Box
                       sx={{
                         display: "flex",
                         alignItems: "center",
+<<<<<<< HEAD
                         gap: { xs: ds.spacing["1"], sm: ds.spacing["2"] },
                         // ✅ Responsive padding - küçük desktop'larda azalt
                         px: {
@@ -428,6 +506,49 @@ export const AppBar: React.FC<AppBarProps> = ({
               </>
             );
           })()}
+=======
+                        justifyContent: "center",
+                        width: { xs: 28, sm: 30, md: 32 },
+                        height: { xs: 28, sm: 30, md: 32 },
+                        borderRadius: `${ds.borderRadius.md}px`,
+                        background: alpha(ds.colors.primary.main, 0.12),
+                        color: ds.colors.primary.main,
+                        transition: ds.transitions.fast,
+                      }}
+                    >
+                      <PageIcon sx={{ fontSize: { xs: 16, sm: 17, md: 18 } }} />
+                    </Box>
+                  )}
+
+                  {/* Separator */}
+                  <Box
+                    sx={{
+                      width: { xs: 3, sm: 4 },
+                      height: { xs: 3, sm: 4 },
+                      borderRadius: "50%",
+                      background: alpha(ds.colors.neutral[400], 0.4),
+                    }}
+                  />
+
+                  {/* Page Label - Elegant Typography */}
+                  <Typography
+                    sx={{
+                      fontSize: "clamp(0.9375rem, 1.5vw + 0.5rem, 1.125rem)",
+                      fontWeight: ds.typography.fontWeight.semibold,
+                      color: ds.colors.primary[800] ?? ds.colors.primary.main,
+                      letterSpacing: "-0.02em",
+                      lineHeight: 1,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {pageLabel}
+                  </Typography>
+                </Box>
+              </Box>
+            </Fade>
+          );
+        })()}
+>>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
 
           {/* Spacer for right side - esnek ama küçülebilir */}
           <Box
@@ -440,6 +561,7 @@ export const AppBar: React.FC<AppBarProps> = ({
             }}
           />
 
+<<<<<<< HEAD
           {/* Enhanced Action Buttons - Design System v2.0 */}
           <Box
             sx={{
@@ -467,6 +589,55 @@ export const AppBar: React.FC<AppBarProps> = ({
           >
             {/* Enhanced GPU Status Badge - Hidden on mobile */}
             <Tooltip title="GPU Acceleration Status" arrow>
+=======
+        {/* Enhanced Action Buttons - Design System v2.0 */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: {
+              xs: 4,
+              sm: ds.spacing["1"],
+              md: ds.spacing["2"],
+              lg: ds.spacing["3"],
+            }, // 4px = 0.5 spacing
+            ml: {
+              xs: ds.spacing["1"],
+              sm: ds.spacing["2"],
+              md: ds.spacing["3"],
+              lg: ds.spacing["4"],
+            },
+            flexShrink: 0, // Prevent shrinking
+            minWidth: 0, // Allow content to shrink if needed
+          }}
+        >
+          {/* Enhanced GPU Status Badge - Hidden on mobile */}
+          <Tooltip title="GPU Acceleration Status" arrow>
+            <Box
+              sx={{
+                display: { xs: "none", sm: "flex" }, // Hide completely on mobile
+                alignItems: "center",
+                gap: ds.spacing["1"],
+                px: { sm: ds.spacing["1"], md: ds.spacing["2"] },
+                py: ds.spacing["1"],
+                background:
+                  isSupported && isInitialized
+                    ? alpha(ds.colors.success.main, 0.1)
+                    : alpha(ds.colors.neutral[400], 0.1),
+                borderRadius: `${ds.borderRadius.md}px`,
+                border: `1px solid ${
+                  isSupported && isInitialized
+                    ? alpha(ds.colors.success.main, 0.2)
+                    : alpha(ds.colors.neutral[400], 0.2)
+                }`,
+                transition: ds.transitions.fast,
+                "&:hover": {
+                  transform: "translateY(-1px)",
+                  boxShadow: ds.shadows.soft.sm,
+                },
+              }}
+            >
+>>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
               <Box
                 sx={{
                   // ✅ GPU Badge daha geç göster - geniş ekranlarda göster (breadcrumb ile çakışmasın)
@@ -482,6 +653,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                   borderRadius: `${ds.borderRadius.md}px`,
                   border: `1px solid ${
                     isSupported && isInitialized
+<<<<<<< HEAD
                       ? alpha(ds.colors.success.main, 0.2)
                       : alpha(ds.colors.neutral[400], 0.2)
                   }`,
@@ -489,6 +661,92 @@ export const AppBar: React.FC<AppBarProps> = ({
                   "&:hover": {
                     transform: "translateY(-1px)",
                     boxShadow: ds.shadows.soft.sm,
+=======
+                      ? ds.colors.success.main
+                      : ds.colors.neutral[600],
+                  display: { sm: "none", md: "block" }, // Hide text on tablet
+                }}
+              >
+                {isLoading
+                  ? "Kontrol ediliyor..."
+                  : isSupported && isInitialized
+                    ? "GPU Aktif"
+                    : "GPU Pasif"}
+              </Typography>
+            </Box>
+          </Tooltip>
+
+          {/* Enhanced Command Palette Trigger */}
+          <Tooltip title={messages.navigation.commandPaletteTooltip} arrow>
+            <IconButton
+              onClick={onCommandPaletteOpen}
+              sx={{
+                color: ds.colors.primary.main,
+                backgroundColor: alpha(ds.colors.primary.main, 0.1),
+                border: `1px solid ${alpha(ds.colors.primary.main, 0.2)}`,
+                borderRadius: `${ds.borderRadius.button}px`,
+                width: { xs: 32, sm: 36, md: 40 },
+                height: { xs: 32, sm: 36, md: 40 },
+                padding: { xs: "6px", sm: "8px" },
+                transition: ds.transitions.fast,
+                "&:hover": {
+                  backgroundColor: alpha(ds.colors.primary.main, 0.15),
+                  borderColor: alpha(ds.colors.primary.main, 0.3),
+                  transform: "translateY(-2px)",
+                  boxShadow: `0 4px 12px ${alpha(ds.colors.primary.main, 0.2)}`,
+                },
+                "&:focus-visible": {
+                  outline: `2px solid ${ds.colors.primary.main}`,
+                  outlineOffset: "2px",
+                },
+              }}
+            >
+              <ZapIcon
+                sx={{
+                  fontSize: { xs: 16, sm: 18, md: ds.componentSizes.icon.sm },
+                }}
+              />
+            </IconButton>
+          </Tooltip>
+
+          {/* Enhanced Notifications - Hidden on mobile */}
+          <Tooltip title={messages.navigation.notificationsTooltip} arrow>
+            <IconButton
+              sx={{
+                display: { xs: "none", sm: "flex" }, // Hide on mobile
+                color: ds.colors.text.secondary,
+                backgroundColor: alpha(ds.colors.neutral[500], 0.08),
+                border: `1px solid ${alpha(ds.colors.neutral[500], 0.15)}`,
+                borderRadius: `${ds.borderRadius.button}px`,
+                width: { sm: 36, md: 40 },
+                height: { sm: 36, md: 40 },
+                transition: ds.transitions.fast,
+                "&:hover": {
+                  backgroundColor: alpha(ds.colors.primary.main, 0.1),
+                  borderColor: alpha(ds.colors.primary.main, 0.2),
+                  color: ds.colors.primary.main,
+                  transform: "translateY(-2px)",
+                  boxShadow: `0 4px 12px ${alpha(ds.colors.primary.main, 0.15)}`,
+                },
+                "&:focus-visible": {
+                  outline: `2px solid ${ds.colors.primary.main}`,
+                  outlineOffset: "2px",
+                },
+              }}
+            >
+              <Badge
+                badgeContent={2}
+                sx={{
+                  "& .MuiBadge-badge": {
+                    backgroundColor: ds.colors.error.main,
+                    color: "white",
+                    fontSize: { sm: "0.5625rem", md: "0.625rem" },
+                    minWidth: { sm: 16, md: 18 },
+                    height: { sm: 16, md: 18 },
+                    fontWeight: ds.typography.fontWeight.semibold,
+                    borderRadius: `${ds.borderRadius.sm}px`,
+                    boxShadow: `0 2px 4px ${alpha(ds.colors.error.main, 0.3)}`,
+>>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
                   },
                 }}
               >

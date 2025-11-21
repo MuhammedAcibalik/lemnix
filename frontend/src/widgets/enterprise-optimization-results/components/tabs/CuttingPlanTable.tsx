@@ -306,10 +306,16 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({
           border: `1px solid ${alpha(ds.colors.neutral[200], 0.5)}`,
           borderRadius: `${tokens.borderRadius.lg}px`,
           boxShadow: ds.shadows.soft.md,
-          overflow: "hidden",
+          overflow: "auto",
+          maxWidth: "100%",
         }}
       >
-        <Table sx={{ tableLayout: "fixed" }}>
+        <Table
+          sx={{
+            tableLayout: "fixed",
+            minWidth: { xs: "600px", md: "100%" },
+          }}
+        >
           <TableHead>
             <TableRow
               sx={{
