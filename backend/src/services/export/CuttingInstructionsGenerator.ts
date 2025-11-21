@@ -1,14 +1,14 @@
 /**
  * Cutting Instructions Generator
  * Generate PDF cutting instructions for operators
- * 
+ *
  * @module services/export
  * @version 1.0.0
  */
 
-import QRCode from 'qrcode';
-import type { CuttingInstructionData } from './types';
-import { OptimizationResult } from '../../types';
+import QRCode from "qrcode";
+import type { CuttingInstructionData } from "./types";
+import { OptimizationResult } from "../../types";
 
 /**
  * Generate cutting instructions PDF
@@ -19,7 +19,12 @@ export class CuttingInstructionsGenerator {
    * Generate cutting instructions
    */
   public async generate(data: CuttingInstructionData): Promise<Buffer> {
-    const { result, companyName = 'LEMNİX', projectName = 'Kesim Planı', generatedAt } = data;
+    const {
+      result,
+      companyName = "LEMNİX",
+      projectName = "Kesim Planı",
+      generatedAt,
+    } = data;
 
     // TODO: Implement full PDF generation with diagrams
     // For now, return a simple JSON representation
@@ -32,7 +37,9 @@ export class CuttingInstructionsGenerator {
       },
       summary: {
         totalStocks: result.stockCount,
-        totalSegments: result.totalSegments || result.cuts.reduce((sum, c) => sum + c.segments.length, 0),
+        totalSegments:
+          result.totalSegments ||
+          result.cuts.reduce((sum, c) => sum + c.segments.length, 0),
         efficiency: result.efficiency,
         wastePercentage: result.wastePercentage,
       },
@@ -50,11 +57,13 @@ export class CuttingInstructionsGenerator {
         waste: cut.remainingLength,
         wasteCategory: cut.wasteCategory,
       })),
-      qrCode: await this.generateQRCode((result as { id?: string }).id || 'unknown'),
+      qrCode: await this.generateQRCode(
+        (result as { id?: string }).id || "unknown",
+      ),
     };
 
     // Convert to Buffer (in real implementation, use PDF library)
-    return Buffer.from(JSON.stringify(instructions, null, 2), 'utf-8');
+    return Buffer.from(JSON.stringify(instructions, null, 2), "utf-8");
   }
 
   /**
@@ -62,12 +71,11 @@ export class CuttingInstructionsGenerator {
    */
   private async generateQRCode(resultId: string): Promise<string> {
     try {
-      const url = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/results/${resultId}`;
+      const url = `${process.env.FRONTEND_URL || "http://localhost:5173"}/results/${resultId}`;
       return await QRCode.toDataURL(url);
     } catch (error) {
-      console.error('Failed to generate QR code:', error);
-      return '';
+      console.error("Failed to generate QR code:", error);
+      return "";
     }
   }
 }
-

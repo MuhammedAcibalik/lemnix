@@ -206,7 +206,8 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     const { tokens } = useAdaptiveUIContext();
 
     const variantStyles = useMemo(
-      () => buildVariantStyles(ds, tokens, variant, hoverable, interactive, glow),
+      () =>
+        buildVariantStyles(ds, tokens, variant, hoverable, interactive, glow),
       [ds, tokens, variant, hoverable, interactive, glow],
     );
 
@@ -280,9 +281,13 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           sx={{
             padding: `${padding}px`,
             paddingTop:
-              hasHeader && !headerDivider ? `${tokens.spacing.xs}px` : `${padding}px`,
+              hasHeader && !headerDivider
+                ? `${tokens.spacing.xs}px`
+                : `${padding}px`,
             paddingBottom:
-              hasFooter && !footerDivider ? `${tokens.spacing.xs}px` : `${padding}px`,
+              hasFooter && !footerDivider
+                ? `${tokens.spacing.xs}px`
+                : `${padding}px`,
             fontSize: tokens.typography.base,
             "&:last-child": {
               paddingBottom: `${padding}px`,

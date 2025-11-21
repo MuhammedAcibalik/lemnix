@@ -695,7 +695,9 @@ export class StatisticsService {
             },
           },
         }),
-        prisma.$queryRaw<Array<{ count: bigint }>>`SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = 'public'`,
+        prisma.$queryRaw<
+          Array<{ count: bigint }>
+        >`SELECT COUNT(*) as count FROM information_schema.tables WHERE table_schema = 'public'`,
       ]);
 
       const memoryUsage = process.memoryUsage();
@@ -707,7 +709,11 @@ export class StatisticsService {
         activeConnections: 0, // Will be tracked by connection pool
         memoryUsage: Math.round(memoryUsage.heapUsed / 1024 / 1024), // MB
         cpuUsage: Math.round((cpuUsage.user + cpuUsage.system) / 1000000), // seconds
-        databaseConnections: Number(await prisma.$queryRaw<Array<{ count: bigint }>>`SELECT count(*) as count FROM pg_stat_activity WHERE datname = current_database()`), // PostgreSQL active connections
+        databaseConnections: Number(
+          await prisma.$queryRaw<
+            Array<{ count: bigint }>
+          >`SELECT count(*) as count FROM pg_stat_activity WHERE datname = current_database()`,
+        ), // PostgreSQL active connections
       };
     } catch (error) {
       logger.error("Failed to get system health metrics:", error);

@@ -88,9 +88,6 @@ export class ExcelCellUtils {
    */
   public static normalizeText(value: CellValue): string {
     if (!this.isValidString(value)) return "";
-    return this.toString(value)
-      .toUpperCase()
-      .replace(/\s+/g, " ")
-      .trim();
+    return this.toString(value).toUpperCase().replace(/\s+/g, " ").trim();
   }
 }

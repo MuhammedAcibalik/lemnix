@@ -279,12 +279,12 @@ export const useCuttingListData = ({
 
         // ✅ FIX: Update BOTH cuttingList and cuttingLists
         setCuttingList(updatedCuttingList);
-        
+
         // ✅ CRITICAL FIX: Use functional update to avoid stale closure
         setCuttingLists((prevLists) =>
           prevLists.map((list) =>
-            list.id === cuttingList.id ? updatedCuttingList : list
-          )
+            list.id === cuttingList.id ? updatedCuttingList : list,
+          ),
         );
 
         setShowNewProductDialog(false);
@@ -353,12 +353,14 @@ export const useCuttingListData = ({
 
       const updatedList = { ...cuttingList, sections: updatedSections };
       setCuttingList(updatedList);
-      
+
       // ✅ CRITICAL FIX: Use functional update to avoid stale closure
       setCuttingLists((prevLists) =>
-        prevLists.map((list) => (list.id === cuttingList.id ? updatedList : list))
+        prevLists.map((list) =>
+          list.id === cuttingList.id ? updatedList : list,
+        ),
       );
-      
+
       resetNewItemForm();
       setShowNewItemDialog(false);
       setSuccess("İş emri eklendi");
@@ -468,12 +470,14 @@ export const useCuttingListData = ({
 
         const updatedList = { ...cuttingList, sections: updatedSections };
         setCuttingList(updatedList);
-        
+
         // ✅ CRITICAL FIX: Use functional update to avoid stale closure
         setCuttingLists((prevLists) =>
-          prevLists.map((list) => (list.id === cuttingList.id ? updatedList : list))
+          prevLists.map((list) =>
+            list.id === cuttingList.id ? updatedList : list,
+          ),
         );
-        
+
         resetNewItemForm();
         setEditingItem(null);
         setShowEditItemDialog(false);
@@ -522,12 +526,14 @@ export const useCuttingListData = ({
 
         const updatedList = { ...cuttingList, sections: updatedSections };
         setCuttingList(updatedList);
-        
+
         // ✅ CRITICAL FIX: Use functional update to avoid stale closure
         setCuttingLists((prevLists) =>
-          prevLists.map((list) => (list.id === cuttingList.id ? updatedList : list))
+          prevLists.map((list) =>
+            list.id === cuttingList.id ? updatedList : list,
+          ),
         );
-        
+
         setSuccess("İş emri silindi");
         setLoadingState(LoadingState.SUCCESS);
       } catch (error) {
@@ -554,12 +560,14 @@ export const useCuttingListData = ({
         );
         const updatedList = { ...cuttingList, sections: updatedSections };
         setCuttingList(updatedList);
-        
+
         // ✅ CRITICAL FIX: Use functional update to avoid stale closure
         setCuttingLists((prevLists) =>
-          prevLists.map((list) => (list.id === cuttingList.id ? updatedList : list))
+          prevLists.map((list) =>
+            list.id === cuttingList.id ? updatedList : list,
+          ),
         );
-        
+
         setSuccess("Ürün kategorisi silindi");
         setLoadingState(LoadingState.SUCCESS);
       } catch (error) {

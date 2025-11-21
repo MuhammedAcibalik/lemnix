@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import { logger } from '../logger';
+import { logger } from "../logger";
 
 /**
  * Cache options for TTL and invalidation
@@ -18,30 +18,33 @@ interface CacheOptions {
  * L1: In-memory cache with TTL
  */
 class MemoryCache {
-  private cache: Map<string, { value: unknown; expires: number; tags: string[] }> = new Map();
+  private cache: Map<
+    string,
+    { value: unknown; expires: number; tags: string[] }
+  > = new Map();
   private readonly defaultTTL = 300; // 5 minutes
 
   set(key: string, value: unknown, options: CacheOptions = {}): void {
     const ttl = options.ttl ?? this.defaultTTL;
     const expires = Date.now() + ttl * 1000;
     const tags = options.tags ?? [];
-    
+
     this.cache.set(key, { value, expires, tags });
     this.scheduleCleanup();
   }
 
   get(key: string): unknown | null {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       return null;
     }
-    
+
     if (Date.now() > entry.expires) {
       this.cache.delete(key);
       return null;
     }
-    
+
     return entry.value;
   }
 
@@ -80,14 +83,14 @@ class MemoryCache {
   getStats(): { size: number; hitRate: number } {
     return {
       size: this.cache.size,
-      hitRate: 0 // TODO: Implement hit rate tracking
+      hitRate: 0, // TODO: Implement hit rate tracking
     };
   }
 }
 
 /**
  * L2: Redis cache (optional, falls back to memory-only)
- * 
+ *
  * Note: Redis integration requires redis package and connection setup.
  * For now, this is a placeholder that uses only L1 memory cache.
  * To enable Redis:
@@ -103,18 +106,18 @@ export class RedisCache {
     hits: 0,
     misses: 0,
     sets: 0,
-    deletes: 0
+    deletes: 0,
   };
 
   private constructor() {
     this.memoryCache = new MemoryCache();
-    
+
     // TODO: Initialize Redis client when redis package is installed
     // this.initializeRedis();
-    
-    logger.info('Cache service initialized', {
-      l1: 'memory',
-      l2: this.redisEnabled ? 'redis' : 'disabled'
+
+    logger.info("Cache service initialized", {
+      l1: "memory",
+      l2: this.redisEnabled ? "redis" : "disabled",
     });
   }
 
@@ -133,7 +136,7 @@ export class RedisCache {
     const l1Value = this.memoryCache.get(key);
     if (l1Value !== null) {
       this.stats.hits++;
-      logger.debug('[Cache] L1 HIT', { key });
+      logger.debug("[Cache] L1 HIT", { key });
       return l1Value as T;
     }
 
@@ -150,17 +153,21 @@ export class RedisCache {
     }
 
     this.stats.misses++;
-    logger.debug('[Cache] MISS', { key });
+    logger.debug("[Cache] MISS", { key });
     return null;
   }
 
   /**
    * Set value in cache (L1 + L2)
    */
-  async set(key: string, value: unknown, options: CacheOptions = {}): Promise<void> {
+  async set(
+    key: string,
+    value: unknown,
+    options: CacheOptions = {},
+  ): Promise<void> {
     // Set in L1
     this.memoryCache.set(key, value, options);
-    
+
     // Set in L2 (Redis) if enabled
     if (this.redisEnabled) {
       // TODO: Implement Redis set
@@ -169,7 +176,7 @@ export class RedisCache {
     }
 
     this.stats.sets++;
-    logger.debug('[Cache] SET', { key, ttl: options.ttl });
+    logger.debug("[Cache] SET", { key, ttl: options.ttl });
   }
 
   /**
@@ -177,14 +184,14 @@ export class RedisCache {
    */
   async delete(key: string): Promise<void> {
     this.memoryCache.delete(key);
-    
+
     if (this.redisEnabled) {
       // TODO: Implement Redis delete
       // await this.redisClient.del(key);
     }
 
     this.stats.deletes++;
-    logger.debug('[Cache] DELETE', { key });
+    logger.debug("[Cache] DELETE", { key });
   }
 
   /**
@@ -192,13 +199,13 @@ export class RedisCache {
    */
   async invalidateByTag(tag: string): Promise<void> {
     this.memoryCache.invalidateByTag(tag);
-    
+
     if (this.redisEnabled) {
       // TODO: Implement Redis tag-based invalidation
       // This requires maintaining a separate index of tags -> keys
     }
 
-    logger.info('[Cache] Tag invalidated', { tag });
+    logger.info("[Cache] Tag invalidated", { tag });
   }
 
   /**
@@ -206,13 +213,13 @@ export class RedisCache {
    */
   async clear(): Promise<void> {
     this.memoryCache.clear();
-    
+
     if (this.redisEnabled) {
       // TODO: Implement Redis flush
       // await this.redisClient.flushdb();
     }
 
-    logger.warn('[Cache] Cache cleared');
+    logger.warn("[Cache] Cache cleared");
   }
 
   /**
@@ -235,7 +242,7 @@ export class RedisCache {
       misses: this.stats.misses,
       hitRate: Number(hitRate.toFixed(2)),
       sets: this.stats.sets,
-      deletes: this.stats.deletes
+      deletes: this.stats.deletes,
     };
   }
 
@@ -244,16 +251,16 @@ export class RedisCache {
    */
   async warmup(dataLoader: () => Promise<Map<string, unknown>>): Promise<void> {
     try {
-      logger.info('[Cache] Starting cache warmup...');
+      logger.info("[Cache] Starting cache warmup...");
       const data = await dataLoader();
-      
+
       for (const [key, value] of data.entries()) {
         await this.set(key, value, { ttl: 600 }); // 10 minutes
       }
-      
-      logger.info('[Cache] Cache warmup completed', { count: data.size });
+
+      logger.info("[Cache] Cache warmup completed", { count: data.size });
     } catch (error) {
-      logger.error('[Cache] Warmup failed', { error });
+      logger.error("[Cache] Warmup failed", { error });
     }
   }
 }
@@ -269,10 +276,12 @@ export const cacheService = RedisCache.getInstance();
 export const CacheKeys = {
   cuttingList: (id: string) => `cutting-list:${id}`,
   cuttingLists: (userId: string) => `cutting-lists:user:${userId}`,
-  cuttingListsByWeek: (userId: string, week: number) => `cutting-lists:user:${userId}:week:${week}`,
+  cuttingListsByWeek: (userId: string, week: number) =>
+    `cutting-lists:user:${userId}:week:${week}`,
   optimization: (id: string) => `optimization:${id}`,
   optimizations: (userId: string) => `optimizations:user:${userId}`,
-  optimizationsByAlgorithm: (algorithm: string) => `optimizations:algorithm:${algorithm}`,
+  optimizationsByAlgorithm: (algorithm: string) =>
+    `optimizations:algorithm:${algorithm}`,
   statistics: (listId: string) => `statistics:list:${listId}`,
   profileUsage: (profileType: string) => `profile-usage:${profileType}`,
 } as const;
@@ -281,9 +290,8 @@ export const CacheKeys = {
  * Cache tags for invalidation groups
  */
 export const CacheTags = {
-  CUTTING_LISTS: 'cutting-lists',
-  OPTIMIZATIONS: 'optimizations',
-  STATISTICS: 'statistics',
-  USERS: 'users',
+  CUTTING_LISTS: "cutting-lists",
+  OPTIMIZATIONS: "optimizations",
+  STATISTICS: "statistics",
+  USERS: "users",
 } as const;
-

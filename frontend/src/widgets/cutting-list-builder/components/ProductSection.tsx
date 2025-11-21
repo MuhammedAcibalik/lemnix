@@ -64,9 +64,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
   onDeleteSection,
 }) => {
   const ds = useDesignSystem();
-  const [isExpanded, setIsExpanded] = useState(
-    section.isExpanded ?? false,
-  );
+  const [isExpanded, setIsExpanded] = useState(section.isExpanded ?? false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const totalQuantity = section.items.reduce(
@@ -259,7 +257,9 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
                     transition: ds.transitions.fast,
                   }}
                 >
-                  <DeleteIcon sx={{ fontSize: ds.componentSizes.icon.medium }} />
+                  <DeleteIcon
+                    sx={{ fontSize: ds.componentSizes.icon.medium }}
+                  />
                 </IconButton>
               </Tooltip>
             )}

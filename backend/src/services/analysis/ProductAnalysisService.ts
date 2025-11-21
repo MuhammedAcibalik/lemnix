@@ -142,7 +142,7 @@ export class ProductAnalysisService {
         });
       } else {
         const existing = combinationMap.get(profileKey)!;
-        
+
         // Update usage count
         const updated: ProfileCombination = {
           ...existing,

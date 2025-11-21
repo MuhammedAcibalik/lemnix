@@ -1,6 +1,6 @@
 /**
  * Enterprise Controller Types - Barrel Export
- * 
+ *
  * @module enterprise/types
  * @version 1.0.0
  */
@@ -11,8 +11,8 @@ export type {
   ExportRequest,
   AnalyticsRequest,
   AuditLogQuery,
-  OptimizationHistoryQuery
-} from './requests';
+  OptimizationHistoryQuery,
+} from "./requests";
 
 // Response types
 export type {
@@ -25,14 +25,13 @@ export type {
   MetricData,
   ExportResponse,
   SuccessResponse,
-  ErrorResponse
-} from './responses';
+  ErrorResponse,
+} from "./responses";
 
 // Audit types
 export type {
   AuditLogEntry,
   AuditAction,
   AuditSeverity,
-  ExtendedAuditLogEntry
-} from './audit';
-
+  ExtendedAuditLogEntry,
+} from "./audit";

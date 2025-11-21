@@ -60,7 +60,7 @@ export class CuttingListStorageService {
   constructor(storageDir?: string) {
     // Set up storage directory
     const baseDir = storageDir || path.join(__dirname, "../../../data");
-    
+
     if (!fs.existsSync(baseDir)) {
       fs.mkdirSync(baseDir, { recursive: true });
       console.log("[INFO] [STORAGE] Created storage directory:", baseDir);

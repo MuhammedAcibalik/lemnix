@@ -11,7 +11,13 @@
  * ✅ Consistent with other dialogs
  */
 
-import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from "react";
 import {
   Dialog,
   DialogContent,
@@ -85,12 +91,14 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
   const { data: categories = [], isLoading: categoriesLoading } =
     useProductCategories();
   const { data: existingCategory, isLoading: checkingCategory } =
-    useCategoryByProduct(shouldQueryCategory ? debouncedProductName : undefined);
+    useCategoryByProduct(
+      shouldQueryCategory ? debouncedProductName : undefined,
+    );
   const mapProductMutation = useMapProductToCategory();
 
   // ✅ FIX: Track if user manually selected a category
   const [userManuallySelected, setUserManuallySelected] = useState(false);
-  
+
   // ✅ FIX: Track last auto-selected category to prevent re-selection
   const lastAutoSelectedRef = useRef<string | null>(null);
 
@@ -99,8 +107,8 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
   // ✅ FIX: Prevent redundant updates to avoid re-renders
   useEffect(() => {
     if (
-      existingCategory && 
-      !userManuallySelected && 
+      existingCategory &&
+      !userManuallySelected &&
       lastAutoSelectedRef.current !== existingCategory.name
     ) {
       lastAutoSelectedRef.current = existingCategory.name;
@@ -115,7 +123,7 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
       // Auto-convert to uppercase
       const upperValue = value.toUpperCase();
       setProductName(upperValue);
-      
+
       // ✅ FIX: Inline validation - no external function dependency
       const trimmed = upperValue.trim();
       let error: string | undefined;
@@ -126,7 +134,7 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
       } else if (trimmed.length > 50) {
         error = "Ürün adı en fazla 50 karakter olabilir";
       }
-      
+
       setErrors((prev) => ({ ...prev, productName: error }));
     },
     [], // ✅ No dependencies = stable reference
@@ -145,17 +153,14 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
   );
 
   // ✅ FIX: Product category change handler with validation
-  const handleProductCategoryChange = useCallback(
-    (value: string) => {
-      setProductCategory(value);
-      setUserManuallySelected(true); // ✅ Mark as manually selected
-      // Clear error when category is selected
-      if (value.trim()) {
-        setErrors((prev) => ({ ...prev, productCategory: undefined }));
-      }
-    },
-    [],
-  );
+  const handleProductCategoryChange = useCallback((value: string) => {
+    setProductCategory(value);
+    setUserManuallySelected(true); // ✅ Mark as manually selected
+    // Clear error when category is selected
+    if (value.trim()) {
+      setErrors((prev) => ({ ...prev, productCategory: undefined }));
+    }
+  }, []);
 
   const isFormValid = useMemo(() => {
     return (
@@ -167,22 +172,30 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
   }, [errors, productName, productCategory]);
 
   // ✅ FIX: Memoize adornments to prevent TextField re-renders
-  const productNameStartAdornment = useMemo(() => (
-    <InputAdornment position="start">
-      <CategoryIcon
-        sx={{
-          color: errors.productName
-            ? ds.colors.error.main
-            : ds.colors.primary.main,
-          fontSize: ds.componentSizes.icon.medium,
-        }}
-      />
-    </InputAdornment>
-  ), [errors.productName, ds.colors.error.main, ds.colors.primary.main, ds.componentSizes.icon.medium]);
-  
+  const productNameStartAdornment = useMemo(
+    () => (
+      <InputAdornment position="start">
+        <CategoryIcon
+          sx={{
+            color: errors.productName
+              ? ds.colors.error.main
+              : ds.colors.primary.main,
+            fontSize: ds.componentSizes.icon.medium,
+          }}
+        />
+      </InputAdornment>
+    ),
+    [
+      errors.productName,
+      ds.colors.error.main,
+      ds.colors.primary.main,
+      ds.componentSizes.icon.medium,
+    ],
+  );
+
   const productNameEndAdornment = useMemo(() => {
     if (!productName.trim() || errors.productName) return null;
-    
+
     return (
       <InputAdornment position="end">
         {checkingCategory ? (
@@ -197,7 +210,13 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
         )}
       </InputAdornment>
     );
-  }, [productName, errors.productName, checkingCategory, ds.colors.success.main, ds.componentSizes.icon.small]);
+  }, [
+    productName,
+    errors.productName,
+    checkingCategory,
+    ds.colors.success.main,
+    ds.componentSizes.icon.small,
+  ]);
 
   const handleClose = useCallback(() => {
     setProductName("");

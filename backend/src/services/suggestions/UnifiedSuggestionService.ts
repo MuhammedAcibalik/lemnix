@@ -735,7 +735,8 @@ export class UnifiedSuggestionService {
         }
 
         for (const section of sections) {
-          const sectionProductName = section.productName?.toUpperCase().trim() || "";
+          const sectionProductName =
+            section.productName?.toUpperCase().trim() || "";
           if (sectionProductName.includes(normalizedProductName)) {
             cuttingListProductMap.set(cuttingList.id, sectionProductName);
             break; // Found matching product, no need to check other sections
@@ -784,7 +785,11 @@ export class UnifiedSuggestionService {
         },
       });
 
-      const ratios: Array<{ orderQty: number; profileQty: number; ratio: number }> = [];
+      const ratios: Array<{
+        orderQty: number;
+        profileQty: number;
+        ratio: number;
+      }> = [];
       // Track processed workOrderId+profile+measurement combinations to avoid duplicates
       const processedCombinations = new Set<string>();
 
@@ -860,7 +865,7 @@ export class UnifiedSuggestionService {
   /**
    * Apply smart suggestion - returns complete profiles with calculated quantities
    * This is the ONE-CLICK magic: user enters orderQuantity, we calculate all profile quantities
-   * 
+   *
    * ✅ FIXED: Added requestedProfile parameter for profile type matching
    */
   async applySmartSuggestion(
@@ -1017,7 +1022,7 @@ export class UnifiedSuggestionService {
             // ✅ FIXED: Try to use averageRatio from all patterns if ratioHistory is empty
             // This handles cases where pattern was created before ratioHistory was implemented
             const validRatios: number[] = [];
-            
+
             for (const pattern of profilePatterns) {
               const avgRatio =
                 typeof pattern.averageRatio === "number"
@@ -1057,14 +1062,20 @@ export class UnifiedSuggestionService {
                 try {
                   const patternToUpdate = profilePatterns[0];
                   if (patternToUpdate.id) {
-                    await this.patternRepo.update(patternToUpdate.id as string, {
-                      averageRatio: combinedAverageRatio,
-                      ratioHistory: historicalRatios,
-                    });
-                    logger.info("Updated pattern with calculated ratioHistory", {
-                      patternId: patternToUpdate.id,
-                      ratioCount: historicalRatios.length,
-                    });
+                    await this.patternRepo.update(
+                      patternToUpdate.id as string,
+                      {
+                        averageRatio: combinedAverageRatio,
+                        ratioHistory: historicalRatios,
+                      },
+                    );
+                    logger.info(
+                      "Updated pattern with calculated ratioHistory",
+                      {
+                        patternId: patternToUpdate.id,
+                        ratioCount: historicalRatios.length,
+                      },
+                    );
                   }
                 } catch (updateError) {
                   logger.warn("Failed to update pattern with ratioHistory", {
@@ -1075,7 +1086,7 @@ export class UnifiedSuggestionService {
               } else {
                 // Fallback: Try to calculate ratio from quantity/orderQuantity fields
                 const calculatedRatios: number[] = [];
-                
+
                 for (const pattern of profilePatterns) {
                   const patternQuantity =
                     typeof pattern.quantity === "number" ? pattern.quantity : 0;
@@ -1083,9 +1094,10 @@ export class UnifiedSuggestionService {
                     typeof pattern.orderQuantity === "number"
                       ? pattern.orderQuantity
                       : 0;
-                  
+
                   if (patternOrderQuantity > 0 && patternQuantity > 0) {
-                    const calculatedRatio = patternQuantity / patternOrderQuantity;
+                    const calculatedRatio =
+                      patternQuantity / patternOrderQuantity;
                     if (calculatedRatio > 0 && !isNaN(calculatedRatio)) {
                       calculatedRatios.push(calculatedRatio);
                     }

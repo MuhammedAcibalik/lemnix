@@ -1,13 +1,17 @@
 /**
  * Enterprise Validation Service - Type-safe request validation
  * SRP: Single responsibility - validate enterprise optimization requests
- * 
+ *
  * @module enterprise/services
  * @version 1.0.0
  */
 
-import { OptimizationItem, OptimizationResult, OptimizationAlgorithm } from '../../types';
-import type { EnterpriseOptimizationRequest } from '../../types/enterprise';
+import {
+  OptimizationItem,
+  OptimizationResult,
+  OptimizationAlgorithm,
+} from "../../types";
+import type { EnterpriseOptimizationRequest } from "../../types/enterprise";
 
 /**
  * Validation result type
@@ -25,60 +29,64 @@ export interface ValidationResult<T> {
  */
 export class EnterpriseValidationService {
   private readonly SUPPORTED_ALGORITHMS: ReadonlyArray<string> = [
-    'ffd',
-    'bfd',
-    'genetic',
-    'pooling'
+    "ffd",
+    "bfd",
+    "genetic",
+    "pooling",
   ] as const;
 
   /**
    * Validate enterprise optimization request
    */
-  public validateRequest(body: unknown): ValidationResult<EnterpriseOptimizationRequest> {
+  public validateRequest(
+    body: unknown,
+  ): ValidationResult<EnterpriseOptimizationRequest> {
     const errors: string[] = [];
 
     // Check if body is object
     if (!this.isRecord(body)) {
-      return { isValid: false, errors: ['Request body must be an object'] };
+      return { isValid: false, errors: ["Request body must be an object"] };
     }
 
     // Validate items
     if (!this.hasValidItems(body)) {
-      errors.push('Items array is required and must be non-empty');
+      errors.push("Items array is required and must be non-empty");
     }
 
     // Validate algorithm
     if (!this.hasValidAlgorithm(body)) {
-      errors.push(`Algorithm must be one of: ${this.SUPPORTED_ALGORITHMS.join(', ')}`);
+      errors.push(
+        `Algorithm must be one of: ${this.SUPPORTED_ALGORITHMS.join(", ")}`,
+      );
     }
 
     // Validate objectives
     if (!this.hasValidObjectives(body)) {
-      errors.push('At least one optimization objective is required');
+      errors.push("At least one optimization objective is required");
     }
 
     // Validate constraints
     if (!this.hasValidConstraints(body)) {
-      errors.push('Constraints object is required');
+      errors.push("Constraints object is required");
     }
 
     // Validate performance settings
     if (!this.hasValidPerformance(body)) {
-      errors.push('Performance settings object is required');
+      errors.push("Performance settings object is required");
     }
 
     // Validate cost model
     if (!this.hasValidCostModel(body)) {
-      errors.push('Cost model object is required');
+      errors.push("Cost model object is required");
     }
 
     if (errors.length > 0) {
       return { isValid: false, errors };
     }
 
-    return { 
-      isValid: true, 
-      data: body as unknown as EnterpriseOptimizationRequest 
+    return {
+      isValid: true,
+      data: body as unknown as EnterpriseOptimizationRequest,
     };
   }
 
@@ -106,9 +114,10 @@ export class EnterpriseValidationService {
     // Validate efficiency calculation
     const totalUsed = cuts.reduce((sum, cut) => sum + cut.usedLength, 0);
     const totalStock = cuts.reduce((sum, cut) => sum + cut.stockLength, 0);
-    const calculatedEfficiency = totalStock > 0 ? (totalUsed / totalStock) * 100 : 0;
-    
-    if (typeof result.efficiency !== 'number') return false;
+    const calculatedEfficiency =
+      totalStock > 0 ? (totalUsed / totalStock) * 100 : 0;
+
+    if (typeof result.efficiency !== "number") return false;
     if (Math.abs(result.efficiency - calculatedEfficiency) > 0.1) {
       return false;
     }
@@ -150,7 +159,7 @@ export class EnterpriseValidationService {
         large: 0,
         excessive: 0,
         reclaimable: 0,
-        totalPieces: 0
+        totalPieces: 0,
       },
       constraints: {
         maxWastePercentage: 10,
@@ -162,10 +171,10 @@ export class EnterpriseValidationService {
         prioritizeSmallWaste: true,
         reclaimWasteOnly: false,
         balanceComplexity: true,
-        respectMaterialGrades: true
+        respectMaterialGrades: true,
       },
       recommendations: [],
-      efficiencyCategory: 'good',
+      efficiencyCategory: "good",
       detailedWasteAnalysis: {
         minimal: 0,
         small: 0,
@@ -173,9 +182,9 @@ export class EnterpriseValidationService {
         large: 0,
         excessive: 0,
         totalPieces: 0,
-        averageWaste: 0
+        averageWaste: 0,
       },
-      optimizationScore: 0
+      optimizationScore: 0,
     };
   }
 
@@ -184,66 +193,65 @@ export class EnterpriseValidationService {
   // ============================================================================
 
   private isRecord(value: unknown): value is Record<string, unknown> {
-    return typeof value === 'object' && value !== null && !Array.isArray(value);
+    return typeof value === "object" && value !== null && !Array.isArray(value);
   }
 
-  private hasValidItems(body: Record<string, unknown>): body is Record<string, unknown> & { items: OptimizationItem[] } {
+  private hasValidItems(
+    body: Record<string, unknown>,
+  ): body is Record<string, unknown> & { items: OptimizationItem[] } {
     return (
-      'items' in body &&
-      Array.isArray(body.items) &&
-      body.items.length > 0
+      "items" in body && Array.isArray(body.items) && body.items.length > 0
     );
   }
 
   private hasValidAlgorithm(body: Record<string, unknown>): boolean {
     return (
-      'algorithm' in body &&
-      typeof body.algorithm === 'string' &&
+      "algorithm" in body &&
+      typeof body.algorithm === "string" &&
       this.SUPPORTED_ALGORITHMS.includes(body.algorithm)
     );
   }
 
   private hasValidObjectives(body: Record<string, unknown>): boolean {
     return (
-      'objectives' in body &&
+      "objectives" in body &&
       Array.isArray(body.objectives) &&
       body.objectives.length > 0
     );
   }
 
   private hasValidConstraints(body: Record<string, unknown>): boolean {
-    return (
-      'constraints' in body &&
-      this.isRecord(body.constraints)
-    );
+    return "constraints" in body && this.isRecord(body.constraints);
   }
 
   private hasValidPerformance(body: Record<string, unknown>): boolean {
-    return (
-      'performance' in body &&
-      this.isRecord(body.performance)
-    );
+    return "performance" in body && this.isRecord(body.performance);
   }
 
   private hasValidCostModel(body: Record<string, unknown>): boolean {
-    return (
-      'costModel' in body &&
-      this.isRecord(body.costModel)
-    );
+    return "costModel" in body && this.isRecord(body.costModel);
   }
 
-  private isValidCutsArray(value: unknown): value is Array<Record<string, unknown>> {
+  private isValidCutsArray(
+    value: unknown,
+  ): value is Array<Record<string, unknown>> {
     return Array.isArray(value);
   }
 
-  private isValidCut(cut: unknown): cut is { usedLength: number; remainingLength: number; stockLength: number } {
+  private isValidCut(cut: unknown): cut is {
+    usedLength: number;
+    remainingLength: number;
+    stockLength: number;
+  } {
     if (!this.isRecord(cut)) return false;
 
     const { usedLength, remainingLength, stockLength } = cut;
 
-    if (typeof usedLength !== 'number' || 
-        typeof remainingLength !== 'number' || 
-        typeof stockLength !== 'number') {
+    if (
+      typeof usedLength !== "number" ||
+      typeof remainingLength !== "number" ||
+      typeof stockLength !== "number"
+    ) {
       return false;
     }
 
@@ -262,4 +270,3 @@ export class EnterpriseValidationService {
     return true;
   }
 }
-

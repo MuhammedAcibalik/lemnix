@@ -66,12 +66,15 @@ export class ProductCategoryController {
         await fn(req, res);
       } catch (error) {
         const requestId = this.generateRequestId();
-        logger.error(`[${requestId}] Controller error`, { error, path: req.path });
+        logger.error(`[${requestId}] Controller error`, {
+          error,
+          path: req.path,
+        });
         const errorMessage =
           error instanceof Error ? error.message : "Internal server error";
-        res.status(500).json(
-          this.createResponse(false, undefined, errorMessage),
-        );
+        res
+          .status(500)
+          .json(this.createResponse(false, undefined, errorMessage));
       }
     };
   };
@@ -95,7 +98,12 @@ export class ProductCategoryController {
         logger.info(`[${requestId}] Retrieved ${categories.length} categories`);
 
         res.json(
-          this.createResponse(true, categories, undefined, "Categories retrieved successfully"),
+          this.createResponse(
+            true,
+            categories,
+            undefined,
+            "Categories retrieved successfully",
+          ),
         );
       } catch (error) {
         logger.error(`[${requestId}] Failed to get categories`, { error });
@@ -119,16 +127,21 @@ export class ProductCategoryController {
         const category = await productCategoryRepository.findById(id);
 
         if (!category) {
-          res.status(404).json(
-            this.createResponse(false, undefined, "Category not found"),
-          );
+          res
+            .status(404)
+            .json(this.createResponse(false, undefined, "Category not found"));
           return;
         }
 
         logger.info(`[${requestId}] Category retrieved: ${category.name}`);
 
         res.json(
-          this.createResponse(true, category, undefined, "Category retrieved successfully"),
+          this.createResponse(
+            true,
+            category,
+            undefined,
+            "Category retrieved successfully",
+          ),
         );
       } catch (error) {
         logger.error(`[${requestId}] Failed to get category`, { error, id });
@@ -150,9 +163,15 @@ export class ProductCategoryController {
 
       try {
         if (!name || typeof name !== "string" || !name.trim()) {
-          res.status(400).json(
-            this.createResponse(false, undefined, "Category name is required"),
-          );
+          res
+            .status(400)
+            .json(
+              this.createResponse(
+                false,
+                undefined,
+                "Category name is required",
+              ),
+            );
           return;
         }
 
@@ -163,11 +182,21 @@ export class ProductCategoryController {
 
         logger.info(`[${requestId}] Category created: ${category.id}`);
 
-        res.status(201).json(
-          this.createResponse(true, category, undefined, "Category created successfully"),
-        );
+        res
+          .status(201)
+          .json(
+            this.createResponse(
+              true,
+              category,
+              undefined,
+              "Category created successfully",
+            ),
+          );
       } catch (error) {
-        logger.error(`[${requestId}] Failed to create category`, { error, name });
+        logger.error(`[${requestId}] Failed to create category`, {
+          error,
+          name,
+        });
         throw error;
       }
     },
@@ -194,7 +223,12 @@ export class ProductCategoryController {
         logger.info(`[${requestId}] Category updated: ${category.id}`);
 
         res.json(
-          this.createResponse(true, category, undefined, "Category updated successfully"),
+          this.createResponse(
+            true,
+            category,
+            undefined,
+            "Category updated successfully",
+          ),
         );
       } catch (error) {
         logger.error(`[${requestId}] Failed to update category`, { error, id });
@@ -220,7 +254,12 @@ export class ProductCategoryController {
         logger.info(`[${requestId}] Category deleted: ${id}`);
 
         res.json(
-          this.createResponse(true, undefined, undefined, "Category deleted successfully"),
+          this.createResponse(
+            true,
+            undefined,
+            undefined,
+            "Category deleted successfully",
+          ),
         );
       } catch (error) {
         logger.error(`[${requestId}] Failed to delete category`, { error, id });
@@ -253,28 +292,46 @@ export class ProductCategoryController {
       });
 
       try {
-        if (!decodedProductName || typeof decodedProductName !== "string" || decodedProductName.trim().length === 0) {
-          res.status(400).json(
-            this.createResponse(false, undefined, "Product name is required"),
-          );
+        if (
+          !decodedProductName ||
+          typeof decodedProductName !== "string" ||
+          decodedProductName.trim().length === 0
+        ) {
+          res
+            .status(400)
+            .json(
+              this.createResponse(false, undefined, "Product name is required"),
+            );
           return;
         }
 
-        const category = await productCategoryRepository.getCategoryByProductName(
-          decodedProductName.trim(),
-        );
+        const category =
+          await productCategoryRepository.getCategoryByProductName(
+            decodedProductName.trim(),
+          );
 
         if (!category) {
-          res.status(404).json(
-            this.createResponse(false, undefined, "Category not found for this product"),
-          );
+          res
+            .status(404)
+            .json(
+              this.createResponse(
+                false,
+                undefined,
+                "Category not found for this product",
+              ),
+            );
           return;
         }
 
         logger.info(`[${requestId}] Category found: ${category.name}`);
 
         res.json(
-          this.createResponse(true, category, undefined, "Category retrieved successfully"),
+          this.createResponse(
+            true,
+            category,
+            undefined,
+            "Category retrieved successfully",
+          ),
         );
       } catch (error) {
         logger.error(`[${requestId}] Failed to get category by product`, {
@@ -301,17 +358,29 @@ export class ProductCategoryController {
       });
 
       try {
-        if (!productName || typeof productName !== "string" || !productName.trim()) {
-          res.status(400).json(
-            this.createResponse(false, undefined, "Product name is required"),
-          );
+        if (
+          !productName ||
+          typeof productName !== "string" ||
+          !productName.trim()
+        ) {
+          res
+            .status(400)
+            .json(
+              this.createResponse(false, undefined, "Product name is required"),
+            );
           return;
         }
 
-        if (!categoryId || typeof categoryId !== "string" || !categoryId.trim()) {
-          res.status(400).json(
-            this.createResponse(false, undefined, "Category ID is required"),
-          );
+        if (
+          !categoryId ||
+          typeof categoryId !== "string" ||
+          !categoryId.trim()
+        ) {
+          res
+            .status(400)
+            .json(
+              this.createResponse(false, undefined, "Category ID is required"),
+            );
           return;
         }
 
@@ -322,9 +391,16 @@ export class ProductCategoryController {
 
         logger.info(`[${requestId}] Product mapped successfully`);
 
-        res.status(201).json(
-          this.createResponse(true, mapping, undefined, "Product mapped to category successfully"),
-        );
+        res
+          .status(201)
+          .json(
+            this.createResponse(
+              true,
+              mapping,
+              undefined,
+              "Product mapped to category successfully",
+            ),
+          );
       } catch (error) {
         logger.error(`[${requestId}] Failed to map product to category`, {
           error,
@@ -348,12 +424,18 @@ export class ProductCategoryController {
       logger.info(`[${requestId}] Getting products for category: ${id}`);
 
       try {
-        const products = await productCategoryRepository.getProductsByCategory(id);
+        const products =
+          await productCategoryRepository.getProductsByCategory(id);
 
         logger.info(`[${requestId}] Retrieved ${products.length} products`);
 
         res.json(
-          this.createResponse(true, products, undefined, "Products retrieved successfully"),
+          this.createResponse(
+            true,
+            products,
+            undefined,
+            "Products retrieved successfully",
+          ),
         );
       } catch (error) {
         logger.error(`[${requestId}] Failed to get products by category`, {
@@ -368,4 +450,3 @@ export class ProductCategoryController {
 
 // Export singleton instance
 export const productCategoryController = new ProductCategoryController();
-

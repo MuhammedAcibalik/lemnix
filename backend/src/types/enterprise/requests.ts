@@ -1,18 +1,18 @@
 /**
  * Enterprise Controller Request Types
- * 
+ *
  * @module enterprise/types
  * @version 1.0.0
  */
 
-import { OptimizationItem, MaterialStockLength } from '../index';
-import { 
-  AlgorithmLabel, 
-  EnhancedConstraints, 
-  OptimizationObjective, 
-  PerformanceSettings, 
-  CostModel 
-} from '../../services/optimization/types';
+import { OptimizationItem, MaterialStockLength } from "../index";
+import {
+  AlgorithmLabel,
+  EnhancedConstraints,
+  OptimizationObjective,
+  PerformanceSettings,
+  CostModel,
+} from "../../services/optimization/types";
 
 /**
  * Enterprise optimization request
@@ -37,10 +37,10 @@ export interface EnterpriseOptimizationRequest {
  * Enterprise result export request
  */
 export interface ExportRequest {
-  readonly format: 'pdf' | 'excel' | 'json' | 'csv';
+  readonly format: "pdf" | "excel" | "json" | "csv";
   readonly includeCharts: boolean;
   readonly includeDetails: boolean;
-  readonly language: 'tr' | 'en';
+  readonly language: "tr" | "en";
   readonly resultId?: string;
 }
 
@@ -48,7 +48,7 @@ export interface ExportRequest {
  * Performance analytics request
  */
 export interface AnalyticsRequest {
-  readonly timeRange: 'hour' | 'day' | 'week' | 'month';
+  readonly timeRange: "hour" | "day" | "week" | "month";
   readonly metrics: string[];
   readonly algorithm?: AlgorithmLabel;
 }
@@ -74,5 +74,3 @@ export interface OptimizationHistoryQuery {
   readonly endDate?: Date;
   readonly limit: number;
 }
-
-

@@ -17,7 +17,11 @@ import {
   ChevronRight as ChevronRightIcon,
   PlayArrow as PlayArrowIcon,
 } from "@mui/icons-material";
-import { useDesignSystem, useAdaptiveUIContext, useAdaptiveVariant } from "@/shared/hooks";
+import {
+  useDesignSystem,
+  useAdaptiveUIContext,
+  useAdaptiveVariant,
+} from "@/shared/hooks";
 import { CardV2 } from "@/shared";
 import { apiClient } from "@/shared/api/client";
 
@@ -617,11 +621,12 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
       >
         <Box
           sx={{
-            maxWidth: typeof tokens.layout.maxWidth === "number" 
-              ? tokens.layout.maxWidth 
-              : tokens.layout.maxWidth === "none" 
-                ? "none" 
-                : 1800,
+            maxWidth:
+              typeof tokens.layout.maxWidth === "number"
+                ? tokens.layout.maxWidth
+                : tokens.layout.maxWidth === "none"
+                  ? "none"
+                  : 1800,
             mx: "auto",
             px: {
               xs: tokens.layout.containerPadding,
@@ -670,21 +675,24 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
                           : ds.typography.fontWeight.normal,
                       fontSize: `${tokens.typography.sm}px`,
                       height: tokens.components.button.sm,
-                      minHeight: device.isTouch ? tokens.components.minTouchTarget : tokens.components.button.sm,
+                      minHeight: device.isTouch
+                        ? tokens.components.minTouchTarget
+                        : tokens.components.button.sm,
                       transition: ds.transitions.fast,
                       opacity: isClickable ? 1 : 0.6,
                       width: { xs: "100%", sm: "auto" },
-                      "&:hover": isClickable && !device.isTouch
-                        ? {
-                            transform: "translateY(-1px)",
-                            boxShadow: ds.shadows.soft.md,
-                          }
-                        : {},
+                      "&:hover":
+                        isClickable && !device.isTouch
+                          ? {
+                              transform: "translateY(-1px)",
+                              boxShadow: ds.shadows.soft.md,
+                            }
+                          : {},
                     }}
                   />
                   {idx < STEPS.length - 1 && (
                     <ChevronRightIcon
-                      sx={{ 
+                      sx={{
                         fontSize: tokens.components.icon.xs,
                         color: ds.colors.text.secondary,
                         display: { xs: "none", sm: "block" },
@@ -700,28 +708,40 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
 
       <Box
         sx={{
-          maxWidth: activeStep === 2 
-            ? (tokens.layout.maxWidth === "none" ? "none" : typeof tokens.layout.maxWidth === "number" ? tokens.layout.maxWidth : "none")
-            : (typeof tokens.layout.maxWidth === "number" ? tokens.layout.maxWidth : 1800),
+          maxWidth:
+            activeStep === 2
+              ? tokens.layout.maxWidth === "none"
+                ? "none"
+                : typeof tokens.layout.maxWidth === "number"
+                  ? tokens.layout.maxWidth
+                  : "none"
+              : typeof tokens.layout.maxWidth === "number"
+                ? tokens.layout.maxWidth
+                : 1800,
           mx: "auto",
-          px: activeStep === 2 ? {
-            xs: tokens.spacing.md,
-            sm: tokens.spacing.lg,
-            md: tokens.spacing.xl,
-            lg: tokens.spacing.xl * 1.5,
-            xl: tokens.spacing.xl * 2,
-          } : {
-            xs: tokens.layout.containerPadding,
-            md: tokens.spacing.md,
-            lg: tokens.spacing.lg,
-          },
-          py: activeStep === 2 
-            ? { xs: tokens.spacing.sm, md: tokens.spacing.md }
-            : tokens.layout.sectionSpacing,
+          px:
+            activeStep === 2
+              ? {
+                  xs: tokens.spacing.md,
+                  sm: tokens.spacing.lg,
+                  md: tokens.spacing.xl,
+                  lg: tokens.spacing.xl * 1.5,
+                  xl: tokens.spacing.xl * 2,
+                }
+              : {
+                  xs: tokens.layout.containerPadding,
+                  md: tokens.spacing.md,
+                  lg: tokens.spacing.lg,
+                },
+          py:
+            activeStep === 2
+              ? { xs: tokens.spacing.sm, md: tokens.spacing.md }
+              : tokens.layout.sectionSpacing,
           display: "grid",
-          gap: activeStep === 2 
-            ? { xs: tokens.spacing.md, md: tokens.spacing.lg }
-            : tokens.layout.sectionSpacing,
+          gap:
+            activeStep === 2
+              ? { xs: tokens.spacing.md, md: tokens.spacing.lg }
+              : tokens.layout.sectionSpacing,
           position: "relative", // ✅ Sticky buton için
         }}
       >
@@ -748,11 +768,7 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
               justifyContent: "center",
             }}
           >
-            <Tooltip
-              title="Optimizasyonu Başlat"
-              arrow
-              placement="left"
-            >
+            <Tooltip title="Optimizasyonu Başlat" arrow placement="left">
               <Box
                 component="button"
                 onClick={handleStartOptimization}
@@ -761,8 +777,12 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
                   position: "relative",
                   width: stickyButtonSize,
                   height: stickyButtonSize,
-                  minWidth: device.isTouch ? tokens.components.minTouchTarget : undefined,
-                  minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+                  minWidth: device.isTouch
+                    ? tokens.components.minTouchTarget
+                    : undefined,
+                  minHeight: device.isTouch
+                    ? tokens.components.minTouchTarget
+                    : undefined,
                   borderRadius: "50%",
                   // ✅ Projenin primary renk yapısı: mavi tonları
                   background: `linear-gradient(135deg, ${ds.colors.primary[600]} 0%, ${ds.colors.primary[700]} 50%, ${ds.colors.primary[800]} 100%)`,
@@ -776,7 +796,10 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  cursor: (!canStartOptimization || isOptimizing) ? "not-allowed" : "pointer",
+                  cursor:
+                    !canStartOptimization || isOptimizing
+                      ? "not-allowed"
+                      : "pointer",
                   transition: `all ${ds.transitions.base} cubic-bezier(0.4, 0, 0.2, 1)`,
                   p: 0,
                   outline: "none",

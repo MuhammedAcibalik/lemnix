@@ -1,6 +1,6 @@
 /**
  * Enterprise Controller Response Types
- * 
+ *
  * @module enterprise/types
  * @version 1.0.0
  */
@@ -37,7 +37,7 @@ export interface EnterpriseOptimizationResponse {
 export interface HealthResponse {
   readonly success: boolean;
   readonly data?: {
-    readonly status: 'healthy' | 'warning' | 'critical';
+    readonly status: "healthy" | "warning" | "critical";
     readonly services: Record<string, ServiceStatus>;
     readonly metrics: SystemMetrics;
     readonly uptime: number;
@@ -53,7 +53,7 @@ export interface HealthResponse {
  * Service status
  */
 export interface ServiceStatus {
-  readonly status: 'operational' | 'degraded' | 'down';
+  readonly status: "operational" | "degraded" | "down";
   readonly responseTime: number;
 }
 
@@ -107,7 +107,7 @@ export interface AnalyticsResponse {
 export interface MetricData {
   readonly current: number;
   readonly average: number;
-  readonly trend: 'up' | 'down' | 'stable';
+  readonly trend: "up" | "down" | "stable";
 }
 
 /**
@@ -158,4 +158,3 @@ export interface ErrorResponse {
     readonly requestId?: string;
   };
 }
-

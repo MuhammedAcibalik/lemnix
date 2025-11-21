@@ -99,7 +99,11 @@ export class WorkOrderValidator {
     }
 
     // Must have at least one profile
-    if (!data.profiles || !Array.isArray(data.profiles) || data.profiles.length === 0) {
+    if (
+      !data.profiles ||
+      !Array.isArray(data.profiles) ||
+      data.profiles.length === 0
+    ) {
       return false;
     }
 

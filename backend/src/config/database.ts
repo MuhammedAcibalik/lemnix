@@ -80,9 +80,12 @@ prisma.$on(
 prisma.$on("error", (e: { message: string; target: string }) => {
   // Ignore missing pg_stat_statements extension in dev - only affects slow-query monitoring
   if (e.message.includes("pg_stat_statements")) {
-    logger.warn("Database monitoring extension pg_stat_statements is not available - slow query monitoring disabled", {
-      timestamp: new Date().toISOString(),
-    });
+    logger.warn(
+      "Database monitoring extension pg_stat_statements is not available - slow query monitoring disabled",
+      {
+        timestamp: new Date().toISOString(),
+      },
+    );
     return;
   }
 

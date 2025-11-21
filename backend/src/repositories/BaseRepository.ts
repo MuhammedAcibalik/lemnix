@@ -32,9 +32,10 @@ export abstract class BaseRepository {
 /**
  * Shared singleton for lightweight repository scenarios.
  */
-export const baseRepository: BaseRepository = new (class extends BaseRepository {
-  // Expose constructor publicly via this concrete subclass
-  public constructor() {
-    super();
-  }
-})();
+export const baseRepository: BaseRepository =
+  new (class extends BaseRepository {
+    // Expose constructor publicly via this concrete subclass
+    public constructor() {
+      super();
+    }
+  })();

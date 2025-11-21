@@ -1,29 +1,30 @@
 /**
  * Cutting List Validation Schemas (Phase 1 Implementation)
  * Using Zod for runtime type validation
- * 
+ *
  * @module middleware/validation/cuttingListSchemas
  * @version 1.0.0
  */
 
-import { z } from 'zod';
-import { Request, Response, NextFunction } from 'express';
-import { CuttingListStatus, ItemPriority } from '../../types';
+import { z } from "zod";
+import { Request, Response, NextFunction } from "express";
+import { CuttingListStatus, ItemPriority } from "../../types";
 
 // ============================================================================
 // ENUM SCHEMAS
 // ============================================================================
 
 export const CuttingListStatusSchema = z.nativeEnum(CuttingListStatus, {
-  errorMap: () => ({ 
-    message: 'Status must be one of: DRAFT, READY, PROCESSING, COMPLETED, ARCHIVED' 
-  })
+  errorMap: () => ({
+    message:
+      "Status must be one of: DRAFT, READY, PROCESSING, COMPLETED, ARCHIVED",
+  }),
 });
 
 export const ItemPrioritySchema = z.nativeEnum(ItemPriority, {
-  errorMap: () => ({ 
-    message: 'Priority must be one of: LOW, MEDIUM, HIGH, URGENT' 
-  })
+  errorMap: () => ({
+    message: "Priority must be one of: LOW, MEDIUM, HIGH, URGENT",
+  }),
 });
 
 // ============================================================================
@@ -31,18 +32,21 @@ export const ItemPrioritySchema = z.nativeEnum(ItemPriority, {
 // ============================================================================
 
 export const createCuttingListSchema = z.object({
-  name: z.string()
-    .min(3, 'Name must be at least 3 characters')
-    .max(100, 'Name must be less than 100 characters')
+  name: z
+    .string()
+    .min(3, "Name must be at least 3 characters")
+    .max(100, "Name must be less than 100 characters")
     .trim(),
-  weekNumber: z.number()
-    .int('Week number must be an integer')
-    .min(1, 'Week number must be at least 1')
-    .max(53, 'Week number must be at most 53'),
-  description: z.string()
-    .max(500, 'Description must be less than 500 characters')
+  weekNumber: z
+    .number()
+    .int("Week number must be an integer")
+    .min(1, "Week number must be at least 1")
+    .max(53, "Week number must be at most 53"),
+  description: z
+    .string()
+    .max(500, "Description must be less than 500 characters")
     .optional(),
-  status: CuttingListStatusSchema.optional().default(CuttingListStatus.DRAFT)
+  status: CuttingListStatusSchema.optional().default(CuttingListStatus.DRAFT),
 });
 
 export type CreateCuttingListInput = z.infer<typeof createCuttingListSchema>;
@@ -52,15 +56,17 @@ export type CreateCuttingListInput = z.infer<typeof createCuttingListSchema>;
 // ============================================================================
 
 export const updateCuttingListSchema = z.object({
-  name: z.string()
-    .min(3, 'Name must be at least 3 characters')
-    .max(100, 'Name must be less than 100 characters')
+  name: z
+    .string()
+    .min(3, "Name must be at least 3 characters")
+    .max(100, "Name must be less than 100 characters")
     .trim()
     .optional(),
-  description: z.string()
-    .max(500, 'Description must be less than 500 characters')
+  description: z
+    .string()
+    .max(500, "Description must be less than 500 characters")
     .optional(),
-  status: CuttingListStatusSchema.optional()
+  status: CuttingListStatusSchema.optional(),
 });
 
 export type UpdateCuttingListInput = z.infer<typeof updateCuttingListSchema>;
@@ -70,10 +76,11 @@ export type UpdateCuttingListInput = z.infer<typeof updateCuttingListSchema>;
 // ============================================================================
 
 export const addProductSectionSchema = z.object({
-  productName: z.string()
-    .min(1, 'Product name is required')
-    .max(100, 'Product name must be less than 100 characters')
-    .trim()
+  productName: z
+    .string()
+    .min(1, "Product name is required")
+    .max(100, "Product name must be less than 100 characters")
+    .trim(),
 });
 
 export type AddProductSectionInput = z.infer<typeof addProductSectionSchema>;
@@ -84,15 +91,18 @@ export type AddProductSectionInput = z.infer<typeof addProductSectionSchema>;
 
 export const profileSchema = z.object({
   id: z.string().optional(),
-  profile: z.string()
-    .min(1, 'Profile type is required')
+  profile: z.string().min(1, "Profile type is required").trim(),
+  measurement: z
+    .string()
+    .regex(
+      /^\d+mm$/,
+      "Measurement must be in format: {number}mm (e.g., 2500mm)",
+    )
     .trim(),
-  measurement: z.string()
-    .regex(/^\d+mm$/, 'Measurement must be in format: {number}mm (e.g., 2500mm)')
-    .trim(),
-  quantity: z.number()
-    .int('Quantity must be an integer')
-    .positive('Quantity must be positive')
+  quantity: z
+    .number()
+    .int("Quantity must be an integer")
+    .positive("Quantity must be positive"),
 });
 
 export type ProfileInput = z.infer<typeof profileSchema>;
@@ -102,32 +112,25 @@ export type ProfileInput = z.infer<typeof profileSchema>;
 // ============================================================================
 
 export const addItemSchema = z.object({
-  workOrderId: z.string()
-    .min(1, 'Work order ID is required')
-    .trim(),
-  date: z.string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in format: YYYY-MM-DD')
+  workOrderId: z.string().min(1, "Work order ID is required").trim(),
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in format: YYYY-MM-DD")
     .optional(),
-  version: z.string()
-    .min(1, 'Version is required')
-    .trim(),
-  color: z.string()
-    .min(1, 'Color is required')
-    .trim(),
-  size: z.string()
-    .min(1, 'Size is required')
-    .trim(),
-  orderQuantity: z.number()
-    .int('Order quantity must be an integer')
-    .positive('Order quantity must be positive'),
-  profiles: z.array(profileSchema)
-    .min(1, 'At least one profile is required')
-    .max(20, 'Maximum 20 profiles per item'),
+  version: z.string().min(1, "Version is required").trim(),
+  color: z.string().min(1, "Color is required").trim(),
+  size: z.string().min(1, "Size is required").trim(),
+  orderQuantity: z
+    .number()
+    .int("Order quantity must be an integer")
+    .positive("Order quantity must be positive"),
+  profiles: z
+    .array(profileSchema)
+    .min(1, "At least one profile is required")
+    .max(20, "Maximum 20 profiles per item"),
   priority: ItemPrioritySchema.optional().default(ItemPriority.MEDIUM),
   status: CuttingListStatusSchema.optional().default(CuttingListStatus.DRAFT),
-  note: z.string()
-    .max(500, 'Note must be less than 500 characters')
-    .optional()
+  note: z.string().max(500, "Note must be less than 500 characters").optional(),
 });
 
 export type AddItemInput = z.infer<typeof addItemSchema>;
@@ -137,7 +140,7 @@ export type AddItemInput = z.infer<typeof addItemSchema>;
 // ============================================================================
 
 export const updateItemSchema = addItemSchema.partial().extend({
-  workOrderId: z.string().min(1, 'Work order ID is required').trim()
+  workOrderId: z.string().min(1, "Work order ID is required").trim(),
 });
 
 export type UpdateItemInput = z.infer<typeof updateItemSchema>;
@@ -147,32 +150,36 @@ export type UpdateItemInput = z.infer<typeof updateItemSchema>;
 // ============================================================================
 
 export const paginationSchema = z.object({
-  page: z.number()
-    .int('Page must be an integer')
-    .min(1, 'Page must be at least 1')
+  page: z
+    .number()
+    .int("Page must be an integer")
+    .min(1, "Page must be at least 1")
     .optional()
     .default(1),
-  pageSize: z.number()
-    .int('Page size must be an integer')
-    .min(1, 'Page size must be at least 1')
-    .max(100, 'Page size must be at most 100')
+  pageSize: z
+    .number()
+    .int("Page size must be an integer")
+    .min(1, "Page size must be at least 1")
+    .max(100, "Page size must be at most 100")
     .optional()
     .default(20),
-  sortBy: z.string().optional().default('createdAt'),
-  order: z.enum(['asc', 'desc']).optional().default('desc')
+  sortBy: z.string().optional().default("createdAt"),
+  order: z.enum(["asc", "desc"]).optional().default("desc"),
 });
 
 export type PaginationParams = z.infer<typeof paginationSchema>;
 
 export const cuttingListFilterSchema = z.object({
   status: z.array(CuttingListStatusSchema).optional(),
-  weekNumber: z.union([
-    z.number().int().min(1).max(53),
-    z.array(z.number().int().min(1).max(53))
-  ]).optional(),
+  weekNumber: z
+    .union([
+      z.number().int().min(1).max(53),
+      z.array(z.number().int().min(1).max(53)),
+    ])
+    .optional(),
   search: z.string().max(100).optional(),
   createdAfter: z.string().datetime().optional(),
-  createdBefore: z.string().datetime().optional()
+  createdBefore: z.string().datetime().optional(),
 });
 
 export type CuttingListFilters = z.infer<typeof cuttingListFilterSchema>;
@@ -186,19 +193,19 @@ export type CuttingListFilters = z.infer<typeof cuttingListFilterSchema>;
  */
 export function validateInput<T>(
   schema: z.ZodSchema<T>,
-  data: unknown
+  data: unknown,
 ): { success: true; data: T } | { success: false; errors: string[] } {
   try {
     const validated = schema.parse(data);
     return { success: true, data: validated };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errors = error.errors.map(err => 
-        `${err.path.join('.')}: ${err.message}`
+      const errors = error.errors.map(
+        (err) => `${err.path.join(".")}: ${err.message}`,
       );
       return { success: false, errors };
     }
-    return { success: false, errors: ['Validation failed'] };
+    return { success: false, errors: ["Validation failed"] };
   }
 }
 
@@ -212,10 +219,10 @@ export function createValidationMiddleware<T>(schema: z.ZodSchema<T>) {
       res.status(400).json({
         success: false,
         error: {
-          message: 'Validation failed',
-          code: 'VALIDATION_ERROR',
-          details: result.errors
-        }
+          message: "Validation failed",
+          code: "VALIDATION_ERROR",
+          details: result.errors,
+        },
       });
       return;
     }
@@ -238,5 +245,5 @@ export default {
   paginationSchema,
   cuttingListFilterSchema,
   validateInput,
-  createValidationMiddleware
+  createValidationMiddleware,
 };

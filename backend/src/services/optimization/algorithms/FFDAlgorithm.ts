@@ -463,9 +463,7 @@ export class FFDAlgorithm extends BaseAlgorithm {
   /**
    * Generate cutting plan from segments
    */
-  private generateCuttingPlan(
-    segments: CuttingSegment[],
-  ): Array<{
+  private generateCuttingPlan(segments: CuttingSegment[]): Array<{
     length: number;
     count: number;
     profile?: string;

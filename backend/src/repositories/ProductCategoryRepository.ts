@@ -7,11 +7,7 @@
  */
 
 import { prisma } from "../config/database";
-import {
-  ProductCategory,
-  ProductMapping,
-  Prisma,
-} from "@prisma/client";
+import { ProductCategory, ProductMapping, Prisma } from "@prisma/client";
 import { logger } from "../services/logger";
 
 // ============================================================================
@@ -97,9 +93,7 @@ export class ProductCategoryRepository {
   /**
    * Create a new category
    */
-  public async create(
-    data: CreateCategoryInput,
-  ): Promise<ProductCategory> {
+  public async create(data: CreateCategoryInput): Promise<ProductCategory> {
     try {
       const result = await prisma.productCategory.create({
         data: {
@@ -132,7 +126,9 @@ export class ProductCategoryRepository {
         where: { id },
         data: {
           ...(data.name && { name: data.name }),
-          ...(data.description !== undefined && { description: data.description }),
+          ...(data.description !== undefined && {
+            description: data.description,
+          }),
         },
       });
 
@@ -343,4 +339,3 @@ export class ProductCategoryRepository {
 // Export singleton instance
 export const productCategoryRepository =
   ProductCategoryRepository.getInstance();
-

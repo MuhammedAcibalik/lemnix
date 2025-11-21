@@ -1,16 +1,16 @@
 /**
  * Pattern Generator
- * 
+ *
  * Generates cutting patterns using hybrid strategy:
  * - Brute-force (N²/N³) for ≤8 distinct pieces (fast, simple)
  * - DP-based for >8 pieces (powerful, handles large combinations)
- * 
+ *
  * @module optimization/utils
  */
 
-import type { ILogger } from '../../logger';
-import type { PieceDef } from './OptimizationInputNormalizer';
-import type { StockDef } from './StockDefinitionMapper';
+import type { ILogger } from "../../logger";
+import type { PieceDef } from "./OptimizationInputNormalizer";
+import type { StockDef } from "./StockDefinitionMapper";
 
 /**
  * Pattern structure
@@ -36,12 +36,16 @@ export interface PatternConfig {
  * Pattern generation strategy interface
  */
 export interface PatternGenerationStrategy {
-  generate(stock: StockDef, pieces: ReadonlyArray<PieceDef>, config: PatternConfig): ReadonlyArray<Pattern>;
+  generate(
+    stock: StockDef,
+    pieces: ReadonlyArray<PieceDef>,
+    config: PatternConfig,
+  ): ReadonlyArray<Pattern>;
 }
 
 /**
  * Brute-force pattern generator
- * 
+ *
  * Simple N²/N³ nested loops for combining 2-3 pieces.
  * Fast and efficient for ≤8 distinct pieces.
  */
@@ -49,7 +53,7 @@ export class BruteForcePatternGenerator implements PatternGenerationStrategy {
   generate(
     stock: StockDef,
     pieces: ReadonlyArray<PieceDef>,
-    config: PatternConfig
+    config: PatternConfig,
   ): ReadonlyArray<Pattern> {
     const patterns: Pattern[] = [];
     const usable = stock.usable;
@@ -61,12 +65,12 @@ export class BruteForcePatternGenerator implements PatternGenerationStrategy {
     // Generate single-piece patterns
     for (const piece of limited) {
       const maxQty = Math.floor(usable / piece.size);
-      
+
       for (let qty = 1; qty <= maxQty; qty++) {
         const usedLength = piece.size * qty;
         const kerfNeeded = (qty - 1) * kerfWidth;
         const totalUsed = usedLength + kerfNeeded;
-        
+
         if (totalUsed <= usable) {
           patterns.push({
             stockId: stock.id,
@@ -74,7 +78,7 @@ export class BruteForcePatternGenerator implements PatternGenerationStrategy {
             usable,
             cuts: [{ pieceId: piece.id, qty }],
             usedLength: totalUsed,
-            waste: usable - totalUsed
+            waste: usable - totalUsed,
           });
         }
       }
@@ -84,39 +88,39 @@ export class BruteForcePatternGenerator implements PatternGenerationStrategy {
     for (let i = 0; i < limited.length; i++) {
       const p1 = limited[i]!;
       const max1 = Math.floor(usable / p1.size);
-      
+
       for (let c1 = 1; c1 <= max1; c1++) {
         const used1 = p1.size * c1;
         const kerf1 = (c1 - 1) * kerfWidth;
         const totalUsed1 = used1 + kerf1;
-        
+
         if (totalUsed1 > usable) continue;
-        
+
         const remaining = usable - totalUsed1;
-        
+
         for (let j = i + 1; j < limited.length; j++) {
           const p2 = limited[j]!;
           const max2 = Math.floor(remaining / p2.size);
-          
+
           for (let c2 = 1; c2 <= max2; c2++) {
             const used2 = p2.size * c2;
             const kerf2 = c2 > 0 && c1 > 0 ? kerfWidth : 0; // kerf between pieces
             const totalUsed2 = used2 + kerf2;
-            
+
             if (totalUsed1 + totalUsed2 <= usable) {
               const cuts = [];
               if (c1 > 0) cuts.push({ pieceId: p1.id, qty: c1 });
               if (c2 > 0) cuts.push({ pieceId: p2.id, qty: c2 });
-              
+
               const finalUsed = totalUsed1 + totalUsed2;
-              
+
               patterns.push({
                 stockId: stock.id,
                 stockLength: stock.rawLength,
                 usable,
                 cuts,
                 usedLength: finalUsed,
-                waste: usable - finalUsed
+                waste: usable - finalUsed,
               });
             }
           }
@@ -130,53 +134,53 @@ export class BruteForcePatternGenerator implements PatternGenerationStrategy {
       for (let i = 0; i < limited.length; i++) {
         const p1 = limited[i]!;
         const max1 = Math.floor(usable / p1.size);
-        
+
         for (let c1 = 1; c1 <= max1; c1++) {
           const used1 = p1.size * c1;
           const kerf1 = (c1 - 1) * kerfWidth;
           const totalUsed1 = used1 + kerf1;
-          
+
           if (totalUsed1 > usable) continue;
-          
+
           const remaining1 = usable - totalUsed1;
-          
+
           for (let j = i + 1; j < limited.length; j++) {
             const p2 = limited[j]!;
             const max2 = Math.floor(remaining1 / p2.size);
-            
+
             for (let c2 = 1; c2 <= max2; c2++) {
               const used2 = p2.size * c2;
               const kerf2 = c1 > 0 ? kerfWidth : 0;
               const totalUsed2 = used2 + kerf2;
-              
+
               if (totalUsed1 + totalUsed2 > usable) continue;
-              
+
               const remaining2 = usable - totalUsed1 - totalUsed2;
-              
+
               for (let k = j + 1; k < limited.length; k++) {
                 const p3 = limited[k]!;
                 const max3 = Math.floor(remaining2 / p3.size);
-                
+
                 for (let c3 = 1; c3 <= max3; c3++) {
                   const used3 = p3.size * c3;
                   const kerf3 = c2 > 0 ? kerfWidth : 0;
                   const totalUsed3 = used3 + kerf3;
-                  
+
                   if (totalUsed1 + totalUsed2 + totalUsed3 <= usable) {
                     const cuts = [];
                     if (c1 > 0) cuts.push({ pieceId: p1.id, qty: c1 });
                     if (c2 > 0) cuts.push({ pieceId: p2.id, qty: c2 });
                     if (c3 > 0) cuts.push({ pieceId: p3.id, qty: c3 });
-                    
+
                     const finalUsed = totalUsed1 + totalUsed2 + totalUsed3;
-                    
+
                     patterns.push({
                       stockId: stock.id,
                       stockLength: stock.rawLength,
                       usable,
                       cuts,
                       usedLength: finalUsed,
-                      waste: usable - finalUsed
+                      waste: usable - finalUsed,
                     });
                   }
                 }
@@ -193,7 +197,7 @@ export class BruteForcePatternGenerator implements PatternGenerationStrategy {
 
 /**
  * DP-based pattern generator
- * 
+ *
  * Uses recursive dynamic programming to generate all valid combinations.
  * More powerful than brute-force, handles larger piece sets efficiently.
  */
@@ -203,7 +207,7 @@ export class DPPatternGenerator implements PatternGenerationStrategy {
   generate(
     stock: StockDef,
     pieces: ReadonlyArray<PieceDef>,
-    config: PatternConfig
+    config: PatternConfig,
   ): ReadonlyArray<Pattern> {
     const patterns: Pattern[] = [];
     const usable = stock.usable;
@@ -214,8 +218,8 @@ export class DPPatternGenerator implements PatternGenerationStrategy {
     const limited = sorted.slice(0, config.maxPiecesPerStock);
 
     // Convert to lengths and maxCounts arrays
-    const lengths = limited.map(p => p.size);
-    const maxCounts = lengths.map(len => Math.floor(usable / len));
+    const lengths = limited.map((p) => p.size);
+    const maxCounts = lengths.map((len) => Math.floor(usable / len));
 
     // Generate patterns recursively
     this.generateCombinations(
@@ -227,12 +231,12 @@ export class DPPatternGenerator implements PatternGenerationStrategy {
       new Map<number, number>(),
       0,
       patterns,
-      limited
+      limited,
     );
 
-    this.logger.debug('[DPGenerator] Generated patterns:', {
+    this.logger.debug("[DPGenerator] Generated patterns:", {
       stockId: stock.id,
-      patternsCount: patterns.length
+      patternsCount: patterns.length,
     });
 
     return patterns;
@@ -250,45 +254,45 @@ export class DPPatternGenerator implements PatternGenerationStrategy {
     currentPattern: Map<number, number>,
     itemIndex: number,
     patterns: Pattern[],
-    pieces: ReadonlyArray<PieceDef>
+    pieces: ReadonlyArray<PieceDef>,
   ): void {
     if (itemIndex >= lengths.length) {
       // Terminal: check if pattern is valid
       if (currentPattern.size > 0) {
         let used = 0;
         let totalSegments = 0;
-        
+
         for (const [length, count] of currentPattern.entries()) {
           used += length * count;
           totalSegments += count;
         }
-        
+
         // Add kerf: (totalSegments - 1) × kerfWidth
         if (kerfWidth > 0 && totalSegments > 0) {
           const kerfNeeded = (totalSegments - 1) * kerfWidth;
           used += kerfNeeded;
         }
-        
+
         if (used <= usableLength) {
           const waste = usableLength - used;
-          
+
           // Convert Map<number, number> to Array<{pieceId, qty}>
           const cuts = Array.from(currentPattern.entries())
             .map(([length, qty]) => {
-              const piece = pieces.find(p => p.size === length);
-              return piece
-                ? { pieceId: piece.id, qty }
-                : null;
+              const piece = pieces.find((p) => p.size === length);
+              return piece ? { pieceId: piece.id, qty } : null;
             })
-            .filter((cut): cut is { pieceId: string; qty: number } => cut !== null);
-          
+            .filter(
+              (cut): cut is { pieceId: string; qty: number } => cut !== null,
+            );
+
           patterns.push({
             stockId: stock.id,
             stockLength: stock.rawLength,
             usable: usableLength,
             cuts,
             usedLength: used,
-            waste
+            waste,
           });
         }
       }
@@ -296,7 +300,7 @@ export class DPPatternGenerator implements PatternGenerationStrategy {
     }
 
     const currentLength = lengths[itemIndex]!;
-    
+
     // Calculate remaining space in current pattern
     let currentUsed = 0;
     let currentTotalSegments = 0;
@@ -304,21 +308,28 @@ export class DPPatternGenerator implements PatternGenerationStrategy {
       currentUsed += length * count;
       currentTotalSegments += count;
     }
-    
+
     // Calculate kerf already used
-    const currentKerf = kerfWidth > 0 && currentTotalSegments > 0 
-      ? (currentTotalSegments - 1) * kerfWidth 
-      : 0;
-    
+    const currentKerf =
+      kerfWidth > 0 && currentTotalSegments > 0
+        ? (currentTotalSegments - 1) * kerfWidth
+        : 0;
+
     const remainingSpace = usableLength - currentUsed - currentKerf;
-    
+
     // Calculate max count for current item based on remaining space
-    const maxCount = kerfWidth === 0
-      ? Math.min(maxCounts[itemIndex]!, Math.floor(remainingSpace / currentLength))
-      : Math.min(
-          maxCounts[itemIndex]!,
-          Math.floor((remainingSpace + kerfWidth) / (currentLength + kerfWidth))
-        );
+    const maxCount =
+      kerfWidth === 0
+        ? Math.min(
+            maxCounts[itemIndex]!,
+            Math.floor(remainingSpace / currentLength),
+          )
+        : Math.min(
+            maxCounts[itemIndex]!,
+            Math.floor(
+              (remainingSpace + kerfWidth) / (currentLength + kerfWidth),
+            ),
+          );
 
     // Try all quantities from 0 to maxCount
     for (let count = 0; count <= maxCount; count++) {
@@ -333,13 +344,13 @@ export class DPPatternGenerator implements PatternGenerationStrategy {
           currentPattern,
           itemIndex + 1,
           patterns,
-          pieces
+          pieces,
         );
       } else {
         // Add this item
         const newPattern = new Map(currentPattern);
         newPattern.set(currentLength, count);
-        
+
         this.generateCombinations(
           lengths,
           maxCounts,
@@ -349,7 +360,7 @@ export class DPPatternGenerator implements PatternGenerationStrategy {
           newPattern,
           itemIndex + 1,
           patterns,
-          pieces
+          pieces,
         );
       }
     }
@@ -358,7 +369,7 @@ export class DPPatternGenerator implements PatternGenerationStrategy {
 
 /**
  * Hybrid pattern generator
- * 
+ *
  * Selects strategy based on number of distinct pieces:
  * - ≤8 pieces: brute-force (fast)
  * - >8 pieces: DP (powerful)
@@ -375,7 +386,7 @@ export class HybridPatternGenerator implements PatternGenerationStrategy {
   generate(
     stock: StockDef,
     pieces: ReadonlyArray<PieceDef>,
-    config: PatternConfig
+    config: PatternConfig,
   ): ReadonlyArray<Pattern> {
     const distinctPieces = pieces.length;
     const threshold = 8;
@@ -387,4 +398,3 @@ export class HybridPatternGenerator implements PatternGenerationStrategy {
     return this.dp.generate(stock, pieces, config);
   }
 }
-

@@ -112,10 +112,9 @@ export function validateEnv(): Env {
   try {
     // 6432 → 5432 otomatik düzeltme (eski PgBouncer URL'leri için)
     const rawDatabaseUrl = process.env.DATABASE_URL;
-    const normalizedDatabaseUrl =
-      rawDatabaseUrl?.includes("localhost:6432")
-        ? rawDatabaseUrl.replace("localhost:6432", "localhost:5432")
-        : rawDatabaseUrl;
+    const normalizedDatabaseUrl = rawDatabaseUrl?.includes("localhost:6432")
+      ? rawDatabaseUrl.replace("localhost:6432", "localhost:5432")
+      : rawDatabaseUrl;
 
     const parsed = envSchema.parse({
       ...process.env,

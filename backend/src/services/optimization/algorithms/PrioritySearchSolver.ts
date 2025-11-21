@@ -1,9 +1,9 @@
 /**
  * Priority Search Solver for Mixed-Pattern Optimization
- * 
+ *
  * Replaces greedy backtracking with BFS/Dijkstra-like priority search
  * to find optimal mixed-pattern solutions.
- * 
+ *
  * Algorithm:
  * - State space: (produced, totalBars, totalWaste, picks)
  * - Priority: g + h + w
@@ -11,12 +11,12 @@
  *   * h = estimated remaining bars (heuristic)
  *   * w = normalized waste (tie-breaker)
  * - Termination: demand satisfied within tolerance
- * 
+ *
  * @module optimization/algorithms
  * @version 1.0.0
  */
 
-import type { ILogger } from '../../logger';
+import type { ILogger } from "../../logger";
 
 /**
  * Pattern structure for search
@@ -59,15 +59,15 @@ export class PrioritySearchSolver {
   solve(
     patterns: SearchPattern[],
     demand: Map<number, number>,
-    config: SearchConfig
+    config: SearchConfig,
   ): SearchState | null {
     if (patterns.length === 0) {
-      this.logger.warn('[PrioritySearch] No patterns provided');
+      this.logger.warn("[PrioritySearch] No patterns provided");
       return null;
     }
 
     if (demand.size === 0) {
-      this.logger.warn('[PrioritySearch] No demand provided');
+      this.logger.warn("[PrioritySearch] No demand provided");
       return null;
     }
 
@@ -77,12 +77,12 @@ export class PrioritySearchSolver {
 
     // Find best pattern density (for heuristic)
     const bestPatternDensity = this.findBestPatternDensity(patterns);
-    
-    this.logger.info('[PrioritySearch] Starting search:', {
+
+    this.logger.info("[PrioritySearch] Starting search:", {
       patternsCount: patterns.length,
       demand: Object.fromEntries(demand),
       bestDensity: bestPatternDensity,
-      config: adjustedConfig
+      config: adjustedConfig,
     });
 
     // Initialize state
@@ -90,7 +90,7 @@ export class PrioritySearchSolver {
       produced: new Map<number, number>(),
       totalBars: 0,
       totalWaste: 0,
-      picks: []
+      picks: [],
     };
 
     // Priority queue (simple array with sort)
@@ -106,8 +106,18 @@ export class PrioritySearchSolver {
 
       // Sort by priority (ascending: lower is better)
       open.sort((a, b) => {
-        const priorityA = this.priorityOf(a, demand, bestPatternDensity, adjustedConfig);
-        const priorityB = this.priorityOf(b, demand, bestPatternDensity, adjustedConfig);
+        const priorityA = this.priorityOf(
+          a,
+          demand,
+          bestPatternDensity,
+          adjustedConfig,
+        );
+        const priorityB = this.priorityOf(
+          b,
+          demand,
+          bestPatternDensity,
+          adjustedConfig,
+        );
         return priorityA - priorityB;
       });
 
@@ -116,29 +126,43 @@ export class PrioritySearchSolver {
 
       // Log progress every 1000 iterations
       if (iterations % 1000 === 0) {
-        this.logger.debug(`[PrioritySearch] Progress ${iterations}/${adjustedConfig.maxStates}`, {
-          openSize: open.length,
-          totalBars: current.totalBars,
-          totalWaste: current.totalWaste
-        });
+        this.logger.debug(
+          `[PrioritySearch] Progress ${iterations}/${adjustedConfig.maxStates}`,
+          {
+            openSize: open.length,
+            totalBars: current.totalBars,
+            totalWaste: current.totalWaste,
+          },
+        );
       }
 
       // Check if goal reached
-      if (this.isDemandSatisfied(current.produced, demand, adjustedConfig.overProductionTolerance)) {
-        this.logger.info('[PrioritySearch] Solution found:', {
+      if (
+        this.isDemandSatisfied(
+          current.produced,
+          demand,
+          adjustedConfig.overProductionTolerance,
+        )
+      ) {
+        this.logger.info("[PrioritySearch] Solution found:", {
           iterations,
           totalBars: current.totalBars,
           totalWaste: current.totalWaste,
           picksCount: current.picks.length,
-          produced: Object.fromEntries(current.produced)
+          produced: Object.fromEntries(current.produced),
         });
         return current;
       }
 
       // Track best solution so far
       // Priority calculation now includes shortage penalty, so lower priority = better
-      const currentPriority = this.priorityOf(current, demand, bestPatternDensity, adjustedConfig);
-      
+      const currentPriority = this.priorityOf(
+        current,
+        demand,
+        bestPatternDensity,
+        adjustedConfig,
+      );
+
       if (currentPriority < bestPriority) {
         bestPriority = currentPriority;
         bestSolution = current;
@@ -154,8 +178,10 @@ export class PrioritySearchSolver {
         const prev = seen.get(key);
         if (prev) {
           // Only skip if strictly better (less bars OR same bars + less waste)
-          if (prev.bars < next.totalBars || 
-              (prev.bars === next.totalBars && prev.waste <= next.totalWaste)) {
+          if (
+            prev.bars < next.totalBars ||
+            (prev.bars === next.totalBars && prev.waste <= next.totalWaste)
+          ) {
             continue;
           }
         }
@@ -166,7 +192,7 @@ export class PrioritySearchSolver {
         // Add to open set
         open.push(next);
       }
-      
+
       // Note: Beam search pruning at top of loop handles memory
       // No need for additional pruning here
     }
@@ -174,7 +200,7 @@ export class PrioritySearchSolver {
     // Calculate shortage for best solution
     const shortages: Record<string, number> = {};
     let hasShortage = false;
-    
+
     if (bestSolution) {
       for (const [length, targetCount] of demand.entries()) {
         const producedCount = bestSolution.produced.get(length) || 0;
@@ -185,18 +211,23 @@ export class PrioritySearchSolver {
         }
       }
     }
-    
-    this.logger.warn('[PrioritySearch] Search limit reached but NO valid solution found:', {
-      iterations,
-      maxStates: adjustedConfig.maxStates,
-      patternsCount: patterns.length,
-      demand: Object.fromEntries(demand),
-      bestBars: bestSolution?.totalBars,
-      bestWaste: bestSolution?.totalWaste,
-      bestProduced: bestSolution ? Object.fromEntries(bestSolution.produced) : {},
-      hasShortage,
-      shortages: hasShortage ? shortages : undefined
-    });
+
+    this.logger.warn(
+      "[PrioritySearch] Search limit reached but NO valid solution found:",
+      {
+        iterations,
+        maxStates: adjustedConfig.maxStates,
+        patternsCount: patterns.length,
+        demand: Object.fromEntries(demand),
+        bestBars: bestSolution?.totalBars,
+        bestWaste: bestSolution?.totalWaste,
+        bestProduced: bestSolution
+          ? Object.fromEntries(bestSolution.produced)
+          : {},
+        hasShortage,
+        shortages: hasShortage ? shortages : undefined,
+      },
+    );
 
     // Return null - pattern generation or search space insufficient
     // Caller will fall back to traditional algorithm
@@ -214,7 +245,7 @@ export class PrioritySearchSolver {
     state: SearchState,
     target: Map<number, number>,
     bestPatternDensity: number,
-    config: SearchConfig
+    config: SearchConfig,
   ): number {
     // Calculate total shortage (unmet demand)
     let totalShortage = 0;
@@ -223,20 +254,24 @@ export class PrioritySearchSolver {
       const shortage = Math.max(0, required - produced);
       totalShortage += shortage;
     }
-    
+
     // CRITICAL: Shortage penalty must dominate everything else
     // Each missing piece adds 1000 to priority (makes this state very undesirable)
     const shortagePenalty = totalShortage * 1000;
-    
+
     const g = state.totalBars;
-    const h = this.estimateMinBarsRemaining(state.produced, target, bestPatternDensity);
+    const h = this.estimateMinBarsRemaining(
+      state.produced,
+      target,
+      bestPatternDensity,
+    );
     const w = state.totalWaste / config.wasteNormalization;
 
     // ✅ WASTE-FIRST PRIORITY: Lower is better
     // Shortage dominates (1000×), then WASTE (1000× weight!), then bars, then heuristic
     // This makes waste comparable to stock count in priority
     // Example: 1mm waste ≈ 0.01 bars, so 100mm waste ≈ 1 bar
-    return shortagePenalty + (w * 1000) + g + h;
+    return shortagePenalty + w * 1000 + g + h;
   }
 
   /**
@@ -245,7 +280,7 @@ export class PrioritySearchSolver {
   private estimateMinBarsRemaining(
     produced: Map<number, number>,
     target: Map<number, number>,
-    bestPatternDensity: number
+    bestPatternDensity: number,
   ): number {
     // Calculate remaining pieces needed
     let remainingPieces = 0;
@@ -289,7 +324,7 @@ export class PrioritySearchSolver {
   private isDemandSatisfied(
     produced: Map<number, number>,
     target: Map<number, number>,
-    tolerance: number
+    tolerance: number,
   ): boolean {
     for (const [length, targetCount] of target.entries()) {
       const producedCount = produced.get(length) || 0;
@@ -314,7 +349,7 @@ export class PrioritySearchSolver {
   private expandState(
     current: SearchState,
     pattern: SearchPattern,
-    patternIndex: number
+    patternIndex: number,
   ): SearchState {
     const nextProduced = new Map(current.produced);
 
@@ -328,7 +363,7 @@ export class PrioritySearchSolver {
       produced: nextProduced,
       totalBars: current.totalBars + 1,
       totalWaste: current.totalWaste + pattern.waste,
-      picks: [...current.picks, patternIndex]
+      picks: [...current.picks, patternIndex],
     };
   }
 
@@ -342,7 +377,6 @@ export class PrioritySearchSolver {
       // Round to 10s to prevent explosion
       parts.push(`${length}-${Math.min(count, 999)}`);
     }
-    return parts.join('_');
+    return parts.join("_");
   }
 }
-

@@ -1,15 +1,19 @@
 /**
  * LEMNİX GPU Accelerator
  * Enhanced WebGPU service with intelligent GPU selection
- * 
+ *
  * @module optimization/helpers
  * @version 1.0.0
  * @architecture Hardware-aware GPU acceleration
  */
 
-import { ILogger } from '../../logger';
-import { WebGPUOptimizationService, type WebGPUOptimizationParams, type WebGPUOptimizationResult } from '../webgpuOptimizationService';
-import { GPUDetector, DetectedGPUInfo, GPUVendor } from './GPUDetector';
+import { ILogger } from "../../logger";
+import {
+  WebGPUOptimizationService,
+  type WebGPUOptimizationParams,
+  type WebGPUOptimizationResult,
+} from "../webgpuOptimizationService";
+import { GPUDetector, DetectedGPUInfo, GPUVendor } from "./GPUDetector";
 
 /**
  * Navigator with WebGPU support (for type safety in Node.js)
@@ -17,7 +21,7 @@ import { GPUDetector, DetectedGPUInfo, GPUVendor } from './GPUDetector';
 interface NavigatorGPU {
   readonly gpu?: {
     requestAdapter(options?: {
-      powerPreference?: 'low-power' | 'high-performance';
+      powerPreference?: "low-power" | "high-performance";
       forceFallbackAdapter?: boolean;
     }): Promise<GPUAdapter | null>;
   };
@@ -56,24 +60,24 @@ export class GPUAccelerator {
     }
 
     try {
-      this.logger.info('Initializing GPU accelerator...');
+      this.logger.info("Initializing GPU accelerator...");
 
       // Get WebGPU service instance
       this.webgpuService = WebGPUOptimizationService.getInstance();
 
       // Initialize base service
       const baseInitialized = await this.webgpuService.initialize();
-      
+
       if (!baseInitialized) {
-        this.logger.warn('Base WebGPU initialization failed');
+        this.logger.warn("Base WebGPU initialization failed");
         return false;
       }
 
       // Detect and select best GPU
       const gpu = await this.detectAndSelectBestGPU();
-      
+
       if (!gpu) {
-        this.logger.warn('No suitable GPU found');
+        this.logger.warn("No suitable GPU found");
         return false;
       }
 
@@ -84,8 +88,8 @@ export class GPUAccelerator {
 
       return true;
     } catch (error) {
-      this.logger.error('GPU accelerator initialization failed', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+      this.logger.error("GPU accelerator initialization failed", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       return false;
     }
@@ -98,7 +102,7 @@ export class GPUAccelerator {
     try {
       // In Node.js with @webgpu/dawn, we get a single adapter
       // In browser, we could enumerate multiple adapters (future enhancement)
-      
+
       const navigator = this.getNavigator();
       if (!navigator?.gpu) {
         return null;
@@ -106,8 +110,8 @@ export class GPUAccelerator {
 
       // Request adapter with high-performance preference
       const adapter = await navigator.gpu.requestAdapter({
-        powerPreference: 'high-performance',
-        forceFallbackAdapter: false
+        powerPreference: "high-performance",
+        forceFallbackAdapter: false,
       });
 
       if (!adapter) {
@@ -120,43 +124,43 @@ export class GPUAccelerator {
 
       // Detect GPU info
       const vendor = GPUDetector.detectVendor(
-        adapterInfo.vendor || '',
-        adapterInfo.description || ''
+        adapterInfo.vendor || "",
+        adapterInfo.description || "",
       );
-      
+
       const priority = GPUDetector.getVendorPriority(vendor);
-      
+
       const isDiscrete = GPUDetector.isDiscreteGPU(
-        adapterInfo.description || '',
-        adapterInfo.architecture || ''
+        adapterInfo.description || "",
+        adapterInfo.architecture || "",
       );
 
       const gpu: DetectedGPUInfo = {
         vendor,
-        name: adapterInfo.description || 'Unknown GPU',
-        architecture: adapterInfo.architecture || 'Unknown',
+        name: adapterInfo.description || "Unknown GPU",
+        architecture: adapterInfo.architecture || "Unknown",
         memory: limits.maxStorageBufferBindingSize / (1024 * 1024), // Convert to MB
         priority,
         isDiscrete,
         capabilities: {
           maxWorkgroupSize: limits.maxComputeWorkgroupSizeX,
           maxComputeInvocations: limits.maxComputeInvocationsPerWorkgroup,
-          maxBufferSize: limits.maxBufferSize
-        }
+          maxBufferSize: limits.maxBufferSize,
+        },
       };
 
       // Check minimum requirements
       if (!GPUDetector.meetsMinimumRequirements(gpu)) {
-        this.logger.warn('GPU does not meet minimum requirements', {
-          gpu: GPUDetector.formatGPUName(gpu)
+        this.logger.warn("GPU does not meet minimum requirements", {
+          gpu: GPUDetector.formatGPUName(gpu),
         });
         return null;
       }
 
       return gpu;
     } catch (error) {
-      this.logger.error('GPU detection failed', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+      this.logger.error("GPU detection failed", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       return null;
     }
@@ -168,21 +172,25 @@ export class GPUAccelerator {
    */
   private getNavigator(): NavigatorGPU | undefined {
     // Check for global object (Node.js with @webgpu/dawn)
-    if (typeof global !== 'undefined') {
-      const globalWithNav = global as typeof global & { navigator?: NavigatorGPU };
+    if (typeof global !== "undefined") {
+      const globalWithNav = global as typeof global & {
+        navigator?: NavigatorGPU;
+      };
       if (globalWithNav.navigator?.gpu) {
         return globalWithNav.navigator;
       }
     }
-    
+
     // Check for globalThis (modern approach)
-    if (typeof globalThis !== 'undefined') {
-      const globalThisWithNav = globalThis as typeof globalThis & { navigator?: NavigatorGPU };
+    if (typeof globalThis !== "undefined") {
+      const globalThisWithNav = globalThis as typeof globalThis & {
+        navigator?: NavigatorGPU;
+      };
       if (globalThisWithNav.navigator?.gpu) {
         return globalThisWithNav.navigator;
       }
     }
-    
+
     return undefined;
   }
 
@@ -203,20 +211,24 @@ export class GPUAccelerator {
   /**
    * Run genetic algorithm with GPU acceleration
    */
-  public async runGeneticAlgorithm(params: WebGPUOptimizationParams): Promise<WebGPUOptimizationResult> {
+  public async runGeneticAlgorithm(
+    params: WebGPUOptimizationParams,
+  ): Promise<WebGPUOptimizationResult> {
     if (!this.isAvailable() || !this.webgpuService) {
-      throw new Error('GPU accelerator not initialized');
+      throw new Error("GPU accelerator not initialized");
     }
 
     const startTime = performance.now();
 
     try {
       // Log optimization start
-      this.logger.info('Starting GPU-accelerated genetic algorithm', {
-        gpu: this.selectedGPU ? GPUDetector.formatGPUName(this.selectedGPU) : 'Unknown',
+      this.logger.info("Starting GPU-accelerated genetic algorithm", {
+        gpu: this.selectedGPU
+          ? GPUDetector.formatGPUName(this.selectedGPU)
+          : "Unknown",
         populationSize: params.population.length,
         generations: params.generations,
-        individualSize: params.population[0]?.length || 0
+        individualSize: params.population[0]?.length || 0,
       });
 
       // Run optimization
@@ -224,16 +236,16 @@ export class GPUAccelerator {
 
       // Log completion
       const executionTime = performance.now() - startTime;
-      this.logger.info('GPU-accelerated genetic algorithm completed', {
+      this.logger.info("GPU-accelerated genetic algorithm completed", {
         success: result.success,
         executionTime: `${executionTime.toFixed(2)}ms`,
-        efficiency: result.statistics.maximum.toFixed(2)
+        efficiency: result.statistics.maximum.toFixed(2),
       });
 
       return result;
     } catch (error) {
-      this.logger.error('GPU genetic algorithm failed', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+      this.logger.error("GPU genetic algorithm failed", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -251,20 +263,29 @@ export class GPUAccelerator {
       return {
         workgroupSize: 64,
         populationSize: 20,
-        generations: 50
+        generations: 50,
       };
     }
 
-    const workgroupSize = GPUDetector.getRecommendedWorkgroupSize(this.selectedGPU, itemCount);
-    
+    const workgroupSize = GPUDetector.getRecommendedWorkgroupSize(
+      this.selectedGPU,
+      itemCount,
+    );
+
     // Adjust population/generations based on GPU capability
     let populationMultiplier = 1;
     let generationMultiplier = 1;
 
-    if (this.selectedGPU.vendor === GPUVendor.NVIDIA && this.selectedGPU.isDiscrete) {
+    if (
+      this.selectedGPU.vendor === GPUVendor.NVIDIA &&
+      this.selectedGPU.isDiscrete
+    ) {
       populationMultiplier = 2.5;
       generationMultiplier = 2;
-    } else if (this.selectedGPU.vendor === GPUVendor.AMD && this.selectedGPU.isDiscrete) {
+    } else if (
+      this.selectedGPU.vendor === GPUVendor.AMD &&
+      this.selectedGPU.isDiscrete
+    ) {
       populationMultiplier = 2;
       generationMultiplier = 1.5;
     } else if (this.selectedGPU.vendor === GPUVendor.INTEL) {
@@ -275,7 +296,7 @@ export class GPUAccelerator {
     return {
       workgroupSize,
       populationSize: Math.floor(50 * populationMultiplier),
-      generations: Math.floor(100 * generationMultiplier)
+      generations: Math.floor(100 * generationMultiplier),
     };
   }
 
@@ -288,4 +309,3 @@ export class GPUAccelerator {
     this.isInitialized = false;
   }
 }
-

@@ -1,18 +1,28 @@
 /**
  * Result Converter
- * 
+ *
  * Converts CuttingOptimizerResult to AdvancedOptimizationResult
  * for integration with Lemnix's existing optimization infrastructure.
- * 
+ *
  * @module optimization/utils
  */
 
-import type { ILogger } from '../../logger';
-import { OptimizationItem, Cut, CuttingSegment, WasteCategory, WasteDistribution, OptimizationConstraints } from '../../../types';
-import type { OptimizationAlgorithm, MaterialStockLength } from '../../../types';
-import type { AdvancedOptimizationResult, StockSummary } from '../types';
-import type { CuttingOptimizerResult } from '../CuttingOptimizer';
-import type { Pattern } from './PatternGenerator';
+import type { ILogger } from "../../logger";
+import {
+  OptimizationItem,
+  Cut,
+  CuttingSegment,
+  WasteCategory,
+  WasteDistribution,
+  OptimizationConstraints,
+} from "../../../types";
+import type {
+  OptimizationAlgorithm,
+  MaterialStockLength,
+} from "../../../types";
+import type { AdvancedOptimizationResult, StockSummary } from "../types";
+import type { CuttingOptimizerResult } from "../CuttingOptimizer";
+import type { Pattern } from "./PatternGenerator";
 
 /**
  * Result Converter
@@ -22,7 +32,7 @@ export class ResultConverter {
 
   /**
    * Convert CuttingOptimizerResult to AdvancedOptimizationResult
-   * 
+   *
    * @param optimizerResult - Result from CuttingOptimizer
    * @param items - Original optimization items
    * @param stockLengths - Available stock lengths
@@ -37,44 +47,54 @@ export class ResultConverter {
     stockLengths: ReadonlyArray<number>,
     algorithm: OptimizationAlgorithm,
     executionTimeMs: number,
-    requestId: string
+    requestId: string,
   ): AdvancedOptimizationResult {
-    this.logger.debug('[ResultConverter] Converting result:', {
+    this.logger.debug("[ResultConverter] Converting result:", {
       requestId,
       totalBars: optimizerResult.solution.totalBars,
-      totalWaste: optimizerResult.solution.totalWaste
+      totalWaste: optimizerResult.solution.totalWaste,
     });
 
     // 1. Convert patterns to cuts
     const cuts = this.convertPatternsToCuts(
       optimizerResult.patterns,
       optimizerResult.solution.picks,
-      stockLengths
+      stockLengths,
     );
 
     // 2. Calculate metrics
     const totalSegments = cuts.reduce((sum, cut) => sum + cut.segmentCount, 0);
     const totalLength = cuts.reduce((sum, cut) => sum + cut.usedLength, 0);
-    const averageCutsPerStock = cuts.length > 0 ? totalSegments / cuts.length : 0;
-    
+    const averageCutsPerStock =
+      cuts.length > 0 ? totalSegments / cuts.length : 0;
+
     // 3. Calculate waste distribution
     const wasteDistribution = this.calculateWasteDistribution(cuts);
-    
+
     // 4. Calculate costs (simplified)
     const materialCost = this.calculateMaterialCost(cuts);
-    const wasteCost = this.calculateWasteCost(optimizerResult.solution.totalWaste);
+    const wasteCost = this.calculateWasteCost(
+      optimizerResult.solution.totalWaste,
+    );
     const laborCost = this.calculateLaborCost(cuts);
     const totalCost = materialCost + wasteCost + laborCost;
-    
+
     // 5. Calculate efficiency
-    const efficiency = this.calculateEfficiency(totalLength, optimizerResult.solution.totalWaste, cuts);
-    
+    const efficiency = this.calculateEfficiency(
+      totalLength,
+      optimizerResult.solution.totalWaste,
+      cuts,
+    );
+
     // 6. Build stock summary
     const stockSummary = this.buildStockSummary(cuts, stockLengths);
-    
+
     // 7. Calculate quality score
-    const qualityScore = this.calculateQualityScore(efficiency, wasteDistribution);
-    
+    const qualityScore = this.calculateQualityScore(
+      efficiency,
+      wasteDistribution,
+    );
+
     // 8. Build result
     const result: AdvancedOptimizationResult = {
       cuts: [...cuts], // Convert readonly to mutable
@@ -96,7 +116,8 @@ export class ResultConverter {
       totalCost,
       costPerMeter: totalCost / (totalLength / 1000), // Convert mm to meters
       qualityScore,
-      reclaimableWastePercentage: this.calculateReclaimableWastePercentage(cuts),
+      reclaimableWastePercentage:
+        this.calculateReclaimableWastePercentage(cuts),
       algorithm,
       executionTimeMs,
       wasteDistribution,
@@ -112,27 +133,27 @@ export class ResultConverter {
         wasteCost,
         timeCost: 0, // TODO
         energyCost: 0, // TODO
-        totalCost
+        totalCost,
       },
       performanceMetrics: {
-        algorithmComplexity: 'O(2^n)',
+        algorithmComplexity: "O(2^n)",
         convergenceRate: 1.0,
         memoryUsage: 0,
         cpuUsage: 0,
-        scalability: 8
+        scalability: 8,
       },
       recommendations: [],
       confidence: 0.95,
       totalKerfLoss: this.calculateTotalKerfLoss(cuts),
       totalSafetyReserve: this.calculateTotalSafetyReserve(cuts),
-      stockSummary
+      stockSummary,
     };
 
-    this.logger.info('[ResultConverter] Conversion complete:', {
+    this.logger.info("[ResultConverter] Conversion complete:", {
       requestId,
       cuts: cuts.length,
       efficiency: result.efficiency,
-      totalCost: result.totalCost
+      totalCost: result.totalCost,
     });
 
     return result;
@@ -144,7 +165,7 @@ export class ResultConverter {
   private convertPatternsToCuts(
     patterns: ReadonlyArray<Pattern>,
     picks: readonly number[],
-    stockLengths: ReadonlyArray<number>
+    stockLengths: ReadonlyArray<number>,
   ): ReadonlyArray<Cut> {
     const cuts: Cut[] = [];
     let cutIndex = 0;
@@ -177,25 +198,25 @@ export class ResultConverter {
   private convertPatternToCut(
     pattern: Pattern,
     cutIndex: number,
-    stockLengths: ReadonlyArray<number>
+    stockLengths: ReadonlyArray<number>,
   ): Cut {
     const stockLength = pattern.stockLength;
     const usable = pattern.usable;
-    
+
     // Convert cuts to segments
     const segments: CuttingSegment[] = [];
     let position = 0;
     let totalLength = 0;
 
     for (const cut of pattern.cuts) {
-      const length = Number(cut.pieceId.replace('mm', ''));
-      
+      const length = Number(cut.pieceId.replace("mm", ""));
+
       for (let i = 0; i < cut.qty; i++) {
         const segment: CuttingSegment = {
           id: `seg-${cutIndex}-${segments.length}`,
           cutId: `cut-${cutIndex}`,
           sequenceNumber: segments.length + 1,
-          profileType: 'Generic', // TODO: map from original items
+          profileType: "Generic", // TODO: map from original items
           length,
           quantity: 1,
           position,
@@ -205,9 +226,9 @@ export class ResultConverter {
           originalLength: length,
           qualityCheck: true,
           unitCost: 0,
-          totalCost: 0
+          totalCost: 0,
         };
-        
+
         segments.push(segment);
         position += length;
         totalLength += length;
@@ -224,7 +245,7 @@ export class ResultConverter {
       cuttingPlanId: `plan-${pattern.stockId}`,
       stockIndex: cutIndex,
       stockLength,
-      materialType: 'Generic', // TODO: map from original items
+      materialType: "Generic", // TODO: map from original items
       segments,
       segmentCount: segments.length,
       usedLength: totalLength,
@@ -236,7 +257,7 @@ export class ResultConverter {
       kerfLoss: this.calculateKerfLoss(segments),
       safetyMargin: pattern.stockLength - pattern.usable,
       toleranceCheck: true,
-      sequence: cutIndex
+      sequence: cutIndex,
     };
   }
 
@@ -280,16 +301,16 @@ export class ResultConverter {
       excessive: 0,
       reclaimable: 0,
       totalPieces: 0,
-      averageWaste: 0
+      averageWaste: 0,
     };
 
     for (const cut of cuts) {
       distribution.totalPieces++;
-      
+
       if (cut.isReclaimable) {
         distribution.reclaimable += cut.remainingLength;
       }
-      
+
       switch (cut.wasteCategory) {
         case WasteCategory.MINIMAL:
           distribution.minimal++;
@@ -310,7 +331,9 @@ export class ResultConverter {
     }
 
     if (distribution.totalPieces > 0) {
-      distribution.averageWaste = cuts.reduce((sum, c) => sum + c.remainingLength, 0) / distribution.totalPieces;
+      distribution.averageWaste =
+        cuts.reduce((sum, c) => sum + c.remainingLength, 0) /
+        distribution.totalPieces;
     }
 
     return distribution;
@@ -322,7 +345,7 @@ export class ResultConverter {
   private calculateEfficiency(
     totalLength: number,
     totalWaste: number,
-    cuts: ReadonlyArray<Cut>
+    cuts: ReadonlyArray<Cut>,
   ): number {
     const totalUsed = totalLength + totalWaste;
     if (totalUsed === 0) return 0;
@@ -336,7 +359,7 @@ export class ResultConverter {
     const totalUsed = cuts.reduce((sum, c) => sum + c.usedLength, 0);
     const totalWaste = cuts.reduce((sum, c) => sum + c.remainingLength, 0);
     const total = totalUsed + totalWaste;
-    
+
     if (total === 0) return 0;
     return (totalWaste / total) * 100;
   }
@@ -346,21 +369,23 @@ export class ResultConverter {
    */
   private buildStockSummary(
     cuts: ReadonlyArray<Cut>,
-    stockLengths: ReadonlyArray<number>
+    stockLengths: ReadonlyArray<number>,
   ): readonly StockSummary[] {
     const summary = new Map<number, StockSummary>();
 
     for (const cut of cuts) {
       const existing = summary.get(cut.stockLength);
-      
+
       if (existing) {
         summary.set(cut.stockLength, {
           stockLength: cut.stockLength,
           cutCount: existing.cutCount + 1,
           patterns: existing.patterns, // TODO: track patterns
-          avgWaste: (existing.avgWaste * existing.cutCount + cut.remainingLength) / (existing.cutCount + 1),
+          avgWaste:
+            (existing.avgWaste * existing.cutCount + cut.remainingLength) /
+            (existing.cutCount + 1),
           totalWaste: existing.totalWaste + cut.remainingLength,
-          efficiency: 0 // TODO: calculate
+          efficiency: 0, // TODO: calculate
         });
       } else {
         summary.set(cut.stockLength, {
@@ -369,7 +394,7 @@ export class ResultConverter {
           patterns: [],
           avgWaste: cut.remainingLength,
           totalWaste: cut.remainingLength,
-          efficiency: 0 // TODO: calculate
+          efficiency: 0, // TODO: calculate
         });
       }
     }
@@ -381,7 +406,7 @@ export class ResultConverter {
    * Calculate costs (simplified)
    */
   private calculateMaterialCost(cuts: ReadonlyArray<Cut>): number {
-    return cuts.reduce((sum, c) => sum + (c.stockLength * 0.001), 0); // TODO: actual cost model
+    return cuts.reduce((sum, c) => sum + c.stockLength * 0.001, 0); // TODO: actual cost model
   }
 
   private calculateWasteCost(totalWaste: number): number {
@@ -395,27 +420,32 @@ export class ResultConverter {
   /**
    * Calculate quality score
    */
-  private calculateQualityScore(efficiency: number, wasteDistribution: WasteDistribution): number {
+  private calculateQualityScore(
+    efficiency: number,
+    wasteDistribution: WasteDistribution,
+  ): number {
     const wasteScore = this.calculateWasteScore(wasteDistribution);
-    return (efficiency * 0.7) + (wasteScore * 0.3);
+    return efficiency * 0.7 + wasteScore * 0.3;
   }
 
   private calculateWasteScore(wasteDistribution: WasteDistribution): number {
     const excessivePenalty = wasteDistribution.excessive * 20;
     const largePenalty = wasteDistribution.large * 10;
     const mediumPenalty = wasteDistribution.medium * 5;
-    
+
     return Math.max(0, 100 - excessivePenalty - largePenalty - mediumPenalty);
   }
 
   /**
    * Categorize efficiency
    */
-  private categorizeEfficiency(efficiency: number): 'excellent' | 'good' | 'average' | 'poor' {
-    if (efficiency >= 95) return 'excellent';
-    if (efficiency >= 90) return 'good';
-    if (efficiency >= 85) return 'average';
-    return 'poor';
+  private categorizeEfficiency(
+    efficiency: number,
+  ): "excellent" | "good" | "average" | "poor" {
+    if (efficiency >= 95) return "excellent";
+    if (efficiency >= 90) return "good";
+    if (efficiency >= 85) return "average";
+    return "poor";
   }
 
   /**
@@ -437,18 +467,22 @@ export class ResultConverter {
    * Calculate complexity
    */
   private calculateCuttingComplexity(cuts: ReadonlyArray<Cut>): number {
-    const avgSegmentsPerCut = cuts.reduce((sum, c) => sum + c.segmentCount, 0) / cuts.length;
+    const avgSegmentsPerCut =
+      cuts.reduce((sum, c) => sum + c.segmentCount, 0) / cuts.length;
     return avgSegmentsPerCut / 10; // Normalize to 0-10
   }
 
   /**
    * Calculate reclaimable waste percentage
    */
-  private calculateReclaimableWastePercentage(cuts: ReadonlyArray<Cut>): number {
-    const reclaimableWaste = cuts.filter(c => c.isReclaimable)
+  private calculateReclaimableWastePercentage(
+    cuts: ReadonlyArray<Cut>,
+  ): number {
+    const reclaimableWaste = cuts
+      .filter((c) => c.isReclaimable)
       .reduce((sum, c) => sum + c.remainingLength, 0);
     const totalWaste = cuts.reduce((sum, c) => sum + c.remainingLength, 0);
-    
+
     if (totalWaste === 0) return 0;
     return (reclaimableWaste / totalWaste) * 100;
   }
@@ -467,4 +501,3 @@ export class ResultConverter {
     return cuts.reduce((sum, c) => sum + (c.safetyMargin ?? 0), 0);
   }
 }
-

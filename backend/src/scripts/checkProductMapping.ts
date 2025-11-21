@@ -29,7 +29,9 @@ async function checkProductMapping(productName: string): Promise<void> {
       console.log(`   Updated: ${mapping.updatedAt}`);
     } else {
       console.log("❌ No mapping found");
-      console.log("   This is expected for new products or products without categories");
+      console.log(
+        "   This is expected for new products or products without categories",
+      );
     }
 
     // Also check all mappings for similar product names
@@ -66,7 +68,9 @@ async function checkProductMapping(productName: string): Promise<void> {
 const productName = process.argv[2];
 
 if (!productName) {
-  console.error("❌ Usage: npx tsx src/scripts/checkProductMapping.ts \"PRODUCT_NAME\"");
+  console.error(
+    '❌ Usage: npx tsx src/scripts/checkProductMapping.ts "PRODUCT_NAME"',
+  );
   process.exit(1);
 }
 
@@ -79,4 +83,3 @@ checkProductMapping(productName)
     console.error("❌ Check failed:", error);
     process.exit(1);
   });
-

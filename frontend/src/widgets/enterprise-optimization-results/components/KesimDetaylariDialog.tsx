@@ -308,9 +308,11 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                 color: ds.colors.primary.main,
                 fontWeight: ds.typography.fontWeight.bold,
               },
-              "&:hover": !device.isTouch ? {
-                backgroundColor: alpha(ds.colors.primary.main, 0.04),
-              } : {},
+              "&:hover": !device.isTouch
+                ? {
+                    backgroundColor: alpha(ds.colors.primary.main, 0.04),
+                  }
+                : {},
             },
             "& .MuiTabs-indicator": {
               height: 3,
@@ -367,11 +369,13 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                       height: "100%",
                       transition: ds.transitions.fast,
                       boxShadow: ds.shadows.soft.sm,
-                      "&:hover": !device.isTouch ? {
-                        transform: "translateY(-2px)",
-                        boxShadow: ds.shadows.soft.md,
-                        borderColor: alpha(ds.colors.primary.main, 0.2),
-                      } : {},
+                      "&:hover": !device.isTouch
+                        ? {
+                            transform: "translateY(-2px)",
+                            boxShadow: ds.shadows.soft.md,
+                            borderColor: alpha(ds.colors.primary.main, 0.2),
+                          }
+                        : {},
                     }}
                   >
                     <CardContent sx={{ p: tokens.components.card.padding }}>
@@ -435,10 +439,15 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                                 fontWeight: ds.typography.fontWeight.medium,
                                 borderColor: alpha(ds.colors.neutral[300], 0.5),
                                 color: ds.colors.text.secondary,
-                                "&:hover": !device.isTouch ? {
-                                  borderColor: ds.colors.primary.main,
-                                  backgroundColor: alpha(ds.colors.primary.main, 0.04),
-                                } : {},
+                                "&:hover": !device.isTouch
+                                  ? {
+                                      borderColor: ds.colors.primary.main,
+                                      backgroundColor: alpha(
+                                        ds.colors.primary.main,
+                                        0.04,
+                                      ),
+                                    }
+                                  : {},
                               }}
                             />
                           ))}
@@ -530,15 +539,25 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                 height: "100%",
                 transition: ds.transitions.fast,
                 boxShadow: ds.shadows.soft.sm,
-                "&:hover": !device.isTouch ? {
-                  transform: "translateY(-2px)",
-                  boxShadow: ds.shadows.soft.md,
-                  borderColor: alpha(ds.colors.primary.main, 0.2),
-                } : {},
+                "&:hover": !device.isTouch
+                  ? {
+                      transform: "translateY(-2px)",
+                      boxShadow: ds.shadows.soft.md,
+                      borderColor: alpha(ds.colors.primary.main, 0.2),
+                    }
+                  : {},
               }}
             >
-              <CardContent sx={{ textAlign: "center", p: tokens.components.card.padding }}>
-                <Box sx={{ display: "flex", justifyContent: "center", mb: tokens.spacing.sm }}>
+              <CardContent
+                sx={{ textAlign: "center", p: tokens.components.card.padding }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    mb: tokens.spacing.sm,
+                  }}
+                >
                   <AssessmentIcon
                     sx={{
                       fontSize: {
@@ -584,15 +603,25 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                 height: "100%",
                 transition: ds.transitions.fast,
                 boxShadow: ds.shadows.soft.sm,
-                "&:hover": !device.isTouch ? {
-                  transform: "translateY(-2px)",
-                  boxShadow: ds.shadows.soft.md,
-                  borderColor: alpha(ds.colors.success.main, 0.2),
-                } : {},
+                "&:hover": !device.isTouch
+                  ? {
+                      transform: "translateY(-2px)",
+                      boxShadow: ds.shadows.soft.md,
+                      borderColor: alpha(ds.colors.success.main, 0.2),
+                    }
+                  : {},
               }}
             >
-              <CardContent sx={{ textAlign: "center", p: tokens.components.card.padding }}>
-                <Box sx={{ display: "flex", justifyContent: "center", mb: tokens.spacing.sm }}>
+              <CardContent
+                sx={{ textAlign: "center", p: tokens.components.card.padding }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    mb: tokens.spacing.sm,
+                  }}
+                >
                   <InventoryIcon
                     sx={{
                       fontSize: {
@@ -638,15 +667,25 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                 height: "100%",
                 transition: ds.transitions.fast,
                 boxShadow: ds.shadows.soft.sm,
-                "&:hover": !device.isTouch ? {
-                  transform: "translateY(-2px)",
-                  boxShadow: ds.shadows.soft.md,
-                  borderColor: alpha(ds.colors.warning.main, 0.2),
-                } : {},
+                "&:hover": !device.isTouch
+                  ? {
+                      transform: "translateY(-2px)",
+                      boxShadow: ds.shadows.soft.md,
+                      borderColor: alpha(ds.colors.warning.main, 0.2),
+                    }
+                  : {},
               }}
             >
-              <CardContent sx={{ textAlign: "center", p: tokens.components.card.padding }}>
-                <Box sx={{ display: "flex", justifyContent: "center", mb: tokens.spacing.sm }}>
+              <CardContent
+                sx={{ textAlign: "center", p: tokens.components.card.padding }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    mb: tokens.spacing.sm,
+                  }}
+                >
                   <WarningIcon
                     sx={{
                       fontSize: {
@@ -692,15 +731,25 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                 height: "100%",
                 transition: ds.transitions.fast,
                 boxShadow: ds.shadows.soft.sm,
-                "&:hover": !device.isTouch ? {
-                  transform: "translateY(-2px)",
-                  boxShadow: ds.shadows.soft.md,
-                  borderColor: alpha(ds.colors.secondary.main, 0.2),
-                } : {},
+                "&:hover": !device.isTouch
+                  ? {
+                      transform: "translateY(-2px)",
+                      boxShadow: ds.shadows.soft.md,
+                      borderColor: alpha(ds.colors.secondary.main, 0.2),
+                    }
+                  : {},
               }}
             >
-              <CardContent sx={{ textAlign: "center", p: tokens.components.card.padding }}>
-                <Box sx={{ display: "flex", justifyContent: "center", mb: tokens.spacing.sm }}>
+              <CardContent
+                sx={{ textAlign: "center", p: tokens.components.card.padding }}
+              >
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    mb: tokens.spacing.sm,
+                  }}
+                >
                   <TrendingUpIcon
                     sx={{
                       fontSize: {
@@ -1041,9 +1090,11 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                   hover
                   sx={{
                     transition: ds.transitions.fast,
-                    "&:hover": !device.isTouch ? {
-                      backgroundColor: alpha(ds.colors.primary.main, 0.02),
-                    } : {},
+                    "&:hover": !device.isTouch
+                      ? {
+                          backgroundColor: alpha(ds.colors.primary.main, 0.02),
+                        }
+                      : {},
                     borderBottom: `1px solid ${alpha(ds.colors.neutral[200], 0.3)}`,
                   }}
                 >
@@ -1189,7 +1240,11 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
         </TableContainer>
 
         {/* Özet Kartları */}
-        <Grid container spacing={tokens.spacing.md} sx={{ mt: tokens.spacing.md }}>
+        <Grid
+          container
+          spacing={tokens.spacing.md}
+          sx={{ mt: tokens.spacing.md }}
+        >
           <Grid item xs={12} sm={4}>
             <Paper
               sx={{
@@ -1310,10 +1365,12 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                     border: `1px solid ${alpha(ds.colors.primary.main, 0.12)}`,
                     boxShadow: ds.shadows.soft.sm,
                     transition: ds.transitions.fast,
-                    "&:hover": !device.isTouch ? {
-                      transform: "translateY(-2px)",
-                      boxShadow: ds.shadows.soft.md,
-                    } : {},
+                    "&:hover": !device.isTouch
+                      ? {
+                          transform: "translateY(-2px)",
+                          boxShadow: ds.shadows.soft.md,
+                        }
+                      : {},
                   }}
                 >
                   <Box
@@ -1360,14 +1417,16 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                       trendData.improvement >= 0
                         ? ds.colors.success.main
                         : ds.colors.error.main,
-                      0.12
+                      0.12,
                     )}`,
                     boxShadow: ds.shadows.soft.sm,
                     transition: ds.transitions.fast,
-                    "&:hover": !device.isTouch ? {
-                      transform: "translateY(-2px)",
-                      boxShadow: ds.shadows.soft.md,
-                    } : {},
+                    "&:hover": !device.isTouch
+                      ? {
+                          transform: "translateY(-2px)",
+                          boxShadow: ds.shadows.soft.md,
+                        }
+                      : {},
                   }}
                 >
                   <Box
@@ -1420,10 +1479,12 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                     border: `1px solid ${alpha(ds.colors.warning.main, 0.12)}`,
                     boxShadow: ds.shadows.soft.sm,
                     transition: ds.transitions.fast,
-                    "&:hover": !device.isTouch ? {
-                      transform: "translateY(-2px)",
-                      boxShadow: ds.shadows.soft.md,
-                    } : {},
+                    "&:hover": !device.isTouch
+                      ? {
+                          transform: "translateY(-2px)",
+                          boxShadow: ds.shadows.soft.md,
+                        }
+                      : {},
                   }}
                 >
                   <Box
@@ -1469,10 +1530,12 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                     border: `1px solid ${alpha(ds.colors.info.main, 0.12)}`,
                     boxShadow: ds.shadows.soft.sm,
                     transition: ds.transitions.fast,
-                    "&:hover": !device.isTouch ? {
-                      transform: "translateY(-2px)",
-                      boxShadow: ds.shadows.soft.md,
-                    } : {},
+                    "&:hover": !device.isTouch
+                      ? {
+                          transform: "translateY(-2px)",
+                          boxShadow: ds.shadows.soft.md,
+                        }
+                      : {},
                   }}
                 >
                   <Box
@@ -1606,9 +1669,14 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                           key={day.date}
                           sx={{
                             transition: ds.transitions.fast,
-                            "&:hover": !device.isTouch ? {
-                              backgroundColor: alpha(ds.colors.primary.main, 0.02),
-                            } : {},
+                            "&:hover": !device.isTouch
+                              ? {
+                                  backgroundColor: alpha(
+                                    ds.colors.primary.main,
+                                    0.02,
+                                  ),
+                                }
+                              : {},
                             borderBottom: `1px solid ${alpha(ds.colors.neutral[200], 0.3)}`,
                           }}
                         >
@@ -1708,7 +1776,7 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
                     : trendData.avgEfficiency >= 90
                       ? ds.colors.warning.main
                       : ds.colors.error.main,
-                  0.2
+                  0.2,
                 )}`,
               }}
             >
@@ -1785,17 +1853,21 @@ export const KesimDetaylariDialog: React.FC<KesimDetaylariDialogProps> = ({
             px: tokens.spacing.xl,
             py: tokens.spacing.sm,
             borderRadius: `${tokens.borderRadius.md}px`,
-            minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+            minHeight: device.isTouch
+              ? tokens.components.minTouchTarget
+              : undefined,
             fontSize: {
               xs: `${tokens.typography.sm}px`,
               md: `${tokens.typography.base}px`,
             },
             boxShadow: ds.shadows.soft.md,
-            "&:hover": !device.isTouch ? {
-              background: `linear-gradient(135deg, ${ds.colors.primary[700]} 0%, ${ds.colors.secondary[700]} 100%)`,
-              transform: "translateY(-2px)",
-              boxShadow: ds.shadows.soft.lg,
-            } : {},
+            "&:hover": !device.isTouch
+              ? {
+                  background: `linear-gradient(135deg, ${ds.colors.primary[700]} 0%, ${ds.colors.secondary[700]} 100%)`,
+                  transform: "translateY(-2px)",
+                  boxShadow: ds.shadows.soft.lg,
+                }
+              : {},
             transition: ds.transitions.fast,
           }}
         >

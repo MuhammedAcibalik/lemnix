@@ -1,12 +1,12 @@
 /**
  * Handler Interface (ISP - Interface Segregation Principle)
  * Small, focused interfaces for each handler type
- * 
+ *
  * @module enterprise/core
  * @version 1.0.0
  */
 
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 
 /**
  * Base handler interface
@@ -56,4 +56,3 @@ export interface IExportOperations {
   exportResults(req: Request, res: Response): Promise<void>;
   getAuditTrail(req: Request, res: Response): Promise<void>;
 }
-

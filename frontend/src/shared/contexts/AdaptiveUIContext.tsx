@@ -74,4 +74,3 @@ export function useAdaptiveUIContext(): AdaptiveUIContextValue {
 
   return ctx;
 }
-

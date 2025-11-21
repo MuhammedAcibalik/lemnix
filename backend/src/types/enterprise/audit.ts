@@ -1,6 +1,6 @@
 /**
  * Enterprise Audit Types
- * 
+ *
  * @module enterprise/types
  * @version 1.0.0
  */
@@ -21,21 +21,21 @@ export interface AuditLogEntry {
  * Audit action types
  */
 export type AuditAction =
-  | 'optimization_started'
-  | 'optimization_completed'
-  | 'optimization_failed'
-  | 'export_requested'
-  | 'export_completed'
-  | 'metrics_accessed'
-  | 'analytics_generated'
-  | 'health_check_performed'
-  | 'algorithm_compared'
-  | 'history_accessed';
+  | "optimization_started"
+  | "optimization_completed"
+  | "optimization_failed"
+  | "export_requested"
+  | "export_completed"
+  | "metrics_accessed"
+  | "analytics_generated"
+  | "health_check_performed"
+  | "algorithm_compared"
+  | "history_accessed";
 
 /**
  * Audit severity levels
  */
-export type AuditSeverity = 'info' | 'warning' | 'error' | 'critical';
+export type AuditSeverity = "info" | "warning" | "error" | "critical";
 
 /**
  * Extended audit log entry with severity
@@ -43,7 +43,6 @@ export type AuditSeverity = 'info' | 'warning' | 'error' | 'critical';
 export interface ExtendedAuditLogEntry extends AuditLogEntry {
   readonly severity: AuditSeverity;
   readonly duration?: number;
-  readonly outcome: 'success' | 'failure';
+  readonly outcome: "success" | "failure";
   readonly errorMessage?: string;
 }
-

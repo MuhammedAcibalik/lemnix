@@ -1,16 +1,16 @@
 /**
  * LEMNİX Pattern Solver
  * Solves the pattern selection problem using DFS + memoization
- * 
+ *
  * @module optimization/domain
  * @version 1.0.0
- * 
+ *
  * Uses DFS to find exact demand-satisfying combinations of patterns
  * with lexicographic optimization: minimize stocks, then waste
  */
 
-import type { ILogger } from '../../logger';
-import { Pattern, PatternSolution } from './Pattern';
+import type { ILogger } from "../../logger";
+import { Pattern, PatternSolution } from "./Pattern";
 
 /**
  * Custom error for timeout
@@ -18,7 +18,7 @@ import { Pattern, PatternSolution } from './Pattern';
 export class SolverTimeoutError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'SolverTimeoutError';
+    this.name = "SolverTimeoutError";
   }
 }
 
@@ -28,7 +28,7 @@ export class SolverTimeoutError extends Error {
 export interface IPatternSolver {
   /**
    * Solve pattern selection problem
-   * 
+   *
    * @param patterns - All available patterns
    * @param demand - Required items (length -> quantity)
    * @param maxStocks - Maximum stock bars to use
@@ -39,7 +39,7 @@ export interface IPatternSolver {
     patterns: ReadonlyArray<Pattern>,
     demand: ReadonlyMap<number, number>,
     maxStocks: number,
-    timeout: number
+    timeout: number,
   ): PatternSolution | null;
 }
 
@@ -62,21 +62,21 @@ export class MemoizedPatternSolver implements IPatternSolver {
     patterns: ReadonlyArray<Pattern>,
     demand: ReadonlyMap<number, number>,
     maxStocks: number,
-    timeout: number
+    timeout: number,
   ): PatternSolution | null {
     this.iterationCount = 0;
     const startTime = Date.now();
 
-    this.logger.debug('[PatternSolver] Starting solve', {
+    this.logger.debug("[PatternSolver] Starting solve", {
       patternsCount: patterns.length,
       demandSize: demand.size,
       maxStocks,
-      timeout
+      timeout,
     });
 
     // Sort patterns by utilization DESC (try best-filling first)
     const sortedPatterns = [...patterns].sort(
-      (a, b) => b.utilization - a.utilization
+      (a, b) => b.utilization - a.utilization,
     );
 
     // Create demand map (mutable for recursion)
@@ -99,16 +99,17 @@ export class MemoizedPatternSolver implements IPatternSolver {
           bestRef.value = solution;
           bestWaste = solution.totalWaste;
         }
-      }
+      },
     );
 
     const elapsed = Date.now() - startTime;
-    const bestWasteValue = bestRef.value !== null ? bestRef.value.totalWaste : undefined;
-    this.logger.debug('[PatternSolver] Solve complete', {
+    const bestWasteValue =
+      bestRef.value !== null ? bestRef.value.totalWaste : undefined;
+    this.logger.debug("[PatternSolver] Solve complete", {
       found: result !== null,
       iterations: this.iterationCount,
       elapsed,
-      bestWaste: bestWasteValue
+      bestWaste: bestWasteValue,
     });
 
     // Return best solution found, or first valid solution if no best
@@ -125,7 +126,7 @@ export class MemoizedPatternSolver implements IPatternSolver {
     startTime: number,
     timeout: number,
     memo: Map<string, PatternSolution | null>,
-    onSolutionFound: (solution: PatternSolution) => void
+    onSolutionFound: (solution: PatternSolution) => void,
   ): PatternSolution | null {
     // Check timeout
     this.iterationCount++;
@@ -168,7 +169,7 @@ export class MemoizedPatternSolver implements IPatternSolver {
 
       // Apply pattern
       this.applyPattern(pattern, remainingDemand);
-      
+
       // Recurse
       const result = this.solveDFS(
         patterns,
@@ -177,7 +178,7 @@ export class MemoizedPatternSolver implements IPatternSolver {
         startTime,
         timeout,
         memo,
-        onSolutionFound
+        onSolutionFound,
       );
 
       // Backtrack
@@ -206,13 +207,11 @@ export class MemoizedPatternSolver implements IPatternSolver {
    */
   private createMemoKey(
     demand: ReadonlyMap<number, number>,
-    stocks: number
+    stocks: number,
   ): string {
     // Sort keys for deterministic key generation
     const sortedKeys = Array.from(demand.keys()).sort((a, b) => a - b);
-    const demandStr = sortedKeys
-      .map(k => `${k}:${demand.get(k)}`)
-      .join(',');
+    const demandStr = sortedKeys.map((k) => `${k}:${demand.get(k)}`).join(",");
     return `${stocks}|${demandStr}`;
   }
 
@@ -233,7 +232,7 @@ export class MemoizedPatternSolver implements IPatternSolver {
    */
   private canApplyPattern(
     pattern: Pattern,
-    demand: ReadonlyMap<number, number>
+    demand: ReadonlyMap<number, number>,
   ): boolean {
     for (const [length, count] of pattern.items) {
       const required = demand.get(length) || 0;
@@ -247,10 +246,7 @@ export class MemoizedPatternSolver implements IPatternSolver {
   /**
    * Apply pattern to demand (subtract items)
    */
-  private applyPattern(
-    pattern: Pattern,
-    demand: Map<number, number>
-  ): void {
+  private applyPattern(pattern: Pattern, demand: Map<number, number>): void {
     for (const [length, count] of pattern.items) {
       const current = demand.get(length) || 0;
       demand.set(length, current - count);
@@ -260,10 +256,7 @@ export class MemoizedPatternSolver implements IPatternSolver {
   /**
    * Unapply pattern from demand (add items back)
    */
-  private unapplyPattern(
-    pattern: Pattern,
-    demand: Map<number, number>
-  ): void {
+  private unapplyPattern(pattern: Pattern, demand: Map<number, number>): void {
     for (const [length, count] of pattern.items) {
       const current = demand.get(length) || 0;
       demand.set(length, current + count);
@@ -275,13 +268,13 @@ export class MemoizedPatternSolver implements IPatternSolver {
    */
   private createSolution(
     allPatterns: ReadonlyArray<Pattern>,
-    patternCounts: ReadonlyArray<{ patternId: string; count: number }>
+    patternCounts: ReadonlyArray<{ patternId: string; count: number }>,
   ): PatternSolution {
     let totalStocks = 0;
     let totalWaste = 0;
 
     for (const pc of patternCounts) {
-      const pattern = allPatterns.find(p => p.id === pc.patternId);
+      const pattern = allPatterns.find((p) => p.id === pc.patternId);
       if (pattern) {
         totalStocks += pc.count;
         totalWaste += pattern.waste * pc.count;
@@ -292,7 +285,7 @@ export class MemoizedPatternSolver implements IPatternSolver {
       patternCounts,
       allPatterns,
       totalStocks,
-      totalWaste
+      totalWaste,
     };
   }
 
@@ -301,11 +294,11 @@ export class MemoizedPatternSolver implements IPatternSolver {
    */
   private prependPattern(
     solution: PatternSolution,
-    pattern: Pattern
+    pattern: Pattern,
   ): PatternSolution {
     // Check if pattern already in solution
     const existingIdx = solution.patternCounts.findIndex(
-      pc => pc.patternId === pattern.id
+      (pc) => pc.patternId === pattern.id,
     );
 
     let newCounts: ReadonlyArray<{ patternId: string; count: number }>;
@@ -314,14 +307,16 @@ export class MemoizedPatternSolver implements IPatternSolver {
       newCounts = solution.patternCounts.map((pc, idx) =>
         idx === existingIdx
           ? { patternId: pc.patternId, count: pc.count + 1 }
-          : pc
+          : pc,
       );
     } else {
       // Add new pattern
-      newCounts = [{ patternId: pattern.id, count: 1 }, ...solution.patternCounts];
+      newCounts = [
+        { patternId: pattern.id, count: 1 },
+        ...solution.patternCounts,
+      ];
     }
 
     return this.createSolution(solution.allPatterns, newCounts);
   }
 }
-

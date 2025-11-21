@@ -47,7 +47,10 @@ router.post("/map", productCategoryController.mapProductToCategory);
  * Get category by product name
  * IMPORTANT: This must come before /:id route to avoid route conflicts
  */
-router.get("/product/:productName", productCategoryController.getCategoryByProduct);
+router.get(
+  "/product/:productName",
+  productCategoryController.getCategoryByProduct,
+);
 
 /**
  * GET /api/product-categories/:id/products
@@ -79,4 +82,3 @@ router.put("/:id", productCategoryController.updateCategory);
 router.delete("/:id", productCategoryController.deleteCategory);
 
 export default router;
-

@@ -3,6 +3,5 @@
  * @module ExportServices
  */
 
-export { PDFExportService } from './pdfExportService';
-export { ExcelExportService } from './excelExportService';
-
+export { PDFExportService } from "./pdfExportService";
+export { ExcelExportService } from "./excelExportService";

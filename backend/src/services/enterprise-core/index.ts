@@ -2,6 +2,5 @@
  * Core Module - Barrel Export
  */
 
-export * from './IHandler';
-export { BaseHandler } from './BaseHandler';
-
+export * from "./IHandler";
+export { BaseHandler } from "./BaseHandler";

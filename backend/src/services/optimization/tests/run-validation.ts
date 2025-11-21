@@ -5,15 +5,17 @@
  * Usage: npm run test:validation or ts-node run-validation.ts
  */
 
-import { AlgorithmValidationTests } from './AlgorithmValidationTests';
+import { AlgorithmValidationTests } from "./AlgorithmValidationTests";
 
 async function main() {
-  console.log('🔬 Lemnix Algorithm Optimization Validation Suite');
-  console.log('================================================\n');
-  
+  console.log("🔬 Lemnix Algorithm Optimization Validation Suite");
+  console.log("================================================\n");
+
   await AlgorithmValidationTests.runAllTests();
-  
-  console.log('\n🏁 Validation complete! All critical fixes have been verified.');
+
+  console.log(
+    "\n🏁 Validation complete! All critical fixes have been verified.",
+  );
   process.exit(0);
 }
 

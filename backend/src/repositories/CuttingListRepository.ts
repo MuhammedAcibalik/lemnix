@@ -83,7 +83,7 @@ export class CuttingListRepository {
       const verify = await prisma.cuttingList.findUnique({
         where: { id: result.id },
       });
-      
+
       if (!verify) {
         logger.error("Created list not found in database after creation", {
           id: result.id,
@@ -100,7 +100,7 @@ export class CuttingListRepository {
 
       return result;
     } catch (error) {
-      logger.error("Failed to create cutting list", { 
+      logger.error("Failed to create cutting list", {
         error,
         data: {
           name: data.name,
@@ -591,7 +591,7 @@ export class CuttingListRepository {
       // Create new item with unique ID
       const now = new Date();
       const newItemId = `id-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
+
       // ✅ CRITICAL FIX: Create item for JSONB sections with profiles
       const newItemForSections = {
         id: newItemId,
@@ -1196,7 +1196,8 @@ export class CuttingListRepository {
       }
 
       // Parse sections
-      const sections = (cuttingList.sections as unknown as Array<CuttingListSection>) || [];
+      const sections =
+        (cuttingList.sections as unknown as Array<CuttingListSection>) || [];
 
       // Find section index
       const sectionIndex = sections.findIndex((s) => s.id === sectionId);
@@ -1215,7 +1216,9 @@ export class CuttingListRepository {
       // Each item in the section may have multiple CuttingListItem records (one per profile)
       if (targetSection.items && Array.isArray(targetSection.items)) {
         const itemIds = targetSection.items.map((item) => item.id);
-        const workOrderIds = targetSection.items.map((item) => item.workOrderId);
+        const workOrderIds = targetSection.items.map(
+          (item) => item.workOrderId,
+        );
 
         // Delete by item IDs (these are the IDs used in CuttingListItem records)
         // Format: `${itemId}-${profile.id}` or just `itemId`

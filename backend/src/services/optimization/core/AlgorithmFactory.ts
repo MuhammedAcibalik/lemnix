@@ -1,15 +1,18 @@
 /**
  * LEMNİX Algorithm Factory
  * Factory pattern for creating optimization algorithm instances
- * 
+ *
  * @module optimization/core
  * @version 1.0.0
  * @architecture Factory Pattern + Registry Pattern (OCP)
  */
 
-import { OptimizationAlgorithm } from '../../../types';
-import { ILogger } from '../../logger';
-import { IOptimizationAlgorithm, AlgorithmMetadata } from './IOptimizationAlgorithm';
+import { OptimizationAlgorithm } from "../../../types";
+import { ILogger } from "../../logger";
+import {
+  IOptimizationAlgorithm,
+  AlgorithmMetadata,
+} from "./IOptimizationAlgorithm";
 
 /**
  * Algorithm constructor type
@@ -21,8 +24,14 @@ type AlgorithmConstructor = new (logger: ILogger) => IOptimizationAlgorithm;
  * Allows adding new algorithms without modifying existing code (OCP)
  */
 export class AlgorithmFactory {
-  private readonly registry = new Map<OptimizationAlgorithm, AlgorithmConstructor>();
-  private readonly metadata = new Map<OptimizationAlgorithm, AlgorithmMetadata>();
+  private readonly registry = new Map<
+    OptimizationAlgorithm,
+    AlgorithmConstructor
+  >();
+  private readonly metadata = new Map<
+    OptimizationAlgorithm,
+    AlgorithmMetadata
+  >();
 
   constructor(private readonly logger: ILogger) {}
 
@@ -33,20 +42,20 @@ export class AlgorithmFactory {
    */
   public register(
     algorithmClass: AlgorithmConstructor,
-    metadata: AlgorithmMetadata
+    metadata: AlgorithmMetadata,
   ): void {
     if (this.registry.has(metadata.name)) {
-      this.logger.warn('Algorithm already registered, overwriting', {
-        algorithm: metadata.name
+      this.logger.warn("Algorithm already registered, overwriting", {
+        algorithm: metadata.name,
       });
     }
-    
+
     this.registry.set(metadata.name, algorithmClass);
     this.metadata.set(metadata.name, metadata);
-    
-    this.logger.debug('Algorithm registered', {
+
+    this.logger.debug("Algorithm registered", {
       algorithm: metadata.name,
-      displayName: metadata.displayName
+      displayName: metadata.displayName,
     });
   }
 
@@ -58,14 +67,14 @@ export class AlgorithmFactory {
    */
   public create(algorithm: OptimizationAlgorithm): IOptimizationAlgorithm {
     const AlgorithmClass = this.registry.get(algorithm);
-    
+
     if (!AlgorithmClass) {
       const available = Array.from(this.registry.keys());
       throw new Error(
-        `Algorithm '${algorithm}' not registered. Available: ${available.join(', ')}`
+        `Algorithm '${algorithm}' not registered. Available: ${available.join(", ")}`,
       );
     }
-    
+
     return new AlgorithmClass(this.logger);
   }
 
@@ -74,7 +83,9 @@ export class AlgorithmFactory {
    * @param algorithm - Algorithm identifier
    * @returns Algorithm metadata or undefined
    */
-  public getMetadata(algorithm: OptimizationAlgorithm): AlgorithmMetadata | undefined {
+  public getMetadata(
+    algorithm: OptimizationAlgorithm,
+  ): AlgorithmMetadata | undefined {
     return this.metadata.get(algorithm);
   }
 
@@ -108,12 +119,14 @@ export class AlgorithmFactory {
    * @param itemCount - Number of items to optimize
    * @returns Recommended algorithm or undefined
    */
-  public getRecommendedAlgorithm(itemCount: number): OptimizationAlgorithm | undefined {
+  public getRecommendedAlgorithm(
+    itemCount: number,
+  ): OptimizationAlgorithm | undefined {
     const metadataList = this.getAllMetadata();
-    
+
     // Sort by scalability descending
     const sorted = metadataList.sort((a, b) => b.scalability - a.scalability);
-    
+
     // Find first algorithm that can handle the load
     for (const meta of sorted) {
       if (itemCount < 100) {
@@ -133,9 +146,8 @@ export class AlgorithmFactory {
         }
       }
     }
-    
+
     // Fallback to first algorithm
     return sorted[0]?.name;
   }
 }
-

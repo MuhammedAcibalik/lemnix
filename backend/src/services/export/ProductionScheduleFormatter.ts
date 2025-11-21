@@ -1,19 +1,19 @@
 /**
  * Production Schedule Formatter
  * Generate production timeline from optimization results
- * 
+ *
  * @module services/export
  * @version 1.0.0
  */
 
-import type { ProductionScheduleData } from './types';
+import type { ProductionScheduleData } from "./types";
 
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================
 
 interface TimelineEvent {
-  readonly type: 'setup' | 'cutting' | 'break';
+  readonly type: "setup" | "cutting" | "break";
   readonly stockNumber?: number;
   readonly startTime: string;
   readonly endTime: string;
@@ -39,7 +39,12 @@ export class ProductionScheduleFormatter {
    * Format production schedule
    */
   public format(data: ProductionScheduleData): Buffer {
-    const { result, startDate, setupTimePerStock = 5, cuttingTimePerSegment = 2 } = data;
+    const {
+      result,
+      startDate,
+      setupTimePerStock = 5,
+      cuttingTimePerSegment = 2,
+    } = data;
 
     let currentTime = new Date(startDate);
     const timeline: TimelineEvent[] = [];
@@ -47,11 +52,13 @@ export class ProductionScheduleFormatter {
     result.cuts.forEach((cut, stockIndex) => {
       // Setup time
       const setupStart = new Date(currentTime);
-      currentTime = new Date(currentTime.getTime() + setupTimePerStock * 60 * 1000);
+      currentTime = new Date(
+        currentTime.getTime() + setupTimePerStock * 60 * 1000,
+      );
       const setupEnd = new Date(currentTime);
 
       timeline.push({
-        type: 'setup',
+        type: "setup",
         stockNumber: stockIndex + 1,
         startTime: setupStart.toISOString(),
         endTime: setupEnd.toISOString(),
@@ -62,11 +69,14 @@ export class ProductionScheduleFormatter {
       // Cutting time
       const segmentCount = cut.segments.length;
       const cuttingStart = new Date(currentTime);
-      currentTime = new Date(currentTime.getTime() + segmentCount * cuttingTimePerSegment * 60 * 1000);
+      currentTime = new Date(
+        currentTime.getTime() +
+          segmentCount * cuttingTimePerSegment * 60 * 1000,
+      );
       const cuttingEnd = new Date(currentTime);
 
       timeline.push({
-        type: 'cutting',
+        type: "cutting",
         stockNumber: stockIndex + 1,
         segmentCount,
         startTime: cuttingStart.toISOString(),
@@ -77,7 +87,7 @@ export class ProductionScheduleFormatter {
           segmentNumber: segIndex + 1,
           profileType: seg.profileType,
           length: seg.length,
-          workOrderId: seg.workOrderId || 'N/A',
+          workOrderId: seg.workOrderId || "N/A",
         })),
       });
     });
@@ -85,16 +95,20 @@ export class ProductionScheduleFormatter {
     const schedule = {
       projectStart: startDate.toISOString(),
       projectEnd: currentTime.toISOString(),
-      totalDuration: Math.ceil((currentTime.getTime() - startDate.getTime()) / (60 * 1000)), // minutes
+      totalDuration: Math.ceil(
+        (currentTime.getTime() - startDate.getTime()) / (60 * 1000),
+      ), // minutes
       timeline,
       summary: {
         totalStocks: result.cuts.length,
         totalSetupTime: result.cuts.length * setupTimePerStock,
-        totalCuttingTime: result.cuts.reduce((sum, c) => sum + c.segments.length * cuttingTimePerSegment, 0),
+        totalCuttingTime: result.cuts.reduce(
+          (sum, c) => sum + c.segments.length * cuttingTimePerSegment,
+          0,
+        ),
       },
     };
 
-    return Buffer.from(JSON.stringify(schedule, null, 2), 'utf-8');
+    return Buffer.from(JSON.stringify(schedule, null, 2), "utf-8");
   }
 }
-

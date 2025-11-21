@@ -5,6 +5,7 @@ Zoom/scale-aware utilities for creating UI elements that adapt to any resolution
 ## Problem
 
 When users change browser zoom or use different screen resolutions/scales, UI elements can:
+
 - Cards shrink too much and become unusable
 - Buttons grow too large or shrink too small
 - Text overflows containers
@@ -13,6 +14,7 @@ When users change browser zoom or use different screen resolutions/scales, UI el
 ## Solution
 
 This utility library provides:
+
 1. **Fluid sizing** - Elements scale smoothly between min and max values
 2. **Safe constraints** - Elements never become too small or too large
 3. **Overflow control** - Text and content never overflow containers
@@ -88,7 +90,7 @@ import { zoomAwareCard, fluidSpacing } from "@/shared/lib/zoom-aware";
       Content
     </Typography>
   </CardContent>
-</Card>
+</Card>;
 ```
 
 ### Button Component
@@ -104,7 +106,7 @@ import { zoomAwareButton, fluidFontSize } from "@/shared/lib/zoom-aware";
   }}
 >
   Click Me
-</Button>
+</Button>;
 ```
 
 ### Responsive Grid
@@ -119,7 +121,8 @@ import { zoomAwareGrid, responsiveGap } from "@/shared/lib/zoom-aware";
     gap: responsiveGap("1rem", "2rem"),
   }}
 >
-  {items.map(item => <Card key={item.id} {...item} />)}
-</Box>
+  {items.map((item) => (
+    <Card key={item.id} {...item} />
+  ))}
+</Box>;
 ```
-

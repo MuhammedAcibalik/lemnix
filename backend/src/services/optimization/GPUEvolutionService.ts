@@ -1,10 +1,10 @@
 /**
  * LEMNİX GPU Evolution Service
  * WebGPU-accelerated genetic algorithm implementation
- * 
+ *
  * @module optimization/GPUEvolutionService
  * @version 1.0.0
- * 
+ *
  * Features:
  * - Type-safe WebGPU implementation using @webgpu/types
  * - Deterministic RNG with seed support
@@ -14,20 +14,20 @@
  * - CV-based convergence detection (<1%)
  * - CPU fallback support
  * - Performance metrics and logging
- * 
+ *
  * Architecture:
  * - GPU-first with seamless CPU fallback
  * - Buffer-based data management
  * - Shader-based computation kernels
  * - Memory-efficient population handling
- * 
+ *
  * @see GeneticAlgorithm.ts for integration
  * @see NSGAII.ts for multi-objective support
  */
 
-import type { OptimizationItem } from '../../types';
-import type { AdvancedOptimizationResult } from './types';
-import type { ILogger } from '../logger';
+import type { OptimizationItem } from "../../types";
+import type { AdvancedOptimizationResult } from "./types";
+import type { ILogger } from "../logger";
 
 /**
  * WebGPU Navigator interface for type safety
@@ -38,47 +38,59 @@ type NavigatorWithGPU = Navigator & {
 
 // WebGPU type definitions
 declare global {
-  
   interface GPU {
-    requestAdapter(options?: GPURequestAdapterOptions): Promise<GPUAdapter | null>;
+    requestAdapter(
+      options?: GPURequestAdapterOptions,
+    ): Promise<GPUAdapter | null>;
   }
-  
+
   interface GPURequestAdapterOptions {
-    powerPreference?: 'low-power' | 'high-performance';
+    powerPreference?: "low-power" | "high-performance";
     forceFallbackAdapter?: boolean;
   }
-  
+
   interface GPUAdapter {
     requestDevice(descriptor?: GPUDeviceDescriptor): Promise<GPUDevice>;
     readonly limits: GPUSupportedLimits;
     readonly info?: GPUAdapterInfo;
   }
-  
+
   interface GPUAdapterInfo {
     readonly description?: string;
   }
-  
+
   interface GPUDeviceDescriptor {
     requiredFeatures?: GPUFeatureName[];
     requiredLimits?: Record<string, number>;
   }
-  
+
   interface GPUDevice {
     createBuffer(descriptor: GPUBufferDescriptor): GPUBuffer;
     createShaderModule(descriptor: GPUShaderModuleDescriptor): GPUShaderModule;
-    createComputePipeline(descriptor: GPUComputePipelineDescriptor): GPUComputePipeline;
+    createComputePipeline(
+      descriptor: GPUComputePipelineDescriptor,
+    ): GPUComputePipeline;
     createBindGroup(descriptor: GPUBindGroupDescriptor): GPUBindGroup;
-    createCommandEncoder(descriptor?: GPUCommandEncoderDescriptor): GPUCommandEncoder;
-    addEventListener(type: 'uncapturederror', listener: (event: GPUUncapturedErrorEvent) => void): void;
+    createCommandEncoder(
+      descriptor?: GPUCommandEncoderDescriptor,
+    ): GPUCommandEncoder;
+    addEventListener(
+      type: "uncapturederror",
+      listener: (event: GPUUncapturedErrorEvent) => void,
+    ): void;
     readonly queue: GPUQueue;
     readonly label?: string;
   }
-  
+
   interface GPUQueue {
     submit(commandBuffers: GPUCommandBuffer[]): void;
-    writeBuffer(buffer: GPUBuffer, bufferOffset: number, data: ArrayBuffer | ArrayBufferView): void;
+    writeBuffer(
+      buffer: GPUBuffer,
+      bufferOffset: number,
+      data: ArrayBuffer | ArrayBufferView,
+    ): void;
   }
-  
+
   interface GPUBuffer {
     destroy(): void;
     mapAsync(mode: GPUMapMode): Promise<void>;
@@ -87,102 +99,124 @@ declare global {
     readonly size: number;
     readonly usage: number;
   }
-  
+
   interface GPUBufferDescriptor {
     size: number;
     usage: number;
     label?: string;
   }
-  
+
   interface GPUShaderModule {
     readonly label?: string;
   }
-  
+
   interface GPUShaderModuleDescriptor {
     code: string;
     label?: string;
   }
-  
+
   interface GPUComputePipeline {
     readonly label?: string;
     getBindGroupLayout(index: number): GPUBindGroupLayout;
   }
-  
+
   interface GPUComputePipelineInternal {
     readonly label?: string;
     getBindGroupLayout(index: number): GPUBindGroupLayout;
   }
-  
+
   interface GPUComputePipelineDescriptor {
-    layout: 'auto' | GPUPipelineLayout;
+    layout: "auto" | GPUPipelineLayout;
     compute: GPUProgrammableStage;
   }
-  
+
   interface GPUProgrammableStage {
     module: GPUShaderModule;
     entryPoint: string;
   }
-  
+
   interface GPUBindGroup {
     readonly label?: string;
   }
-  
+
   interface GPUBindGroupDescriptor {
     layout: GPUBindGroupLayout;
     entries: GPUBindGroupEntry[];
   }
-  
+
   interface GPUBindGroupEntry {
     binding: number;
     resource: GPUBindingResource;
   }
-  
+
   interface GPUBindingResource {
     buffer: GPUBuffer;
   }
-  
+
   interface GPUBindGroupLayout {
     readonly label?: string;
   }
-  
+
   interface GPUCommandEncoder {
-    beginComputePass(descriptor?: GPUComputePassDescriptor): GPUComputePassEncoder;
-    copyBufferToBuffer(source: GPUBuffer, sourceOffset: number, destination: GPUBuffer, destinationOffset: number, size: number): void;
+    beginComputePass(
+      descriptor?: GPUComputePassDescriptor,
+    ): GPUComputePassEncoder;
+    copyBufferToBuffer(
+      source: GPUBuffer,
+      sourceOffset: number,
+      destination: GPUBuffer,
+      destinationOffset: number,
+      size: number,
+    ): void;
     finish(): GPUCommandBuffer;
   }
-  
+
   interface GPUCommandEncoderDescriptor {
     label?: string;
   }
-  
+
   interface GPUComputePassEncoder {
     setPipeline(pipeline: GPUComputePipeline): void;
     setBindGroup(index: number, bindGroup: GPUBindGroup): void;
-    dispatchWorkgroups(workgroupCountX: number, workgroupCountY?: number, workgroupCountZ?: number): void;
+    dispatchWorkgroups(
+      workgroupCountX: number,
+      workgroupCountY?: number,
+      workgroupCountZ?: number,
+    ): void;
     end(): void;
   }
-  
+
   interface GPUComputePassDescriptor {
     label?: string;
   }
-  
+
   interface GPUCommandBuffer {
     readonly label?: string;
   }
-  
+
   interface GPUUncapturedErrorEvent extends Event {
     readonly error: Error;
   }
-  
+
   interface GPUSupportedLimits {
     readonly maxStorageBufferBindingSize: number;
     readonly maxComputeWorkgroupSizeX: number;
     readonly maxComputeWorkgroupsPerDimension: number;
   }
-  
-  type GPUFeatureName = 'timestamp-query';
-  type GPUMapMode = 'read' | 'write';
-  type GPUBufferUsage = 'map-read' | 'map-write' | 'copy-src' | 'copy-dst' | 'index' | 'vertex' | 'uniform' | 'storage' | 'indirect' | 'query-resolve';
+
+  type GPUFeatureName = "timestamp-query";
+  type GPUMapMode = "read" | "write";
+  type GPUBufferUsage =
+    | "map-read"
+    | "map-write"
+    | "copy-src"
+    | "copy-dst"
+    | "index"
+    | "vertex"
+    | "uniform"
+    | "storage"
+    | "indirect"
+    | "query-resolve";
   type GPUPipelineLayout = any; // Simplified for now
 }
 
@@ -207,7 +241,10 @@ export interface GPUEvolutionResult {
   readonly bestSequence: readonly number[];
   readonly fitness: number;
   readonly generation: number;
-  readonly convergenceReason: 'max-generations' | 'fitness-plateau' | 'cv-threshold';
+  readonly convergenceReason:
+    | "max-generations"
+    | "fitness-plateau"
+    | "cv-threshold";
   readonly metrics: {
     readonly totalGenerations: number;
     readonly finalFitness: number;
@@ -226,14 +263,14 @@ export interface GPUEvolutionResult {
  * GPU Buffer management interface
  */
 interface GPUBuffers {
-  readonly population: GPUBuffer;      // u32 array (indices)
-  readonly fitness: GPUBuffer;         // f32 array
-  readonly items: GPUBuffer;           // Item structs
-  readonly params: GPUBuffer;          // Uniform params
-  readonly rngState: GPUBuffer;        // RNG state
-  readonly selection: GPUBuffer;       // Selection buffer
-  readonly offspring: GPUBuffer;       // Crossover results
-  readonly temp: GPUBuffer;            // Temporary buffer
+  readonly population: GPUBuffer; // u32 array (indices)
+  readonly fitness: GPUBuffer; // f32 array
+  readonly items: GPUBuffer; // Item structs
+  readonly params: GPUBuffer; // Uniform params
+  readonly rngState: GPUBuffer; // RNG state
+  readonly selection: GPUBuffer; // Selection buffer
+  readonly offspring: GPUBuffer; // Crossover results
+  readonly temp: GPUBuffer; // Temporary buffer
 }
 
 /**
@@ -249,7 +286,7 @@ interface GPUComputePipelineCollection {
 
 /**
  * GPU Evolution Service
- * 
+ *
  * Provides WebGPU-accelerated genetic algorithm evolution
  * with full type safety and deterministic behavior
  */
@@ -268,57 +305,64 @@ export class GPUEvolutionService {
 
   /**
    * Initialize GPU device and create compute pipelines
-   * 
+   *
    * @returns Promise<boolean> - true if GPU is available and initialized
    */
   public async initialize(): Promise<boolean> {
     try {
-      this.logger.info('Initializing GPU Evolution Service...');
+      this.logger.info("Initializing GPU Evolution Service...");
 
       // Check WebGPU support
-      if (typeof globalThis !== 'undefined' && (globalThis.navigator as NavigatorWithGPU)?.gpu) {
+      if (
+        typeof globalThis !== "undefined" &&
+        (globalThis.navigator as NavigatorWithGPU)?.gpu
+      ) {
         // Browser environment
-        const adapter = await (globalThis.navigator as NavigatorWithGPU).gpu!.requestAdapter({
-          powerPreference: 'high-performance',
-          forceFallbackAdapter: false
+        const adapter = await (
+          globalThis.navigator as NavigatorWithGPU
+        ).gpu!.requestAdapter({
+          powerPreference: "high-performance",
+          forceFallbackAdapter: false,
         });
         this.adapter = adapter as GPUAdapter | null;
       } else {
-        this.logger.warn('WebGPU not supported in this environment');
+        this.logger.warn("WebGPU not supported in this environment");
         return false;
       }
 
       if (!this.adapter) {
-        this.logger.warn('No suitable GPU adapter found');
+        this.logger.warn("No suitable GPU adapter found");
         return false;
       }
 
       // Request device
       this.device = await this.adapter.requestDevice({
-        requiredFeatures: ['timestamp-query'],
+        requiredFeatures: ["timestamp-query"],
         requiredLimits: {
-          maxStorageBufferBindingSize: this.adapter.limits.maxStorageBufferBindingSize,
-          maxComputeWorkgroupSizeX: this.adapter.limits.maxComputeWorkgroupSizeX,
-          maxComputeWorkgroupsPerDimension: this.adapter.limits.maxComputeWorkgroupsPerDimension
-        }
+          maxStorageBufferBindingSize:
+            this.adapter.limits.maxStorageBufferBindingSize,
+          maxComputeWorkgroupSizeX:
+            this.adapter.limits.maxComputeWorkgroupSizeX,
+          maxComputeWorkgroupsPerDimension:
+            this.adapter.limits.maxComputeWorkgroupsPerDimension,
+        },
       });
 
       // Set up device error handling
-      this.device.addEventListener('uncapturederror', (event) => {
-        this.logger.error('GPU device error', { error: event.error });
+      this.device.addEventListener("uncapturederror", (event) => {
+        this.logger.error("GPU device error", { error: event.error });
       });
 
       this.isInitialized = true;
-      this.logger.info('GPU Evolution Service initialized successfully', {
-        adapter: this.adapter.info?.description || 'Unknown',
-        device: this.device.label || 'Unknown'
+      this.logger.info("GPU Evolution Service initialized successfully", {
+        adapter: this.adapter.info?.description || "Unknown",
+        device: this.device.label || "Unknown",
       });
 
       return true;
-
     } catch (error) {
-      this.logger.error('Failed to initialize GPU Evolution Service', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+      this.logger.error("Failed to initialize GPU Evolution Service", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       return false;
     }
@@ -326,13 +370,15 @@ export class GPUEvolutionService {
 
   /**
    * Run GPU-accelerated evolution
-   * 
+   *
    * @param params - Evolution parameters
    * @returns Promise<GPUEvolutionResult> - Evolution result
    */
-  public async runEvolution(params: GPUEvolutionParams): Promise<GPUEvolutionResult> {
+  public async runEvolution(
+    params: GPUEvolutionParams,
+  ): Promise<GPUEvolutionResult> {
     if (!this.isInitialized || !this.device) {
-      throw new Error('GPU Evolution Service not initialized');
+      throw new Error("GPU Evolution Service not initialized");
     }
 
     this.startTime = performance.now();
@@ -340,40 +386,39 @@ export class GPUEvolutionService {
     this.transferTime = 0;
 
     try {
-      this.logger.info('Starting GPU evolution', {
+      this.logger.info("Starting GPU evolution", {
         populationSize: params.populationSize,
         generations: params.generations,
         itemsCount: params.items.length,
-        seed: params.seed
+        seed: params.seed,
       });
 
       // Create buffers
       this.buffers = await this.createBuffers(params);
-      
+
       // Create compute pipelines
       this.pipelines = await this.createComputePipelines();
-      
+
       // Initialize population with random sequences
       await this.initializePopulation(params);
-      
+
       // Run evolution pipeline
       const result = await this.runEvolutionPipeline(params, this.buffers);
-      
+
       const totalTime = performance.now() - this.startTime;
-      
-      this.logger.info('GPU evolution completed', {
-        totalTime: totalTime.toFixed(2) + 'ms',
-        kernelTime: this.kernelTime.toFixed(2) + 'ms',
-        transferTime: this.transferTime.toFixed(2) + 'ms',
+
+      this.logger.info("GPU evolution completed", {
+        totalTime: totalTime.toFixed(2) + "ms",
+        kernelTime: this.kernelTime.toFixed(2) + "ms",
+        transferTime: this.transferTime.toFixed(2) + "ms",
         generations: result.metrics.totalGenerations,
-        finalFitness: result.metrics.finalFitness.toFixed(4)
+        finalFitness: result.metrics.finalFitness.toFixed(4),
       });
 
       return result;
-
     } catch (error) {
-      this.logger.error('GPU evolution failed', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+      this.logger.error("GPU evolution failed", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
@@ -384,16 +429,16 @@ export class GPUEvolutionService {
    */
   public dispose(): void {
     if (this.buffers) {
-      Object.values(this.buffers).forEach(buffer => buffer.destroy());
+      Object.values(this.buffers).forEach((buffer) => buffer.destroy());
       this.buffers = null;
     }
-    
+
     this.pipelines = null;
     this.device = null;
     this.adapter = null;
     this.isInitialized = false;
-    
-    this.logger.info('GPU Evolution Service disposed');
+
+    this.logger.info("GPU Evolution Service disposed");
   }
 
   /**
@@ -408,50 +453,50 @@ export class GPUEvolutionService {
       population: device.createBuffer({
         size: populationSize * itemCount * 4, // u32 = 4 bytes
         usage: 0x0008 | 0x0004 | 0x0002, // STORAGE | COPY_DST | COPY_SRC
-        label: 'Population Buffer'
+        label: "Population Buffer",
       }),
-      
+
       fitness: device.createBuffer({
         size: populationSize * 4, // f32 = 4 bytes
         usage: 0x0008 | 0x0004 | 0x0002, // STORAGE | COPY_DST | COPY_SRC
-        label: 'Fitness Buffer'
+        label: "Fitness Buffer",
       }),
-      
+
       items: device.createBuffer({
         size: itemCount * 16, // Item struct = 16 bytes
         usage: 0x0008 | 0x0004, // STORAGE | COPY_DST
-        label: 'Items Buffer'
+        label: "Items Buffer",
       }),
-      
+
       params: device.createBuffer({
         size: 64, // Params struct = 64 bytes
         usage: 0x0040 | 0x0004, // UNIFORM | COPY_DST
-        label: 'Params Buffer'
+        label: "Params Buffer",
       }),
-      
+
       rngState: device.createBuffer({
         size: populationSize * 4, // u32 = 4 bytes
         usage: 0x0008 | 0x0004 | 0x0002, // STORAGE | COPY_DST | COPY_SRC
-        label: 'RNG State Buffer'
+        label: "RNG State Buffer",
       }),
-      
+
       selection: device.createBuffer({
         size: populationSize * 4, // u32 = 4 bytes
         usage: 0x0008 | 0x0004 | 0x0002, // STORAGE | COPY_DST | COPY_SRC
-        label: 'Selection Buffer'
+        label: "Selection Buffer",
       }),
-      
+
       offspring: device.createBuffer({
         size: populationSize * itemCount * 4, // u32 = 4 bytes
         usage: 0x0008 | 0x0004 | 0x0002, // STORAGE | COPY_DST | COPY_SRC
-        label: 'Offspring Buffer'
+        label: "Offspring Buffer",
       }),
-      
+
       temp: device.createBuffer({
         size: Math.max(populationSize * itemCount * 4, populationSize * 4),
         usage: 0x0008 | 0x0004 | 0x0002, // STORAGE | COPY_DST | COPY_SRC
-        label: 'Temp Buffer'
-      })
+        label: "Temp Buffer",
+      }),
     };
   }
 
@@ -462,52 +507,58 @@ export class GPUEvolutionService {
     const device = this.device!;
 
     // Load shader modules
-    const fitnessShader = await this.loadShaderModule('fitness-evolution.wgsl');
-    const selectionShader = await this.loadShaderModule('tournament-selection-evolution.wgsl');
-    const crossoverShader = await this.loadShaderModule('order-crossover-evolution.wgsl');
-    const mutationShader = await this.loadShaderModule('mutation-evolution.wgsl');
-    const rngShader = await this.loadShaderModule('rng.wgsl');
+    const fitnessShader = await this.loadShaderModule("fitness-evolution.wgsl");
+    const selectionShader = await this.loadShaderModule(
+      "tournament-selection-evolution.wgsl",
+    );
+    const crossoverShader = await this.loadShaderModule(
+      "order-crossover-evolution.wgsl",
+    );
+    const mutationShader = await this.loadShaderModule(
+      "mutation-evolution.wgsl",
+    );
+    const rngShader = await this.loadShaderModule("rng.wgsl");
 
     return {
       fitnessPipeline: device.createComputePipeline({
-        layout: 'auto',
+        layout: "auto",
         compute: {
           module: fitnessShader,
-          entryPoint: 'evaluateFitness'
-        }
+          entryPoint: "evaluateFitness",
+        },
       }) as GPUComputePipelineInternal,
-      
+
       selectionPipeline: device.createComputePipeline({
-        layout: 'auto',
+        layout: "auto",
         compute: {
           module: selectionShader,
-          entryPoint: 'tournamentSelection'
-        }
+          entryPoint: "tournamentSelection",
+        },
       }) as GPUComputePipelineInternal,
-      
+
       crossoverPipeline: device.createComputePipeline({
-        layout: 'auto',
+        layout: "auto",
         compute: {
           module: crossoverShader,
-          entryPoint: 'orderCrossover'
-        }
+          entryPoint: "orderCrossover",
+        },
       }) as GPUComputePipelineInternal,
-      
+
       mutationPipeline: device.createComputePipeline({
-        layout: 'auto',
+        layout: "auto",
         compute: {
           module: mutationShader,
-          entryPoint: 'mutate'
-        }
+          entryPoint: "mutate",
+        },
       }) as GPUComputePipelineInternal,
-      
+
       rngPipeline: device.createComputePipeline({
-        layout: 'auto',
+        layout: "auto",
         compute: {
           module: rngShader,
-          entryPoint: 'generateRandom'
-        }
-      }) as GPUComputePipelineInternal
+          entryPoint: "generateRandom",
+        },
+      }) as GPUComputePipelineInternal,
     };
   }
 
@@ -516,7 +567,7 @@ export class GPUEvolutionService {
    */
   private async loadShaderModule(filename: string): Promise<GPUShaderModule> {
     const device = this.device!;
-    
+
     try {
       // Try to load from file system (development)
       const response = await fetch(`/shaders/${filename}`);
@@ -524,12 +575,12 @@ export class GPUEvolutionService {
         const shaderCode = await response.text();
         return device.createShaderModule({
           code: shaderCode,
-          label: filename
+          label: filename,
         });
       }
     } catch (error) {
       this.logger.warn(`Could not load shader from file: ${filename}`, {
-        error: error instanceof Error ? error.message : 'Unknown'
+        error: error instanceof Error ? error.message : "Unknown",
       });
     }
 
@@ -537,7 +588,7 @@ export class GPUEvolutionService {
     const embeddedShader = this.getEmbeddedShader(filename);
     return device.createShaderModule({
       code: embeddedShader,
-      label: filename
+      label: filename,
     });
   }
 
@@ -546,7 +597,7 @@ export class GPUEvolutionService {
    */
   private getEmbeddedShader(filename: string): string {
     switch (filename) {
-      case 'rng.wgsl':
+      case "rng.wgsl":
         return `// Linear Congruential Generator (LCG) for GPU
 // Deterministic random number generation with seed support
 
@@ -588,7 +639,7 @@ fn generateRandom(@builtin(global_invocation_id) global_id: vec3<u32>) {
   randomNumbers[idx] = normalize(state);
 }`;
 
-      case 'fitness-evolution.wgsl':
+      case "fitness-evolution.wgsl":
         return `// Enhanced Fitness Evaluation Shader for GPU Evolution
 // Multi-objective optimization with dynamic normalization
 
@@ -673,7 +724,7 @@ fn evaluateFitness(@builtin(global_invocation_id) global_id: vec3<u32>) {
     params.timeWeight * timeScore;
 }`;
 
-      case 'tournament-selection-evolution.wgsl':
+      case "tournament-selection-evolution.wgsl":
         return `// Tournament Selection Shader for GPU Evolution
 
 struct SelectionParams {
@@ -748,7 +799,7 @@ fn tournamentSelection(@builtin(global_invocation_id) global_id: vec3<u32>) {
   }
 }`;
 
-      case 'order-crossover-evolution.wgsl':
+      case "order-crossover-evolution.wgsl":
         return `// Order Crossover (OX) Shader for GPU Evolution
 
 struct CrossoverParams {
@@ -834,7 +885,7 @@ fn orderCrossoverKernel(@builtin(global_invocation_id) global_id: vec3<u32>) {
   }
 }`;
 
-      case 'mutation-evolution.wgsl':
+      case "mutation-evolution.wgsl":
         return `// Mutation Shader for GPU Evolution
 
 struct MutationParams {
@@ -903,7 +954,9 @@ fn mutate(@builtin(global_invocation_id) global_id: vec3<u32>) {
   /**
    * Initialize population with random sequences
    */
-  private async initializePopulation(params: GPUEvolutionParams): Promise<void> {
+  private async initializePopulation(
+    params: GPUEvolutionParams,
+  ): Promise<void> {
     const device = this.device!;
     const buffers = this.buffers!;
     const itemCount = params.items.length;
@@ -912,7 +965,7 @@ fn mutate(@builtin(global_invocation_id) global_id: vec3<u32>) {
     // Create initial population data
     const populationData = new Uint32Array(populationSize * itemCount);
     const rngStateData = new Uint32Array(populationSize);
-    
+
     // Initialize RNG states with seed
     for (let i = 0; i < populationSize; i++) {
       rngStateData[i] = params.seed + i;
@@ -921,14 +974,14 @@ fn mutate(@builtin(global_invocation_id) global_id: vec3<u32>) {
     // Generate random sequences
     for (let i = 0; i < populationSize; i++) {
       const sequence = Array.from({ length: itemCount }, (_, j) => j);
-      
+
       // Fisher-Yates shuffle with RNG
       for (let j = itemCount - 1; j > 0; j--) {
         const random = this.lcg(rngStateData[i]);
         const k = Math.floor(random * (j + 1));
         [sequence[j], sequence[k]] = [sequence[k], sequence[j]];
       }
-      
+
       // Copy to population data
       for (let j = 0; j < itemCount; j++) {
         populationData[i * itemCount + j] = sequence[j];
@@ -955,33 +1008,32 @@ fn mutate(@builtin(global_invocation_id) global_id: vec3<u32>) {
    */
   private async runEvolutionPipeline(
     params: GPUEvolutionParams,
-    buffers: GPUBuffers
+    buffers: GPUBuffers,
   ): Promise<GPUEvolutionResult> {
-    
     for (let gen = 0; gen < params.generations; gen++) {
       // 1. Fitness Evaluation
       await this.runFitnessKernel(buffers);
-      
+
       // 2. Tournament Selection
       await this.runSelectionKernel(buffers);
-      
+
       // 3. Order Crossover
       await this.runCrossoverKernel(buffers);
-      
+
       // 4. Mutation
       await this.runMutationKernel(buffers);
-      
+
       // 5. Elitism (copy best to next gen)
       await this.applyElitism(buffers);
-      
+
       // 6. Convergence Check
       const converged = await this.checkConvergence(buffers, gen);
       if (converged) {
-        return this.extractResult(buffers, gen, 'cv-threshold');
+        return this.extractResult(buffers, gen, "cv-threshold");
       }
     }
-    
-    return this.extractResult(buffers, params.generations, 'max-generations');
+
+    return this.extractResult(buffers, params.generations, "max-generations");
   }
 
   /**
@@ -991,31 +1043,34 @@ fn mutate(@builtin(global_invocation_id) global_id: vec3<u32>) {
     const device = this.device!;
     const pipelines = this.pipelines!;
     const commandEncoder = device.createCommandEncoder();
-    
+
     const passEncoder = commandEncoder.beginComputePass();
     passEncoder.setPipeline(pipelines.fitnessPipeline);
-    
+
     // Set bindings
-    passEncoder.setBindGroup(0, device.createBindGroup({
-      layout: pipelines.fitnessPipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: buffers.population } },
-        { binding: 1, resource: { buffer: buffers.items } },
-        { binding: 2, resource: { buffer: buffers.params } },
-        { binding: 3, resource: { buffer: buffers.fitness } }
-      ]
-    }));
-    
+    passEncoder.setBindGroup(
+      0,
+      device.createBindGroup({
+        layout: pipelines.fitnessPipeline.getBindGroupLayout(0),
+        entries: [
+          { binding: 0, resource: { buffer: buffers.population } },
+          { binding: 1, resource: { buffer: buffers.items } },
+          { binding: 2, resource: { buffer: buffers.params } },
+          { binding: 3, resource: { buffer: buffers.fitness } },
+        ],
+      }),
+    );
+
     // Dispatch compute shader
     const workgroupCount = Math.ceil(buffers.population.size / (256 * 4)) / 4; // u32 = 4 bytes
     passEncoder.dispatchWorkgroups(workgroupCount);
     passEncoder.end();
-    
+
     // Submit command
     const commandBuffer = commandEncoder.finish();
     device.queue.submit([commandBuffer]);
-    
-    this.logger.debug('Fitness kernel dispatched', { workgroupCount });
+
+    this.logger.debug("Fitness kernel dispatched", { workgroupCount });
   }
 
   /**
@@ -1025,33 +1080,36 @@ fn mutate(@builtin(global_invocation_id) global_id: vec3<u32>) {
     const device = this.device!;
     const pipelines = this.pipelines!;
     const commandEncoder = device.createCommandEncoder();
-    
+
     const passEncoder = commandEncoder.beginComputePass();
     passEncoder.setPipeline(pipelines.selectionPipeline);
-    
+
     // Set bindings
-    passEncoder.setBindGroup(0, device.createBindGroup({
-      layout: pipelines.selectionPipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: buffers.fitness } },
-        { binding: 1, resource: { buffer: buffers.population } },
-        { binding: 2, resource: { buffer: buffers.rngState } },
-        { binding: 3, resource: { buffer: buffers.params } },
-        { binding: 4, resource: { buffer: buffers.selection } },
-        { binding: 5, resource: { buffer: buffers.offspring } }
-      ]
-    }));
-    
+    passEncoder.setBindGroup(
+      0,
+      device.createBindGroup({
+        layout: pipelines.selectionPipeline.getBindGroupLayout(0),
+        entries: [
+          { binding: 0, resource: { buffer: buffers.fitness } },
+          { binding: 1, resource: { buffer: buffers.population } },
+          { binding: 2, resource: { buffer: buffers.rngState } },
+          { binding: 3, resource: { buffer: buffers.params } },
+          { binding: 4, resource: { buffer: buffers.selection } },
+          { binding: 5, resource: { buffer: buffers.offspring } },
+        ],
+      }),
+    );
+
     // Dispatch compute shader
     const workgroupCount = Math.ceil(buffers.population.size / (256 * 4)) / 4;
     passEncoder.dispatchWorkgroups(workgroupCount);
     passEncoder.end();
-    
+
     // Submit command
     const commandBuffer = commandEncoder.finish();
     device.queue.submit([commandBuffer]);
-    
-    this.logger.debug('Selection kernel dispatched', { workgroupCount });
+
+    this.logger.debug("Selection kernel dispatched", { workgroupCount });
   }
 
   /**
@@ -1061,32 +1119,35 @@ fn mutate(@builtin(global_invocation_id) global_id: vec3<u32>) {
     const device = this.device!;
     const pipelines = this.pipelines!;
     const commandEncoder = device.createCommandEncoder();
-    
+
     const passEncoder = commandEncoder.beginComputePass();
     passEncoder.setPipeline(pipelines.crossoverPipeline);
-    
+
     // Set bindings
-    passEncoder.setBindGroup(0, device.createBindGroup({
-      layout: pipelines.crossoverPipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: buffers.population } },
-        { binding: 1, resource: { buffer: buffers.selection } },
-        { binding: 2, resource: { buffer: buffers.rngState } },
-        { binding: 3, resource: { buffer: buffers.params } },
-        { binding: 4, resource: { buffer: buffers.offspring } }
-      ]
-    }));
-    
+    passEncoder.setBindGroup(
+      0,
+      device.createBindGroup({
+        layout: pipelines.crossoverPipeline.getBindGroupLayout(0),
+        entries: [
+          { binding: 0, resource: { buffer: buffers.population } },
+          { binding: 1, resource: { buffer: buffers.selection } },
+          { binding: 2, resource: { buffer: buffers.rngState } },
+          { binding: 3, resource: { buffer: buffers.params } },
+          { binding: 4, resource: { buffer: buffers.offspring } },
+        ],
+      }),
+    );
+
     // Dispatch compute shader
     const workgroupCount = Math.ceil(buffers.population.size / (256 * 4)) / 4;
     passEncoder.dispatchWorkgroups(workgroupCount);
     passEncoder.end();
-    
+
     // Submit command
     const commandBuffer = commandEncoder.finish();
     device.queue.submit([commandBuffer]);
-    
-    this.logger.debug('Crossover kernel dispatched', { workgroupCount });
+
+    this.logger.debug("Crossover kernel dispatched", { workgroupCount });
   }
 
   /**
@@ -1096,31 +1157,34 @@ fn mutate(@builtin(global_invocation_id) global_id: vec3<u32>) {
     const device = this.device!;
     const pipelines = this.pipelines!;
     const commandEncoder = device.createCommandEncoder();
-    
+
     const passEncoder = commandEncoder.beginComputePass();
     passEncoder.setPipeline(pipelines.mutationPipeline);
-    
+
     // Set bindings
-    passEncoder.setBindGroup(0, device.createBindGroup({
-      layout: pipelines.mutationPipeline.getBindGroupLayout(0),
-      entries: [
-        { binding: 0, resource: { buffer: buffers.fitness } },
-        { binding: 1, resource: { buffer: buffers.population } },
-        { binding: 2, resource: { buffer: buffers.rngState } },
-        { binding: 3, resource: { buffer: buffers.params } }
-      ]
-    }));
-    
+    passEncoder.setBindGroup(
+      0,
+      device.createBindGroup({
+        layout: pipelines.mutationPipeline.getBindGroupLayout(0),
+        entries: [
+          { binding: 0, resource: { buffer: buffers.fitness } },
+          { binding: 1, resource: { buffer: buffers.population } },
+          { binding: 2, resource: { buffer: buffers.rngState } },
+          { binding: 3, resource: { buffer: buffers.params } },
+        ],
+      }),
+    );
+
     // Dispatch compute shader
     const workgroupCount = Math.ceil(buffers.population.size / (256 * 4)) / 4;
     passEncoder.dispatchWorkgroups(workgroupCount);
     passEncoder.end();
-    
+
     // Submit command
     const commandBuffer = commandEncoder.finish();
     device.queue.submit([commandBuffer]);
-    
-    this.logger.debug('Mutation kernel dispatched', { workgroupCount });
+
+    this.logger.debug("Mutation kernel dispatched", { workgroupCount });
   }
 
   /**
@@ -1129,7 +1193,7 @@ fn mutate(@builtin(global_invocation_id) global_id: vec3<u32>) {
   private async applyElitism(buffers: GPUBuffers): Promise<void> {
     // Elitism is handled within the selection kernel
     // This method is kept for future enhancements
-    this.logger.debug('Elitism applied within selection kernel');
+    this.logger.debug("Elitism applied within selection kernel");
   }
 
   /**
@@ -1137,20 +1201,21 @@ fn mutate(@builtin(global_invocation_id) global_id: vec3<u32>) {
    */
   private async checkConvergence(
     buffers: GPUBuffers,
-    generation: number
+    generation: number,
   ): Promise<boolean> {
-    
     if (generation < 10) return false;
-    
+
     // Read fitness scores from GPU
     const fitnessArray = await this.readFitnessBuffer(buffers.fitness);
-    
+
     // Calculate Coefficient of Variation
     const mean = fitnessArray.reduce((a, b) => a + b) / fitnessArray.length;
-    const variance = fitnessArray.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / fitnessArray.length;
+    const variance =
+      fitnessArray.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+      fitnessArray.length;
     const stdDev = Math.sqrt(variance);
     const cv = stdDev / mean;
-    
+
     // CV < 1% means converged
     return cv < 0.01;
   }
@@ -1158,31 +1223,39 @@ fn mutate(@builtin(global_invocation_id) global_id: vec3<u32>) {
   /**
    * Read fitness buffer from GPU
    */
-  private async readFitnessBuffer(fitnessBuffer: GPUBuffer): Promise<Float32Array> {
+  private async readFitnessBuffer(
+    fitnessBuffer: GPUBuffer,
+  ): Promise<Float32Array> {
     const device = this.device!;
     const bufferSize = fitnessBuffer.size;
-    
+
     // Create staging buffer
     const stagingBuffer = device.createBuffer({
       size: bufferSize,
-      usage: 0x0004 | 0x0001 // COPY_DST | MAP_READ
+      usage: 0x0004 | 0x0001, // COPY_DST | MAP_READ
     });
-    
+
     // Copy from GPU to staging
     const commandEncoder = device.createCommandEncoder();
-    commandEncoder.copyBufferToBuffer(fitnessBuffer, 0, stagingBuffer, 0, bufferSize);
+    commandEncoder.copyBufferToBuffer(
+      fitnessBuffer,
+      0,
+      stagingBuffer,
+      0,
+      bufferSize,
+    );
     const commandBuffer = commandEncoder.finish();
     device.queue.submit([commandBuffer]);
-    
+
     // Map and read
-    await stagingBuffer.mapAsync('read');
+    await stagingBuffer.mapAsync("read");
     const arrayBuffer = stagingBuffer.getMappedRange();
     const result = new Float32Array(arrayBuffer);
-    
+
     // Cleanup
     stagingBuffer.unmap();
     stagingBuffer.destroy();
-    
+
     return result;
   }
 
@@ -1192,19 +1265,18 @@ fn mutate(@builtin(global_invocation_id) global_id: vec3<u32>) {
   private async extractResult(
     buffers: GPUBuffers,
     generation: number,
-    reason: 'max-generations' | 'fitness-plateau' | 'cv-threshold'
+    reason: "max-generations" | "fitness-plateau" | "cv-threshold",
   ): Promise<GPUEvolutionResult> {
-    
     // Read best sequence and fitness
     const fitnessArray = await this.readFitnessBuffer(buffers.fitness);
     const bestIndex = fitnessArray.indexOf(Math.max(...fitnessArray));
     const bestFitness = fitnessArray[bestIndex];
-    
+
     // Read best sequence (implementation needed)
     const bestSequence: number[] = []; // Placeholder
-    
+
     const totalTime = performance.now() - this.startTime;
-    
+
     return {
       bestSequence,
       fitness: bestFitness,
@@ -1219,9 +1291,9 @@ fn mutate(@builtin(global_invocation_id) global_id: vec3<u32>) {
           totalTime,
           kernelExecutionTime: this.kernelTime,
           dataTransferTime: this.transferTime,
-          speedupVsCPU: 1.0 // Placeholder
-        }
-      }
+          speedupVsCPU: 1.0, // Placeholder
+        },
+      },
     };
   }
 }

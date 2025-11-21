@@ -2,12 +2,12 @@
  * @fileoverview Enterprise-Grade Professional PDF Export Service
  * @module PDFExportService
  * @version 5.0.0 - Complete Professional Redesign
- * 
+ *
  * Bu servis, kesim listelerini profesyonel iş emri belgelerine dönüştürür.
  * Modern tasarım, mükemmel sayfa sığma ve enterprise-grade hata yönetimi sağlar.
  */
 
-import puppeteer, { Browser, Page } from 'puppeteer';
+import puppeteer, { Browser, Page } from "puppeteer";
 
 // ============================================================================
 // ENTERPRISE TYPE DEFINITIONS
@@ -64,7 +64,7 @@ interface CuttingList {
  * PDF oluşturma seçenekleri
  */
 interface PDFGenerationOptions {
-  readonly format: 'A4' | 'A3' | 'Letter';
+  readonly format: "A4" | "A3" | "Letter";
   readonly margin: {
     readonly top: string;
     readonly right: string;
@@ -86,7 +86,7 @@ interface HTMLGenerationOptions {
   readonly showMeasurements: boolean;
   readonly showColors: boolean;
   readonly showWaste: boolean;
-  readonly colorScheme: 'material' | 'monochrome' | 'corporate';
+  readonly colorScheme: "material" | "monochrome" | "corporate";
 }
 
 /**
@@ -104,12 +104,12 @@ interface PDFExportResult {
  * Hata türleri
  */
 enum PDFExportErrorType {
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
-  BROWSER_ERROR = 'BROWSER_ERROR',
-  HTML_GENERATION_ERROR = 'HTML_GENERATION_ERROR',
-  PDF_GENERATION_ERROR = 'PDF_GENERATION_ERROR',
-  RESOURCE_ERROR = 'RESOURCE_ERROR',
-  TIMEOUT_ERROR = 'TIMEOUT_ERROR'
+  VALIDATION_ERROR = "VALIDATION_ERROR",
+  BROWSER_ERROR = "BROWSER_ERROR",
+  HTML_GENERATION_ERROR = "HTML_GENERATION_ERROR",
+  PDF_GENERATION_ERROR = "PDF_GENERATION_ERROR",
+  RESOURCE_ERROR = "RESOURCE_ERROR",
+  TIMEOUT_ERROR = "TIMEOUT_ERROR",
 }
 
 /**
@@ -123,10 +123,10 @@ class PDFExportError extends Error {
   constructor(
     type: PDFExportErrorType,
     message: string,
-    context: Record<string, unknown> = {}
+    context: Record<string, unknown> = {},
   ) {
     super(message);
-    this.name = 'PDFExportError';
+    this.name = "PDFExportError";
     this.type = type;
     this.context = context;
     this.timestamp = new Date().toISOString();
@@ -139,7 +139,7 @@ class PDFExportError extends Error {
 
 /**
  * Enterprise-Grade Professional PDF Export Service
- * 
+ *
  * Bu servis, kesim listelerini profesyonel iş emri belgelerine dönüştürür.
  * Modern tasarım, mükemmel sayfa sığma ve enterprise-grade hata yönetimi sağlar.
  */
@@ -151,17 +151,17 @@ export class PDFExportService {
 
   // Profesyonel PDF oluşturma seçenekleri
   private readonly defaultPDFOptions: PDFGenerationOptions = {
-    format: 'A4',
+    format: "A4",
     margin: {
-      top: '5mm',
-      right: '5mm',
-      bottom: '5mm',
-      left: '5mm'
+      top: "5mm",
+      right: "5mm",
+      bottom: "5mm",
+      left: "5mm",
     },
     printBackground: true,
     scale: 1.0,
     landscape: true,
-    timeout: 45000
+    timeout: 45000,
   };
 
   // Modern HTML oluşturma seçenekleri
@@ -171,7 +171,7 @@ export class PDFExportService {
     showMeasurements: true,
     showColors: true,
     showWaste: true,
-    colorScheme: 'corporate'
+    colorScheme: "corporate",
   };
 
   private constructor() {
@@ -193,12 +193,14 @@ export class PDFExportService {
    */
   public async exportToPDF(
     cuttingList: CuttingList,
-    options?: Partial<PDFGenerationOptions>
+    options?: Partial<PDFGenerationOptions>,
   ): Promise<PDFExportResult> {
     const startTime = Date.now();
     const requestId = this.generateRequestId();
-    
-    console.log(`[PDFExport:${requestId}] Starting professional PDF export for: ${cuttingList.title}`);
+
+    console.log(
+      `[PDFExport:${requestId}] Starting professional PDF export for: ${cuttingList.title}`,
+    );
 
     try {
       // 1. Input validation
@@ -211,43 +213,55 @@ export class PDFExportService {
 
       // 3. Professional HTML content generation
       const htmlContent = this.generateProfessionalHTMLContent(cuttingList);
-      console.log(`[PDFExport:${requestId}] Professional HTML content generated, length: ${htmlContent.length}`);
+      console.log(
+        `[PDFExport:${requestId}] Professional HTML content generated, length: ${htmlContent.length}`,
+      );
 
       // 4. PDF generation with optimized settings
-      const pdfOptions = { 
-        ...this.defaultPDFOptions, 
-        ...options
+      const pdfOptions = {
+        ...this.defaultPDFOptions,
+        ...options,
       };
       console.log(`[PDFExport:${requestId}] Using professional PDF options`);
-      const pdfBuffer = await this.generatePDF(htmlContent, pdfOptions, requestId);
-      console.log(`[PDFExport:${requestId}] Professional PDF generated, size: ${pdfBuffer.length} bytes`);
+      const pdfBuffer = await this.generatePDF(
+        htmlContent,
+        pdfOptions,
+        requestId,
+      );
+      console.log(
+        `[PDFExport:${requestId}] Professional PDF generated, size: ${pdfBuffer.length} bytes`,
+      );
 
       // 5. Validation
       this.validatePDFBuffer(pdfBuffer);
 
       const generationTime = Date.now() - startTime;
-      console.log(`[PDFExport:${requestId}] Professional PDF export completed successfully in ${generationTime}ms`);
+      console.log(
+        `[PDFExport:${requestId}] Professional PDF export completed successfully in ${generationTime}ms`,
+      );
 
       return {
         buffer: pdfBuffer,
         size: pdfBuffer.length,
         generationTime,
         pageCount: 1,
-        isValid: true
+        isValid: true,
       };
-
     } catch (error) {
       const generationTime = Date.now() - startTime;
-      console.error(`[PDFExport:${requestId}] Professional PDF export failed after ${generationTime}ms:`, error);
-      
+      console.error(
+        `[PDFExport:${requestId}] Professional PDF export failed after ${generationTime}ms:`,
+        error,
+      );
+
       if (error instanceof PDFExportError) {
         throw error;
       }
-      
+
       throw new PDFExportError(
         PDFExportErrorType.PDF_GENERATION_ERROR,
-        `Professional PDF export failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        { requestId, generationTime, cuttingListId: cuttingList.id }
+        `Professional PDF export failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        { requestId, generationTime, cuttingListId: cuttingList.id },
       );
     }
   }
@@ -257,51 +271,50 @@ export class PDFExportService {
    */
   private async initializeBrowser(): Promise<void> {
     if (this.isInitialized && this.browser) {
-      console.log('[PDFExport] Browser already initialized, reusing instance');
+      console.log("[PDFExport] Browser already initialized, reusing instance");
       return;
     }
 
     try {
-      console.log('[PDFExport] Initializing professional browser...');
-      
+      console.log("[PDFExport] Initializing professional browser...");
+
       const launchOptions = {
         headless: true,
         args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-web-security',
-          '--hide-scrollbars',
-          '--disable-background-networking',
-          '--disable-default-apps',
-          '--disable-extensions',
-          '--disable-sync',
-          '--disable-translate',
-          '--no-first-run'
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-web-security",
+          "--hide-scrollbars",
+          "--disable-background-networking",
+          "--disable-default-apps",
+          "--disable-extensions",
+          "--disable-sync",
+          "--disable-translate",
+          "--no-first-run",
         ],
         timeout: this.defaultTimeout,
         protocolTimeout: this.defaultTimeout,
         defaultViewport: {
           width: 1200,
           height: 900,
-          deviceScaleFactor: 1
-        }
+          deviceScaleFactor: 1,
+        },
       };
 
       this.browser = await puppeteer.launch(launchOptions);
       this.isInitialized = true;
-      
-      console.log('[PDFExport] Professional browser initialized successfully');
-      
+
+      console.log("[PDFExport] Professional browser initialized successfully");
+
       const version = await this.browser.version();
       console.log(`[PDFExport] Browser version: ${version}`);
-      
     } catch (error) {
-      console.error('[PDFExport] Browser initialization failed:', error);
+      console.error("[PDFExport] Browser initialization failed:", error);
       throw new PDFExportError(
         PDFExportErrorType.BROWSER_ERROR,
-        `Browser initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        { originalError: error }
+        `Browser initialization failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        { originalError: error },
       );
     }
   }
@@ -309,7 +322,10 @@ export class PDFExportService {
   /**
    * Work Order kartı oluşturur
    */
-  private generateWorkOrderCard(item: CuttingListItem, escapeHtml: (text: string) => string): string {
+  private generateWorkOrderCard(
+    item: CuttingListItem,
+    escapeHtml: (text: string) => string,
+  ): string {
     let cardHtml = `
         <div class="work-order-card">
             <div class="work-order-header">
@@ -319,7 +335,7 @@ export class PDFExportService {
                 <div class="order-details-grid">
                     <div class="detail-row">
                         <span class="detail-label">Versiyon</span>
-                        <span class="detail-value">${escapeHtml(item.version || '-')}</span>
+                        <span class="detail-value">${escapeHtml(item.version || "-")}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Renk</span>
@@ -339,7 +355,7 @@ export class PDFExportService {
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Not</span>
-                        <span class="detail-value">${escapeHtml(item.note || '-')}</span>
+                        <span class="detail-value">${escapeHtml(item.note || "-")}</span>
                     </div>
                 </div>`;
 
@@ -357,12 +373,12 @@ export class PDFExportService {
                             </tr>
                         </thead>
                         <tbody>`;
-    
+
       item.profiles.forEach((profile) => {
         cardHtml += `
                             <tr>
-                                <td>${escapeHtml(profile.profile || 'Belirtilmemiş')}</td>
-                                <td>${escapeHtml(profile.measurement || '-')}</td>
+                                <td>${escapeHtml(profile.profile || "Belirtilmemiş")}</td>
+                                <td>${escapeHtml(profile.measurement || "-")}</td>
                                 <td class="quantity-cell">${profile.quantity || 0}</td>
                             </tr>`;
       });
@@ -372,11 +388,11 @@ export class PDFExportService {
                     </table>
                 </div>`;
     }
-    
+
     cardHtml += `
             </div>
         </div>`;
-    
+
     return cardHtml;
   }
 
@@ -385,18 +401,18 @@ export class PDFExportService {
    */
   private generateProfessionalHTMLContent(
     cuttingList: CuttingList,
-    options?: Partial<HTMLGenerationOptions>
+    options?: Partial<HTMLGenerationOptions>,
   ): string {
     const htmlOptions = { ...this.defaultHTMLOptions, ...options };
-    const currentDate = new Date().toLocaleDateString('tr-TR');
-    
+    const currentDate = new Date().toLocaleDateString("tr-TR");
+
     const escapeHtml = (text: string): string => {
       return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
     };
 
     // Tüm iş emirlerini topla
@@ -406,7 +422,7 @@ export class PDFExportService {
         allWorkOrders.push(...section.items);
       }
     });
-    
+
     let html = `
 <!DOCTYPE html>
 <html lang="tr" xml:lang="tr">
@@ -638,12 +654,12 @@ export class PDFExportService {
 
     // Work Orders Container - CSS Grid Layout
     html += `<div class="work-orders-container">`;
-    
+
     // Tüm kartları doğrudan ekle - CSS Grid otomatik olarak 2 sütuna yerleştirecek
     allWorkOrders.forEach((item) => {
       html += this.generateWorkOrderCard(item, escapeHtml);
     });
-    
+
     html += `</div>`;
 
     // Document Footer
@@ -668,13 +684,13 @@ export class PDFExportService {
   private async generatePDF(
     htmlContent: string,
     options: PDFGenerationOptions,
-    requestId: string
+    requestId: string,
   ): Promise<Buffer> {
     if (!this.browser) {
       throw new PDFExportError(
         PDFExportErrorType.BROWSER_ERROR,
-        'Browser not initialized',
-        { requestId }
+        "Browser not initialized",
+        { requestId },
       );
     }
 
@@ -685,24 +701,34 @@ export class PDFExportService {
       page = await this.browser.newPage();
 
       // Professional page configuration
-      await page.setViewport({ width: 1200, height: 900, deviceScaleFactor: 1 });
-      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
-      await page.emulateMediaType('print');
+      await page.setViewport({
+        width: 1200,
+        height: 900,
+        deviceScaleFactor: 1,
+      });
+      await page.setUserAgent(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      );
+      await page.emulateMediaType("print");
       console.log(`[PDFExport:${requestId}] Professional page configured`);
 
       // Set content
       console.log(`[PDFExport:${requestId}] Setting professional content...`);
-      await page.setContent(htmlContent, { 
-        waitUntil: 'networkidle0', 
-        timeout: 20000 
+      await page.setContent(htmlContent, {
+        waitUntil: "networkidle0",
+        timeout: 20000,
       });
 
       // Wait for rendering
-      await page.waitForFunction('document.readyState === "complete"', { timeout: 15000 });
-      await page.waitForSelector('.work-orders-container', { timeout: 10000 });
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log(`[PDFExport:${requestId}] Professional content rendering completed`);
+      await page.waitForFunction('document.readyState === "complete"', {
+        timeout: 15000,
+      });
+      await page.waitForSelector(".work-orders-container", { timeout: 10000 });
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      console.log(
+        `[PDFExport:${requestId}] Professional content rendering completed`,
+      );
 
       // Generate professional PDF
       console.log(`[PDFExport:${requestId}] Generating professional PDF...`);
@@ -714,26 +740,35 @@ export class PDFExportService {
         scale: options.scale,
         timeout: options.timeout,
         displayHeaderFooter: false,
-        preferCSSPageSize: false
+        preferCSSPageSize: false,
       });
 
-      console.log(`[PDFExport:${requestId}] Professional PDF generated successfully`);
+      console.log(
+        `[PDFExport:${requestId}] Professional PDF generated successfully`,
+      );
       return Buffer.from(pdfBuffer);
-
     } catch (error) {
-      console.error(`[PDFExport:${requestId}] Professional PDF generation failed:`, error);
+      console.error(
+        `[PDFExport:${requestId}] Professional PDF generation failed:`,
+        error,
+      );
       throw new PDFExportError(
         PDFExportErrorType.PDF_GENERATION_ERROR,
-        `Professional PDF generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        { requestId, error }
+        `Professional PDF generation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        { requestId, error },
       );
     } finally {
       if (page) {
         try {
           await page.close();
-          console.log(`[PDFExport:${requestId}] Professional page closed successfully`);
+          console.log(
+            `[PDFExport:${requestId}] Professional page closed successfully`,
+          );
         } catch (closeError) {
-          console.warn(`[PDFExport:${requestId}] Failed to close page gracefully:`, closeError);
+          console.warn(
+            `[PDFExport:${requestId}] Failed to close page gracefully:`,
+            closeError,
+          );
         }
       }
     }
@@ -746,77 +781,80 @@ export class PDFExportService {
     if (!cuttingList) {
       throw new PDFExportError(
         PDFExportErrorType.VALIDATION_ERROR,
-        'Cutting list is required'
+        "Cutting list is required",
       );
     }
-    
-    if (!cuttingList.title || cuttingList.title.trim() === '') {
+
+    if (!cuttingList.title || cuttingList.title.trim() === "") {
       throw new PDFExportError(
         PDFExportErrorType.VALIDATION_ERROR,
-        'Cutting list title is required'
+        "Cutting list title is required",
       );
     }
-    
+
     if (!cuttingList.sections || cuttingList.sections.length === 0) {
       throw new PDFExportError(
         PDFExportErrorType.VALIDATION_ERROR,
-        'Cutting list must have at least one section'
+        "Cutting list must have at least one section",
       );
     }
-    
+
     // Validate each section
     cuttingList.sections.forEach((section, index) => {
       if (!section.id) {
         throw new PDFExportError(
           PDFExportErrorType.VALIDATION_ERROR,
-          `Section ${index + 1} is missing ID`
+          `Section ${index + 1} is missing ID`,
         );
       }
-      
+
       const sectionName = section.name || section.productName;
-      if (!sectionName || sectionName.trim() === '') {
+      if (!sectionName || sectionName.trim() === "") {
         throw new PDFExportError(
           PDFExportErrorType.VALIDATION_ERROR,
-          `Section ${index + 1} is missing name or productName`
+          `Section ${index + 1} is missing name or productName`,
         );
       }
-      
+
       if (section.items && section.items.length > 0) {
         section.items.forEach((item, itemIndex) => {
           if (!item.id) {
             throw new PDFExportError(
               PDFExportErrorType.VALIDATION_ERROR,
-              `Item ${itemIndex + 1} in section ${sectionName} is missing ID`
+              `Item ${itemIndex + 1} in section ${sectionName} is missing ID`,
             );
           }
-          
+
           if (!item.workOrderId) {
             throw new PDFExportError(
               PDFExportErrorType.VALIDATION_ERROR,
-              `Item ${itemIndex + 1} in section ${sectionName} is missing workOrderId`
+              `Item ${itemIndex + 1} in section ${sectionName} is missing workOrderId`,
             );
           }
-          
+
           if (item.profiles && item.profiles.length > 0) {
             item.profiles.forEach((profile, profileIndex) => {
               if (!profile.id) {
                 throw new PDFExportError(
                   PDFExportErrorType.VALIDATION_ERROR,
-                  `Profile ${profileIndex + 1} in item ${item.workOrderId} is missing ID`
+                  `Profile ${profileIndex + 1} in item ${item.workOrderId} is missing ID`,
                 );
               }
-              
-              if (!profile.measurement || profile.measurement.trim() === '') {
+
+              if (!profile.measurement || profile.measurement.trim() === "") {
                 throw new PDFExportError(
                   PDFExportErrorType.VALIDATION_ERROR,
-                  `Profile ${profileIndex + 1} in item ${item.workOrderId} is missing measurement`
+                  `Profile ${profileIndex + 1} in item ${item.workOrderId} is missing measurement`,
                 );
               }
-              
-              if (typeof profile.quantity !== 'number' || profile.quantity < 0) {
+
+              if (
+                typeof profile.quantity !== "number" ||
+                profile.quantity < 0
+              ) {
                 throw new PDFExportError(
                   PDFExportErrorType.VALIDATION_ERROR,
-                  `Profile ${profileIndex + 1} in item ${item.workOrderId} has invalid quantity`
+                  `Profile ${profileIndex + 1} in item ${item.workOrderId} has invalid quantity`,
                 );
               }
             });
@@ -833,20 +871,22 @@ export class PDFExportService {
     if (!pdfBuffer || pdfBuffer.length === 0) {
       throw new PDFExportError(
         PDFExportErrorType.PDF_GENERATION_ERROR,
-        'PDF buffer is empty or null'
+        "PDF buffer is empty or null",
       );
     }
-    
+
     const pdfHeader = pdfBuffer.slice(0, 4).toString();
-    if (pdfHeader !== '%PDF') {
+    if (pdfHeader !== "%PDF") {
       throw new PDFExportError(
         PDFExportErrorType.PDF_GENERATION_ERROR,
         `Generated file is not a valid PDF. Header: ${pdfHeader}`,
-        { pdfHeader, bufferSize: pdfBuffer.length }
+        { pdfHeader, bufferSize: pdfBuffer.length },
       );
     }
-    
-    console.log(`[PDFExport] Professional PDF validation passed - Size: ${pdfBuffer.length} bytes, Header: ${pdfHeader}`);
+
+    console.log(
+      `[PDFExport] Professional PDF validation passed - Size: ${pdfBuffer.length} bytes, Header: ${pdfHeader}`,
+    );
   }
 
   /**
@@ -865,9 +905,9 @@ export class PDFExportService {
         await this.browser.close();
         this.browser = null;
         this.isInitialized = false;
-        console.log('[PDFExport] Professional browser closed successfully');
+        console.log("[PDFExport] Professional browser closed successfully");
       } catch (error) {
-        console.warn('[PDFExport] Failed to close browser gracefully:', error);
+        console.warn("[PDFExport] Failed to close browser gracefully:", error);
       }
     }
   }
@@ -876,18 +916,21 @@ export class PDFExportService {
    * Tüm kaynakları temizler
    */
   public async cleanup(): Promise<void> {
-    console.log('[PDFExport] Starting professional cleanup...');
+    console.log("[PDFExport] Starting professional cleanup...");
     await this.closeBrowser();
-    console.log('[PDFExport] Professional cleanup completed');
+    console.log("[PDFExport] Professional cleanup completed");
   }
 
   /**
    * Service health check
    */
-  public async healthCheck(): Promise<{ healthy: boolean; browserReady: boolean }> {
+  public async healthCheck(): Promise<{
+    healthy: boolean;
+    browserReady: boolean;
+  }> {
     return {
       healthy: true,
-      browserReady: this.isInitialized && this.browser !== null
+      browserReady: this.isInitialized && this.browser !== null,
     };
   }
 }

@@ -1,23 +1,23 @@
 /**
  * Export Service Types
  * Type definitions for export services
- * 
+ *
  * @module services/export
  * @version 1.0.0
  */
 
-import type { OptimizationResult, Cut, CuttingSegment } from '../../types';
+import type { OptimizationResult, Cut, CuttingSegment } from "../../types";
 
 /**
  * Export format type
  */
-export type ExportFormat = 
-  | 'pdf' 
-  | 'excel' 
-  | 'json' 
-  | 'cutting-instructions' 
-  | 'work-order-labels' 
-  | 'production-schedule';
+export type ExportFormat =
+  | "pdf"
+  | "excel"
+  | "json"
+  | "cutting-instructions"
+  | "work-order-labels"
+  | "production-schedule";
 
 /**
  * Cutting instruction data
@@ -62,7 +62,6 @@ export interface ExportOptions {
   readonly format: ExportFormat;
   readonly includeQRCodes?: boolean;
   readonly includeDiagrams?: boolean;
-  readonly paperSize?: 'A4' | 'Letter';
-  readonly orientation?: 'portrait' | 'landscape';
+  readonly paperSize?: "A4" | "Letter";
+  readonly orientation?: "portrait" | "landscape";
 }
-

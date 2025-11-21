@@ -1,13 +1,13 @@
 /**
  * Work Order Label Generator
  * Generate printable QR-coded labels for segments
- * 
+ *
  * @module services/export
  * @version 1.0.0
  */
 
-import QRCode from 'qrcode';
-import type { WorkOrderLabelData } from './types';
+import QRCode from "qrcode";
+import type { WorkOrderLabelData } from "./types";
 
 /**
  * Generate work order labels
@@ -17,9 +17,11 @@ export class WorkOrderLabelGenerator {
   /**
    * Generate labels for all segments
    */
-  public async generateAll(labels: ReadonlyArray<WorkOrderLabelData>): Promise<Buffer> {
+  public async generateAll(
+    labels: ReadonlyArray<WorkOrderLabelData>,
+  ): Promise<Buffer> {
     const labelPages = await Promise.all(
-      labels.map(label => this.generateSingleLabel(label))
+      labels.map((label) => this.generateSingleLabel(label)),
     );
 
     // TODO: Combine into single PDF with multiple labels per page
@@ -30,7 +32,7 @@ export class WorkOrderLabelGenerator {
       generatedAt: new Date().toISOString(),
     };
 
-    return Buffer.from(JSON.stringify(output, null, 2), 'utf-8');
+    return Buffer.from(JSON.stringify(output, null, 2), "utf-8");
   }
 
   /**
@@ -70,12 +72,11 @@ export class WorkOrderLabelGenerator {
       return await QRCode.toDataURL(data, {
         width: 200,
         margin: 1,
-        errorCorrectionLevel: 'M',
+        errorCorrectionLevel: "M",
       });
     } catch (error) {
-      console.error('Failed to generate QR code:', error);
-      return '';
+      console.error("Failed to generate QR code:", error);
+      return "";
     }
   }
 }
-

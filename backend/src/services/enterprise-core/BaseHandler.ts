@@ -1,13 +1,13 @@
 /**
  * Base Handler (Template Method Pattern)
  * Common error handling and response formatting
- * 
+ *
  * @module enterprise/core
  * @version 1.0.0
  */
 
-import { Response } from 'express';
-import type { ErrorResponse } from '../../types/enterprise';
+import { Response } from "express";
+import type { ErrorResponse } from "../../types/enterprise";
 
 /**
  * Abstract base handler with common utilities
@@ -21,20 +21,20 @@ export abstract class BaseHandler {
     statusCode: number,
     code: string,
     message: string,
-    details?: Record<string, unknown>
+    details?: Record<string, unknown>,
   ): void {
     const response: ErrorResponse = {
       success: false,
       error: {
         code,
         message,
-        ...(details && { details })
+        ...(details && { details }),
       },
       metadata: {
         timestamp: new Date().toISOString(),
-        version: '5.0.0',
-        requestId: this.generateRequestId()
-      }
+        version: "5.0.0",
+        requestId: this.generateRequestId(),
+      },
     };
 
     res.status(statusCode).json(response);
@@ -46,16 +46,16 @@ export abstract class BaseHandler {
   protected sendSuccess<T>(
     res: Response,
     data: T,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): void {
     res.status(200).json({
       success: true,
       data,
       metadata: {
         timestamp: new Date().toISOString(),
-        version: '5.0.0',
-        ...metadata
-      }
+        version: "5.0.0",
+        ...metadata,
+      },
     });
   }
 
@@ -72,14 +72,15 @@ export abstract class BaseHandler {
   protected handleError(
     res: Response,
     error: unknown,
-    code: string = 'INTERNAL_ERROR'
+    code: string = "INTERNAL_ERROR",
   ): void {
-    const message = error instanceof Error ? error.message : 'Unknown error occurred';
-    const details = error instanceof Error && process.env['NODE_ENV'] !== 'production' 
-      ? { stack: error.stack } 
-      : undefined;
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    const details =
+      error instanceof Error && process.env["NODE_ENV"] !== "production"
+        ? { stack: error.stack }
+        : undefined;
 
     this.sendError(res, 500, code, message, details);
   }
 }
-

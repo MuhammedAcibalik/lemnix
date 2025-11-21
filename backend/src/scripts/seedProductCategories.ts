@@ -127,4 +127,3 @@ export async function seedProductCategories(): Promise<void> {
     process.exit(1);
   }
 })();
-

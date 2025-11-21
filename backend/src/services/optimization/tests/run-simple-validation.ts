@@ -5,15 +5,17 @@
  * Usage: npm run test:simple-validation or ts-node run-simple-validation.ts
  */
 
-import { SimpleValidationTest } from './SimpleValidationTest';
+import { SimpleValidationTest } from "./SimpleValidationTest";
 
 async function main() {
-  console.log('🔬 Lemnix Algorithm Fixes - Simple Validation Suite');
-  console.log('==================================================\n');
-  
+  console.log("🔬 Lemnix Algorithm Fixes - Simple Validation Suite");
+  console.log("==================================================\n");
+
   SimpleValidationTest.runAllTests();
-  
-  console.log('\n🏁 Simple validation complete! All mathematical fixes verified.');
+
+  console.log(
+    "\n🏁 Simple validation complete! All mathematical fixes verified.",
+  );
   process.exit(0);
 }
 

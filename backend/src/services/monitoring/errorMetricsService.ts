@@ -3,8 +3,12 @@
  * Collects and aggregates error metrics by class for monitoring dashboard
  */
 
-import { ErrorClass, ErrorSeverity, ErrorMetrics } from '../../types/errorTypes';
-import { ILogger } from '../logger';
+import {
+  ErrorClass,
+  ErrorSeverity,
+  ErrorMetrics,
+} from "../../types/errorTypes";
+import { ILogger } from "../logger";
 
 interface ErrorEvent {
   class: ErrorClass;
@@ -41,7 +45,7 @@ export class ErrorMetricsService {
   public recordError(event: ErrorEvent): void {
     const now = Date.now();
     const windowKey = this.getWindowKey(event.class, event.severity);
-    
+
     // Get or create current window
     let currentWindow = this.getCurrentWindow(now);
     if (!currentWindow) {
@@ -58,11 +62,11 @@ export class ErrorMetricsService {
     }
     currentWindow.endpoints.add(event.endpoint);
 
-    this.logger.debug('Error recorded', {
+    this.logger.debug("Error recorded", {
       class: event.class,
       severity: event.severity,
       endpoint: event.endpoint,
-      correlationId: event.correlationId
+      correlationId: event.correlationId,
     });
   }
 
@@ -72,7 +76,7 @@ export class ErrorMetricsService {
   public getErrorMetrics(): Map<string, ErrorMetrics> {
     const metrics = new Map<string, ErrorMetrics>();
     const now = Date.now();
-    
+
     // Aggregate metrics across all windows
     const aggregatedCounts = new Map<string, number>();
     const aggregatedUsers = new Map<string, Set<string>>();
@@ -93,13 +97,17 @@ export class ErrorMetricsService {
         if (!aggregatedUsers.has(key)) {
           aggregatedUsers.set(key, new Set());
         }
-        window.uniqueUsers.forEach(user => aggregatedUsers.get(key)!.add(user));
+        window.uniqueUsers.forEach((user) =>
+          aggregatedUsers.get(key)!.add(user),
+        );
 
         // Track endpoints
         if (!aggregatedEndpoints.has(key)) {
           aggregatedEndpoints.set(key, new Set());
         }
-        window.endpoints.forEach(endpoint => aggregatedEndpoints.get(key)!.add(endpoint));
+        window.endpoints.forEach((endpoint) =>
+          aggregatedEndpoints.get(key)!.add(endpoint),
+        );
 
         // Update last occurrence
         lastOccurrences.set(key, new Date(window.startTime).toISOString());
@@ -108,12 +116,12 @@ export class ErrorMetricsService {
 
     // Create ErrorMetrics objects
     for (const [key, count] of aggregatedCounts) {
-      const [classStr, severityStr] = key.split(':');
+      const [classStr, severityStr] = key.split(":");
       const errorClass = classStr as ErrorClass;
       const severity = severityStr as ErrorSeverity;
-      
+
       const rate = count / this.getActiveWindowCount(); // errors per minute
-      
+
       metrics.set(key, {
         class: errorClass,
         severity,
@@ -121,7 +129,7 @@ export class ErrorMetricsService {
         rate,
         lastOccurrence: lastOccurrences.get(key) || new Date().toISOString(),
         affectedEndpoints: Array.from(aggregatedEndpoints.get(key) || []),
-        uniqueUsers: (aggregatedUsers.get(key) || new Set()).size
+        uniqueUsers: (aggregatedUsers.get(key) || new Set()).size,
       });
     }
 
@@ -204,34 +212,43 @@ export class ErrorMetricsService {
    * Get error trends (last 5 minutes)
    */
   public getErrorTrends(): {
-    trend: 'increasing' | 'decreasing' | 'stable';
+    trend: "increasing" | "decreasing" | "stable";
     rate: number;
     changePercent: number;
   } {
     const recentWindows = this.errorWindows
-      .filter(w => Date.now() - w.endTime <= 300000) // Last 5 minutes
+      .filter((w) => Date.now() - w.endTime <= 300000) // Last 5 minutes
       .sort((a, b) => b.startTime - a.startTime);
 
     if (recentWindows.length < 2) {
-      return { trend: 'stable', rate: 0, changePercent: 0 };
+      return { trend: "stable", rate: 0, changePercent: 0 };
     }
 
     const latest = recentWindows[0];
     const previous = recentWindows[1];
 
-    const latestRate = Array.from(latest.errorCounts.values()).reduce((sum, count) => sum + count, 0);
-    const previousRate = Array.from(previous.errorCounts.values()).reduce((sum, count) => sum + count, 0);
+    const latestRate = Array.from(latest.errorCounts.values()).reduce(
+      (sum, count) => sum + count,
+      0,
+    );
+    const previousRate = Array.from(previous.errorCounts.values()).reduce(
+      (sum, count) => sum + count,
+      0,
+    );
 
-    const changePercent = previousRate === 0 ? 0 : ((latestRate - previousRate) / previousRate) * 100;
+    const changePercent =
+      previousRate === 0
+        ? 0
+        : ((latestRate - previousRate) / previousRate) * 100;
 
-    let trend: 'increasing' | 'decreasing' | 'stable' = 'stable';
-    if (changePercent > 10) trend = 'increasing';
-    else if (changePercent < -10) trend = 'decreasing';
+    let trend: "increasing" | "decreasing" | "stable" = "stable";
+    if (changePercent > 10) trend = "increasing";
+    else if (changePercent < -10) trend = "decreasing";
 
     return {
       trend,
       rate: latestRate,
-      changePercent
+      changePercent,
     };
   }
 
@@ -240,7 +257,7 @@ export class ErrorMetricsService {
    */
   public resetMetrics(): void {
     this.errorWindows = [];
-    this.logger.info('Error metrics reset');
+    this.logger.info("Error metrics reset");
   }
 
   /**
@@ -248,7 +265,7 @@ export class ErrorMetricsService {
    */
   private getCurrentWindow(now: number): ErrorRateWindow | null {
     const windowStart = Math.floor(now / this.windowSizeMs) * this.windowSizeMs;
-    return this.errorWindows.find(w => w.startTime === windowStart) || null;
+    return this.errorWindows.find((w) => w.startTime === windowStart) || null;
   }
 
   /**
@@ -261,7 +278,7 @@ export class ErrorMetricsService {
       endTime: windowStart + this.windowSizeMs,
       errorCounts: new Map(),
       uniqueUsers: new Set(),
-      endpoints: new Set()
+      endpoints: new Set(),
     };
 
     this.errorWindows.push(newWindow);
@@ -271,7 +288,10 @@ export class ErrorMetricsService {
   /**
    * Get window key for error classification
    */
-  private getWindowKey(errorClass: ErrorClass, severity: ErrorSeverity): string {
+  private getWindowKey(
+    errorClass: ErrorClass,
+    severity: ErrorSeverity,
+  ): string {
     return `${errorClass}:${severity}`;
   }
 
@@ -280,7 +300,9 @@ export class ErrorMetricsService {
    */
   private getActiveWindowCount(): number {
     const now = Date.now();
-    return this.errorWindows.filter(w => now - w.endTime <= 3600000).length || 1; // Last hour
+    return (
+      this.errorWindows.filter((w) => now - w.endTime <= 3600000).length || 1
+    ); // Last hour
   }
 
   /**
@@ -298,9 +320,9 @@ export class ErrorMetricsService {
   private cleanupOldWindows(): void {
     const now = Date.now();
     const initialCount = this.errorWindows.length;
-    
-    this.errorWindows = this.errorWindows.filter(w => 
-      now - w.endTime <= (this.maxWindows * this.windowSizeMs)
+
+    this.errorWindows = this.errorWindows.filter(
+      (w) => now - w.endTime <= this.maxWindows * this.windowSizeMs,
     );
 
     const removedCount = initialCount - this.errorWindows.length;

@@ -429,13 +429,15 @@ export class CuttingListController {
         if (!isConnected) {
           const healthCheck = await databaseManager.healthCheck();
           if (!healthCheck) {
-            res.status(503).json(
-              this.createResponse(
-                false,
-                undefined,
-                "Veritabanı bağlantı hatası. Lütfen PostgreSQL servisinin çalıştığından emin olun.",
-              ),
-            );
+            res
+              .status(503)
+              .json(
+                this.createResponse(
+                  false,
+                  undefined,
+                  "Veritabanı bağlantı hatası. Lütfen PostgreSQL servisinin çalıştığından emin olun.",
+                ),
+              );
             return;
           }
         }
@@ -502,7 +504,7 @@ export class CuttingListController {
         res.json(this.createResponse(true, response));
       } catch (error) {
         const err = error as Error & { code?: string; meta?: unknown };
-        
+
         logger.error(`[${requestId}] Error creating cutting list:`, {
           error: err.message,
           code: err.code,
@@ -550,14 +552,16 @@ export class CuttingListController {
             code: err.code,
             message: err.message,
           });
-          
-          res.status(503).json(
-            this.createResponse(
-              false,
-              undefined,
-              "Veritabanı bağlantı hatası. Lütfen daha sonra tekrar deneyin veya sistem yöneticisine başvurun.",
-            ),
-          );
+
+          res
+            .status(503)
+            .json(
+              this.createResponse(
+                false,
+                undefined,
+                "Veritabanı bağlantı hatası. Lütfen daha sonra tekrar deneyin veya sistem yöneticisine başvurun.",
+              ),
+            );
           return;
         }
 
@@ -568,20 +572,22 @@ export class CuttingListController {
             message: err.message,
             meta: err.meta,
           });
-          
-          res.status(500).json(
-            this.createResponse(
-              false,
-              undefined,
-              "Veritabanı işlemi başarısız oldu. Lütfen tekrar deneyin.",
-            ),
-          );
+
+          res
+            .status(500)
+            .json(
+              this.createResponse(
+                false,
+                undefined,
+                "Veritabanı işlemi başarısız oldu. Lütfen tekrar deneyin.",
+              ),
+            );
           return;
         }
 
         const errorMessage =
           err instanceof Error ? err.message : "Unknown error occurred";
-        
+
         res
           .status(500)
           .json(this.createResponse(false, undefined, errorMessage));
@@ -768,22 +774,25 @@ export class CuttingListController {
               // ✅ FIX: Merge items into existing sections, preserving profiles from both sources
               const updatedSections = dbSections.map((section) => {
                 const profileType = section.productName;
-                
+
                 // If section already has items with profiles, preserve them
-                const existingItems = (section.items || []) as CuttingListItem[];
-                
+                const existingItems = (section.items ||
+                  []) as CuttingListItem[];
+
                 // If we have items from DB for this profile type, merge them
                 if (workOrdersByProfileType[profileType]) {
-                  const dbItems = workOrdersByProfileType[profileType] as CuttingListItem[];
-                  
+                  const dbItems = workOrdersByProfileType[
+                    profileType
+                  ] as CuttingListItem[];
+
                   // Merge: combine existing items with DB items by workOrderId
                   const itemsMap = new Map<string, CuttingListItem>();
-                  
+
                   // First, add existing items (preserve profiles if they exist)
                   existingItems.forEach((item) => {
                     itemsMap.set(item.workOrderId, item);
                   });
-                  
+
                   // Then, merge or add DB items
                   dbItems.forEach((dbItem) => {
                     const existing = itemsMap.get(dbItem.workOrderId);
@@ -792,21 +801,22 @@ export class CuttingListController {
                       // If existing has profiles, keep them (don't override)
                       itemsMap.set(dbItem.workOrderId, {
                         ...existing,
-                        profiles: existing.profiles && existing.profiles.length > 0
-                          ? existing.profiles
-                          : dbItem.profiles,
+                        profiles:
+                          existing.profiles && existing.profiles.length > 0
+                            ? existing.profiles
+                            : dbItem.profiles,
                       });
                     } else {
                       itemsMap.set(dbItem.workOrderId, dbItem);
                     }
                   });
-                  
+
                   return {
                     ...section,
                     items: Array.from(itemsMap.values()),
                   };
                 }
-                
+
                 // No DB items for this section, return as-is (preserve existing profiles)
                 return section;
               });
@@ -1153,9 +1163,10 @@ export class CuttingListController {
                   if (existing) {
                     itemsMap.set(dbItem.workOrderId, {
                       ...existing,
-                      profiles: existing.profiles && existing.profiles.length > 0
-                        ? existing.profiles
-                        : dbItem.profiles,
+                      profiles:
+                        existing.profiles && existing.profiles.length > 0
+                          ? existing.profiles
+                          : dbItem.profiles,
                     });
                   } else {
                     itemsMap.set(dbItem.workOrderId, dbItem);

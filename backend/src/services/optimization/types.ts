@@ -1,18 +1,23 @@
 /**
  * LEMNİX Optimization Types
  * Shared type definitions for optimization module
- * 
+ *
  * @module optimization/types
  * @version 1.0.0
  */
 
-import { OptimizationResult, OptimizationConstraints } from '../../types';
+import { OptimizationResult, OptimizationConstraints } from "../../types";
 
 /**
  * Algorithm labels (URL-safe identifiers)
  * Only includes active, supported algorithms
  */
-export type AlgorithmLabel = 'ffd' | 'bfd' | 'genetic' | 'pooling' | 'pattern-exact';
+export type AlgorithmLabel =
+  | "ffd"
+  | "bfd"
+  | "genetic"
+  | "pooling"
+  | "pattern-exact";
 
 /**
  * @deprecated Removed algorithms (no longer supported)
@@ -21,7 +26,11 @@ export type AlgorithmLabel = 'ffd' | 'bfd' | 'genetic' | 'pooling' | 'pattern-ex
  * - 'simulated-annealing'
  * - 'branch-and-bound'
  */
-export type DeprecatedAlgorithmLabel = 'nfd' | 'wfd' | 'simulated-annealing' | 'branch-and-bound';
+export type DeprecatedAlgorithmLabel =
+  | "nfd"
+  | "wfd"
+  | "simulated-annealing"
+  | "branch-and-bound";
 
 /**
  * Enhanced constraints extending base constraints
@@ -38,9 +47,13 @@ export interface EnhancedConstraints extends OptimizationConstraints {
  * Optimization objective
  */
 export interface OptimizationObjective {
-  readonly type: 'minimize-waste' | 'minimize-cost' | 'minimize-time' | 'maximize-efficiency';
+  readonly type:
+    | "minimize-waste"
+    | "minimize-cost"
+    | "minimize-time"
+    | "maximize-efficiency";
   readonly weight: number;
-  readonly priority: 'high' | 'medium' | 'low';
+  readonly priority: "high" | "medium" | "low";
 }
 
 /**
@@ -66,8 +79,8 @@ export interface NSGAParams {
   readonly mutationRate?: number;
   readonly gpuThreshold?: number;
   readonly seed?: number;
-  readonly convergenceWindow?: number;      // HV stagnation window (generations)
-  readonly convergenceThreshold?: number;   // HV improvement threshold
+  readonly convergenceWindow?: number; // HV stagnation window (generations)
+  readonly convergenceThreshold?: number; // HV improvement threshold
 }
 
 /**
@@ -75,8 +88,8 @@ export interface NSGAParams {
  * Production-specific time parameters
  */
 export interface TimeModel {
-  readonly setupPerStock?: number;  // minutes per stock setup
-  readonly cutPerSegment?: number;  // minutes per segment cutting
+  readonly setupPerStock?: number; // minutes per stock setup
+  readonly cutPerSegment?: number; // minutes per segment cutting
 }
 
 /**
@@ -118,7 +131,7 @@ export interface CostBreakdown {
  * Performance metrics
  */
 export interface PerformanceMetrics {
-  readonly algorithmComplexity: 'O(n)' | 'O(n²)' | 'O(n³)' | 'O(2^n)';
+  readonly algorithmComplexity: "O(n)" | "O(n²)" | "O(n³)" | "O(2^n)";
   readonly convergenceRate: number;
   readonly memoryUsage: number;
   readonly cpuUsage: number;
@@ -129,13 +142,16 @@ export interface PerformanceMetrics {
  * Advanced optimization recommendation
  */
 export interface AdvancedOptimizationRecommendation {
-  readonly type: 'algorithm-change' | 'parameter-adjustment' | 'constraint-relaxation';
+  readonly type:
+    | "algorithm-change"
+    | "parameter-adjustment"
+    | "constraint-relaxation";
   readonly description: string;
   readonly expectedImprovement: number;
-  readonly implementationEffort: 'low' | 'medium' | 'high';
-  readonly severity: 'info' | 'warning' | 'error' | 'critical';
+  readonly implementationEffort: "low" | "medium" | "high";
+  readonly severity: "info" | "warning" | "error" | "critical";
   readonly message: string;
-  readonly impact: 'low' | 'medium' | 'high';
+  readonly impact: "low" | "medium" | "high";
   readonly suggestion: string;
 }
 
@@ -156,7 +172,10 @@ export interface OptimizationHistoryEntry {
 export interface StockSummary {
   readonly stockLength: number;
   readonly cutCount: number;
-  readonly patterns: ReadonlyArray<{ readonly pattern: string; readonly count: number }>;
+  readonly patterns: ReadonlyArray<{
+    readonly pattern: string;
+    readonly count: number;
+  }>;
   readonly avgWaste: number;
   readonly totalWaste: number;
   readonly efficiency: number;
@@ -165,7 +184,8 @@ export interface StockSummary {
 /**
  * Advanced optimization result (extends base OptimizationResult)
  */
-export interface AdvancedOptimizationResult extends Omit<OptimizationResult, 'recommendations'> {
+export interface AdvancedOptimizationResult
+  extends Omit<OptimizationResult, "recommendations"> {
   readonly paretoFrontier: ParetoPoint[];
   readonly costBreakdown: CostBreakdown;
   readonly performanceMetrics: PerformanceMetrics;
@@ -226,4 +246,3 @@ export interface AdvancedOptimizationParams {
   readonly verbose?: boolean;
   readonly startTime?: number;
 }
-

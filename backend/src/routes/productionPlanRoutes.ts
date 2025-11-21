@@ -277,11 +277,14 @@ router.use((error: Error, req: Request, res: Response, next: NextFunction) => {
   // not surface 500 errors to the frontend. For those, return safe fallback
   // data instead of an error response.
   if (req.path.startsWith("/metrics")) {
-    logger.warn("Production plan metrics route error, returning fallback data", {
-      error: error.message,
-      url: req.url,
-      method: req.method,
-    });
+    logger.warn(
+      "Production plan metrics route error, returning fallback data",
+      {
+        error: error.message,
+        url: req.url,
+        method: req.method,
+      },
+    );
 
     res.json({
       success: true,

@@ -3,8 +3,10 @@
  * @module AnalysisServices
  */
 
-export { ColorSizeAnalysisService } from './colorSizeAnalysisService';
-export { ProfileAnalysisService } from './profileAnalysisService';
-export { WorkOrderAnalysisService } from './workOrderAnalysisService';
-export { ProductCategoriesService, productCategoriesService } from './productCategoriesService';
-
+export { ColorSizeAnalysisService } from "./colorSizeAnalysisService";
+export { ProfileAnalysisService } from "./profileAnalysisService";
+export { WorkOrderAnalysisService } from "./workOrderAnalysisService";
+export {
+  ProductCategoriesService,
+  productCategoriesService,
+} from "./productCategoriesService";

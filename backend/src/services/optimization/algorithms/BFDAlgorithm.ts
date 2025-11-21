@@ -58,7 +58,7 @@
  * ===================
  * Time: O(n²) for traditional BFD, O(2ⁿ) for pattern-based
  * Space: O(n) for traditional, O(2ⁿ) for patterns
- * 
+ *
  * The algorithm adaptively selects between:
  * - Pattern-based (optimal): n ≤ 15 unique lengths, d ≤ 1000 items
  * - Traditional BFD (fast): larger problems
@@ -106,7 +106,7 @@ const MATERIAL_TYPE = "aluminum" as const;
 
 /**
  * Algorithm constants
- * 
+ *
  * Mathematical significance:
  * - SETUP_TIME_PER_CUT: Fixed overhead τₛ for each stock initialization
  * - CUTTING_TIME_PER_SEGMENT: Variable time τc per item cut
@@ -171,7 +171,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
   private itemPatternCache: Map<number, number> = new Map(); // length -> count
   private stockUsageCache: Map<number, StockLengthUsage> = new Map(); // memoization
   private readonly paretoFilter: ParetoFilter;
-  
+
   // NEW: Memoization cache for pattern fit calculations
   private readonly patternFitCache: Map<string, boolean> = new Map();
   private readonly patternDemandCache: Map<string, number> = new Map();
@@ -229,7 +229,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
     this.patternFitCache.clear();
     this.patternDemandCache.clear();
     this.upcomingItems = [];
-    
+
     this.logger.debug("[BFD] Optimization caches cleared");
   }
 
@@ -693,7 +693,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
 
   /**
    * Evaluate if item fits in cut and calculate waste
-   * 
+   *
    * Mathematical Model:
    * ==================
    * Let:
@@ -702,33 +702,33 @@ export class BFDAlgorithm extends BaseAlgorithm {
    * - k = kerf width (saw blade thickness)
    * - λ = minimum usable scrap threshold
    * - α = fragment penalty factor (0.8)
-   * 
+   *
    * Feasibility Check:
    * -----------------
    * Item fits if: r ≥ l + k
-   * 
+   *
    * Waste Calculation:
    * -----------------
    * w = r - (l + k)  // Basic waste
-   * 
+   *
    * Fragment Detection:
    * ------------------
    * Fragment created if: 0 < w < λ
    * (Too small to be useful, too large to ignore)
-   * 
+   *
    * Adjusted Waste (with penalty):
    * -----------------------------
    * w' = w × (1/α)  if fragment created
    *    = w          otherwise
-   * 
+   *
    * This makes fragment-creating placements less attractive
    * by artificially inflating their waste score.
-   * 
+   *
    * Future Opportunity Score:
    * ------------------------
    * f = (# of upcoming items that fit in w) / (total upcoming items)
    * Range: [0, 1] where 1 = many items could fit, 0 = none fit
-   * 
+   *
    * Final Scoring:
    * -------------
    * Priority by: w' (primary), then f (tie-breaker)
@@ -954,37 +954,37 @@ export class BFDAlgorithm extends BaseAlgorithm {
   /**
    * Select optimal stock length with waste-per-item strategy
    * ✅ OPTIMIZED: Minimize waste per piece for better efficiency
-   * 
+   *
    * Mathematical Strategy:
    * =====================
    * Goal: Minimize waste-per-piece ratio η
-   * 
+   *
    * For each stock length s ∈ S:
    * 1. Calculate maximum pieces: n = ⌊(s - σₛ - σₑ + k) / (l + k)⌋
    * 2. Calculate used length: u = σₛ + n×l + (n-1)×k + σₑ
    * 3. Calculate waste: w = s - u
    * 4. Calculate waste-per-piece: η = w / n
-   * 
+   *
    * Select: s* = argmin(η)
-   * 
+   *
    * Example:
    * --------
    * Item: 918mm, Stocks: [3400mm, 6000mm], k=3mm, σₛ=σₑ=100mm
-   * 
+   *
    * Stock 3400mm:
    * - n = ⌊(3400 - 200 + 3) / (918 + 3)⌋ = ⌊3203 / 921⌋ = 3 pieces
    * - u = 100 + 3×918 + 2×3 + 100 = 2960mm
    * - w = 3400 - 2960 = 440mm
    * - η = 440 / 3 = 146.67 mm/piece
-   * 
+   *
    * Stock 6000mm:
    * - n = ⌊(6000 - 200 + 3) / (918 + 3)⌋ = ⌊5803 / 921⌋ = 6 pieces
    * - u = 100 + 6×918 + 5×3 + 100 = 5723mm
    * - w = 6000 - 5723 = 277mm
    * - η = 277 / 6 = 46.17 mm/piece ← BETTER!
-   * 
+   *
    * Result: Select 6000mm (lower waste per piece)
-   * 
+   *
    * This strategy balances:
    * - Stock count (fewer larger stocks preferred)
    * - Total waste (lower absolute waste preferred)
@@ -1719,17 +1719,14 @@ export class BFDAlgorithm extends BaseAlgorithm {
       totalDemand > maxDemandThreshold ||
       estimatedPatternCount > 50000
     ) {
-      this.logger.info(
-        `[BFD] Using traditional BFD for complex problem`,
-        {
-          reason: "Complexity threshold exceeded",
-          uniqueLengths,
-          maxLengthThreshold,
-          totalDemand,
-          maxDemandThreshold,
-          estimatedPatterns: estimatedPatternCount,
-        },
-      );
+      this.logger.info(`[BFD] Using traditional BFD for complex problem`, {
+        reason: "Complexity threshold exceeded",
+        uniqueLengths,
+        maxLengthThreshold,
+        totalDemand,
+        maxDemandThreshold,
+        estimatedPatterns: estimatedPatternCount,
+      });
 
       // CRITICAL: Traditional BFD with Best Fit Decreasing gives very good results
       // It's O(n log n) vs pattern-based O(2^n), and waste is typically within 10% of optimal
@@ -1961,9 +1958,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
       this.logger.error(
         "[BFD] No stock lengths provided for pattern generation",
       );
-      throw new Error(
-        "Cannot generate patterns: No stock lengths available",
-      );
+      throw new Error("Cannot generate patterns: No stock lengths available");
     }
 
     // Check for invalid item lengths
@@ -1978,10 +1973,10 @@ export class BFDAlgorithm extends BaseAlgorithm {
         );
       }
       if (!Number.isFinite(group.quantity) || group.quantity < 1) {
-        this.logger.error(
-          "[BFD] Invalid item quantity in pattern generation",
-          { length: group.length, quantity: group.quantity },
-        );
+        this.logger.error("[BFD] Invalid item quantity in pattern generation", {
+          length: group.length,
+          quantity: group.quantity,
+        });
         throw new Error(
           `Invalid item quantity ${group.quantity} for length ${group.length}mm`,
         );
@@ -2026,13 +2021,10 @@ export class BFDAlgorithm extends BaseAlgorithm {
           constraints,
         );
       } catch (error) {
-        this.logger.error(
-          "[BFD] Error generating patterns for stock length",
-          {
-            stockLength,
-            error: error instanceof Error ? error.message : String(error),
-          },
-        );
+        this.logger.error("[BFD] Error generating patterns for stock length", {
+          stockLength,
+          error: error instanceof Error ? error.message : String(error),
+        });
         // Continue with other stock lengths instead of failing completely
         continue;
       }
@@ -2082,34 +2074,34 @@ export class BFDAlgorithm extends BaseAlgorithm {
 
   /**
    * Generate patterns for a specific stock length
-   * 
+   *
    * Pattern Generation Algorithm:
    * =============================
    * Uses recursive enumeration to generate all valid cutting patterns.
-   * 
+   *
    * Input:
    * - Item groups: G = {(l₁, q₁), (l₂, q₂), ..., (lₙ, qₙ)}
    *   where lᵢ = length, qᵢ = quantity demanded
    * - Stock length: s
    * - Usable length: u = s - σₛ (start safety already subtracted)
    * - Kerf width: k
-   * 
+   *
    * Output:
    * - Set of patterns P = {p₁, p₂, ..., pₘ}
    *   where each pattern pⱼ = {(l₁, c₁), (l₂, c₂), ..., (lₙ, cₙ)}
    *   and cᵢ = count of items with length lᵢ in pattern
-   * 
+   *
    * Constraints per pattern:
    * -----------------------
    * 1. Capacity: Σ(cᵢ × lᵢ) + (Σcᵢ - 1) × k ≤ u
    * 2. Non-negative: cᵢ ≥ 0 for all i
    * 3. At least one item: Σcᵢ ≥ 1
-   * 
+   *
    * Complexity:
    * ----------
    * Time: O(∏ᵢ (maxCountᵢ + 1)) ≈ O(2ⁿ) worst case
    * Space: O(number of valid patterns)
-   * 
+   *
    * The exponential growth is why we limit pattern generation
    * for problems with many unique lengths.
    */
@@ -2156,19 +2148,19 @@ export class BFDAlgorithm extends BaseAlgorithm {
   /**
    * Recursively generate all valid combinations
    * ✅ FIX: Now supports kerf calculation
-   * 
+   *
    * Recursive Pattern Generation:
    * =============================
    * This implements a backtracking algorithm to enumerate all
    * feasible cutting patterns for a given stock.
-   * 
+   *
    * State Space:
    * -----------
    * Each state is defined by:
    * - currentPattern: Partial pattern built so far
    * - itemIndex: Current item type being considered
    * - remainingSpace: Unused length available
-   * 
+   *
    * Branching:
    * ---------
    * At each level, try counts from 0 to maxCount for current item.
@@ -2177,35 +2169,35 @@ export class BFDAlgorithm extends BaseAlgorithm {
    *   a) Theoretical maximum from item length
    *   b) Actual available space (dynamic)
    *   c) Space already used by previous items
-   * 
+   *
    * Pruning:
    * -------
    * Stop branch if:
    * 1. Used length + kerf > usable length
    * 2. Remaining space cannot fit minimum item
-   * 
+   *
    * Kerf Calculation with Multiple Items:
    * ------------------------------------
    * Given n items in pattern:
    * - Total item length: Σ(lᵢ × cᵢ)
    * - Total kerf: (n - 1) × k where n = Σcᵢ
    * - Rationale: kerf between consecutive items only
-   * 
+   *
    * Space needed for adding m more items of length l:
    * - If current total segments = n:
    *   space = m × l + m × k (need kerf before each new item)
    * - Effective max: ⌊(remaining + k) / (l + k)⌋
-   * 
+   *
    * Termination:
    * -----------
    * When itemIndex reaches end of items list:
    * - If pattern is valid (≥ 1 item), add to result
    * - Backtrack to try different combinations
-   * 
+   *
    * Example Trace:
    * -------------
    * Items: [(500mm, ×3), (300mm, ×2)], Stock: 2000mm, k=3mm
-   * 
+   *
    * Level 0 (500mm): Try 0, 1, 2, 3 pieces
    *   Branch [2×500mm]:
    *     Space used: 2×500 + 1×3 = 1003mm
@@ -2216,7 +2208,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
    *       Branch [2×500mm, 2×300mm]:
    *         Space: 1003 + 2×300 + 1×3 = 1606mm ✓
    *         Add pattern: {500: 2, 300: 2, waste: 394mm}
-   * 
+   *
    * Total patterns generated: ~16 for this small example
    */
   private generateCombinations(
@@ -2713,9 +2705,7 @@ export class BFDAlgorithm extends BaseAlgorithm {
 
     // Validate inputs
     if (patterns.length === 0) {
-      this.logger.error(
-        "[BFD] Cannot run priority search with no patterns",
-      );
+      this.logger.error("[BFD] Cannot run priority search with no patterns");
       throw new Error(
         "Priority search failed: No patterns available. This indicates pattern generation failed or all patterns were filtered out.",
       );
@@ -2762,15 +2752,12 @@ export class BFDAlgorithm extends BaseAlgorithm {
         wasteNormalization: 10,
       });
     } catch (error) {
-      this.logger.error(
-        "[BFD] Priority search solver threw an exception",
-        {
-          error: error instanceof Error ? error.message : String(error),
-          stack: error instanceof Error ? error.stack : undefined,
-          patternsCount: searchPatterns.length,
-          demandSize: demand.size,
-        },
-      );
+      this.logger.error("[BFD] Priority search solver threw an exception", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        patternsCount: searchPatterns.length,
+        demandSize: demand.size,
+      });
       throw new Error(
         `Priority search solver failed: ${error instanceof Error ? error.message : String(error)}. ` +
           `This may indicate the problem is too complex or requires manual intervention.`,

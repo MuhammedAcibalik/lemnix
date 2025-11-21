@@ -61,7 +61,12 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
         <Box
           sx={{ display: "flex", alignItems: "center", gap: tokens.spacing.sm }}
         >
-          <ListIcon sx={{ fontSize: tokens.components.icon.sm, color: ds.colors.primary.main }} />
+          <ListIcon
+            sx={{
+              fontSize: tokens.components.icon.sm,
+              color: ds.colors.primary.main,
+            }}
+          />
           <Typography
             sx={{
               fontSize: `${tokens.typography.base}px`,
@@ -96,12 +101,12 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
                 ) || 0;
 
               return (
-                <Grid 
-                  item 
-                  xs={12}  // Mobile: 1 column
-                  sm={6}   // Tablet: 2 columns
-                  md={4}   // Laptop: 3 columns
-                  lg={3}   // Desktop: 4 columns
+                <Grid
+                  item
+                  xs={12} // Mobile: 1 column
+                  sm={6} // Tablet: 2 columns
+                  md={4} // Laptop: 3 columns
+                  lg={3} // Desktop: 4 columns
                   xl={2.4} // TV: 5 columns
                   key={list.id}
                 >
@@ -121,12 +126,16 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
                       background: isSelected
                         ? alpha(ds.colors.primary.main, 0.02)
                         : ds.colors.background.paper,
-                      minHeight: device.isTouch ? tokens.components.minTouchTarget * 2 : undefined,
-                      "&:hover": !device.isTouch ? {
-                        transform: "translateY(-4px)",
-                        boxShadow: ds.shadows.soft.xl,
-                        borderColor: ds.colors.primary.main,
-                      } : {},
+                      minHeight: device.isTouch
+                        ? tokens.components.minTouchTarget * 2
+                        : undefined,
+                      "&:hover": !device.isTouch
+                        ? {
+                            transform: "translateY(-4px)",
+                            boxShadow: ds.shadows.soft.xl,
+                            borderColor: ds.colors.primary.main,
+                          }
+                        : {},
                     }}
                     onClick={() => onCuttingListSelect(list)}
                   >
@@ -252,7 +261,9 @@ export const CuttingListStep: React.FC<CuttingListStepProps> = ({
                       xs: tokens.components.button.lg,
                       md: tokens.components.button.md,
                     },
-                    minHeight: device.isTouch ? tokens.components.minTouchTarget : undefined,
+                    minHeight: device.isTouch
+                      ? tokens.components.minTouchTarget
+                      : undefined,
                     px: tokens.spacing.lg,
                     background: ds.gradients.primary,
                     color: "white",

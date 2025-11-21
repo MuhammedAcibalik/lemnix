@@ -1,36 +1,42 @@
 /**
  * LEMNİX Profile Pooling Algorithm
  * Advanced same-profile consolidation for multi-work-order optimization
- * 
+ *
  * @module optimization/algorithms
  * @version 1.0.0
  * @architecture Domain-driven pooling strategy
- * 
+ *
  * Algorithm:
  * 1. Group items by profile characteristics (type, die, alloy, surface, tolerance)
  * 2. Create demand vectors for each unique length in pool
  * 3. Generate candidate bar patterns (single-length + mixed)
  * 4. Select optimal patterns using greedy coverage
  * 5. Distribute segments back to work orders proportionally
- * 
+ *
  * Time Complexity: O(n² × p) where p = number of pools
  * Space Complexity: O(n × w) where w = number of work orders
  * Best For: Multi-work-order scenarios, minimizing mixed bars
  */
 
-import { OptimizationItem, Cut, CuttingSegment, WasteCategory, OptimizationAlgorithm } from '../../../types';
-import { BaseAlgorithm } from '../core/BaseAlgorithm';
-import { OptimizationContext } from '../core/OptimizationContext';
-import { AdvancedOptimizationResult } from '../types';
-import { StockCalculator } from '../helpers/StockCalculator';
-import { WasteAnalyzer } from '../helpers/WasteAnalyzer';
-import { CostCalculator } from '../helpers/CostCalculator';
-import { MetricsCalculator } from '../helpers/MetricsCalculator';
+import {
+  OptimizationItem,
+  Cut,
+  CuttingSegment,
+  WasteCategory,
+  OptimizationAlgorithm,
+} from "../../../types";
+import { BaseAlgorithm } from "../core/BaseAlgorithm";
+import { OptimizationContext } from "../core/OptimizationContext";
+import { AdvancedOptimizationResult } from "../types";
+import { StockCalculator } from "../helpers/StockCalculator";
+import { WasteAnalyzer } from "../helpers/WasteAnalyzer";
+import { CostCalculator } from "../helpers/CostCalculator";
+import { MetricsCalculator } from "../helpers/MetricsCalculator";
 
 /**
  * Material type constant
  */
-const MATERIAL_TYPE = 'aluminum' as const;
+const MATERIAL_TYPE = "aluminum" as const;
 
 /**
  * Pooling threshold constants
@@ -38,7 +44,7 @@ const MATERIAL_TYPE = 'aluminum' as const;
 const POOLING_THRESHOLDS = {
   WASTE_REDUCTION_MIN: 0.01, // 1% of baseline
   EFFICIENCY_DROP_MAX: 0.002, // 0.2 percentage points
-  MIXED_BAR_RATIO_MAX: 0.30 // 30% max mixed bars
+  MIXED_BAR_RATIO_MAX: 0.3, // 30% max mixed bars
 } as const;
 
 /**
@@ -108,17 +114,19 @@ interface PooledCut extends Cut {
  */
 export class PoolingAlgorithm extends BaseAlgorithm {
   public readonly name = OptimizationAlgorithm.PROFILE_POOLING;
-  public readonly complexity = 'O(n²)' as const;
+  public readonly complexity = "O(n²)" as const;
   public readonly scalability = 8;
 
   /**
    * Main optimization method
    */
-  public async optimize(context: OptimizationContext): Promise<AdvancedOptimizationResult> {
-    this.logger.info('Starting Profile Pooling optimization', {
+  public async optimize(
+    context: OptimizationContext,
+  ): Promise<AdvancedOptimizationResult> {
+    this.logger.info("Starting Profile Pooling optimization", {
       requestId: context.requestId,
       items: context.items.length,
-      totalPieces: context.getTotalItemCount()
+      totalPieces: context.getTotalItemCount(),
     });
 
     // Validate context
@@ -132,7 +140,9 @@ export class PoolingAlgorithm extends BaseAlgorithm {
 
     // ✅ FIX: Collect work order information for tracking
     const workOrderIds = this.collectWorkOrderIds(preprocessed);
-    this.logger.info(`Found ${workOrderIds.length} work orders: ${workOrderIds.join(', ')}`);
+    this.logger.info(
+      `Found ${workOrderIds.length} work orders: ${workOrderIds.join(", ")}`,
+    );
 
     // Collect profile pools
     const pools = this.collectProfilePools(preprocessed, context);
@@ -146,7 +156,9 @@ export class PoolingAlgorithm extends BaseAlgorithm {
       const pool = pools[i];
       if (!pool) continue;
 
-      this.logger.debug(`Optimizing pool ${i + 1}/${pools.length}: ${pool.profileType}`);
+      this.logger.debug(
+        `Optimizing pool ${i + 1}/${pools.length}: ${pool.profileType}`,
+      );
 
       const poolCuts = this.optimizePool(pool, context);
       allCuts.push(...poolCuts);
@@ -160,11 +172,11 @@ export class PoolingAlgorithm extends BaseAlgorithm {
     // Create result with work order information
     const result = this.createResult(finalizedCuts, context, workOrderIds);
 
-    this.logger.info('Profile Pooling optimization completed', {
+    this.logger.info("Profile Pooling optimization completed", {
       cuts: result.cuts.length,
       efficiency: result.efficiency.toFixed(2),
-      mixedBars: finalizedCuts.filter(c => (c as PooledCut).isMixed).length,
-      executionTime: this.getExecutionTime(context)
+      mixedBars: finalizedCuts.filter((c) => (c as PooledCut).isMixed).length,
+      executionTime: this.getExecutionTime(context),
     });
 
     return result;
@@ -173,22 +185,27 @@ export class PoolingAlgorithm extends BaseAlgorithm {
   /**
    * ✅ FIX: Collect work order IDs from items
    */
-  private collectWorkOrderIds(items: ReadonlyArray<OptimizationItem>): string[] {
+  private collectWorkOrderIds(
+    items: ReadonlyArray<OptimizationItem>,
+  ): string[] {
     const workOrderSet = new Set<string>();
-    
+
     for (const item of items) {
       if (item.workOrderId && item.workOrderId.trim()) {
         workOrderSet.add(item.workOrderId.trim());
       }
     }
-    
+
     return Array.from(workOrderSet).sort();
   }
 
   /**
    * Collect profile pools from items
    */
-  private collectProfilePools(items: ReadonlyArray<OptimizationItem>, context: OptimizationContext): ProfilePool[] {
+  private collectProfilePools(
+    items: ReadonlyArray<OptimizationItem>,
+    context: OptimizationContext,
+  ): ProfilePool[] {
     const poolMap = new Map<string, ProfilePool>();
 
     for (const item of items) {
@@ -202,7 +219,7 @@ export class PoolingAlgorithm extends BaseAlgorithm {
           stockLengths: context.stockLengths,
           kerf: context.constraints.kerfWidth,
           startSafety: context.constraints.startSafety,
-          endSafety: context.constraints.endSafety
+          endSafety: context.constraints.endSafety,
         });
       }
 
@@ -223,7 +240,7 @@ export class PoolingAlgorithm extends BaseAlgorithm {
         pool.demandVector.set(item.length, {
           length: item.length,
           quantity: item.quantity,
-          workOrders
+          workOrders,
         });
       }
     }
@@ -237,10 +254,10 @@ export class PoolingAlgorithm extends BaseAlgorithm {
   private generatePoolKey(item: OptimizationItem): string {
     const poolKey: PoolKey = {
       profileType: item.profileType,
-      dieId: this.extractProperty(item, 'dieId', 'UNKNOWN'),
-      alloy: this.extractProperty(item, 'alloy', 'AA6063'),
-      surface: this.extractProperty(item, 'surface', 'E6'),
-      tolerance: this.extractProperty(item, 'tolerance', 'TOL-N')
+      dieId: this.extractProperty(item, "dieId", "UNKNOWN"),
+      alloy: this.extractProperty(item, "alloy", "AA6063"),
+      surface: this.extractProperty(item, "surface", "E6"),
+      tolerance: this.extractProperty(item, "tolerance", "TOL-N"),
     };
 
     return `${poolKey.profileType}|${poolKey.dieId}|${poolKey.alloy}|${poolKey.surface}|${poolKey.tolerance}`;
@@ -249,16 +266,23 @@ export class PoolingAlgorithm extends BaseAlgorithm {
   /**
    * Extract property from item (with fallback)
    */
-  private extractProperty(item: OptimizationItem, property: string, fallback: string): string {
+  private extractProperty(
+    item: OptimizationItem,
+    property: string,
+    fallback: string,
+  ): string {
     const extendedItem = item as OptimizationItem & Record<string, unknown>;
     const value = extendedItem[property];
-    return typeof value === 'string' ? value : fallback;
+    return typeof value === "string" ? value : fallback;
   }
 
   /**
    * Optimize single pool
    */
-  private optimizePool(pool: ProfilePool, context: OptimizationContext): PooledCut[] {
+  private optimizePool(
+    pool: ProfilePool,
+    context: OptimizationContext,
+  ): PooledCut[] {
     // Generate candidate patterns for all stock lengths
     const allPatterns: BarPattern[] = [];
     for (const stockLength of pool.stockLengths) {
@@ -270,7 +294,11 @@ export class PoolingAlgorithm extends BaseAlgorithm {
     const selectedBars = this.selectBarsToCoverDemand(pool, allPatterns);
 
     // Distribute segments to work orders
-    const cuts = this.distributeSegmentsToWorkOrders(selectedBars, pool, context);
+    const cuts = this.distributeSegmentsToWorkOrders(
+      selectedBars,
+      pool,
+      context,
+    );
 
     return cuts;
   }
@@ -278,9 +306,14 @@ export class PoolingAlgorithm extends BaseAlgorithm {
   /**
    * Generate bar patterns for a stock length
    */
-  private generateBarPatterns(pool: ProfilePool, stockLength: number): BarPattern[] {
+  private generateBarPatterns(
+    pool: ProfilePool,
+    stockLength: number,
+  ): BarPattern[] {
     const patterns: BarPattern[] = [];
-    const demandArray = Array.from(pool.demandVector.values()).sort((a, b) => b.length - a.length);
+    const demandArray = Array.from(pool.demandVector.values()).sort(
+      (a, b) => b.length - a.length,
+    );
 
     // Single-length patterns
     for (const demand of demandArray) {
@@ -289,13 +322,14 @@ export class PoolingAlgorithm extends BaseAlgorithm {
         stockLength,
         pool.kerf,
         pool.startSafety,
-        pool.endSafety
+        pool.endSafety,
       );
 
       if (maxFit > 0) {
-        const used = pool.startSafety + 
-          maxFit * demand.length + 
-          (maxFit - 1) * pool.kerf + 
+        const used =
+          pool.startSafety +
+          maxFit * demand.length +
+          (maxFit - 1) * pool.kerf +
           pool.endSafety;
         const remaining = stockLength - used;
 
@@ -305,13 +339,17 @@ export class PoolingAlgorithm extends BaseAlgorithm {
           planLabel: `${maxFit} × ${demand.length} mm`,
           used,
           remaining,
-          pieceCount: maxFit
+          pieceCount: maxFit,
         });
       }
     }
 
     // Mixed-length patterns
-    const mixedPatterns = this.generateMixedPatterns(pool, stockLength, demandArray);
+    const mixedPatterns = this.generateMixedPatterns(
+      pool,
+      stockLength,
+      demandArray,
+    );
     patterns.push(...mixedPatterns);
 
     return patterns;
@@ -323,7 +361,7 @@ export class PoolingAlgorithm extends BaseAlgorithm {
   private generateMixedPatterns(
     pool: ProfilePool,
     stockLength: number,
-    demandArray: DemandVector[]
+    demandArray: DemandVector[],
   ): BarPattern[] {
     const patterns: BarPattern[] = [];
 
@@ -358,10 +396,12 @@ export class PoolingAlgorithm extends BaseAlgorithm {
           patterns.push({
             stockLength,
             plan,
-            planLabel: plan.map(p => `${p.count} × ${p.length} mm`).join(' + '),
+            planLabel: plan
+              .map((p) => `${p.count} × ${p.length} mm`)
+              .join(" + "),
             used,
             remaining: stockLength - used,
-            pieceCount: count1 + count2
+            pieceCount: count1 + count2,
           });
         }
       }
@@ -373,13 +413,16 @@ export class PoolingAlgorithm extends BaseAlgorithm {
   /**
    * Select bars to cover demand (greedy with mixed bar ratio constraint)
    */
-  private selectBarsToCoverDemand(pool: ProfilePool, patterns: BarPattern[]): BarPattern[] {
+  private selectBarsToCoverDemand(
+    pool: ProfilePool,
+    patterns: BarPattern[],
+  ): BarPattern[] {
     const selectedBars: BarPattern[] = [];
     const remainingDemand = new Map(pool.demandVector);
 
     // Separate single and mixed patterns for ratio control
-    const singlePatterns = patterns.filter(p => p.plan.length === 1);
-    const mixedPatterns = patterns.filter(p => p.plan.length > 1);
+    const singlePatterns = patterns.filter((p) => p.plan.length === 1);
+    const mixedPatterns = patterns.filter((p) => p.plan.length > 1);
 
     while (remainingDemand.size > 0) {
       let bestPattern: BarPattern | null = null;
@@ -387,15 +430,20 @@ export class PoolingAlgorithm extends BaseAlgorithm {
 
       // ✅ IMPROVED: Calculate mixed bar ratio by material volume instead of count
       const mixedMaterial = selectedBars
-        .filter(b => b.plan.length > 1)
+        .filter((b) => b.plan.length > 1)
         .reduce((sum, b) => sum + b.stockLength, 0);
-      const totalMaterial = selectedBars.reduce((sum, b) => sum + b.stockLength, 0);
-      const mixedBarRatio = totalMaterial > 0 ? mixedMaterial / totalMaterial : 0;
-      
+      const totalMaterial = selectedBars.reduce(
+        (sum, b) => sum + b.stockLength,
+        0,
+      );
+      const mixedBarRatio =
+        totalMaterial > 0 ? mixedMaterial / totalMaterial : 0;
+
       // Choose candidate patterns based on mixed bar ratio constraint
-      const candidatePatterns = mixedBarRatio >= POOLING_THRESHOLDS.MIXED_BAR_RATIO_MAX 
-        ? singlePatterns  // Only single patterns if ratio limit reached
-        : patterns;       // All patterns if under limit
+      const candidatePatterns =
+        mixedBarRatio >= POOLING_THRESHOLDS.MIXED_BAR_RATIO_MAX
+          ? singlePatterns // Only single patterns if ratio limit reached
+          : patterns; // All patterns if under limit
 
       for (const pattern of candidatePatterns) {
         let canSatisfy = false;
@@ -438,16 +486,25 @@ export class PoolingAlgorithm extends BaseAlgorithm {
 
     // Log mixed bar ratio for monitoring (by material volume)
     const finalMixedMaterial = selectedBars
-      .filter(b => b.plan.length > 1)
+      .filter((b) => b.plan.length > 1)
       .reduce((sum, b) => sum + b.stockLength, 0);
-    const finalTotalMaterial = selectedBars.reduce((sum, b) => sum + b.stockLength, 0);
-    const finalMixedRatio = finalTotalMaterial > 0 ? finalMixedMaterial / finalTotalMaterial : 0;
-    const finalMixedCount = selectedBars.filter(b => b.plan.length > 1).length;
-    
-    console.log(`[PoolingAlgorithm] 📊 Mixed bar ratio: ${(finalMixedRatio * 100).toFixed(1)}% (${finalMixedCount}/${selectedBars.length} bars, ${finalMixedMaterial}mm/${finalTotalMaterial}mm material)`, {
-      limit: `${(POOLING_THRESHOLDS.MIXED_BAR_RATIO_MAX * 100).toFixed(1)}%`,
-      withinLimit: finalMixedRatio <= POOLING_THRESHOLDS.MIXED_BAR_RATIO_MAX
-    });
+    const finalTotalMaterial = selectedBars.reduce(
+      (sum, b) => sum + b.stockLength,
+      0,
+    );
+    const finalMixedRatio =
+      finalTotalMaterial > 0 ? finalMixedMaterial / finalTotalMaterial : 0;
+    const finalMixedCount = selectedBars.filter(
+      (b) => b.plan.length > 1,
+    ).length;
+
+    console.log(
+      `[PoolingAlgorithm] 📊 Mixed bar ratio: ${(finalMixedRatio * 100).toFixed(1)}% (${finalMixedCount}/${selectedBars.length} bars, ${finalMixedMaterial}mm/${finalTotalMaterial}mm material)`,
+      {
+        limit: `${(POOLING_THRESHOLDS.MIXED_BAR_RATIO_MAX * 100).toFixed(1)}%`,
+        withinLimit: finalMixedRatio <= POOLING_THRESHOLDS.MIXED_BAR_RATIO_MAX,
+      },
+    );
 
     return selectedBars;
   }
@@ -458,7 +515,7 @@ export class PoolingAlgorithm extends BaseAlgorithm {
   private distributeSegmentsToWorkOrders(
     selectedBars: BarPattern[],
     pool: ProfilePool,
-    context: OptimizationContext
+    context: OptimizationContext,
   ): PooledCut[] {
     const cuts: PooledCut[] = [];
     const workOrderDemand = new Map<string, Map<number, number>>();
@@ -469,7 +526,12 @@ export class PoolingAlgorithm extends BaseAlgorithm {
         if (!workOrderDemand.has(workOrderId)) {
           workOrderDemand.set(workOrderId, new Map());
         }
-        workOrderDemand.get(workOrderId)!.set(length, (workOrderDemand.get(workOrderId)!.get(length) || 0) + qty);
+        workOrderDemand
+          .get(workOrderId)!
+          .set(
+            length,
+            (workOrderDemand.get(workOrderId)!.get(length) || 0) + qty,
+          );
       }
     }
 
@@ -484,20 +546,24 @@ export class PoolingAlgorithm extends BaseAlgorithm {
       // Create segments
       for (const planItem of bar.plan) {
         for (let j = 0; j < planItem.count; j++) {
-          segments.push(this.createSegment(
-            segments.length,
-            `cut_${i}`,
-            planItem.length,
-            pool.profileType,
-            context,
-            planItem.workOrderId  // ✅ FIX: Pass workOrderId from plan item
-          ));
+          segments.push(
+            this.createSegment(
+              segments.length,
+              `cut_${i}`,
+              planItem.length,
+              pool.profileType,
+              context,
+              planItem.workOrderId, // ✅ FIX: Pass workOrderId from plan item
+            ),
+          );
         }
 
         // Distribute to work orders proportionally
         const demandVector = pool.demandVector.get(planItem.length);
         if (demandVector) {
-          const totalDemand = Array.from(demandVector.workOrders.values()).reduce((a, b) => a + b, 0);
+          const totalDemand = Array.from(
+            demandVector.workOrders.values(),
+          ).reduce((a, b) => a + b, 0);
 
           if (totalDemand > 0) {
             for (const [workOrderId, woNeed] of demandVector.workOrders) {
@@ -506,8 +572,14 @@ export class PoolingAlgorithm extends BaseAlgorithm {
                 const assigned = Math.floor(planItem.count * proportion);
 
                 if (assigned > 0) {
-                  workOrderCounts.set(workOrderId, (workOrderCounts.get(workOrderId) || 0) + assigned);
-                  demandVector.workOrders.set(workOrderId, Math.max(0, woNeed - assigned));
+                  workOrderCounts.set(
+                    workOrderId,
+                    (workOrderCounts.get(workOrderId) || 0) + assigned,
+                  );
+                  demandVector.workOrders.set(
+                    workOrderId,
+                    Math.max(0, woNeed - assigned),
+                  );
                 }
               }
             }
@@ -543,7 +615,7 @@ export class PoolingAlgorithm extends BaseAlgorithm {
         workOrderBreakdown,
         isMixed: workOrderBreakdown.length > 1,
         poolKey: pool.poolKey,
-        profileType: pool.profileType
+        profileType: pool.profileType,
       };
 
       cuts.push(cut);
@@ -561,7 +633,7 @@ export class PoolingAlgorithm extends BaseAlgorithm {
     length: number,
     profileType: string,
     context: OptimizationContext,
-    workOrderId?: string
+    workOrderId?: string,
   ): CuttingSegment {
     return {
       id: this.generateSegmentId(),
@@ -572,13 +644,13 @@ export class PoolingAlgorithm extends BaseAlgorithm {
       position: 0, // Will be calculated during finalization
       endPosition: length,
       tolerance: 0.5,
-      workOrderItemId: workOrderId || '',
-      workOrderId: workOrderId || 'POOLED',  // ✅ FIX: Add workOrderId from plan item
+      workOrderItemId: workOrderId || "",
+      workOrderId: workOrderId || "POOLED", // ✅ FIX: Add workOrderId from plan item
       profileType,
       originalLength: length,
       qualityCheck: true,
       unitCost: length * context.costModel.materialCost,
-      totalCost: length * context.costModel.materialCost
+      totalCost: length * context.costModel.materialCost,
     };
   }
 
@@ -586,23 +658,26 @@ export class PoolingAlgorithm extends BaseAlgorithm {
    * Finalize cuts
    */
   private finalizeCuts(cuts: PooledCut[], context: OptimizationContext): Cut[] {
-    return cuts.map(cut => ({
+    return cuts.map((cut) => ({
       ...cut,
-      profileType: cut.profileType || 'Unknown'
+      profileType: cut.profileType || "Unknown",
     }));
   }
 
   /**
    * ✅ FIX: Calculate work order breakdown from cuts
    */
-  private calculateWorkOrderBreakdown(cuts: Cut[], workOrderIds: string[]): Array<{ workOrderId: string; pieceCount: number }> {
+  private calculateWorkOrderBreakdown(
+    cuts: Cut[],
+    workOrderIds: string[],
+  ): Array<{ workOrderId: string; pieceCount: number }> {
     const workOrderCounts = new Map<string, number>();
-    
+
     // Initialize all work orders with 0 count
     for (const workOrderId of workOrderIds) {
       workOrderCounts.set(workOrderId, 0);
     }
-    
+
     // Count pieces from cuts
     for (const cut of cuts) {
       const pooledCut = cut as PooledCut;
@@ -614,35 +689,58 @@ export class PoolingAlgorithm extends BaseAlgorithm {
         }
       }
     }
-    
+
     // Convert to array format
-    return Array.from(workOrderCounts.entries()).map(([workOrderId, pieceCount]) => ({
-      workOrderId,
-      pieceCount
-    }));
+    return Array.from(workOrderCounts.entries()).map(
+      ([workOrderId, pieceCount]) => ({
+        workOrderId,
+        pieceCount,
+      }),
+    );
   }
 
   /**
    * Create result
    */
-  private createResult(cuts: Cut[], context: OptimizationContext, workOrderIds: string[]): AdvancedOptimizationResult {
-    const totalStockLength = cuts.reduce((sum, cut) => sum + cut.stockLength, 0);
+  private createResult(
+    cuts: Cut[],
+    context: OptimizationContext,
+    workOrderIds: string[],
+  ): AdvancedOptimizationResult {
+    const totalStockLength = cuts.reduce(
+      (sum, cut) => sum + cut.stockLength,
+      0,
+    );
     const totalWaste = WasteAnalyzer.calculateTotalWaste(cuts);
     const totalLength = cuts.reduce((sum, cut) => sum + cut.usedLength, 0);
     const totalSegments = cuts.reduce((sum, cut) => sum + cut.segmentCount, 0);
-    const efficiency = StockCalculator.calculateEfficiency(totalStockLength, totalWaste);
+    const efficiency = StockCalculator.calculateEfficiency(
+      totalStockLength,
+      totalWaste,
+    );
 
-    const costBreakdown = CostCalculator.calculateCostBreakdown(cuts, context.costModel, context.constraints);
+    const costBreakdown = CostCalculator.calculateCostBreakdown(
+      cuts,
+      context.costModel,
+      context.constraints,
+    );
     const wasteDistribution = WasteAnalyzer.calculateWasteDistribution(cuts);
-    const detailedWasteAnalysis = WasteAnalyzer.calculateDetailedWasteAnalysis(cuts);
-    const performanceMetrics = MetricsCalculator.calculatePerformanceMetrics('pooling', context.items.length);
+    const detailedWasteAnalysis =
+      WasteAnalyzer.calculateDetailedWasteAnalysis(cuts);
+    const performanceMetrics = MetricsCalculator.calculatePerformanceMetrics(
+      "pooling",
+      context.items.length,
+    );
 
     const setupTime = cuts.length * 5;
     const cuttingTime = totalSegments * 2;
     const totalTime = setupTime + cuttingTime;
 
     // ✅ FIX: Calculate work order breakdown
-    const workOrderBreakdown = this.calculateWorkOrderBreakdown(cuts, workOrderIds);
+    const workOrderBreakdown = this.calculateWorkOrderBreakdown(
+      cuts,
+      workOrderIds,
+    );
 
     return {
       algorithm: this.name,
@@ -657,16 +755,29 @@ export class PoolingAlgorithm extends BaseAlgorithm {
       averageCutsPerStock: cuts.length > 0 ? totalSegments / cuts.length : 0,
       setupTime,
       materialUtilization: efficiency,
-      cuttingComplexity: MetricsCalculator.calculateCuttingComplexity(totalSegments, cuts.length),
+      cuttingComplexity: MetricsCalculator.calculateCuttingComplexity(
+        totalSegments,
+        cuts.length,
+      ),
       cuttingTime,
       totalTime,
       materialCost: costBreakdown.materialCost,
       wasteCost: costBreakdown.wasteCost,
       laborCost: costBreakdown.timeCost,
-      costPerMeter: CostCalculator.calculateCostPerMeter(costBreakdown.totalCost, totalLength),
-      qualityScore: MetricsCalculator.calculateQualityScore(efficiency, totalWaste),
-      reclaimableWastePercentage: WasteAnalyzer.calculateReclaimableWastePercentage(cuts),
-      wastePercentage: WasteAnalyzer.calculateWastePercentage(totalWaste, totalStockLength),
+      costPerMeter: CostCalculator.calculateCostPerMeter(
+        costBreakdown.totalCost,
+        totalLength,
+      ),
+      qualityScore: MetricsCalculator.calculateQualityScore(
+        efficiency,
+        totalWaste,
+      ),
+      reclaimableWastePercentage:
+        WasteAnalyzer.calculateReclaimableWastePercentage(cuts),
+      wastePercentage: WasteAnalyzer.calculateWastePercentage(
+        totalWaste,
+        totalStockLength,
+      ),
       wasteDistribution,
       constraints: context.constraints,
       detailedWasteAnalysis,
@@ -675,54 +786,64 @@ export class PoolingAlgorithm extends BaseAlgorithm {
       optimizationScore: MetricsCalculator.calculateOptimizationScore(
         efficiency,
         WasteAnalyzer.calculateWastePercentage(totalWaste, totalStockLength),
-        MetricsCalculator.calculateQualityScore(efficiency, totalWaste)
+        MetricsCalculator.calculateQualityScore(efficiency, totalWaste),
       ),
-      paretoFrontier: CostCalculator.calculateParetoFrontier(totalWaste, costBreakdown.totalCost, totalTime, efficiency),
+      paretoFrontier: CostCalculator.calculateParetoFrontier(
+        totalWaste,
+        costBreakdown.totalCost,
+        totalTime,
+        efficiency,
+      ),
       costBreakdown,
       performanceMetrics,
-      confidence: MetricsCalculator.calculateConfidence(efficiency, totalWaste, costBreakdown.totalCost),
+      confidence: MetricsCalculator.calculateConfidence(
+        efficiency,
+        totalWaste,
+        costBreakdown.totalCost,
+      ),
       totalKerfLoss: cuts.reduce((sum, cut) => sum + (cut.kerfLoss || 0), 0),
-      totalSafetyReserve: cuts.length * (context.constraints.startSafety + context.constraints.endSafety),
+      totalSafetyReserve:
+        cuts.length *
+        (context.constraints.startSafety + context.constraints.endSafety),
       optimizationHistory: [],
       convergenceData: {
         generations: [],
         fitnessValues: [],
-        diversityValues: []
+        diversityValues: [],
       },
       algorithmParameters: {
         populationSize: 0,
         generations: 0,
         mutationRate: 0,
-        crossoverRate: 0
+        crossoverRate: 0,
       },
       resourceUtilization: {
         cpuUsage: 0,
         memoryUsage: 0,
         gpuUsage: 0,
-        networkUsage: 0
+        networkUsage: 0,
       },
       errorAnalysis: {
         errors: [],
         warnings: [],
-        suggestions: []
+        suggestions: [],
       },
       validationResults: {
         isValid: true,
         errors: [],
-        warnings: []
+        warnings: [],
       },
       metadata: {
-        version: '1.0.0',
+        version: "1.0.0",
         timestamp: new Date().toISOString(),
-        environment: 'production'
+        environment: "production",
       },
       // ✅ FIX: Add work order information
       workOrders: {
         ids: workOrderIds,
         count: workOrderIds.length,
-        breakdown: workOrderBreakdown
-      }
+        breakdown: workOrderBreakdown,
+      },
     };
   }
 }
-

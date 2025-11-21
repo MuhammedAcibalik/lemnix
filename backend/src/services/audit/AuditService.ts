@@ -4,9 +4,9 @@
  * @version 1.0.0
  */
 
-import { prisma } from '../../config/database';
-import { logger } from '../logger';
-import type { Prisma } from '@prisma/client';
+import { prisma } from "../../config/database";
+import { logger } from "../logger";
+import type { Prisma } from "@prisma/client";
 
 /**
  * Audit log entry interface
@@ -14,7 +14,7 @@ import type { Prisma } from '@prisma/client';
 interface AuditEntry {
   userId: string;
   tableName: string;
-  operation: 'INSERT' | 'UPDATE' | 'DELETE';
+  operation: "INSERT" | "UPDATE" | "DELETE";
   recordId: string;
   oldData?: Record<string, unknown>;
   newData?: Record<string, unknown>;
@@ -48,21 +48,25 @@ export class AuditService {
           tableName: entry.tableName,
           operation: entry.operation,
           recordId: entry.recordId,
-          oldData: entry.oldData ? (entry.oldData as Prisma.InputJsonValue) : undefined,
-          newData: entry.newData ? (entry.newData as Prisma.InputJsonValue) : undefined,
+          oldData: entry.oldData
+            ? (entry.oldData as Prisma.InputJsonValue)
+            : undefined,
+          newData: entry.newData
+            ? (entry.newData as Prisma.InputJsonValue)
+            : undefined,
           ipAddress: entry.ipAddress,
           userAgent: entry.userAgent,
         },
       });
 
-      logger.debug('[Audit] Log entry created', {
+      logger.debug("[Audit] Log entry created", {
         table: entry.tableName,
         operation: entry.operation,
         recordId: entry.recordId,
       });
     } catch (error) {
       // Don't fail the main operation if audit logging fails
-      logger.error('[Audit] Failed to log entry', { entry, error });
+      logger.error("[Audit] Failed to log entry", { entry, error });
     }
   }
 
@@ -80,7 +84,7 @@ export class AuditService {
     await this.log({
       userId: params.userId,
       tableName: params.tableName,
-      operation: 'INSERT',
+      operation: "INSERT",
       recordId: params.recordId,
       newData: params.data,
       ipAddress: params.ipAddress,
@@ -103,7 +107,7 @@ export class AuditService {
     await this.log({
       userId: params.userId,
       tableName: params.tableName,
-      operation: 'UPDATE',
+      operation: "UPDATE",
       recordId: params.recordId,
       oldData: params.oldData,
       newData: params.newData,
@@ -126,7 +130,7 @@ export class AuditService {
     await this.log({
       userId: params.userId,
       tableName: params.tableName,
-      operation: 'DELETE',
+      operation: "DELETE",
       recordId: params.recordId,
       oldData: params.data,
       ipAddress: params.ipAddress,
@@ -153,7 +157,7 @@ export class AuditService {
           ...(recordId && { recordId }),
           ...(userId && { userId }),
         },
-        orderBy: { timestamp: 'desc' },
+        orderBy: { timestamp: "desc" },
         take: limit,
         skip: offset,
       });
@@ -172,7 +176,7 @@ export class AuditService {
         hasMore: offset + logs.length < totalCount,
       };
     } catch (error) {
-      logger.error('[Audit] Failed to get audit trail', { params, error });
+      logger.error("[Audit] Failed to get audit trail", { params, error });
       throw error;
     }
   }
@@ -203,7 +207,7 @@ export class AuditService {
 
       // Operations by type
       const byOperation = await prisma.auditLog.groupBy({
-        by: ['operation'],
+        by: ["operation"],
         where: {
           ...(userId && { userId }),
           ...(startDate && { timestamp: { gte: startDate } }),
@@ -212,14 +216,17 @@ export class AuditService {
         _count: true,
       });
 
-      const operationsByType = byOperation.reduce((acc, { operation, _count }) => {
-        acc[operation] = _count;
-        return acc;
-      }, {} as Record<string, number>);
+      const operationsByType = byOperation.reduce(
+        (acc, { operation, _count }) => {
+          acc[operation] = _count;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
 
       // Operations by table
       const byTable = await prisma.auditLog.groupBy({
-        by: ['tableName'],
+        by: ["tableName"],
         where: {
           ...(userId && { userId }),
           ...(startDate && { timestamp: { gte: startDate } }),
@@ -228,10 +235,13 @@ export class AuditService {
         _count: true,
       });
 
-      const operationsByTable = byTable.reduce((acc, { tableName, _count }) => {
-        acc[tableName] = _count;
-        return acc;
-      }, {} as Record<string, number>);
+      const operationsByTable = byTable.reduce(
+        (acc, { tableName, _count }) => {
+          acc[tableName] = _count;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
 
       return {
         totalOperations,
@@ -239,7 +249,7 @@ export class AuditService {
         operationsByTable,
       };
     } catch (error) {
-      logger.error('[Audit] Failed to get statistics', { params, error });
+      logger.error("[Audit] Failed to get statistics", { params, error });
       throw error;
     }
   }
@@ -260,14 +270,14 @@ export class AuditService {
         },
       });
 
-      logger.info('[Audit] Purged old logs', {
+      logger.info("[Audit] Purged old logs", {
         count: result.count,
         cutoffDate: cutoffDate.toISOString(),
       });
 
       return result.count;
     } catch (error) {
-      logger.error('[Audit] Failed to purge old logs', { error });
+      logger.error("[Audit] Failed to purge old logs", { error });
       throw error;
     }
   }
@@ -277,4 +287,3 @@ export class AuditService {
  * Export singleton instance
  */
 export const auditService = AuditService.getInstance();
-
