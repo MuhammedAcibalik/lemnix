@@ -2,7 +2,7 @@
  * @fileoverview ML-like Scoring Service for Smart Suggestions
  * @module services/suggestions/ScoringService
  * @version 1.0.0
- * 
+ *
  * Advanced scoring algorithms with:
  * - Exponential decay for recency
  * - Weighted context matching
@@ -10,7 +10,7 @@
  * - Quantity prediction with confidence intervals
  */
 
-import { logger } from '../logger';
+import { logger } from "../logger";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -57,18 +57,18 @@ export class ScoringService {
 
   // Scoring weights (must sum to 100)
   private readonly FREQUENCY_WEIGHT = 40; // 0-40 points
-  private readonly RECENCY_WEIGHT = 30;   // 0-30 points
-  private readonly CONTEXT_WEIGHT = 30;   // 0-30 points
+  private readonly RECENCY_WEIGHT = 30; // 0-30 points
+  private readonly CONTEXT_WEIGHT = 30; // 0-30 points
 
   // Recency decay parameters
   private readonly RECENCY_HALF_LIFE_DAYS = 90; // 90 days half-life
-  
+
   // Context matching weights (must sum to 1)
   private readonly CONTEXT_MATCH_WEIGHTS = {
-    product: 0.40,  // 40% - Most important
-    size: 0.30,     // 30% - Second most important
-    color: 0.15,    // 15% - Style preference
-    version: 0.15   // 15% - Specification
+    product: 0.4, // 40% - Most important
+    size: 0.3, // 30% - Second most important
+    color: 0.15, // 15% - Style preference
+    version: 0.15, // 15% - Specification
   } as const;
 
   private constructor() {}
@@ -87,7 +87,7 @@ export class ScoringService {
   /**
    * Calculate frequency score (0-40 points)
    * Uses min-max normalization
-   * 
+   *
    * @param frequency - Pattern frequency
    * @param maxFrequency - Maximum frequency in dataset
    * @returns Score between 0 and 40
@@ -100,11 +100,11 @@ export class ScoringService {
     const normalized = frequency / maxFrequency;
     const score = normalized * this.FREQUENCY_WEIGHT;
 
-    logger.debug('Frequency score calculated', {
+    logger.debug("Frequency score calculated", {
       frequency,
       maxFrequency,
       normalized: normalized.toFixed(3),
-      score: score.toFixed(2)
+      score: score.toFixed(2),
     });
 
     return Math.round(score * 100) / 100;
@@ -117,14 +117,14 @@ export class ScoringService {
   /**
    * Calculate recency score (0-30 points)
    * Uses exponential decay: score = 30 * e^(-days/halfLife)
-   * 
+   *
    * Half-life of 90 days means:
    * - 0 days ago: 30 points (100%)
    * - 45 days ago: 21 points (70%)
    * - 90 days ago: 15 points (50%)
    * - 180 days ago: 7.5 points (25%)
    * - 365 days ago: 2 points (7%)
-   * 
+   *
    * @param lastUsed - Last usage date
    * @returns Score between 0 and 30
    */
@@ -134,14 +134,16 @@ export class ScoringService {
     const daysSinceLastUse = (now - lastUsedTime) / (1000 * 60 * 60 * 24);
 
     // Exponential decay formula
-    const decayFactor = Math.exp(-daysSinceLastUse / this.RECENCY_HALF_LIFE_DAYS);
+    const decayFactor = Math.exp(
+      -daysSinceLastUse / this.RECENCY_HALF_LIFE_DAYS,
+    );
     const score = this.RECENCY_WEIGHT * decayFactor;
 
-    logger.debug('Recency score calculated', {
+    logger.debug("Recency score calculated", {
       lastUsed: lastUsed.toISOString(),
       daysSinceLastUse: daysSinceLastUse.toFixed(1),
       decayFactor: decayFactor.toFixed(3),
-      score: score.toFixed(2)
+      score: score.toFixed(2),
     });
 
     return Math.round(score * 100) / 100;
@@ -154,19 +156,19 @@ export class ScoringService {
   /**
    * Calculate context match score (0-30 points)
    * Weighted matching based on context fields
-   * 
+   *
    * Weights:
    * - Product: 40% (12 points max)
    * - Size: 30% (9 points max)
    * - Color: 15% (4.5 points max)
    * - Version: 15% (4.5 points max)
-   * 
+   *
    * @param pattern - Historical pattern
    * @param context - Current context
    * @returns Score between 0 and 30
    */
   calculateContextMatchScore(pattern: Pattern, context: ContextInfo): number {
-    let totalMatch = 0;
+    const totalMatch = 0;
 
     // Extract pattern context (assumed format: "PRODUCT|SIZE|...")
     const patternContexts = pattern.contexts;
@@ -177,9 +179,9 @@ export class ScoringService {
     // Find best matching context
     let bestMatch = 0;
     for (const patternContext of patternContexts) {
-      const parts = patternContext.split('|');
-      const patternProduct = parts[0] || '';
-      const patternSize = parts[1] || '';
+      const parts = patternContext.split("|");
+      const patternProduct = parts[0] || "";
+      const patternSize = parts[1] || "";
 
       let matchScore = 0;
 
@@ -209,10 +211,10 @@ export class ScoringService {
 
     const score = bestMatch * this.CONTEXT_WEIGHT;
 
-    logger.debug('Context match score calculated', {
+    logger.debug("Context match score calculated", {
       patternContexts: patternContexts.length,
       bestMatch: bestMatch.toFixed(3),
-      score: score.toFixed(2)
+      score: score.toFixed(2),
     });
 
     return Math.round(score * 100) / 100;
@@ -225,7 +227,7 @@ export class ScoringService {
   /**
    * Calculate overall confidence score (0-100)
    * Combines frequency, recency, and context matching
-   * 
+   *
    * @param pattern - Historical pattern
    * @param context - Current context
    * @param maxFrequency - Maximum frequency in dataset
@@ -234,9 +236,12 @@ export class ScoringService {
   calculateConfidenceScore(
     pattern: Pattern,
     context: ContextInfo,
-    maxFrequency: number
+    maxFrequency: number,
   ): ConfidenceScore {
-    const frequencyScore = this.calculateFrequencyScore(pattern.frequency, maxFrequency);
+    const frequencyScore = this.calculateFrequencyScore(
+      pattern.frequency,
+      maxFrequency,
+    );
     const recencyScore = this.calculateRecencyScore(pattern.lastUsed);
     const contextScore = this.calculateContextMatchScore(pattern, context);
 
@@ -245,12 +250,12 @@ export class ScoringService {
     const breakdown = [
       `Frequency: ${frequencyScore.toFixed(1)}/${this.FREQUENCY_WEIGHT}`,
       `Recency: ${recencyScore.toFixed(1)}/${this.RECENCY_WEIGHT}`,
-      `Context: ${contextScore.toFixed(1)}/${this.CONTEXT_WEIGHT}`
-    ].join(', ');
+      `Context: ${contextScore.toFixed(1)}/${this.CONTEXT_WEIGHT}`,
+    ].join(", ");
 
-    logger.debug('Confidence score calculated', {
+    logger.debug("Confidence score calculated", {
       total: total.toFixed(2),
-      breakdown
+      breakdown,
     });
 
     return {
@@ -258,7 +263,7 @@ export class ScoringService {
       frequency: frequencyScore,
       recency: recencyScore,
       contextMatch: contextScore,
-      breakdown
+      breakdown,
     };
   }
 
@@ -269,7 +274,7 @@ export class ScoringService {
   /**
    * Predict quantity with confidence interval
    * Uses weighted moving average with confidence bounds
-   * 
+   *
    * @param pattern - Historical pattern
    * @param orderQuantity - Current order quantity (context)
    * @param confidence - Pattern confidence (0-100)
@@ -278,7 +283,7 @@ export class ScoringService {
   predictQuantity(
     pattern: Pattern,
     orderQuantity: number,
-    confidence: number
+    confidence: number,
   ): QuantityPrediction {
     const baseQuantity = pattern.averageQuantity;
 
@@ -287,7 +292,7 @@ export class ScoringService {
 
     // Calculate ratio if order quantity is known
     let predicted = baseQuantity;
-    let reasoning = 'Based on historical average';
+    let reasoning = "Based on historical average";
 
     if (orderQuantity > 0) {
       // Use pattern's ratio relative to typical order size
@@ -297,18 +302,19 @@ export class ScoringService {
     }
 
     // Confidence interval (±20% for low confidence, ±5% for high confidence)
-    const uncertaintyFactor = 0.20 * (1 - confidenceFactor) + 0.05 * confidenceFactor;
+    const uncertaintyFactor =
+      0.2 * (1 - confidenceFactor) + 0.05 * confidenceFactor;
     const min = Math.max(1, Math.floor(predicted * (1 - uncertaintyFactor)));
     const max = Math.ceil(predicted * (1 + uncertaintyFactor));
 
-    logger.debug('Quantity predicted', {
+    logger.debug("Quantity predicted", {
       baseQuantity,
       orderQuantity,
       predicted,
       confidence: confidence.toFixed(1),
       confidenceFactor: confidenceFactor.toFixed(2),
       uncertaintyFactor: uncertaintyFactor.toFixed(2),
-      range: `${min}-${max}`
+      range: `${min}-${max}`,
     });
 
     return {
@@ -316,7 +322,7 @@ export class ScoringService {
       confidence: Math.round(confidence * 100) / 100,
       min,
       max,
-      reasoning
+      reasoning,
     };
   }
 
@@ -361,8 +367,8 @@ export class ScoringService {
         } else {
           matrix[i][j] = Math.min(
             matrix[i - 1][j - 1] + 1, // substitution
-            matrix[i][j - 1] + 1,     // insertion
-            matrix[i - 1][j] + 1      // deletion
+            matrix[i][j - 1] + 1, // insertion
+            matrix[i - 1][j] + 1, // deletion
           );
         }
       }
@@ -370,9 +376,8 @@ export class ScoringService {
 
     const distance = matrix[s2.length][s1.length];
     const maxLength = Math.max(s1.length, s2.length);
-    const similarity = 1 - (distance / maxLength);
+    const similarity = 1 - distance / maxLength;
 
     return Math.max(0, Math.min(1, similarity));
   }
 }
-

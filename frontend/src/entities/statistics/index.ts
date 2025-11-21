@@ -16,6 +16,10 @@ export type {
   SystemHealthMetrics,
   PerformanceMetrics,
   OptimizationAnalytics,
+  ProfileAnalysis,
+  ProductCategoriesAnalysis,
+  ColorSizeAnalysis,
+  WorkOrderAnalysis,
 } from "./model/types";
 
 // API functions
@@ -31,6 +35,10 @@ export {
   getWasteReductionTrends,
   getSystemHealthMetrics,
   getPerformanceMetrics,
+  getProfileAnalysis,
+  getProductCategoriesAnalysis,
+  getColorSizeAnalysis,
+  getWorkOrderAnalysis,
   type StatisticsType,
   type BatchStatisticsRequest,
   type BatchStatisticsResponse,
@@ -50,4 +58,8 @@ export {
   useWasteReductionTrends,
   useSystemHealthMetrics,
   usePerformanceMetrics,
+  useProfileAnalysis,
+  useProductCategoriesAnalysis,
+  useColorSizeAnalysis,
+  useWorkOrderAnalysis,
 } from "./api/statisticsQueries";

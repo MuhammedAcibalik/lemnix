@@ -18,6 +18,7 @@ import {
 } from "@mui/icons-material";
 import { useDesignSystem } from "@/shared/hooks";
 import { ButtonV3 } from "../Button/Button.v3";
+import { fluidSpacing, fluidWidth, pxToRem } from "@/shared/lib/zoom-aware";
 
 type EmptyStateVariant =
   | "default"
@@ -85,25 +86,49 @@ export const EmptyStateV3 = forwardRef<HTMLDivElement, EmptyStateV3Props>(
   ) => {
     const ds = useDesignSystem();
 
-    // Size configurations
+    // ✅ Zoom-aware size configurations with fluid values
     const sizeConfig = {
       sm: {
-        iconSize: 48,
+        iconSize: fluidWidth(pxToRem(40), pxToRem(56), pxToRem(48)), // 40-56px, preferred 48px
         titleVariant: "h6" as const,
-        spacing: ds.spacing["4"],
-        padding: ds.spacing["8"],
+        spacing: fluidSpacing(
+          pxToRem(ds.spacing["4"] * 0.75),
+          pxToRem(ds.spacing["4"] * 1.25),
+          0.3,
+        ),
+        padding: fluidSpacing(
+          pxToRem(ds.spacing["8"] * 0.75),
+          pxToRem(ds.spacing["8"] * 1.25),
+          0.3,
+        ),
       },
       md: {
-        iconSize: 64,
+        iconSize: fluidWidth(pxToRem(56), pxToRem(72), pxToRem(64)), // 56-72px, preferred 64px
         titleVariant: "h5" as const,
-        spacing: ds.spacing["6"],
-        padding: ds.spacing["12"],
+        spacing: fluidSpacing(
+          pxToRem(ds.spacing["6"] * 0.75),
+          pxToRem(ds.spacing["6"] * 1.25),
+          0.3,
+        ),
+        padding: fluidSpacing(
+          pxToRem(ds.spacing["12"] * 0.75),
+          pxToRem(ds.spacing["12"] * 1.25),
+          0.3,
+        ),
       },
       lg: {
-        iconSize: 80,
+        iconSize: fluidWidth(pxToRem(72), pxToRem(88), pxToRem(80)), // 72-88px, preferred 80px
         titleVariant: "h4" as const,
-        spacing: ds.spacing["8"],
-        padding: ds.spacing["16"],
+        spacing: fluidSpacing(
+          pxToRem(ds.spacing["8"] * 0.75),
+          pxToRem(ds.spacing["8"] * 1.25),
+          0.3,
+        ),
+        padding: fluidSpacing(
+          pxToRem(ds.spacing["16"] * 0.75),
+          pxToRem(ds.spacing["16"] * 1.25),
+          0.3,
+        ),
       },
     };
 
@@ -131,7 +156,7 @@ export const EmptyStateV3 = forwardRef<HTMLDivElement, EmptyStateV3Props>(
           alignItems: "center",
           justifyContent: "center",
           textAlign: "center",
-          padding: `${config.padding}px`,
+          padding: config.padding, // ✅ Already fluid
           minHeight: "400px",
           ...sx,
         }}
@@ -146,8 +171,8 @@ export const EmptyStateV3 = forwardRef<HTMLDivElement, EmptyStateV3Props>(
           {illustration ? (
             <Box
               sx={{
-                width: config.iconSize * 2,
-                height: config.iconSize * 2,
+                width: `calc(${config.iconSize} * 2)`, // ✅ Use calc for fluid multiplication
+                height: `calc(${config.iconSize} * 2)`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -158,8 +183,8 @@ export const EmptyStateV3 = forwardRef<HTMLDivElement, EmptyStateV3Props>(
           ) : (
             <Box
               sx={{
-                width: config.iconSize * 1.5,
-                height: config.iconSize * 1.5,
+                width: `calc(${config.iconSize} * 1.5)`, // ✅ Use calc for fluid multiplication
+                height: `calc(${config.iconSize} * 1.5)`,
                 borderRadius: "50%",
                 background: `linear-gradient(135deg, ${alpha(iconColor, 0.1)} 0%, ${alpha(iconColor, 0.05)} 100%)`,
                 display: "flex",

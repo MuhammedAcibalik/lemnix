@@ -29,7 +29,7 @@ import {
   Warning as WarningIcon,
 } from "@mui/icons-material";
 import { useDesignSystem } from "@/shared/hooks";
-import { useWebGPUStatus, useInitializeWebGPU } from "@/entities/webgpu";
+import { useWebGPUStatus } from "@/entities/webgpu";
 import { alpha } from "@mui/material/styles";
 
 /**
@@ -71,21 +71,8 @@ export const WebGPUToggle: React.FC<WebGPUToggleProps> = ({
   const [detailsExpanded, setDetailsExpanded] = useState(false);
 
   // Fetch GPU status
+  // Note: WebGPU operations run in browser, backend only provides status information
   const { data: gpuStatus, isLoading, refetch } = useWebGPUStatus();
-
-  // Initialize GPU mutation
-  const { mutate: initializeGPU, isPending: isInitializing } =
-    useInitializeWebGPU({
-      onSuccess: (data) => {
-        if (data.initialized) {
-          console.log("WebGPU initialized successfully");
-        }
-      },
-      onError: (error) => {
-        console.error("Failed to initialize WebGPU:", error);
-        onToggle(false); // Disable on initialization failure
-      },
-    });
 
   // Handle toggle
   const handleToggle = useCallback(
@@ -98,21 +85,16 @@ export const WebGPUToggle: React.FC<WebGPUToggleProps> = ({
           console.warn("WebGPU not supported on this device");
           return;
         }
-
-        // Initialize GPU if not already initialized
-        if (!gpuStatus?.initialized) {
-          initializeGPU();
-        }
       }
 
       onToggle(newEnabled);
     },
-    [gpuStatus, onToggle, initializeGPU],
+    [gpuStatus, onToggle],
   );
 
   // Status indicator
   const statusIndicator = useMemo(() => {
-    if (isLoading || isInitializing) {
+    if (isLoading) {
       return {
         icon: <CircularProgress size={16} />,
         label: "Kontrol ediliyor...",
@@ -149,7 +131,7 @@ export const WebGPUToggle: React.FC<WebGPUToggleProps> = ({
       label: "Hazır",
       color: ds.colors.primary.main,
     };
-  }, [gpuStatus, enabled, isLoading, isInitializing, ds]);
+  }, [gpuStatus, enabled, isLoading, ds]);
 
   // Compact mode
   if (compact) {
@@ -284,7 +266,7 @@ export const WebGPUToggle: React.FC<WebGPUToggleProps> = ({
             <Switch
               checked={enabled}
               onChange={handleToggle}
-              disabled={!gpuStatus?.supported || isLoading || isInitializing}
+              disabled={!gpuStatus?.supported || isLoading}
             />
           </Stack>
         </Box>

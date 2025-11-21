@@ -14,6 +14,8 @@ export type DeviceType = "mobile" | "tablet" | "laptop" | "desktop" | "tv";
 
 export type UIMode = "mobile" | "compact" | "standard" | "dense" | "kiosk";
 
+export type ResponsiveMode = "mobile" | "tablet" | "desktop" | "wide";
+
 export interface DeviceInfo {
   readonly width: number;
   readonly height: number;
@@ -21,6 +23,7 @@ export interface DeviceInfo {
   readonly orientation: "portrait" | "landscape";
   readonly deviceType: DeviceType;
   readonly uiMode: UIMode;
+  readonly responsiveMode: ResponsiveMode;
   readonly isTouch: boolean;
   readonly isHighDPI: boolean;
 }
@@ -48,6 +51,22 @@ function detectUIMode(deviceType: DeviceType): UIMode {
 }
 
 /**
+ * Detect responsive mode based on viewport width
+ *
+ * Follows the pattern from responsive web app design:
+ * - mobile: < 768px
+ * - tablet: 768px - 1199px
+ * - desktop: 1200px - 1599px
+ * - wide: >= 1600px
+ */
+function detectResponsiveMode(width: number): ResponsiveMode {
+  if (width >= 1600) return "wide";
+  if (width >= 1200) return "desktop";
+  if (width >= 768) return "tablet";
+  return "mobile";
+}
+
+/**
  * Get initial device info (SSR-safe)
  */
 function getInitialDeviceInfo(): DeviceInfo {
@@ -60,6 +79,7 @@ function getInitialDeviceInfo(): DeviceInfo {
       orientation: "landscape",
       deviceType: "desktop",
       uiMode: "standard",
+      responsiveMode: "desktop",
       isTouch: false,
       isHighDPI: false,
     };
@@ -72,6 +92,7 @@ function getInitialDeviceInfo(): DeviceInfo {
   const isTouch = window.matchMedia("(pointer: coarse)").matches;
   const deviceType = detectDeviceType(width);
   const uiMode = detectUIMode(deviceType);
+  const responsiveMode = detectResponsiveMode(width);
   const isHighDPI = dpr >= 2;
 
   return {
@@ -81,6 +102,7 @@ function getInitialDeviceInfo(): DeviceInfo {
     orientation,
     deviceType,
     uiMode,
+    responsiveMode,
     isTouch,
     isHighDPI,
   };
@@ -114,6 +136,7 @@ export function useDeviceInfo(): DeviceInfo {
       const isTouch = window.matchMedia("(pointer: coarse)").matches;
       const deviceType = detectDeviceType(width);
       const uiMode = detectUIMode(deviceType);
+      const responsiveMode = detectResponsiveMode(width);
       const isHighDPI = dpr >= 2;
 
       setInfo({
@@ -123,6 +146,7 @@ export function useDeviceInfo(): DeviceInfo {
         orientation,
         deviceType,
         uiMode,
+        responsiveMode,
         isTouch,
         isHighDPI,
       });
@@ -142,7 +166,9 @@ export function useDeviceInfo(): DeviceInfo {
 
     // Listen to resize and orientation change
     window.addEventListener("resize", throttledHandleResize, { passive: true });
-    window.addEventListener("orientationchange", handleResize, { passive: true });
+    window.addEventListener("orientationchange", handleResize, {
+      passive: true,
+    });
 
     // Initial check
     handleResize();
@@ -155,4 +181,3 @@ export function useDeviceInfo(): DeviceInfo {
 
   return info;
 }
-

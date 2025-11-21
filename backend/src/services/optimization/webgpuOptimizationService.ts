@@ -5,10 +5,7 @@
  * Fully typed, production-ready implementation
  */
 
-import type { 
-  OptimizationItem,
-  OptimizationResult
-} from '../../types';
+import type { OptimizationItem, OptimizationResult } from "../../types";
 
 // WebGPU Type Definitions
 export interface GPUInfo {
@@ -93,7 +90,7 @@ declare global {
   interface Navigator {
     gpu?: GPU;
   }
-  
+
   interface ImageBitmap {}
   interface OffscreenCanvas {}
 }
@@ -104,10 +101,18 @@ declare const navigator: Navigator & { gpu?: GPU };
 interface GPUDevice {
   createBuffer(descriptor: GPUBufferDescriptor): GPUBuffer;
   createShaderModule(descriptor: GPUShaderModuleDescriptor): GPUShaderModule;
-  createComputePipeline(descriptor: GPUComputePipelineDescriptor): GPUComputePipeline;
-  createCommandEncoder(descriptor?: GPUCommandEncoderDescriptor): GPUCommandEncoder;
-  createBindGroupLayout(descriptor: GPUBindGroupLayoutDescriptor): GPUBindGroupLayout;
-  createPipelineLayout(descriptor: GPUPipelineLayoutDescriptor): GPUPipelineLayout;
+  createComputePipeline(
+    descriptor: GPUComputePipelineDescriptor,
+  ): GPUComputePipeline;
+  createCommandEncoder(
+    descriptor?: GPUCommandEncoderDescriptor,
+  ): GPUCommandEncoder;
+  createBindGroupLayout(
+    descriptor: GPUBindGroupLayoutDescriptor,
+  ): GPUBindGroupLayout;
+  createPipelineLayout(
+    descriptor: GPUPipelineLayoutDescriptor,
+  ): GPUPipelineLayout;
   createBindGroup(descriptor: GPUBindGroupDescriptor): GPUBindGroup;
   queue: GPUQueue;
   destroy(): void;
@@ -123,14 +128,16 @@ interface GPUAdapter {
 }
 
 interface GPU {
-  requestAdapter(options?: GPURequestAdapterOptions): Promise<GPUAdapter | null>;
+  requestAdapter(
+    options?: GPURequestAdapterOptions,
+  ): Promise<GPUAdapter | null>;
   getPreferredCanvasFormat(): string;
 }
 
 interface GPUBuffer {
   size: number;
   usage: number;
-  mapState: 'unmapped' | 'pending' | 'mapped';
+  mapState: "unmapped" | "pending" | "mapped";
   label?: string;
   destroy(): void;
   mapAsync(mode: number, offset?: number, size?: number): Promise<void>;
@@ -156,7 +163,7 @@ interface GPUShaderModuleDescriptor {
 }
 
 interface GPUShaderModuleCompilationHint {
-  layout?: GPUPipelineLayout | 'auto';
+  layout?: GPUPipelineLayout | "auto";
 }
 
 interface GPUComputePipeline {
@@ -165,7 +172,7 @@ interface GPUComputePipeline {
 }
 
 interface GPUComputePipelineDescriptor {
-  layout: GPUPipelineLayout | 'auto';
+  layout: GPUPipelineLayout | "auto";
   compute: GPUProgrammableStage;
   label?: string;
 }
@@ -177,12 +184,32 @@ interface GPUProgrammableStage {
 }
 
 interface GPUCommandEncoder {
-  beginComputePass(descriptor?: GPUComputePassDescriptor): GPUComputePassEncoder;
+  beginComputePass(
+    descriptor?: GPUComputePassDescriptor,
+  ): GPUComputePassEncoder;
   beginRenderPass(descriptor: GPURenderPassDescriptor): GPURenderPassEncoder;
-  copyBufferToBuffer(source: GPUBuffer, sourceOffset: number, destination: GPUBuffer, destinationOffset: number, size: number): void;
-  copyBufferToTexture(source: GPUImageCopyBuffer, destination: GPUImageCopyTexture, copySize: GPUExtent3D): void;
-  copyTextureToBuffer(source: GPUImageCopyTexture, destination: GPUImageCopyBuffer, copySize: GPUExtent3D): void;
-  copyTextureToTexture(source: GPUImageCopyTexture, destination: GPUImageCopyTexture, copySize: GPUExtent3D): void;
+  copyBufferToBuffer(
+    source: GPUBuffer,
+    sourceOffset: number,
+    destination: GPUBuffer,
+    destinationOffset: number,
+    size: number,
+  ): void;
+  copyBufferToTexture(
+    source: GPUImageCopyBuffer,
+    destination: GPUImageCopyTexture,
+    copySize: GPUExtent3D,
+  ): void;
+  copyTextureToBuffer(
+    source: GPUImageCopyTexture,
+    destination: GPUImageCopyBuffer,
+    copySize: GPUExtent3D,
+  ): void;
+  copyTextureToTexture(
+    source: GPUImageCopyTexture,
+    destination: GPUImageCopyTexture,
+    copySize: GPUExtent3D,
+  ): void;
   finish(descriptor?: GPUCommandBufferDescriptor): GPUCommandBuffer;
   label?: string;
 }
@@ -203,7 +230,7 @@ interface GPUComputePassTimestampWrites {
 }
 
 interface GPUQuerySet {
-  type: 'occlusion' | 'timestamp';
+  type: "occlusion" | "timestamp";
   count: number;
   label?: string;
   destroy(): void;
@@ -221,19 +248,19 @@ interface GPURenderPassColorAttachment {
   view: GPUTextureView;
   resolveTarget?: GPUTextureView;
   clearValue?: GPUColor;
-  loadOp: 'load' | 'clear';
-  storeOp: 'store' | 'discard';
+  loadOp: "load" | "clear";
+  storeOp: "store" | "discard";
 }
 
 interface GPURenderPassDepthStencilAttachment {
   view: GPUTextureView;
   depthClearValue?: number;
-  depthLoadOp?: 'load' | 'clear';
-  depthStoreOp?: 'store' | 'discard';
+  depthLoadOp?: "load" | "clear";
+  depthStoreOp?: "store" | "discard";
   depthReadOnly?: boolean;
   stencilClearValue?: number;
-  stencilLoadOp?: 'load' | 'clear';
-  stencilStoreOp?: 'store' | 'discard';
+  stencilLoadOp?: "load" | "clear";
+  stencilStoreOp?: "store" | "discard";
   stencilReadOnly?: boolean;
 }
 
@@ -265,7 +292,7 @@ interface GPUImageCopyTexture {
   texture: GPUTexture;
   mipLevel?: number;
   origin?: GPUOrigin3D;
-  aspect?: 'all' | 'stencil-only' | 'depth-only';
+  aspect?: "all" | "stencil-only" | "depth-only";
 }
 
 interface GPUTexture {
@@ -276,7 +303,7 @@ interface GPUTexture {
   depthOrArrayLayers: number;
   mipLevelCount: number;
   sampleCount: number;
-  dimension: '1d' | '2d' | '3d';
+  dimension: "1d" | "2d" | "3d";
   format: string;
   usage: number;
   label?: string;
@@ -284,8 +311,8 @@ interface GPUTexture {
 
 interface GPUTextureViewDescriptor {
   format?: string;
-  dimension?: '1d' | '2d' | '2d-array' | 'cube' | 'cube-array' | '3d';
-  aspect?: 'all' | 'stencil-only' | 'depth-only';
+  dimension?: "1d" | "2d" | "2d-array" | "cube" | "cube-array" | "3d";
+  aspect?: "all" | "stencil-only" | "depth-only";
   baseMipLevel?: number;
   mipLevelCount?: number;
   baseArrayLayer?: number;
@@ -293,23 +320,53 @@ interface GPUTextureViewDescriptor {
   label?: string;
 }
 
-type GPUOrigin3D = [number, number, number] | { x?: number; y?: number; z?: number };
-type GPUExtent3D = [number, number, number] | { width: number; height?: number; depthOrArrayLayers?: number };
+type GPUOrigin3D =
+  | [number, number, number]
+  | { x?: number; y?: number; z?: number };
+type GPUExtent3D =
+  | [number, number, number]
+  | { width: number; height?: number; depthOrArrayLayers?: number };
 
 interface GPUComputePassEncoder {
   setPipeline(pipeline: GPUComputePipeline): void;
-  setBindGroup(index: number, bindGroup: GPUBindGroup | null, dynamicOffsets?: number[]): void;
-  dispatchWorkgroups(workgroupCountX: number, workgroupCountY?: number, workgroupCountZ?: number): void;
-  dispatchWorkgroupsIndirect(indirectBuffer: GPUBuffer, indirectOffset: number): void;
+  setBindGroup(
+    index: number,
+    bindGroup: GPUBindGroup | null,
+    dynamicOffsets?: number[],
+  ): void;
+  dispatchWorkgroups(
+    workgroupCountX: number,
+    workgroupCountY?: number,
+    workgroupCountZ?: number,
+  ): void;
+  dispatchWorkgroupsIndirect(
+    indirectBuffer: GPUBuffer,
+    indirectOffset: number,
+  ): void;
   end(): void;
   label?: string;
 }
 
 interface GPURenderPassEncoder {
   setPipeline(pipeline: GPURenderPipeline): void;
-  setBindGroup(index: number, bindGroup: GPUBindGroup | null, dynamicOffsets?: number[]): void;
-  draw(vertexCount: number, instanceCount?: number, firstVertex?: number, firstInstance?: number): void;
-  drawIndexed(indexCount: number, instanceCount?: number, firstIndex?: number, baseVertex?: number, firstInstance?: number): void;
+  setBindGroup(
+    index: number,
+    bindGroup: GPUBindGroup | null,
+    dynamicOffsets?: number[],
+  ): void;
+  draw(
+    vertexCount: number,
+    instanceCount?: number,
+    firstVertex?: number,
+    firstInstance?: number,
+  ): void;
+  drawIndexed(
+    indexCount: number,
+    instanceCount?: number,
+    firstIndex?: number,
+    baseVertex?: number,
+    firstInstance?: number,
+  ): void;
   drawIndirect(indirectBuffer: GPUBuffer, indirectOffset: number): void;
   drawIndexedIndirect(indirectBuffer: GPUBuffer, indirectOffset: number): void;
   end(): void;
@@ -331,9 +388,24 @@ interface GPUCommandBufferDescriptor {
 
 interface GPUQueue {
   submit(commandBuffers: GPUCommandBuffer[]): void;
-  writeBuffer(buffer: GPUBuffer, bufferOffset: number, data: ArrayBufferView | ArrayBuffer, dataOffset?: number, size?: number): void;
-  writeTexture(destination: GPUImageCopyTexture, data: ArrayBufferView | ArrayBuffer, dataLayout: GPUImageDataLayout, size: GPUExtent3D): void;
-  copyExternalImageToTexture(source: GPUImageCopyExternalImage, destination: GPUImageCopyTextureTagged, copySize: GPUExtent3D): void;
+  writeBuffer(
+    buffer: GPUBuffer,
+    bufferOffset: number,
+    data: ArrayBufferView | ArrayBuffer,
+    dataOffset?: number,
+    size?: number,
+  ): void;
+  writeTexture(
+    destination: GPUImageCopyTexture,
+    data: ArrayBufferView | ArrayBuffer,
+    dataLayout: GPUImageDataLayout,
+    size: GPUExtent3D,
+  ): void;
+  copyExternalImageToTexture(
+    source: GPUImageCopyExternalImage,
+    destination: GPUImageCopyTextureTagged,
+    copySize: GPUExtent3D,
+  ): void;
   onSubmittedWorkDone(): Promise<void>;
   label?: string;
 }
@@ -355,7 +427,7 @@ interface GPUImageCopyExternalImage {
 }
 
 interface GPUImageCopyTextureTagged extends GPUImageCopyTexture {
-  colorSpace?: 'srgb' | 'display-p3';
+  colorSpace?: "srgb" | "display-p3";
   premultipliedAlpha?: boolean;
 }
 
@@ -380,25 +452,25 @@ interface GPUBindGroupLayoutEntry {
 }
 
 interface GPUBufferBindingLayout {
-  type?: 'uniform' | 'storage' | 'read-only-storage';
+  type?: "uniform" | "storage" | "read-only-storage";
   hasDynamicOffset?: boolean;
   minBindingSize?: number;
 }
 
 interface GPUSamplerBindingLayout {
-  type?: 'filtering' | 'non-filtering' | 'comparison';
+  type?: "filtering" | "non-filtering" | "comparison";
 }
 
 interface GPUTextureBindingLayout {
-  sampleType?: 'float' | 'unfilterable-float' | 'depth' | 'sint' | 'uint';
-  viewDimension?: '1d' | '2d' | '2d-array' | 'cube' | 'cube-array' | '3d';
+  sampleType?: "float" | "unfilterable-float" | "depth" | "sint" | "uint";
+  viewDimension?: "1d" | "2d" | "2d-array" | "cube" | "cube-array" | "3d";
   multisampled?: boolean;
 }
 
 interface GPUStorageTextureBindingLayout {
-  access?: 'write-only' | 'read-only' | 'read-write';
+  access?: "write-only" | "read-only" | "read-write";
   format: string;
-  viewDimension?: '1d' | '2d' | '2d-array' | 'cube' | 'cube-array' | '3d';
+  viewDimension?: "1d" | "2d" | "2d-array" | "cube" | "cube-array" | "3d";
 }
 
 interface GPUPipelineLayout {
@@ -425,7 +497,11 @@ interface GPUBindGroupEntry {
   resource: GPUBindingResource;
 }
 
-type GPUBindingResource = GPUSampler | GPUTextureView | GPUBufferBinding | GPUExternalTexture;
+type GPUBindingResource =
+  | GPUSampler
+  | GPUTextureView
+  | GPUBufferBinding
+  | GPUExternalTexture;
 
 interface GPUSampler {
   label?: string;
@@ -465,7 +541,7 @@ interface GPUDeviceDescriptor {
 }
 
 interface GPURequestAdapterOptions {
-  powerPreference?: 'low-power' | 'high-performance';
+  powerPreference?: "low-power" | "high-performance";
   forceFallbackAdapter?: boolean;
 }
 
@@ -475,7 +551,7 @@ export class WebGPUOptimizationService {
   private isInitialized: boolean = false;
   private gpuInfo: GPUInfo | null = null;
   private static instance: WebGPUOptimizationService | null = null;
-  
+
   /**
    * Singleton pattern for enterprise-grade resource management
    */
@@ -492,7 +568,7 @@ export class WebGPUOptimizationService {
   public async initialize(): Promise<boolean> {
     try {
       // WebGPU initialization starting
-      
+
       // Check WebGPU support (real GPU only, no polyfill)
       const nav = this.getNavigator();
       if (!nav?.gpu) {
@@ -501,8 +577,8 @@ export class WebGPUOptimizationService {
 
       // Request adapter
       this.adapter = await nav.gpu.requestAdapter({
-        powerPreference: 'high-performance',
-        forceFallbackAdapter: false
+        powerPreference: "high-performance",
+        forceFallbackAdapter: false,
       });
 
       if (!this.adapter) {
@@ -513,14 +589,15 @@ export class WebGPUOptimizationService {
       this.device = await this.adapter.requestDevice({
         requiredFeatures: [],
         requiredLimits: {
-          maxStorageBufferBindingSize: this.adapter.limits.maxStorageBufferBindingSize,
-          maxBufferSize: this.adapter.limits.maxBufferSize
-        }
+          maxStorageBufferBindingSize:
+            this.adapter.limits.maxStorageBufferBindingSize,
+          maxBufferSize: this.adapter.limits.maxBufferSize,
+        },
       });
 
       // Get GPU info
       this.gpuInfo = await this.getGPUInfoDetails();
-      
+
       this.isInitialized = true;
       return true;
     } catch (error) {
@@ -534,33 +611,34 @@ export class WebGPUOptimizationService {
    */
   private getNavigator(): (Navigator & { gpu?: GPU }) | undefined {
     // Node.js environment - use @webgpu/dawn
-    if (typeof process !== 'undefined' && process.versions?.node) {
+    if (typeof process !== "undefined" && process.versions?.node) {
       try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const dawn = require('@webgpu/dawn');
+        const dawn = require("@webgpu/dawn");
         if (dawn && dawn.gpu) {
           return { gpu: dawn.gpu } as Navigator & { gpu: GPU };
         }
       } catch (error) {
         // @webgpu/dawn not installed or not available
-        console.error('@webgpu/dawn not available:', error);
+        console.error("@webgpu/dawn not available:", error);
         return undefined;
       }
     }
-    
+
     // Browser environment - use native navigator.gpu
-    if (typeof navigator !== 'undefined' && navigator.gpu) {
+    if (typeof navigator !== "undefined" && navigator.gpu) {
       return navigator as Navigator & { gpu: GPU };
     }
-    
+
     // Fallback: check global
-    if (typeof global !== 'undefined') {
-      const globalObj = global as typeof globalThis & { navigator?: Navigator & { gpu?: GPU } };
+    if (typeof global !== "undefined") {
+      const globalObj = global as typeof globalThis & {
+        navigator?: Navigator & { gpu?: GPU };
+      };
       if (globalObj.navigator?.gpu) {
         return globalObj.navigator;
       }
     }
-    
+
     return undefined;
   }
 
@@ -569,32 +647,36 @@ export class WebGPUOptimizationService {
    */
   public async getGPUInfoDetails(): Promise<GPUInfo> {
     if (!this.adapter) {
-      throw new Error('WebGPU adapter not available');
+      throw new Error("WebGPU adapter not available");
     }
 
     const info = await this.adapter.requestAdapterInfo();
     const limits = this.adapter.limits;
-    
+
     return {
-      name: info.description || 'Unknown GPU',
-      type: info.architecture || 'Unknown',
+      name: info.description || "Unknown GPU",
+      type: info.architecture || "Unknown",
       memory: limits.maxStorageBufferBindingSize / (1024 * 1024), // Convert to MB
-      driver: info.vendor || 'Unknown',
-      version: info.device || 'Unknown',
+      driver: info.vendor || "Unknown",
+      version: info.device || "Unknown",
       capabilities: {
         maxWorkgroupSizeX: limits.maxComputeWorkgroupSizeX,
         maxWorkgroupSizeY: limits.maxComputeWorkgroupSizeY,
         maxWorkgroupSizeZ: limits.maxComputeWorkgroupSizeZ,
-        maxComputeInvocationsPerWorkgroup: limits.maxComputeInvocationsPerWorkgroup,
-        maxComputeWorkgroupsPerDimension: limits.maxComputeWorkgroupsPerDimension
-      }
+        maxComputeInvocationsPerWorkgroup:
+          limits.maxComputeInvocationsPerWorkgroup,
+        maxComputeWorkgroupsPerDimension:
+          limits.maxComputeWorkgroupsPerDimension,
+      },
     };
   }
 
   /**
    * Optimize Genetic Algorithm using WebGPU
    */
-  public async optimizeGeneticAlgorithm(params: WebGPUOptimizationParams): Promise<WebGPUOptimizationResult> {
+  public async optimizeGeneticAlgorithm(
+    params: WebGPUOptimizationParams,
+  ): Promise<WebGPUOptimizationResult> {
     if (!this.isInitialized || !this.device) {
       return {
         success: false,
@@ -602,49 +684,49 @@ export class WebGPUOptimizationService {
         populationSize: 0,
         individualSize: 0,
         fitnessResults: [],
-        statistics: { 
-          average: 0, 
-          maximum: 0, 
+        statistics: {
+          average: 0,
+          maximum: 0,
           minimum: 0,
           variance: 0,
-          standardDeviation: 0
+          standardDeviation: 0,
         },
-        error: 'WebGPU not initialized'
+        error: "WebGPU not initialized",
       };
     }
 
     try {
-      console.log('🧬 WebGPU Genetic Algorithm Optimization Starting...');
+      console.log("🧬 WebGPU Genetic Algorithm Optimization Starting...");
       const startTime = Date.now();
 
       const { population, fitnessWeights } = params;
-      
+
       if (!population || population.length === 0) {
-        throw new Error('Population cannot be empty');
+        throw new Error("Population cannot be empty");
       }
-      
+
       const populationSize = population.length;
       const firstPopulation = population[0];
       const individualSize = firstPopulation ? firstPopulation.length : 0;
-      
+
       if (individualSize === 0) {
-        throw new Error('Individual size cannot be zero');
+        throw new Error("Individual size cannot be zero");
       }
 
       // Create GPU buffers
       const populationBuffer = this.device.createBuffer({
         size: populationSize * individualSize * 4, // 4 bytes per float
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
       });
 
       const fitnessWeightsBuffer = this.device.createBuffer({
         size: fitnessWeights.length * 4,
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
       });
 
       const resultBuffer = this.device.createBuffer({
         size: populationSize * 4,
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       });
 
       // Flatten population data
@@ -663,7 +745,11 @@ export class WebGPUOptimizationService {
 
       // Upload data to GPU
       this.device.queue.writeBuffer(populationBuffer, 0, flatPopulation);
-      this.device.queue.writeBuffer(fitnessWeightsBuffer, 0, new Float32Array(fitnessWeights));
+      this.device.queue.writeBuffer(
+        fitnessWeightsBuffer,
+        0,
+        new Float32Array(fitnessWeights),
+      );
 
       // Create compute shader
       const computeShader = this.device.createShaderModule({
@@ -697,7 +783,7 @@ export class WebGPUOptimizationService {
             
             results[index] = fitness;
           }
-        `
+        `,
       });
 
       // Create bind group layout
@@ -706,37 +792,37 @@ export class WebGPUOptimizationService {
           {
             binding: 0,
             visibility: GPUShaderStage.COMPUTE,
-            buffer: { type: 'read-only-storage' }
+            buffer: { type: "read-only-storage" },
           },
           {
             binding: 1,
             visibility: GPUShaderStage.COMPUTE,
-            buffer: { type: 'read-only-storage' }
+            buffer: { type: "read-only-storage" },
           },
           {
             binding: 2,
             visibility: GPUShaderStage.COMPUTE,
-            buffer: { type: 'storage' }
+            buffer: { type: "storage" },
           },
           {
             binding: 3,
             visibility: GPUShaderStage.COMPUTE,
-            buffer: { type: 'uniform' }
-          }
-        ]
+            buffer: { type: "uniform" },
+          },
+        ],
       });
 
       // Create uniform buffer
       const uniformBuffer = this.device.createBuffer({
         size: 16, // 4 * 4 bytes
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
       });
 
       const uniformData = new Uint32Array([
         populationSize,
         individualSize,
         fitnessWeights.length,
-        0 // padding
+        0, // padding
       ]);
 
       this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
@@ -748,19 +834,19 @@ export class WebGPUOptimizationService {
           { binding: 0, resource: { buffer: populationBuffer } },
           { binding: 1, resource: { buffer: fitnessWeightsBuffer } },
           { binding: 2, resource: { buffer: resultBuffer } },
-          { binding: 3, resource: { buffer: uniformBuffer } }
-        ]
+          { binding: 3, resource: { buffer: uniformBuffer } },
+        ],
       });
 
       // Create compute pipeline
       const computePipeline = this.device.createComputePipeline({
         layout: this.device.createPipelineLayout({
-          bindGroupLayouts: [bindGroupLayout]
+          bindGroupLayouts: [bindGroupLayout],
         }),
         compute: {
           module: computeShader,
-          entryPoint: 'main'
-        }
+          entryPoint: "main",
+        },
       });
 
       // Create command encoder
@@ -777,11 +863,17 @@ export class WebGPUOptimizationService {
       // Read results
       const stagingBuffer = this.device.createBuffer({
         size: populationSize * 4,
-        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+        usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
       });
 
       const copyEncoder = this.device.createCommandEncoder();
-      copyEncoder.copyBufferToBuffer(resultBuffer, 0, stagingBuffer, 0, populationSize * 4);
+      copyEncoder.copyBufferToBuffer(
+        resultBuffer,
+        0,
+        stagingBuffer,
+        0,
+        populationSize * 4,
+      );
       this.device.queue.submit([copyEncoder.finish()]);
 
       // Map and read results
@@ -793,15 +885,22 @@ export class WebGPUOptimizationService {
       const executionTime = Date.now() - startTime;
 
       // Calculate statistics
-      const avgFitness = fitnessResults.reduce((sum, f) => sum + f, 0) / fitnessResults.length;
+      const avgFitness =
+        fitnessResults.reduce((sum, f) => sum + f, 0) / fitnessResults.length;
       const maxFitness = Math.max(...fitnessResults);
       const minFitness = Math.min(...fitnessResults);
-      
+
       // Calculate variance and standard deviation
-      const variance = fitnessResults.reduce((sum, f) => sum + Math.pow(f - avgFitness, 2), 0) / fitnessResults.length;
+      const variance =
+        fitnessResults.reduce(
+          (sum, f) => sum + Math.pow(f - avgFitness, 2),
+          0,
+        ) / fitnessResults.length;
       const standardDeviation = Math.sqrt(variance);
 
-      console.log(`✅ WebGPU Genetic Algorithm completed in ${executionTime}ms`);
+      console.log(
+        `✅ WebGPU Genetic Algorithm completed in ${executionTime}ms`,
+      );
       console.log(`📊 Processed ${populationSize} individuals`);
       console.log(`📈 Average fitness: ${avgFitness.toFixed(2)}`);
       console.log(`📊 Standard deviation: ${standardDeviation.toFixed(2)}`);
@@ -817,32 +916,31 @@ export class WebGPUOptimizationService {
           maximum: maxFitness,
           minimum: minFitness,
           variance,
-          standardDeviation
-        }
+          standardDeviation,
+        },
       };
-      
+
       if (this.gpuInfo) {
         result.gpuInfo = this.gpuInfo;
       }
-      
-      return result;
 
+      return result;
     } catch (error) {
-      console.error('❌ WebGPU Genetic Algorithm failed:', error);
+      console.error("❌ WebGPU Genetic Algorithm failed:", error);
       return {
         success: false,
         executionTime: 0,
         populationSize: 0,
         individualSize: 0,
         fitnessResults: [],
-        statistics: { 
-          average: 0, 
-          maximum: 0, 
+        statistics: {
+          average: 0,
+          maximum: 0,
           minimum: 0,
           variance: 0,
-          standardDeviation: 0
+          standardDeviation: 0,
         },
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
@@ -872,9 +970,9 @@ export class WebGPUOptimizationService {
     this.adapter = null;
     this.isInitialized = false;
     this.gpuInfo = null;
-    console.log('🧹 WebGPU resources cleaned up');
+    console.log("🧹 WebGPU resources cleaned up");
   }
-  
+
   /**
    * Reset singleton instance (for testing)
    */

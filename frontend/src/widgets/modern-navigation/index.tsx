@@ -5,7 +5,6 @@
  */
 
 import React from "react";
-import { useTheme, useMediaQuery } from "@mui/material";
 
 // Import modular components
 import { AppBar } from "./components/AppBar";
@@ -16,8 +15,12 @@ import { UserMenu } from "./components/UserMenu";
 import { useNavigationState } from "./hooks/useNavigationState";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 
+// Import responsive hooks from project
+import { useResponsive } from "@/shared/hooks";
+
 // Import types
 import { ModernNavigationProps } from "./types";
+import type { UserMenuProps } from "./types/index";
 
 // Import constants
 import { navigationItems } from "./constants/index";
@@ -26,16 +29,18 @@ import { navigationItems } from "./constants/index";
  * Modern Navigation Component
  *
  * Enterprise-grade navigation with modular architecture
+ * ✅ Fully responsive using project's responsive hook system
  */
 export const ModernNavigation: React.FC<ModernNavigationProps> = ({
   activePage,
   onPageChange,
   onToggleSidebar,
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  // Use project's responsive hook system instead of MUI
+  const { isMobile, isTablet, isDesktop } = useResponsive();
 
   // Custom hooks for state and functionality
+  // Note: onPageChange is required in ModernNavigationProps, so it's always defined
   const {
     commandPaletteOpen,
     userMenuAnchor,
@@ -44,15 +49,15 @@ export const ModernNavigation: React.FC<ModernNavigationProps> = ({
     openUserMenu,
     closeUserMenu,
   } = useNavigationState({
-    activePage,
-    onPageChange,
+    onPageChange: onPageChange!, // Required prop, always defined
     onToggleSidebar,
   });
 
+  // Keyboard shortcuts hook - provides utility functions only
+  // Command palette keyboard navigation is handled inside CommandPalette component
   const { getShortcutDescription, isShortcutAvailable } = useKeyboardShortcuts(
     {
-      onPageChange,
-      onToggleSidebar,
+      onMenuToggle: onToggleSidebar || (() => {}), // Mobile menu toggle
       onCommandPaletteToggle: (open) =>
         open ? openCommandPalette() : closeCommandPalette(),
       onUserMenuToggle: (anchor) =>
@@ -61,9 +66,18 @@ export const ModernNavigation: React.FC<ModernNavigationProps> = ({
               currentTarget: anchor,
             } as React.MouseEvent<HTMLElement>)
           : closeUserMenu(),
+      onNotificationsToggle: () => {}, // Notifications not implemented yet
+      onCloseAll: () => {
+        closeCommandPalette();
+        closeUserMenu();
+      },
     },
     commandPaletteOpen,
-    openCommandPalette,
+    [], // filteredItems - managed inside CommandPalette
+    0, // selectedIndex - managed inside CommandPalette
+    (open) => (open ? openCommandPalette() : closeCommandPalette()), // onCommandPaletteToggle
+    () => {}, // onSelectedIndexChange - managed inside CommandPalette
+    () => {}, // onItemExecute - managed inside CommandPalette
   );
 
   // Get current page item

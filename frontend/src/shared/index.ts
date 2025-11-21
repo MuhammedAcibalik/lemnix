@@ -61,7 +61,7 @@ export { useDebounce, useLocalStorage, usePrevious } from "./lib/hooks";
 
 // WebGPU (P0-7)
 export { useWebGPU, useWebGPUStatus } from "./lib/webgpu";
-export type { WebGPUStatus, WebGPUInfo } from "./lib/webgpu";
+export type { WebGPUStatus } from "./lib/webgpu";
 
 // Validation (P0-6)
 export { useValidation, ValidationAlert } from "./lib/validation";
@@ -96,10 +96,7 @@ export type {
 } from "./hooks";
 
 // Adaptive UI Context
-export {
-  AdaptiveUIProvider,
-  useAdaptiveUIContext,
-} from "./contexts";
+export { AdaptiveUIProvider, useAdaptiveUIContext } from "./contexts";
 export type { AdaptiveUIContextValue } from "./contexts";
 
 // ============================================================================

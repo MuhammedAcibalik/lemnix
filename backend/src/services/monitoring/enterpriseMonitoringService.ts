@@ -2,10 +2,10 @@
  * @fileoverview Enterprise-Grade Monitoring & Logging Service
  * @module EnterpriseMonitoringService
  * @version 2.0.0 - Production-Ready Monitoring System
- * 
+ *
  * Bu servis, enterprise seviyede monitoring, logging ve alerting sağlar.
  * Real-time metrics, health checks, performance tracking ve automated alerting içerir.
- * 
+ *
  * Features:
  * - Real-time Performance Monitoring
  * - Comprehensive Error Tracking
@@ -15,12 +15,12 @@
  * - Log Aggregation & Analysis
  * - SLA Monitoring
  * - Capacity Planning
- * 
+ *
  * Version: 2.0.0
  * Last Updated: 2025
  */
 
-import { OptimizationItem, OptimizationResult } from '../../types';
+import { OptimizationItem, OptimizationResult } from "../../types";
 
 // ============================================================================
 // ENTERPRISE TYPE DEFINITIONS
@@ -30,20 +30,20 @@ import { OptimizationItem, OptimizationResult } from '../../types';
  * System health status
  */
 enum HealthStatus {
-  HEALTHY = 'healthy',
-  WARNING = 'warning',
-  CRITICAL = 'critical',
-  DOWN = 'down'
+  HEALTHY = "healthy",
+  WARNING = "warning",
+  CRITICAL = "critical",
+  DOWN = "down",
 }
 
 /**
  * Alert severity levels
  */
 enum AlertSeverity {
-  INFO = 'info',
-  WARNING = 'warning',
-  ERROR = 'error',
-  CRITICAL = 'critical'
+  INFO = "info",
+  WARNING = "warning",
+  ERROR = "error",
+  CRITICAL = "critical",
 }
 
 /**
@@ -141,7 +141,7 @@ interface AlertConfig {
  */
 interface AlertCondition {
   readonly metric: string;
-  readonly operator: '>' | '<' | '>=' | '<=' | '==' | '!=';
+  readonly operator: ">" | "<" | ">=" | "<=" | "==" | "!=";
   readonly threshold: number;
   readonly duration: number; // seconds
 }
@@ -150,7 +150,7 @@ interface AlertCondition {
  * Alert action
  */
 interface AlertAction {
-  readonly type: 'email' | 'sms' | 'webhook' | 'slack' | 'log';
+  readonly type: "email" | "sms" | "webhook" | "slack" | "log";
   readonly config: Record<string, unknown>;
 }
 
@@ -185,7 +185,7 @@ interface SLAResult {
   readonly name: string;
   readonly target: number;
   readonly actual: number;
-  readonly status: 'met' | 'breached';
+  readonly status: "met" | "breached";
   readonly timestamp: string;
   readonly details: Record<string, unknown>;
 }
@@ -200,12 +200,13 @@ export class EnterpriseMonitoringService {
   private readonly alerts: Alert[] = [];
   private readonly alertConfigs: AlertConfig[] = [];
   private readonly slaConfigs: SLAConfig[] = [];
-  private readonly healthChecks: Map<string, () => Promise<HealthCheck>> = new Map();
-  
+  private readonly healthChecks: Map<string, () => Promise<HealthCheck>> =
+    new Map();
+
   private readonly maxMetricsHistory = 1000;
   private readonly maxOptimizationHistory = 5000;
   private readonly maxAlertsHistory = 1000;
-  
+
   private monitoringInterval: NodeJS.Timeout | null = null;
   private alertingInterval: NodeJS.Timeout | null = null;
   private slaInterval: NodeJS.Timeout | null = null;
@@ -231,11 +232,11 @@ export class EnterpriseMonitoringService {
         this.recordMetrics(metrics);
         this.checkAlerts(metrics);
       } catch (error) {
-        console.error('[Monitoring] Failed to collect metrics:', error);
+        console.error("[Monitoring] Failed to collect metrics:", error);
       }
     }, 5000); // Every 5 seconds
 
-    console.log('[Monitoring] System monitoring started');
+    console.log("[Monitoring] System monitoring started");
   }
 
   /**
@@ -257,7 +258,7 @@ export class EnterpriseMonitoringService {
       this.slaInterval = null;
     }
 
-    console.log('[Monitoring] System monitoring stopped');
+    console.log("[Monitoring] System monitoring stopped");
   }
 
   /**
@@ -270,7 +271,7 @@ export class EnterpriseMonitoringService {
     executionTime: number,
     memoryUsage: number,
     success: boolean,
-    errorMessage?: string
+    errorMessage?: string,
   ): void {
     const metrics: OptimizationMetrics = {
       timestamp: new Date().toISOString(),
@@ -282,7 +283,7 @@ export class EnterpriseMonitoringService {
       waste: result.totalWaste,
       stockCount: result.stockCount,
       success,
-      errorMessage: errorMessage || ''
+      errorMessage: errorMessage || "",
     };
 
     this.optimizationMetrics.push(metrics);
@@ -295,7 +296,9 @@ export class EnterpriseMonitoringService {
     // Check optimization-specific alerts
     this.checkOptimizationAlerts(metrics);
 
-    console.log(`[Monitoring] Recorded optimization metrics: ${algorithm}, ${items.length} items, ${executionTime}ms`);
+    console.log(
+      `[Monitoring] Recorded optimization metrics: ${algorithm}, ${items.length} items, ${executionTime}ms`,
+    );
   }
 
   /**
@@ -311,10 +314,10 @@ export class EnterpriseMonitoringService {
         const startTime = performance.now();
         const check = await checkFunction();
         const responseTime = performance.now() - startTime;
-        
+
         checks.push({
           ...check,
-          responseTime
+          responseTime,
         });
 
         // Calculate overall score
@@ -330,7 +333,7 @@ export class EnterpriseMonitoringService {
           name,
           status: HealthStatus.DOWN,
           responseTime: 0,
-          message: `Health check failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+          message: `Health check failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         });
         overallScore -= 50;
       }
@@ -344,7 +347,7 @@ export class EnterpriseMonitoringService {
       timestamp: new Date().toISOString(),
       checks,
       overallScore: Math.max(0, overallScore),
-      recommendations
+      recommendations,
     };
   }
 
@@ -353,12 +356,12 @@ export class EnterpriseMonitoringService {
    */
   public getSystemMetrics(limit: number = 100): SystemMetrics[] {
     const metrics = this.metrics.slice(-limit);
-    
+
     // Return empty array if no metrics available
     if (metrics.length === 0) {
       return [];
     }
-    
+
     return metrics;
   }
 
@@ -367,12 +370,12 @@ export class EnterpriseMonitoringService {
    */
   public getOptimizationMetrics(limit: number = 100): OptimizationMetrics[] {
     const metrics = this.optimizationMetrics.slice(-limit);
-    
+
     // Return empty array if no metrics available
     if (metrics.length === 0) {
       return [];
     }
-    
+
     return metrics;
   }
 
@@ -380,7 +383,7 @@ export class EnterpriseMonitoringService {
    * Get active alerts
    */
   public getActiveAlerts(): Alert[] {
-    return this.alerts.filter(alert => !alert.resolved);
+    return this.alerts.filter((alert) => !alert.resolved);
   }
 
   /**
@@ -394,10 +397,11 @@ export class EnterpriseMonitoringService {
    * Resolve alert
    */
   public resolveAlert(alertId: string): boolean {
-    const alert = this.alerts.find(a => a.id === alertId);
+    const alert = this.alerts.find((a) => a.id === alertId);
     if (alert && !alert.resolved) {
       (alert as { resolved: boolean; resolvedAt?: string }).resolved = true;
-      (alert as { resolved: boolean; resolvedAt?: string }).resolvedAt = new Date().toISOString();
+      (alert as { resolved: boolean; resolvedAt?: string }).resolvedAt =
+        new Date().toISOString();
       console.log(`[Monitoring] Alert resolved: ${alertId}`);
       return true;
     }
@@ -407,7 +411,10 @@ export class EnterpriseMonitoringService {
   /**
    * Add health check
    */
-  public addHealthCheck(name: string, checkFunction: () => Promise<HealthCheck>): void {
+  public addHealthCheck(
+    name: string,
+    checkFunction: () => Promise<HealthCheck>,
+  ): void {
     this.healthChecks.set(name, checkFunction);
     console.log(`[Monitoring] Added health check: ${name}`);
   }
@@ -432,7 +439,7 @@ export class EnterpriseMonitoringService {
    * Get SLA results
    */
   public getSLAResults(): SLAResult[] {
-    return this.slaConfigs.map(config => this.calculateSLA(config));
+    return this.slaConfigs.map((config) => this.calculateSLA(config));
   }
 
   // ============================================================================
@@ -444,16 +451,16 @@ export class EnterpriseMonitoringService {
 
     // Collect CPU metrics
     const cpu = await this.collectCPUMetrics();
-    
+
     // Collect memory metrics
     const memory = await this.collectMemoryMetrics();
-    
+
     // Collect disk metrics
     const disk = await this.collectDiskMetrics();
-    
+
     // Collect network metrics
     const network = await this.collectNetworkMetrics();
-    
+
     // Collect application metrics
     const application = await this.collectApplicationMetrics();
 
@@ -463,188 +470,217 @@ export class EnterpriseMonitoringService {
       memory,
       disk,
       network,
-      application
+      application,
     };
   }
 
-  private async collectCPUMetrics(): Promise<SystemMetrics['cpu']> {
+  private async collectCPUMetrics(): Promise<SystemMetrics["cpu"]> {
     try {
       // Real CPU metrics collection using Node.js os module
-      const os = await import('os');
+      const os = await import("os");
       const cpus = os.cpus();
       const loadAvg = os.loadavg();
-      
+
       // Calculate CPU usage from idle time
       let totalIdle = 0;
       let totalTick = 0;
-      
-      cpus.forEach(cpu => {
+
+      cpus.forEach((cpu) => {
         for (const type in cpu.times) {
           totalTick += cpu.times[type as keyof typeof cpu.times];
         }
         totalIdle += cpu.times.idle;
       });
-      
+
       const usage = 100 - Math.round((totalIdle / totalTick) * 100);
-      
+
       return {
         usage: Math.max(0, Math.min(100, usage)),
         load: loadAvg,
-        cores: cpus.length
+        cores: cpus.length,
       };
     } catch (error) {
-      console.warn('[Monitoring] Failed to collect CPU metrics, using fallback:', error);
+      console.warn(
+        "[Monitoring] Failed to collect CPU metrics, using fallback:",
+        error,
+      );
       return {
         usage: 0,
         load: [0, 0, 0],
-        cores: 1
+        cores: 1,
       };
     }
   }
 
-  private async collectMemoryMetrics(): Promise<SystemMetrics['memory']> {
+  private async collectMemoryMetrics(): Promise<SystemMetrics["memory"]> {
     try {
       // Real memory metrics collection using Node.js os module
-      const os = await import('os');
+      const os = await import("os");
       const total = os.totalmem();
       const free = os.freemem();
       const used = total - free;
-      
+
       return {
         used: Math.round(used / 1024 / 1024), // Convert to MB
         total: Math.round(total / 1024 / 1024), // Convert to MB
         free: Math.round(free / 1024 / 1024), // Convert to MB
-        usage: Math.round((used / total) * 100)
+        usage: Math.round((used / total) * 100),
       };
     } catch (error) {
-      console.warn('[Monitoring] Failed to collect memory metrics, using fallback:', error);
+      console.warn(
+        "[Monitoring] Failed to collect memory metrics, using fallback:",
+        error,
+      );
       return {
         used: 0,
         total: 0,
         free: 0,
-        usage: 0
+        usage: 0,
       };
     }
   }
 
-  private async collectDiskMetrics(): Promise<SystemMetrics['disk']> {
+  private async collectDiskMetrics(): Promise<SystemMetrics["disk"]> {
     try {
       // Cross-platform disk metrics collection
-      const fs = await import('fs/promises');
-      
+      const fs = await import("fs/promises");
+
       // Get current working directory for disk space check
       const cwd = process.cwd();
-      
+
       try {
         // Try to get disk stats (works on Unix-like systems)
         const stats = await fs.statfs(cwd);
         const total = stats.bavail * stats.bsize + stats.bfree * stats.bsize;
         const free = stats.bavail * stats.bsize;
         const used = total - free;
-        
+
         return {
           used: Math.round(used / 1024 / 1024), // Convert to MB
           total: Math.round(total / 1024 / 1024), // Convert to MB
           free: Math.round(free / 1024 / 1024), // Convert to MB
-          usage: Math.round((used / total) * 100)
+          usage: Math.round((used / total) * 100),
         };
       } catch (statfsError) {
         // Fallback for Windows or other systems without statfs
-        console.warn('[Monitoring] statfs not available, using fallback disk metrics');
+        console.warn(
+          "[Monitoring] statfs not available, using fallback disk metrics",
+        );
         return {
           used: 500000, // 500GB used
           total: 1000000, // 1TB total
           free: 500000, // 500GB free
-          usage: 50 // 50% usage
+          usage: 50, // 50% usage
         };
       }
     } catch (error) {
-      console.warn('[Monitoring] Failed to collect disk metrics, using fallback:', error);
+      console.warn(
+        "[Monitoring] Failed to collect disk metrics, using fallback:",
+        error,
+      );
       return {
         used: 500000, // 500GB used
         total: 1000000, // 1TB total
         free: 500000, // 500GB free
-        usage: 50 // 50% usage
+        usage: 50, // 50% usage
       };
     }
   }
 
-  private async collectNetworkMetrics(): Promise<SystemMetrics['network']> {
+  private async collectNetworkMetrics(): Promise<SystemMetrics["network"]> {
     try {
       // Real network metrics collection using Node.js os module
-      const os = await import('os');
+      const os = await import("os");
       const networkInterfaces = os.networkInterfaces();
-      
-      let bytesIn = 0;
-      let bytesOut = 0;
-      let packetsIn = 0;
-      let packetsOut = 0;
-      
+
+      const bytesIn = 0;
+      const bytesOut = 0;
+      const packetsIn = 0;
+      const packetsOut = 0;
+
       // This is a simplified approach - in production, you'd use more sophisticated monitoring
-      Object.values(networkInterfaces).forEach(interfaces => {
-        interfaces?.forEach(iface => {
+      Object.values(networkInterfaces).forEach((interfaces) => {
+        interfaces?.forEach((iface) => {
           if (iface.internal) return;
           // Note: Node.js doesn't provide direct network stats, this is a placeholder
           // In production, you'd use system monitoring tools or libraries
         });
       });
-      
+
       return {
         bytesIn,
         bytesOut,
         packetsIn,
-        packetsOut
+        packetsOut,
       };
     } catch (error) {
-      console.warn('[Monitoring] Failed to collect network metrics, using fallback:', error);
+      console.warn(
+        "[Monitoring] Failed to collect network metrics, using fallback:",
+        error,
+      );
       return {
         bytesIn: 0,
         bytesOut: 0,
         packetsIn: 0,
-        packetsOut: 0
+        packetsOut: 0,
       };
     }
   }
 
-  private async collectApplicationMetrics(): Promise<SystemMetrics['application']> {
+  private async collectApplicationMetrics(): Promise<
+    SystemMetrics["application"]
+  > {
     try {
       // Real application metrics collection
-      const process = await import('process');
+      const process = await import("process");
       const memUsage = process.memoryUsage();
-      
+
       // Calculate requests per second from recent metrics
       const recentMetrics = this.metrics.slice(-10);
-      const requestsPerSecond = recentMetrics.length > 0 
-        ? recentMetrics.reduce((sum, m) => sum + m.application.requestsPerSecond, 0) / recentMetrics.length
-        : 0;
-      
+      const requestsPerSecond =
+        recentMetrics.length > 0
+          ? recentMetrics.reduce(
+              (sum, m) => sum + m.application.requestsPerSecond,
+              0,
+            ) / recentMetrics.length
+          : 0;
+
       // Calculate average response time from recent metrics
-      const averageResponseTime = recentMetrics.length > 0
-        ? recentMetrics.reduce((sum, m) => sum + m.application.averageResponseTime, 0) / recentMetrics.length
-        : 0;
-      
+      const averageResponseTime =
+        recentMetrics.length > 0
+          ? recentMetrics.reduce(
+              (sum, m) => sum + m.application.averageResponseTime,
+              0,
+            ) / recentMetrics.length
+          : 0;
+
       // Calculate error rate from recent metrics
-      const errorRate = recentMetrics.length > 0
-        ? recentMetrics.reduce((sum, m) => sum + m.application.errorRate, 0) / recentMetrics.length
-        : 0;
-      
+      const errorRate =
+        recentMetrics.length > 0
+          ? recentMetrics.reduce((sum, m) => sum + m.application.errorRate, 0) /
+            recentMetrics.length
+          : 0;
+
       return {
         requestsPerSecond: Math.round(requestsPerSecond * 100) / 100,
         averageResponseTime: Math.round(averageResponseTime * 100) / 100,
         errorRate: Math.round(errorRate * 100) / 100,
         activeConnections: Math.round(memUsage.external / 1024 / 1024), // Rough estimate
         uptime: process.uptime(),
-        version: '3.0.0'
+        version: "3.0.0",
       };
     } catch (error) {
-      console.warn('[Monitoring] Failed to collect application metrics, using fallback:', error);
+      console.warn(
+        "[Monitoring] Failed to collect application metrics, using fallback:",
+        error,
+      );
       return {
         requestsPerSecond: 0,
         averageResponseTime: 0,
         errorRate: 0,
         activeConnections: 0,
         uptime: process.uptime(),
-        version: '3.0.0'
+        version: "3.0.0",
       };
     }
   }
@@ -664,11 +700,15 @@ export class EnterpriseMonitoringService {
 
       // Check if alert is in cooldown
       const lastAlert = this.alerts
-        .filter(a => a.configId === config.id)
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+        .filter((a) => a.configId === config.id)
+        .sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+        )[0];
 
       if (lastAlert && !lastAlert.resolved) {
-        const timeSinceLastAlert = Date.now() - new Date(lastAlert.timestamp).getTime();
+        const timeSinceLastAlert =
+          Date.now() - new Date(lastAlert.timestamp).getTime();
         if (timeSinceLastAlert < config.cooldown * 1000) {
           continue; // Still in cooldown
         }
@@ -678,7 +718,13 @@ export class EnterpriseMonitoringService {
       let triggered = true;
       for (const condition of config.conditions) {
         const value = this.getMetricValue(metrics, condition.metric);
-        if (!this.evaluateCondition(value, condition.operator, condition.threshold)) {
+        if (
+          !this.evaluateCondition(
+            value,
+            condition.operator,
+            condition.threshold,
+          )
+        ) {
           triggered = false;
           break;
         }
@@ -693,42 +739,62 @@ export class EnterpriseMonitoringService {
   private checkOptimizationAlerts(metrics: OptimizationMetrics): void {
     // Check optimization-specific alerts
     if (metrics.executionTime > 10000) {
-      this.createAlert('optimization-slow', AlertSeverity.WARNING, 
-        `Optimization took ${metrics.executionTime}ms for ${metrics.itemCount} items`);
+      this.createAlert(
+        "optimization-slow",
+        AlertSeverity.WARNING,
+        `Optimization took ${metrics.executionTime}ms for ${metrics.itemCount} items`,
+      );
     }
 
     if (metrics.efficiency < 80) {
-      this.createAlert('optimization-inefficient', AlertSeverity.WARNING,
-        `Optimization efficiency is ${metrics.efficiency}%`);
+      this.createAlert(
+        "optimization-inefficient",
+        AlertSeverity.WARNING,
+        `Optimization efficiency is ${metrics.efficiency}%`,
+      );
     }
 
     if (!metrics.success) {
-      this.createAlert('optimization-failed', AlertSeverity.ERROR,
-        `Optimization failed: ${metrics.errorMessage}`);
+      this.createAlert(
+        "optimization-failed",
+        AlertSeverity.ERROR,
+        `Optimization failed: ${metrics.errorMessage}`,
+      );
     }
   }
 
   private getMetricValue(metrics: SystemMetrics, metric: string): number {
-    const parts = metric.split('.');
+    const parts = metric.split(".");
     let value: unknown = metrics;
-    
+
     for (const part of parts) {
       value = (value as Record<string, unknown>)[part];
       if (value === undefined) return 0;
     }
-    
-    return typeof value === 'number' ? value : 0;
+
+    return typeof value === "number" ? value : 0;
   }
 
-  private evaluateCondition(value: number, operator: string, threshold: number): boolean {
+  private evaluateCondition(
+    value: number,
+    operator: string,
+    threshold: number,
+  ): boolean {
     switch (operator) {
-      case '>': return value > threshold;
-      case '<': return value < threshold;
-      case '>=': return value >= threshold;
-      case '<=': return value <= threshold;
-      case '==': return value === threshold;
-      case '!=': return value !== threshold;
-      default: return false;
+      case ">":
+        return value > threshold;
+      case "<":
+        return value < threshold;
+      case ">=":
+        return value >= threshold;
+      case "<=":
+        return value <= threshold;
+      case "==":
+        return value === threshold;
+      case "!=":
+        return value !== threshold;
+      default:
+        return false;
     }
   }
 
@@ -740,7 +806,7 @@ export class EnterpriseMonitoringService {
       message: config.description,
       timestamp: new Date().toISOString(),
       resolved: false,
-      metadata: { metrics }
+      metadata: { metrics },
     };
 
     this.alerts.push(alert);
@@ -753,10 +819,16 @@ export class EnterpriseMonitoringService {
     // Execute alert actions
     this.executeAlertActions(config.actions, alert);
 
-    console.log(`[Monitoring] Alert triggered: ${config.name} - ${config.description}`);
+    console.log(
+      `[Monitoring] Alert triggered: ${config.name} - ${config.description}`,
+    );
   }
 
-  private createAlert(configId: string, severity: AlertSeverity, message: string): void {
+  private createAlert(
+    configId: string,
+    severity: AlertSeverity,
+    message: string,
+  ): void {
     const alert: Alert = {
       id: this.generateAlertId(),
       configId,
@@ -764,7 +836,7 @@ export class EnterpriseMonitoringService {
       message,
       timestamp: new Date().toISOString(),
       resolved: false,
-      metadata: {}
+      metadata: {},
     };
 
     this.alerts.push(alert);
@@ -775,48 +847,57 @@ export class EnterpriseMonitoringService {
     for (const action of actions) {
       try {
         switch (action.type) {
-          case 'log':
-            console.log(`[Alert] ${alert.severity.toUpperCase()}: ${alert.message}`);
+          case "log":
+            console.log(
+              `[Alert] ${alert.severity.toUpperCase()}: ${alert.message}`,
+            );
             break;
-          case 'email':
+          case "email":
             this.sendEmailAlert(action.config, alert);
             break;
-          case 'webhook':
+          case "webhook":
             this.sendWebhookAlert(action.config, alert);
             break;
-          case 'slack':
+          case "slack":
             this.sendSlackAlert(action.config, alert);
             break;
         }
       } catch (error) {
-        console.error(`[Monitoring] Failed to execute alert action ${action.type}:`, error);
+        console.error(
+          `[Monitoring] Failed to execute alert action ${action.type}:`,
+          error,
+        );
       }
     }
   }
 
   private sendEmailAlert(config: Record<string, any>, alert: Alert): void {
     // Simplified email sending
-    console.log(`[Email] Sending alert to ${config['to']}: ${alert.message}`);
+    console.log(`[Email] Sending alert to ${config["to"]}: ${alert.message}`);
   }
 
   private sendWebhookAlert(config: Record<string, any>, alert: Alert): void {
     // Simplified webhook sending
-    console.log(`[Webhook] Sending alert to ${config['url']}: ${alert.message}`);
+    console.log(
+      `[Webhook] Sending alert to ${config["url"]}: ${alert.message}`,
+    );
   }
 
   private sendSlackAlert(config: Record<string, any>, alert: Alert): void {
     // Simplified Slack sending
-    console.log(`[Slack] Sending alert to ${config['channel']}: ${alert.message}`);
+    console.log(
+      `[Slack] Sending alert to ${config["channel"]}: ${alert.message}`,
+    );
   }
 
   private determineOverallStatus(checks: HealthCheck[]): HealthStatus {
-    if (checks.some(check => check.status === HealthStatus.DOWN)) {
+    if (checks.some((check) => check.status === HealthStatus.DOWN)) {
       return HealthStatus.DOWN;
     }
-    if (checks.some(check => check.status === HealthStatus.CRITICAL)) {
+    if (checks.some((check) => check.status === HealthStatus.CRITICAL)) {
       return HealthStatus.CRITICAL;
     }
-    if (checks.some(check => check.status === HealthStatus.WARNING)) {
+    if (checks.some((check) => check.status === HealthStatus.WARNING)) {
       return HealthStatus.WARNING;
     }
     return HealthStatus.HEALTHY;
@@ -826,7 +907,10 @@ export class EnterpriseMonitoringService {
     const recommendations: string[] = [];
 
     for (const check of checks) {
-      if (check.status === HealthStatus.CRITICAL || check.status === HealthStatus.WARNING) {
+      if (
+        check.status === HealthStatus.CRITICAL ||
+        check.status === HealthStatus.WARNING
+      ) {
         recommendations.push(`Address ${check.name}: ${check.message}`);
       }
     }
@@ -837,7 +921,7 @@ export class EnterpriseMonitoringService {
   private calculateSLA(config: SLAConfig): SLAResult {
     // Calculate actual SLA based on real metrics
     const actual = this.calculateActualSLA(config);
-    const status = actual >= config.target ? 'met' : 'breached';
+    const status = actual >= config.target ? "met" : "breached";
 
     return {
       name: config.name,
@@ -845,23 +929,29 @@ export class EnterpriseMonitoringService {
       actual,
       status,
       timestamp: new Date().toISOString(),
-      details: {}
+      details: {},
     };
   }
 
   private calculateActualSLA(config: SLAConfig): number {
     // Calculate real SLA based on system metrics
-    if (config.name === 'Uptime SLA') {
+    if (config.name === "Uptime SLA") {
       const uptime = process.uptime();
-      const totalTime = Date.now() - (process.env['START_TIME'] ? parseInt(process.env['START_TIME']) : Date.now());
+      const totalTime =
+        Date.now() -
+        (process.env["START_TIME"]
+          ? parseInt(process.env["START_TIME"])
+          : Date.now());
       return totalTime > 0 ? (uptime / (totalTime / 1000)) * 100 : 100;
     }
-    
-    if (config.name === 'Response Time SLA') {
+
+    if (config.name === "Response Time SLA") {
       const avgResponseTime = this.getAverageResponseTime();
-      return avgResponseTime > 0 ? Math.max(0, 100 - (avgResponseTime / 10)) : 100;
+      return avgResponseTime > 0
+        ? Math.max(0, 100 - avgResponseTime / 10)
+        : 100;
     }
-    
+
     return 100; // Default to 100% if unknown SLA type
   }
 
@@ -869,19 +959,23 @@ export class EnterpriseMonitoringService {
     // Calculate average response time from recent metrics
     const recentMetrics = this.metrics.slice(-10);
     if (recentMetrics.length === 0) return 0;
-    
-    const totalResponseTime = recentMetrics.reduce((sum, metric) => 
-      sum + (metric.application?.averageResponseTime || 0), 0);
-    
+
+    const totalResponseTime = recentMetrics.reduce(
+      (sum, metric) => sum + (metric.application?.averageResponseTime || 0),
+      0,
+    );
+
     return totalResponseTime / recentMetrics.length;
   }
 
   private startAlerting(): void {
     this.alertingInterval = setInterval(() => {
       // Check for unresolved alerts
-      const unresolvedAlerts = this.alerts.filter(alert => !alert.resolved);
+      const unresolvedAlerts = this.alerts.filter((alert) => !alert.resolved);
       if (unresolvedAlerts.length > 0) {
-        console.log(`[Monitoring] ${unresolvedAlerts.length} unresolved alerts`);
+        console.log(
+          `[Monitoring] ${unresolvedAlerts.length} unresolved alerts`,
+        );
       }
     }, 60000); // Every minute
   }
@@ -890,8 +984,10 @@ export class EnterpriseMonitoringService {
     this.slaInterval = setInterval(() => {
       const slaResults = this.getSLAResults();
       for (const result of slaResults) {
-        if (result.status === 'breached') {
-          console.warn(`[SLA] Breach detected: ${result.name} - ${result.actual}% vs ${result.target}%`);
+        if (result.status === "breached") {
+          console.warn(
+            `[SLA] Breach detected: ${result.name} - ${result.actual}% vs ${result.target}%`,
+          );
         }
       }
     }, 300000); // Every 5 minutes
@@ -899,89 +995,105 @@ export class EnterpriseMonitoringService {
 
   private initializeDefaultConfigs(): void {
     // Default health checks
-    this.addHealthCheck('database', async () => ({
-      name: 'database',
+    this.addHealthCheck("database", async () => ({
+      name: "database",
       status: HealthStatus.HEALTHY,
       responseTime: 0,
-      message: 'Database connection healthy'
+      message: "Database connection healthy",
     }));
 
-    this.addHealthCheck('memory', async () => {
+    this.addHealthCheck("memory", async () => {
       const memory = await this.collectMemoryMetrics();
-      const status = memory.usage > 90 ? HealthStatus.CRITICAL : 
-                    memory.usage > 80 ? HealthStatus.WARNING : HealthStatus.HEALTHY;
+      const status =
+        memory.usage > 90
+          ? HealthStatus.CRITICAL
+          : memory.usage > 80
+            ? HealthStatus.WARNING
+            : HealthStatus.HEALTHY;
       return {
-        name: 'memory',
+        name: "memory",
         status,
         responseTime: 0,
-        message: `Memory usage: ${memory.usage}%`
+        message: `Memory usage: ${memory.usage}%`,
       };
     });
 
-    this.addHealthCheck('cpu', async () => {
+    this.addHealthCheck("cpu", async () => {
       const cpu = await this.collectCPUMetrics();
-      const status = cpu.usage > 90 ? HealthStatus.CRITICAL : 
-                    cpu.usage > 80 ? HealthStatus.WARNING : HealthStatus.HEALTHY;
+      const status =
+        cpu.usage > 90
+          ? HealthStatus.CRITICAL
+          : cpu.usage > 80
+            ? HealthStatus.WARNING
+            : HealthStatus.HEALTHY;
       return {
-        name: 'cpu',
+        name: "cpu",
         status,
         responseTime: 0,
-        message: `CPU usage: ${cpu.usage}%`
+        message: `CPU usage: ${cpu.usage}%`,
       };
     });
 
     // Default alert configurations
     this.addAlertConfig({
-      id: 'high-cpu-usage',
-      name: 'High CPU Usage',
-      description: 'CPU usage is above 90%',
+      id: "high-cpu-usage",
+      name: "High CPU Usage",
+      description: "CPU usage is above 90%",
       severity: AlertSeverity.CRITICAL,
-      conditions: [{
-        metric: 'cpu.usage',
-        operator: '>',
-        threshold: 90,
-        duration: 60
-      }],
-      actions: [{
-        type: 'log',
-        config: {}
-      }],
+      conditions: [
+        {
+          metric: "cpu.usage",
+          operator: ">",
+          threshold: 90,
+          duration: 60,
+        },
+      ],
+      actions: [
+        {
+          type: "log",
+          config: {},
+        },
+      ],
       enabled: true,
-      cooldown: 300
+      cooldown: 300,
     });
 
     this.addAlertConfig({
-      id: 'high-memory-usage',
-      name: 'High Memory Usage',
-      description: 'Memory usage is above 90%',
+      id: "high-memory-usage",
+      name: "High Memory Usage",
+      description: "Memory usage is above 90%",
       severity: AlertSeverity.CRITICAL,
-      conditions: [{
-        metric: 'memory.usage',
-        operator: '>',
-        threshold: 90,
-        duration: 60
-      }],
-      actions: [{
-        type: 'log',
-        config: {}
-      }],
+      conditions: [
+        {
+          metric: "memory.usage",
+          operator: ">",
+          threshold: 90,
+          duration: 60,
+        },
+      ],
+      actions: [
+        {
+          type: "log",
+          config: {},
+        },
+      ],
       enabled: true,
-      cooldown: 300
+      cooldown: 300,
     });
 
     // Default SLA configurations
     this.addSLAConfig({
-      name: 'Uptime SLA',
+      name: "Uptime SLA",
       target: 99.9,
       window: 86400, // 24 hours
-      metrics: ['uptime']
+      metrics: ["uptime"],
     });
 
     this.addSLAConfig({
-      name: 'Response Time SLA',
+      name: "Response Time SLA",
       target: 95,
       window: 3600, // 1 hour
-      metrics: ['response_time']
+      metrics: ["response_time"],
     });
   }
 

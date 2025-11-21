@@ -8,28 +8,12 @@
 // Types
 export type {
   WebGPUStatus,
-  WebGPUInfo,
-  WebGPUOptimizationRequest,
-  WebGPUOptimizationResult,
   WebGPUPerformanceMetrics,
   WebGPUPreference,
 } from "./model/types";
 
 // API functions
-export {
-  getWebGPUStatus,
-  initializeWebGPU,
-  runWebGPUOptimization,
-  getWebGPUInfo,
-  cleanupWebGPU,
-} from "./api/webgpuApi";
+export { getWebGPUStatus } from "./api/webgpuApi";
 
 // React Query hooks
-export {
-  webgpuKeys,
-  useWebGPUStatus,
-  useWebGPUInfo,
-  useInitializeWebGPU,
-  useWebGPUOptimization,
-  useCleanupWebGPU,
-} from "./api/webgpuQueries";
+export { webgpuKeys, useWebGPUStatus } from "./api/webgpuQueries";

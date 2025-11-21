@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import { MoreVert as MoreVertIcon } from "@mui/icons-material";
 import { useDesignSystem } from "@/shared/hooks";
+import { zoomAwareCard, fluidSpacing } from "@/shared/lib/zoom-aware";
 
 type CardVariant =
   | "elevated"
@@ -211,10 +212,17 @@ export const CardV3 = forwardRef<HTMLDivElement, CardV3Props>(
 
     const mergedSx = useMemo(
       () => ({
+        ...zoomAwareCard, // ✅ Zoom-aware base styles
         ...variantStyles,
+        // ✅ Fluid padding that scales with zoom
+        padding: fluidSpacing(
+          `${padding * 0.75}px`, // Min: 75% of base padding
+          `${padding * 1.25}px`, // Max: 125% of base padding
+          0.3, // Viewport unit multiplier
+        ),
         ...sx,
       }),
-      [variantStyles, sx],
+      [variantStyles, padding, sx],
     );
 
     const hasHeader = title || subtitle || action;
@@ -273,13 +281,42 @@ export const CardV3 = forwardRef<HTMLDivElement, CardV3Props>(
         {/* Content */}
         <CardContent
           sx={{
-            padding: `${padding}px`,
+            // ✅ Fluid padding that scales with zoom
+            padding: fluidSpacing(
+              `${padding * 0.75}px`, // Min: 75% of base padding
+              `${padding * 1.25}px`, // Max: 125% of base padding
+              0.3, // Viewport unit multiplier
+            ),
             paddingTop:
-              hasHeader && !headerDivider ? `${padding / 2}px` : `${padding}px`,
+              hasHeader && !headerDivider
+                ? fluidSpacing(
+                    `${padding * 0.375}px`,
+                    `${padding * 0.625}px`,
+                    0.3,
+                  )
+                : fluidSpacing(
+                    `${padding * 0.75}px`,
+                    `${padding * 1.25}px`,
+                    0.3,
+                  ),
             paddingBottom:
-              hasFooter && !footerDivider ? `${padding / 2}px` : `${padding}px`,
+              hasFooter && !footerDivider
+                ? fluidSpacing(
+                    `${padding * 0.375}px`,
+                    `${padding * 0.625}px`,
+                    0.3,
+                  )
+                : fluidSpacing(
+                    `${padding * 0.75}px`,
+                    `${padding * 1.25}px`,
+                    0.3,
+                  ),
             "&:last-child": {
-              paddingBottom: `${padding}px`,
+              paddingBottom: fluidSpacing(
+                `${padding * 0.75}px`,
+                `${padding * 1.25}px`,
+                0.3,
+              ),
             },
           }}
         >

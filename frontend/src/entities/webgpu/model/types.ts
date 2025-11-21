@@ -19,69 +19,6 @@ export interface WebGPUStatus {
 }
 
 /**
- * WebGPU device information
- */
-export interface WebGPUInfo {
-  readonly adapter?: {
-    readonly name: string;
-    readonly vendor: string;
-    readonly architecture: string;
-    readonly features: ReadonlyArray<string>;
-    readonly limits: Record<string, number>;
-  };
-  readonly device?: {
-    readonly queue: string;
-    readonly features: ReadonlyArray<string>;
-    readonly limits: Record<string, number>;
-  };
-  readonly capabilities?: {
-    readonly maxComputeWorkgroupSizeX: number;
-    readonly maxComputeWorkgroupSizeY: number;
-    readonly maxComputeWorkgroupSizeZ: number;
-    readonly maxStorageBufferBindingSize: number;
-  };
-}
-
-/**
- * WebGPU optimization request
- */
-export interface WebGPUOptimizationRequest {
-  readonly items: ReadonlyArray<{
-    readonly profileType: string;
-    readonly length: number;
-    readonly quantity: number;
-  }>;
-  readonly stockLength: number;
-  readonly algorithm: "ffd" | "bfd";
-}
-
-/**
- * WebGPU optimization result
- */
-export interface WebGPUOptimizationResult {
-  readonly cuts: ReadonlyArray<{
-    id: string;
-    stockLength: number;
-    segments: ReadonlyArray<{
-      id: string;
-      profileType: string;
-      length: number;
-      quantity: number;
-      workOrderId: string;
-    }>;
-    usedLength: number;
-    remainingLength: number;
-    wasteCategory: string;
-  }>;
-  readonly totalWaste: number;
-  readonly efficiency: number;
-  readonly executionTimeMs: number;
-  readonly gpuExecutionTimeMs?: number;
-  readonly cpuExecutionTimeMs?: number;
-  readonly speedup?: number; // GPU vs CPU speedup factor
-}
-
-/**
  * WebGPU performance metrics
  */
 export interface WebGPUPerformanceMetrics {

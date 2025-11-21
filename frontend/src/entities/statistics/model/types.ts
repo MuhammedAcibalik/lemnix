@@ -129,3 +129,59 @@ export interface OptimizationAnalytics {
   readonly averageCost: number;
   readonly successRate: number;
 }
+
+/**
+ * Profile analysis (NEW - Analytics endpoints)
+ */
+export interface ProfileAnalysis {
+  readonly totalProfiles: number;
+  readonly byProfileType: Record<string, number>;
+  readonly mostUsedProfiles: ReadonlyArray<{
+    readonly profileType: string;
+    readonly count: number;
+    readonly percentage: number;
+  }>;
+  readonly averageUsage: number;
+}
+
+/**
+ * Product categories analysis (NEW - Analytics endpoints)
+ */
+export interface ProductCategoriesAnalysis {
+  readonly totalCategories: number;
+  readonly byCategory: Record<string, number>;
+  readonly mostUsedCategories: ReadonlyArray<{
+    readonly category: string;
+    readonly count: number;
+    readonly percentage: number;
+  }>;
+}
+
+/**
+ * Color-size analysis (NEW - Analytics endpoints)
+ */
+export interface ColorSizeAnalysis {
+  readonly totalCombinations: number;
+  readonly byColor: Record<string, number>;
+  readonly bySize: Record<string, number>;
+  readonly mostCommonCombinations: ReadonlyArray<{
+    readonly color: string;
+    readonly size: string;
+    readonly count: number;
+  }>;
+}
+
+/**
+ * Work order analysis (NEW - Analytics endpoints)
+ */
+export interface WorkOrderAnalysis {
+  readonly totalWorkOrders: number;
+  readonly completed: number;
+  readonly pending: number;
+  readonly byStatus: Record<string, number>;
+  readonly averageCompletionTime: number;
+  readonly trends: ReadonlyArray<{
+    readonly date: string;
+    readonly count: number;
+  }>;
+}

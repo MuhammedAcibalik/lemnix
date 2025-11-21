@@ -330,7 +330,7 @@ defaultAnimationConfig.scale; // 0.95
 
 ## 📖 Examples
 
-See `examples.tsx` for comprehensive usage examples including:
+See the component documentation below for comprehensive usage examples including:
 
 - Real-world card grids
 - Loading skeletons
@@ -398,4 +398,4 @@ See `examples.tsx` for comprehensive usage examples including:
 
 ---
 
-**Need help?** Check `examples.tsx` for comprehensive usage examples.
+**Need help?** Check the component documentation above for comprehensive usage examples.

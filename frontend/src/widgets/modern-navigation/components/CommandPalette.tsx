@@ -11,17 +11,9 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import {
-  Dialog,
-  DialogProps,
-  Box,
-  Fade,
-  useTheme,
-  useMediaQuery,
-  alpha,
-} from "@mui/material";
+import { Dialog, DialogProps, Box, Fade, alpha } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
-import { useDesignSystem } from "@/shared/hooks";
+import { useDesignSystem, useResponsive } from "@/shared/hooks";
 import { CommandSearch } from "./CommandSearch";
 import { CommandResults } from "./CommandResults";
 import { CommandFooter } from "./CommandFooter";
@@ -41,9 +33,9 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onCommandSelect,
   onPageChange,
 }) => {
-  const theme = useTheme();
   const ds = useDesignSystem();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  // Use project's responsive hook system
+  const { isMobile, isTablet, isDesktop } = useResponsive();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);

@@ -19,7 +19,7 @@ import {
 } from "@mui/icons-material";
 import { stylingConstants } from "../constants";
 import { messages } from "../constants";
-import { UserMenuProps } from "../types";
+import { UserMenuProps } from "../types/index";
 
 /**
  * User Menu Component
@@ -33,7 +33,8 @@ export const UserMenu: React.FC<UserMenuProps> = ({ anchorEl, onClose }) => {
       sx={{
         zIndex: stylingConstants.zIndex.userMenu,
         "& .MuiPaper-root": {
-          minWidth: { xs: "180px", sm: "200px", md: "220px" },
+          // ✅ Responsive width
+          minWidth: { xs: "180px", sm: "200px", md: "220px", lg: "240px" },
           maxWidth: { xs: "90vw", sm: "none" },
           backgroundColor: "rgba(255, 255, 255, 0.98)",
           backdropFilter: "blur(20px)",

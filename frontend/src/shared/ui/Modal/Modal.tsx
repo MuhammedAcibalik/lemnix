@@ -17,10 +17,11 @@ import {
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
 import { useDesignSystem } from "@/shared/hooks";
+import { safeMaxWidth, fluidWidth, pxToRem } from "@/shared/lib/zoom-aware";
 
 type ModalSize = "sm" | "md" | "lg" | "xl" | "full";
 
-export interface ModalProps extends Omit<MuiModalProps, "children"> {
+export interface ModalProps extends Omit<MuiModalProps, "children" | "title"> {
   readonly open: boolean;
   readonly onClose: () => void;
   readonly size?: ModalSize;
@@ -60,12 +61,24 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
   ) => {
     const ds = useDesignSystem();
 
-    // Size mapping
+    // ✅ Zoom-aware size mapping with fluid widths
     const sizeMap = {
-      sm: { width: 400, maxWidth: "90vw" },
-      md: { width: 600, maxWidth: "90vw" },
-      lg: { width: 800, maxWidth: "90vw" },
-      xl: { width: 1200, maxWidth: "95vw" },
+      sm: {
+        width: fluidWidth(pxToRem(320), pxToRem(480), pxToRem(400)), // 320-480px, preferred 400px
+        maxWidth: safeMaxWidth("90vw"),
+      },
+      md: {
+        width: fluidWidth(pxToRem(480), pxToRem(720), pxToRem(600)), // 480-720px, preferred 600px
+        maxWidth: safeMaxWidth("90vw"),
+      },
+      lg: {
+        width: fluidWidth(pxToRem(640), pxToRem(960), pxToRem(800)), // 640-960px, preferred 800px
+        maxWidth: safeMaxWidth("90vw"),
+      },
+      xl: {
+        width: fluidWidth(pxToRem(960), pxToRem(1440), pxToRem(1200)), // 960-1440px, preferred 1200px
+        maxWidth: safeMaxWidth("95vw"),
+      },
       full: { width: "100vw", maxWidth: "100vw", height: "100vh" },
     };
 

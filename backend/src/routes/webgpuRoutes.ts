@@ -1,6 +1,9 @@
 /**
  * WebGPU Routes
- * API endpoints for WebGPU optimization
+ * API endpoints for WebGPU status
+ *
+ * Note: WebGPU operations run in browser, not backend.
+ * Backend only provides status information.
  *
  * @module routes
  * @version 2.0.0 - Refactored to use controller
@@ -15,31 +18,8 @@ const controller = new WebGPUController();
 /**
  * GET /api/webgpu/status
  * Get WebGPU status and support information
+ * WebGPU operations run in browser, backend only provides status information
  */
 router.get("/status", controller.getStatus.bind(controller));
-
-/**
- * POST /api/webgpu/initialize
- * Initialize WebGPU
- */
-router.post("/initialize", controller.initialize.bind(controller));
-
-/**
- * POST /api/webgpu/optimize
- * Run WebGPU optimization
- */
-router.post("/optimize", controller.optimize.bind(controller));
-
-/**
- * GET /api/webgpu/info
- * Get WebGPU device information
- */
-router.get("/info", controller.getInfo.bind(controller));
-
-/**
- * POST /api/webgpu/cleanup
- * Cleanup WebGPU resources
- */
-router.post("/cleanup", controller.cleanup.bind(controller));
 
 export default router;

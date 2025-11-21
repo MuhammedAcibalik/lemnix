@@ -22,6 +22,12 @@ import {
   Info as InfoIcon,
 } from "@mui/icons-material";
 import { useDesignSystem } from "@/shared/hooks";
+import {
+  zoomAwareInput,
+  fluidFontSize,
+  fluidSpacing,
+  pxToRem,
+} from "@/shared/lib/zoom-aware";
 
 type TextFieldVariant = "standard" | "outlined" | "filled" | "modern";
 type TextFieldSize = "sm" | "md" | "lg";
@@ -281,8 +287,18 @@ export const TextField = forwardRef<HTMLDivElement, TextFieldProps>(
           onBlur={() => setFocused(false)}
           InputProps={mergedInputProps}
           sx={{
+            ...zoomAwareInput, // ✅ Zoom-aware base styles
             width: "100%",
             ...variantStyles[variant],
+            // ✅ Apply fluid sizing
+            "& .MuiOutlinedInput-input": {
+              fontSize: currentSize.fontSize,
+              padding: currentSize.padding,
+            },
+            "& .MuiOutlinedInput-root": {
+              height: currentSize.height,
+              minHeight: currentSize.height,
+            },
             ...sx,
           }}
           {...props}

@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { Box, Typography, Grid, Container, Stack, alpha } from "@mui/material";
+import { Box, Typography, Grid, Stack, alpha } from "@mui/material";
 import {
   Memory as Cpu,
   TableChart as FileSpreadsheet,
@@ -73,30 +73,28 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ className }) => {
 
   return (
     <Box
+      component="section"
+      id="features"
       sx={{
-        py: { xs: ds.spacing["5"], md: ds.spacing["6"] },
+        // Responsive padding pattern from example: py-20 px-4 sm:px-6 lg:px-8
+        py: ds.spacing["20"], // py-20 = 80px (sabit, örnek uygulamadaki gibi)
+        px: {
+          xs: ds.spacing["4"], // px-4 (16px) mobile
+          sm: ds.spacing["6"], // sm:px-6 (24px) tablet
+          lg: ds.spacing["8"], // lg:px-8 (32px) desktop
+        },
         background: ds.colors.surface.elevated1,
         position: "relative",
       }}
     >
-      <Container
-        maxWidth={false}
+      <Box
+        component="div"
         sx={{
-          px: {
-            xs: ds.spacing["3"],
-            sm: ds.spacing["4"],
-            md: ds.spacing["6"],
-            lg: ds.spacing["8"],
-            xl: "clamp(2rem, 5vw, 4rem)",
-          },
-          maxWidth: {
-            xs: "100%",
-            sm: "600px",
-            md: "900px",
-            lg: "1200px",
-            xl: "1400px",
-            "2xl": "1600px",
-          },
+          // Container max-width pattern: max-w-7xl (80rem = 1280px) - SABIT
+          // Örnek uygulamadaki gibi: breakpoint'e göre değişmez, sadece 1280px
+          maxWidth: "1280px", // max-w-7xl (sabit, her cihazda aynı)
+          mx: "auto",
+          width: "100%",
         }}
       >
         {/* Section Header */}
@@ -112,7 +110,9 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ className }) => {
                 spacing={ds.spacing["2"]}
                 alignItems="center"
               >
-                <AutoAwesome sx={{ fontSize: 14, color: ds.colors.primary.main }} />
+                <AutoAwesome
+                  sx={{ fontSize: 14, color: ds.colors.primary.main }}
+                />
                 <Typography
                   sx={{
                     fontSize: tokens.typography.xs,
@@ -149,16 +149,21 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ className }) => {
                 fontWeight: 400,
               }}
             >
-              Endüstri 4.0 standartlarında geliştirilmiş, kapsamlı üretim optimizasyon platformu ile 
-              iş süreçlerinizi dijitalleştirin ve verimliliği artırın.
+              Endüstri 4.0 standartlarında geliştirilmiş, kapsamlı üretim
+              optimizasyon platformu ile iş süreçlerinizi dijitalleştirin ve
+              verimliliği artırın.
             </Typography>
           </Stack>
         </FadeIn>
 
         {/* Feature Cards Grid */}
-        <Grid 
-          container 
-          spacing={{ xs: ds.spacing["4"], sm: ds.spacing["5"], md: ds.spacing["6"] }}
+        <Grid
+          container
+          spacing={{
+            xs: ds.spacing["4"],
+            sm: ds.spacing["5"],
+            md: ds.spacing["6"],
+          }}
         >
           {features.map((feature, index) => (
             <Grid key={feature.title} item xs={12} md={6} lg={4}>
@@ -202,7 +207,10 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ className }) => {
 
                       <Badge variant="outline" color="primary">
                         <Typography
-                          sx={{ fontSize: tokens.typography.xs, fontWeight: 600 }}
+                          sx={{
+                            fontSize: tokens.typography.xs,
+                            fontWeight: 600,
+                          }}
                         >
                           {feature.badge}
                         </Typography>
@@ -227,7 +235,10 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ className }) => {
                     <Typography
                       variant="body2"
                       sx={{
-                        fontSize: { xs: tokens.typography.sm, sm: tokens.typography.base },
+                        fontSize: {
+                          xs: tokens.typography.sm,
+                          sm: tokens.typography.base,
+                        },
                         color: ds.colors.text.secondary,
                         lineHeight: 1.65,
                         fontWeight: 400,
@@ -241,7 +252,7 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ className }) => {
             </Grid>
           ))}
         </Grid>
-      </Container>
+      </Box>
     </Box>
   );
 };

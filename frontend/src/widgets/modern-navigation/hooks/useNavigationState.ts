@@ -5,11 +5,16 @@
  */
 
 import { useState, useCallback } from "react";
-import {
-  NavigationState,
-  NavigationHandlers,
-  ModernNavigationProps,
-} from "../types";
+import { NavigationState, NavigationHandlers } from "../types/index";
+
+/**
+ * Props interface for useNavigationState hook
+ * Only includes props that the hook actually uses
+ */
+interface UseNavigationStateProps {
+  readonly onPageChange: (page: string) => void;
+  readonly onToggleSidebar?: () => void;
+}
 
 /**
  * Custom hook for managing navigation state
@@ -17,7 +22,7 @@ import {
 export const useNavigationState = ({
   onPageChange,
   onToggleSidebar,
-}: ModernNavigationProps) => {
+}: UseNavigationStateProps) => {
   // State
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [userMenuAnchor, setUserMenuAnchor] = useState<HTMLElement | null>(

@@ -14,6 +14,12 @@ import {
   alpha,
 } from "@mui/material";
 import { useDesignSystem } from "@/shared/hooks";
+import {
+  zoomAwareButton,
+  fluidFontSize,
+  fluidSpacing,
+  pxToRem,
+} from "@/shared/lib/zoom-aware";
 
 type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl";
 
@@ -302,15 +308,44 @@ export const ButtonV3 = forwardRef<HTMLButtonElement, ButtonV3Props>(
 
     const sizeStyles = useMemo(() => getSizeStyles(ds, size), [ds, size]);
 
-    const mergedSx = useMemo(
-      () => ({
+    const mergedSx = useMemo(() => {
+      // Extract numeric values from sizeStyles for fluid calculations
+      const baseFontSize =
+        typeof sizeStyles.fontSize === "string"
+          ? parseFloat(
+              sizeStyles.fontSize.replace("px", "").replace("rem", ""),
+            ) || 14
+          : sizeStyles.fontSize || 14;
+
+      const basePadding =
+        typeof sizeStyles.padding === "string"
+          ? parseFloat(
+              sizeStyles.padding
+                .split(" ")[0]
+                ?.replace("px", "")
+                .replace("rem", "") || "8",
+            ) || 8
+          : 8;
+
+      return {
+        ...zoomAwareButton, // ✅ Zoom-aware base styles
         ...variantStyles,
         ...sizeStyles,
+        // ✅ Fluid sizing that adapts to zoom
+        fontSize: fluidFontSize(
+          pxToRem(baseFontSize * 0.9), // Min: 90% of base
+          pxToRem(baseFontSize * 1.1), // Max: 110% of base
+          0.3, // Viewport unit multiplier
+        ),
+        padding: fluidSpacing(
+          pxToRem(basePadding * 0.8), // Min: 80% of base
+          pxToRem(basePadding * 1.2), // Max: 120% of base
+          0.2, // Viewport unit multiplier
+        ),
         width: fullWidth ? "100%" : "auto",
         ...sx,
-      }),
-      [variantStyles, sizeStyles, fullWidth, sx],
-    );
+      };
+    }, [variantStyles, sizeStyles, fullWidth, sx]);
 
     return (
       <MuiButton

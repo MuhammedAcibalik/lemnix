@@ -3,6 +3,7 @@
  * @module PolicyServices
  */
 
-export { ValidationPolicyService, getValidationPolicyService } from './validationPolicyService';
-export { SelectionLogService, getSelectionLogService } from './selectionLogService';
-
+export {
+  ValidationPolicyService,
+  getValidationPolicyService,
+} from "./validationPolicyService";

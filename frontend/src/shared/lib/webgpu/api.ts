@@ -1,22 +1,21 @@
 /**
  * WebGPU API Client
+ * Note: Only STATUS endpoint is used. WebGPU operations run in browser, not backend.
  *
  * @module shared/lib/webgpu
  * @version 1.0.0
  */
 
 import { api } from "@/shared/api";
-import type { WebGPUStatus, WebGPUInfo } from "./types";
+import type { WebGPUStatus } from "./types";
 
 const WEBGPU_ENDPOINTS = {
   STATUS: "/webgpu/status",
-  INITIALIZE: "/webgpu/initialize",
-  INFO: "/webgpu/info",
-  CLEANUP: "/webgpu/cleanup",
 } as const;
 
 /**
  * Get WebGPU status
+ * WebGPU operations run in browser, backend only provides status information
  */
 export async function getWebGPUStatus(): Promise<WebGPUStatus> {
   try {
@@ -29,27 +28,4 @@ export async function getWebGPUStatus(): Promise<WebGPUStatus> {
       initialized: false,
     };
   }
-}
-
-/**
- * Initialize WebGPU
- */
-export async function initializeWebGPU(): Promise<WebGPUStatus> {
-  const response = await api.post<WebGPUStatus>(WEBGPU_ENDPOINTS.INITIALIZE);
-  return response.data;
-}
-
-/**
- * Get WebGPU device info
- */
-export async function getWebGPUInfo(): Promise<WebGPUInfo> {
-  const response = await api.get<WebGPUInfo>(WEBGPU_ENDPOINTS.INFO);
-  return response.data;
-}
-
-/**
- * Cleanup WebGPU resources
- */
-export async function cleanupWebGPU(): Promise<void> {
-  await api.post(WEBGPU_ENDPOINTS.CLEANUP);
 }

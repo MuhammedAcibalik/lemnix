@@ -18,6 +18,10 @@ import {
   getWasteReductionTrends,
   getSystemHealthMetrics,
   getPerformanceMetrics,
+  getProfileAnalysis,
+  getProductCategoriesAnalysis,
+  getColorSizeAnalysis,
+  getWorkOrderAnalysis,
   type StatisticsType,
   type BatchStatisticsResponse,
 } from "./statisticsApi";
@@ -31,6 +35,10 @@ import type {
   WasteReductionTrends,
   SystemHealthMetrics,
   PerformanceMetrics,
+  ProfileAnalysis,
+  ProductCategoriesAnalysis,
+  ColorSizeAnalysis,
+  WorkOrderAnalysis,
 } from "../model/types";
 
 /**
@@ -53,6 +61,15 @@ export const statisticsKeys = {
   wasteReduction: () => [...statisticsKeys.all, "wasteReduction"] as const,
   systemHealth: () => [...statisticsKeys.all, "systemHealth"] as const,
   performance: () => [...statisticsKeys.all, "performance"] as const,
+  // NEW: Analytics endpoints
+  profileAnalysis: (cuttingListId?: string) =>
+    [...statisticsKeys.all, "profileAnalysis", cuttingListId] as const,
+  productCategories: () =>
+    [...statisticsKeys.all, "productCategories"] as const,
+  colorSize: (cuttingListId?: string) =>
+    [...statisticsKeys.all, "colorSize", cuttingListId] as const,
+  workOrderAnalysis: (cuttingListId?: string) =>
+    [...statisticsKeys.all, "workOrderAnalysis", cuttingListId] as const,
 } as const;
 
 /**
@@ -233,6 +250,80 @@ export function usePerformanceMetrics(
     queryKey: statisticsKeys.performance(),
     queryFn: getPerformanceMetrics,
     staleTime: 2 * 60 * 1000, // 2 minutes
+    retry: statisticsRetryFn,
+    ...options,
+  });
+}
+
+// ============================================================================
+// NEW HOOKS - Analytics Endpoints
+// ============================================================================
+
+/**
+ * Hook: Get profile analysis
+ * ✅ NEW: Analytics endpoint
+ */
+export function useProfileAnalysis(
+  cuttingListId?: string,
+  options?: UseQueryOptions<ProfileAnalysis, Error>,
+) {
+  return useQuery({
+    queryKey: statisticsKeys.profileAnalysis(cuttingListId),
+    queryFn: () => getProfileAnalysis(cuttingListId),
+    staleTime: 5 * 60 * 1000,
+    enabled: true, // Can be called without cuttingListId
+    retry: statisticsRetryFn,
+    ...options,
+  });
+}
+
+/**
+ * Hook: Get product categories analysis
+ * ✅ NEW: Analytics endpoint
+ */
+export function useProductCategoriesAnalysis(
+  options?: UseQueryOptions<ProductCategoriesAnalysis, Error>,
+) {
+  return useQuery({
+    queryKey: statisticsKeys.productCategories(),
+    queryFn: getProductCategoriesAnalysis,
+    staleTime: 5 * 60 * 1000,
+    retry: statisticsRetryFn,
+    ...options,
+  });
+}
+
+/**
+ * Hook: Get color-size analysis
+ * ✅ NEW: Analytics endpoint
+ */
+export function useColorSizeAnalysis(
+  cuttingListId?: string,
+  options?: UseQueryOptions<ColorSizeAnalysis, Error>,
+) {
+  return useQuery({
+    queryKey: statisticsKeys.colorSize(cuttingListId),
+    queryFn: () => getColorSizeAnalysis(cuttingListId),
+    staleTime: 5 * 60 * 1000,
+    enabled: true, // Can be called without cuttingListId
+    retry: statisticsRetryFn,
+    ...options,
+  });
+}
+
+/**
+ * Hook: Get work order analysis
+ * ✅ NEW: Analytics endpoint
+ */
+export function useWorkOrderAnalysis(
+  cuttingListId?: string,
+  options?: UseQueryOptions<WorkOrderAnalysis, Error>,
+) {
+  return useQuery({
+    queryKey: statisticsKeys.workOrderAnalysis(cuttingListId),
+    queryFn: () => getWorkOrderAnalysis(cuttingListId),
+    staleTime: 5 * 60 * 1000,
+    enabled: true, // Can be called without cuttingListId
     retry: statisticsRetryFn,
     ...options,
   });

@@ -85,6 +85,23 @@ export const globalStyles = `
   /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
+    /* Örnek uygulamadaki gibi line-height ekle */
+    line-height: 1.5;
+  }
+
+  /* Root container reset - Örnek uygulamadaki gibi height: 100% YOK */
+  html, body, #root {
+    margin: 0;
+    padding: 0;
+    /* height: 100% kaldırıldı - overflow sorunlarına yol açıyordu */
+    /* Örnek uygulama sadece min-h-screen kullanıyor, fixed height yok */
+
+
+    
+    /* width: 100% ekle - örnek uygulamadaki gibi */
+    width: 100%;
+    /* overflow-x: hidden - yatay scroll sorunlarını önle */
+    overflow-x: hidden;
   }
 
   /* Body defaults */
@@ -94,6 +111,15 @@ export const globalStyles = `
     background-color: ${DS.colors.background.default};
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Örnek uygulamadaki gibi line-height inherit */
+    line-height: inherit;
+  }
+
+  /* #root için min-height kullan (örnek uygulamadaki min-h-screen gibi) */
+  #root {
+    min-height: 100vh;
+    /* width: 100% - örnek uygulamadaki gibi */
+    width: 100%;
   }
 
   /* Focus visible for accessibility */

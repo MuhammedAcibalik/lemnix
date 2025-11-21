@@ -1,0 +1,166 @@
+/**
+ * @fileoverview Zoom-Aware Global CSS
+ * @module shared/lib/zoom-aware/global
+ * @description Global CSS rules for zoom/scale-aware UI elements
+ */
+
+/* Base font size for rem calculations - scales with browser zoom */
+:root {
+  font-size: 16px; /* Base font size - browser zoom affects this */
+}
+
+/* Ensure all elements use box-sizing: border-box */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Prevent horizontal overflow on body */
+body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* Zoom-aware containers */
+.zoom-aware-container {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Zoom-aware cards */
+.zoom-aware-card {
+  width: 100%;
+  min-width: min(17.5rem, 100%); /* 280px minimum, but never exceed 100% */
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Zoom-aware buttons */
+.zoom-aware-button {
+  min-width: min(5rem, 100%); /* 80px minimum, but never exceed 100% */
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+}
+
+/* Zoom-aware text */
+.zoom-aware-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Zoom-aware multi-line text */
+.zoom-aware-text-multiline {
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Zoom-aware images */
+.zoom-aware-image {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  box-sizing: border-box;
+}
+
+/* Zoom-aware inputs */
+.zoom-aware-input {
+  width: 100%;
+  min-width: min(7.5rem, 100%); /* 120px minimum */
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Prevent text from becoming too small at high zoom */
+@media (min-resolution: 2dppx) {
+  /* High DPI displays */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Ensure flex containers don't break at zoom */
+.zoom-aware-flex {
+  display: flex;
+  flex-wrap: wrap;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Ensure grid containers don't break at zoom */
+.zoom-aware-grid {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Responsive grid that adapts to zoom */
+.zoom-aware-grid-responsive {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(17.5rem, 100%), 1fr));
+  gap: clamp(0.5rem, 1vw + 0.5rem, 2rem);
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Safe min-width utility */
+.safe-min-width {
+  min-width: min(var(--min-width, 12rem), 100%);
+}
+
+/* Safe max-width utility */
+.safe-max-width {
+  max-width: min(var(--max-width, 100%), 100%);
+}
+
+/* Fluid typography */
+.fluid-text-sm {
+  font-size: clamp(0.875rem, 0.5vw + 0.875rem, 1rem);
+}
+
+.fluid-text-base {
+  font-size: clamp(1rem, 0.5vw + 1rem, 1.125rem);
+}
+
+.fluid-text-lg {
+  font-size: clamp(1.125rem, 0.5vw + 1.125rem, 1.25rem);
+}
+
+.fluid-text-xl {
+  font-size: clamp(1.25rem, 0.5vw + 1.25rem, 1.5rem);
+}
+
+/* Fluid spacing */
+.fluid-spacing-sm {
+  padding: clamp(0.5rem, 0.3vw + 0.5rem, 1rem);
+}
+
+.fluid-spacing-md {
+  padding: clamp(1rem, 0.5vw + 1rem, 2rem);
+}
+
+.fluid-spacing-lg {
+  padding: clamp(1.5rem, 0.5vw + 1.5rem, 3rem);
+}
+

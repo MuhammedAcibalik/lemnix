@@ -16,6 +16,10 @@ import type {
   SystemHealthMetrics,
   PerformanceMetrics,
   OptimizationAnalytics,
+  ProfileAnalysis,
+  ProductCategoriesAnalysis,
+  ColorSizeAnalysis,
+  WorkOrderAnalysis,
 } from "../model/types";
 import {
   StatisticsOverviewSchema,
@@ -47,6 +51,11 @@ const STATS_ENDPOINTS = {
   WASTE_REDUCTION: "/statistics/optimization/waste-reduction",
   HEALTH: "/statistics/health",
   METRICS: "/statistics/metrics",
+  // NEW: Analytics endpoints
+  PROFILE_ANALYSIS: "/statistics/profile-analysis",
+  PRODUCT_CATEGORIES: "/statistics/product-categories",
+  COLOR_SIZE: "/statistics/color-size",
+  WORK_ORDER_ANALYSIS: "/statistics/work-order-analysis",
 } as const;
 
 /**
@@ -407,6 +416,117 @@ export async function getPerformanceMetrics(): Promise<PerformanceMetrics> {
       errorRate: 0,
       p95ResponseTime: 0,
       p99ResponseTime: 0,
+    };
+  }
+}
+
+/**
+ * Get profile analysis
+ * ✅ NEW: Analytics endpoint integration
+ */
+export async function getProfileAnalysis(
+  cuttingListId?: string,
+): Promise<ProfileAnalysis> {
+  try {
+    const params = cuttingListId ? { cuttingListId } : undefined;
+    const response = await api.get<ProfileAnalysis>(
+      STATS_ENDPOINTS.PROFILE_ANALYSIS,
+      { params },
+    );
+    return response.data;
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number } };
+    if (err.response?.status === 401 || err.response?.status === 403) {
+      console.warn("Profile analysis require authentication/permission");
+    }
+    return {
+      totalProfiles: 0,
+      byProfileType: {},
+      mostUsedProfiles: [],
+      averageUsage: 0,
+    };
+  }
+}
+
+/**
+ * Get product categories analysis
+ * ✅ NEW: Analytics endpoint integration
+ */
+export async function getProductCategoriesAnalysis(): Promise<ProductCategoriesAnalysis> {
+  try {
+    const response = await api.get<ProductCategoriesAnalysis>(
+      STATS_ENDPOINTS.PRODUCT_CATEGORIES,
+    );
+    return response.data;
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number } };
+    if (err.response?.status === 401 || err.response?.status === 403) {
+      console.warn(
+        "Product categories analysis require authentication/permission",
+      );
+    }
+    return {
+      totalCategories: 0,
+      byCategory: {},
+      mostUsedCategories: [],
+    };
+  }
+}
+
+/**
+ * Get color-size analysis
+ * ✅ NEW: Analytics endpoint integration
+ */
+export async function getColorSizeAnalysis(
+  cuttingListId?: string,
+): Promise<ColorSizeAnalysis> {
+  try {
+    const params = cuttingListId ? { cuttingListId } : undefined;
+    const response = await api.get<ColorSizeAnalysis>(
+      STATS_ENDPOINTS.COLOR_SIZE,
+      { params },
+    );
+    return response.data;
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number } };
+    if (err.response?.status === 401 || err.response?.status === 403) {
+      console.warn("Color-size analysis require authentication/permission");
+    }
+    return {
+      totalCombinations: 0,
+      byColor: {},
+      bySize: {},
+      mostCommonCombinations: [],
+    };
+  }
+}
+
+/**
+ * Get work order analysis
+ * ✅ NEW: Analytics endpoint integration
+ */
+export async function getWorkOrderAnalysis(
+  cuttingListId?: string,
+): Promise<WorkOrderAnalysis> {
+  try {
+    const params = cuttingListId ? { cuttingListId } : undefined;
+    const response = await api.get<WorkOrderAnalysis>(
+      STATS_ENDPOINTS.WORK_ORDER_ANALYSIS,
+      { params },
+    );
+    return response.data;
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number } };
+    if (err.response?.status === 401 || err.response?.status === 403) {
+      console.warn("Work order analysis require authentication/permission");
+    }
+    return {
+      totalWorkOrders: 0,
+      completed: 0,
+      pending: 0,
+      byStatus: {},
+      averageCompletionTime: 0,
+      trends: [],
     };
   }
 }

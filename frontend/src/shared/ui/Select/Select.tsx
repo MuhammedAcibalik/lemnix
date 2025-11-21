@@ -19,6 +19,12 @@ import {
   Chip,
 } from "@mui/material";
 import { useDesignSystem } from "@/shared/hooks";
+import {
+  zoomAwareInput,
+  fluidFontSize,
+  fluidSpacing,
+  pxToRem,
+} from "@/shared/lib/zoom-aware";
 
 export interface SelectOption {
   value: string | number;
@@ -95,7 +101,29 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
     const { componentSizes, colors, borderRadius, spacing, zIndex } =
       useDesignSystem();
 
-    const sizeConfig = componentSizes.input[size];
+    // ✅ Zoom-aware size config with fluid sizing
+    const baseSizeConfig = componentSizes.input[size] as {
+      height: number;
+      fontSize: string;
+      padding: string;
+    };
+    // Extract numeric fontSize value (handle both px and rem)
+    const baseFontSizeNum =
+      typeof baseSizeConfig.fontSize === "string"
+        ? parseFloat(
+            baseSizeConfig.fontSize.replace("rem", "").replace("px", ""),
+          ) * (baseSizeConfig.fontSize.includes("rem") ? 16 : 1)
+        : 16;
+
+    const sizeConfig = {
+      ...baseSizeConfig,
+      fontSize: fluidFontSize(
+        pxToRem(baseFontSizeNum * 0.9), // Min: 90%
+        pxToRem(baseFontSizeNum * 1.1), // Max: 110%
+        0.3,
+      ),
+      height: baseSizeConfig.height, // Keep height for now, can be made fluid later
+    };
     const labelId = `select-label-${label?.toString().replace(/\s+/g, "-").toLowerCase()}`;
 
     return (
@@ -133,8 +161,10 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
             },
           }}
           sx={{
+            ...zoomAwareInput, // ✅ Zoom-aware base styles
             height: sizeConfig.height,
             fontSize: sizeConfig.fontSize,
+            minHeight: sizeConfig.height,
 
             "& .MuiOutlinedInput-notchedOutline": {
               borderRadius: `${borderRadius.input}px`,

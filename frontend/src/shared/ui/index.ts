@@ -42,6 +42,9 @@ export {
 } from "./Card";
 export type { CardProps } from "./Card";
 
+export { PageContainer, CardGrid } from "./layout";
+export type { PageContainerProps, CardGridProps } from "./layout";
+
 // FEEDBACK COMPONENTS
 export { Badge, StatusBadge, MetricBadge } from "./Badge";
 export type { BadgeProps } from "./Badge";

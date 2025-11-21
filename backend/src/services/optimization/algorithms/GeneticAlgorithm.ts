@@ -1,22 +1,22 @@
 /**
  * LEMNİX Genetic Algorithm with GPU Acceleration
  * Advanced evolutionary optimization with WebGPU support
- * 
+ *
  * @module optimization/algorithms
  * @version 1.1.0 - CRITICAL FIXES APPLIED (2025-10-07)
  * @architecture GPU-first with CPU fallback (GPU TEMPORARILY DISABLED - see below)
- * 
+ *
  * ⚠️ KNOWN ISSUES (as of 2025-10-07):
  * - GPU acceleration path DISABLED due to critical bug in evolution integration
  * - GPU does not return evolved population, only initial population fitness
  * - See docs/GENETIC_ALGORITHM_IMPROVEMENTS.md for full roadmap
- * 
+ *
  * ✅ RECENT FIXES:
  * - RNG seed now resets for reproducibility
  * - Type-safe order crossover with explicit null handling
  * - Scale-independent convergence check (CV < 1%)
  * - Comprehensive logging and warnings added
- * 
+ *
  * Algorithm Flow:
  * 1. Initialize population with random permutations
  * 2. Evaluate fitness (greedy sequence evaluation)
@@ -24,35 +24,49 @@
  * 4. Crossover and mutation (order-preserving OX, swap mutation)
  * 5. Elitism (keep best 10%) + offspring generation
  * 6. Repeat for N generations or until convergence
- * 
+ *
  * Time Complexity: O(P × n² × g) where P = population, n = items, g = generations
  * Space Complexity: O(P × n)
  * Best For: Quality-focused optimization, 10-200 items
- * 
+ *
  * @see docs/GENETIC_ALGORITHM_IMPROVEMENTS.md for P0/P1 fixes needed
  */
 
-import type { OptimizationItem, Cut, CuttingSegment, ProfileType, OptimizationConstraints } from '../../../types';
-import { WasteCategory, OptimizationAlgorithm } from '../../../types';
-import { BaseAlgorithm } from '../core/BaseAlgorithm';
-import { OptimizationContext } from '../core/OptimizationContext';
-import type { AdvancedOptimizationResult, OptimizationObjective, StockSummary } from '../types';
-import { StockCalculator } from '../helpers/StockCalculator';
-import { WasteAnalyzer } from '../helpers/WasteAnalyzer';
-import { CostCalculator } from '../helpers/CostCalculator';
-import { MetricsCalculator } from '../helpers/MetricsCalculator';
-import { GPUAccelerator } from '../helpers/GPUAccelerator';
-import type { WebGPUOptimizationParams } from '../webgpuOptimizationService';
-import { GPUEvolutionService } from '../GPUEvolutionService';
-import { TheoreticalMinimumCalculator } from '../utils/TheoreticalMinimumCalculator';
-import { PrioritySearchSolver, SearchPattern, SearchState } from './PrioritySearchSolver';
-import { ParetoFilter } from '../utils/ParetoFilter';
-import type { ILogger } from '../../logger';
+import type {
+  OptimizationItem,
+  Cut,
+  CuttingSegment,
+  ProfileType,
+  OptimizationConstraints,
+} from "../../../types";
+import { WasteCategory, OptimizationAlgorithm } from "../../../types";
+import { BaseAlgorithm } from "../core/BaseAlgorithm";
+import { OptimizationContext } from "../core/OptimizationContext";
+import type {
+  AdvancedOptimizationResult,
+  OptimizationObjective,
+  StockSummary,
+} from "../types";
+import { StockCalculator } from "../helpers/StockCalculator";
+import { WasteAnalyzer } from "../helpers/WasteAnalyzer";
+import { CostCalculator } from "../helpers/CostCalculator";
+import { MetricsCalculator } from "../helpers/MetricsCalculator";
+import { GPUAccelerator } from "../helpers/GPUAccelerator";
+import type { WebGPUOptimizationParams } from "../webgpuOptimizationService";
+import { GPUEvolutionService } from "../GPUEvolutionService";
+import { TheoreticalMinimumCalculator } from "../utils/TheoreticalMinimumCalculator";
+import {
+  PrioritySearchSolver,
+  SearchPattern,
+  SearchState,
+} from "./PrioritySearchSolver";
+import { ParetoFilter } from "../utils/ParetoFilter";
+import type { ILogger } from "../../logger";
 
 /**
  * Material type constant
  */
-const MATERIAL_TYPE = 'aluminum' as const;
+const MATERIAL_TYPE = "aluminum" as const;
 
 /**
  * GA Configuration constants
@@ -73,7 +87,7 @@ const GA_CONFIG = {
  * Used to scale different objectives to [0, 1] range
  */
 const FITNESS_NORMALIZATION = {
-  COST_BASELINE: 10000,  // Baseline cost for normalization (TRY)
+  COST_BASELINE: 10000, // Baseline cost for normalization (TRY)
   TIME_BASELINE_MIN: 60, // Baseline time for normalization (minutes, matches TIME_ESTIMATES)
 } as const;
 
@@ -82,10 +96,10 @@ const FITNESS_NORMALIZATION = {
  * Prioritizes waste minimization (fire reduction) as primary goal
  */
 const ALUMINUM_OPTIMIZED_OBJECTIVES: ReadonlyArray<OptimizationObjective> = [
-  { type: 'minimize-waste', weight: 0.50, priority: 'high' },      // Fire #1 - Primary goal
-  { type: 'maximize-efficiency', weight: 0.30, priority: 'high' }, // Efficiency #2
-  { type: 'minimize-cost', weight: 0.15, priority: 'medium' },    // Cost #3
-  { type: 'minimize-time', weight: 0.05, priority: 'low' },        // Time #4 - Low priority
+  { type: "minimize-waste", weight: 0.5, priority: "high" }, // Fire #1 - Primary goal
+  { type: "maximize-efficiency", weight: 0.3, priority: "high" }, // Efficiency #2
+  { type: "minimize-cost", weight: 0.15, priority: "medium" }, // Cost #3
+  { type: "minimize-time", weight: 0.05, priority: "low" }, // Time #4 - Low priority
 ] as const;
 
 /**
@@ -93,18 +107,18 @@ const ALUMINUM_OPTIMIZED_OBJECTIVES: ReadonlyArray<OptimizationObjective> = [
  * @deprecated Use ALUMINUM_OPTIMIZED_OBJECTIVES for aluminum cutting optimization
  */
 const DEFAULT_OBJECTIVES: ReadonlyArray<OptimizationObjective> = [
-  { type: 'maximize-efficiency', weight: 0.5, priority: 'high' },
-  { type: 'minimize-waste', weight: 0.3, priority: 'medium' },
-  { type: 'minimize-cost', weight: 0.2, priority: 'medium' },
+  { type: "maximize-efficiency", weight: 0.5, priority: "high" },
+  { type: "minimize-waste", weight: 0.3, priority: "medium" },
+  { type: "minimize-cost", weight: 0.2, priority: "medium" },
 ] as const;
 
 /**
  * Production time estimates
  */
 const TIME_ESTIMATES = {
-  SETUP_PER_STOCK: 5,        // Minutes per stock setup
-  CUTTING_PER_SEGMENT: 2,    // Minutes per segment cutting
-  DEFAULT_TOLERANCE: 0.5,    // mm tolerance for segments
+  SETUP_PER_STOCK: 5, // Minutes per stock setup
+  CUTTING_PER_SEGMENT: 2, // Minutes per segment cutting
+  DEFAULT_TOLERANCE: 0.5, // mm tolerance for segments
 } as const;
 
 /**
@@ -134,8 +148,9 @@ interface FitnessStats {
 }
 
 export class GeneticAlgorithm extends BaseAlgorithm {
-  public readonly name: OptimizationAlgorithm = OptimizationAlgorithm.GENETIC_ALGORITHM;
-  public readonly complexity = 'O(n²)' as const; // Actually O(P×n²×g) but constrained to base type
+  public readonly name: OptimizationAlgorithm =
+    OptimizationAlgorithm.GENETIC_ALGORITHM;
+  public readonly complexity = "O(n²)" as const; // Actually O(P×n²×g) but constrained to base type
   public readonly scalability = 7;
 
   private gpuAccelerator: GPUAccelerator | null = null;
@@ -144,7 +159,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   private fitnessStats: FitnessStats | null = null; // Dynamic normalization stats
   private itemKeyCache = new WeakMap<OptimizationItem, string>(); // Stable key cache
   private itemKeyCounter = 0; // Counter for unique key generation (no RNG pollution)
-  
+
   // Theoretical minimum constraints
   private targetStockCount: number = 0;
   private maxAllowedStockCount: number = 0;
@@ -159,11 +174,13 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   /**
    * Main optimization method
    */
-  public async optimize(context: OptimizationContext): Promise<AdvancedOptimizationResult> {
-    this.logger.info('Starting Genetic Algorithm optimization', {
+  public async optimize(
+    context: OptimizationContext,
+  ): Promise<AdvancedOptimizationResult> {
+    this.logger.info("Starting Genetic Algorithm optimization", {
       requestId: context.requestId,
       items: context.items.length,
-      totalPieces: context.getTotalItemCount()
+      totalPieces: context.getTotalItemCount(),
     });
 
     // Validate context
@@ -176,21 +193,24 @@ export class GeneticAlgorithm extends BaseAlgorithm {
     const theoreticalMin = TheoreticalMinimumCalculator.calculateMinimumStock(
       context.items,
       context.stockLengths,
-      context.constraints
+      context.constraints,
     );
 
     this.targetStockCount = theoreticalMin.minStockCount;
     this.maxAllowedStockCount = theoreticalMin.minStockCount + 4; // Allow 4 extra max
 
-    this.logger.info(`[Genetic] Theoretical minimum: ${theoreticalMin.minStockCount} stocks for ${theoreticalMin.totalRequired}mm total`, {
-      recommendedStockLength: theoreticalMin.recommendedStockLength,
-      targetStockCount: this.targetStockCount,
-      maxAllowedStockCount: this.maxAllowedStockCount
-    });
+    this.logger.info(
+      `[Genetic] Theoretical minimum: ${theoreticalMin.minStockCount} stocks for ${theoreticalMin.totalRequired}mm total`,
+      {
+        recommendedStockLength: theoreticalMin.recommendedStockLength,
+        targetStockCount: this.targetStockCount,
+        maxAllowedStockCount: this.maxAllowedStockCount,
+      },
+    );
 
     // Reset RNG seed for reproducibility
     this.rngState = 12345;
-    this.logger.debug('RNG seed initialized', { seed: this.rngState });
+    this.logger.debug("RNG seed initialized", { seed: this.rngState });
 
     // Preprocess items
     const preprocessed = this.preprocessItems(context.items);
@@ -206,7 +226,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
     }
 
     // Fallback to CPU
-    this.logger.info('Using CPU for genetic algorithm');
+    this.logger.info("Using CPU for genetic algorithm");
     return this.optimizeWithCPU(expanded, context);
   }
 
@@ -218,8 +238,8 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       this.gpuAccelerator = new GPUAccelerator(this.logger);
       await this.gpuAccelerator.initialize();
     } catch (error) {
-      this.logger.warn('GPU initialization failed, will use CPU fallback', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+      this.logger.warn("GPU initialization failed, will use CPU fallback", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       this.gpuAccelerator = null;
     }
@@ -243,14 +263,14 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    */
   private async tryGPUOptimization(
     expanded: OptimizationItem[],
-    context: OptimizationContext
+    context: OptimizationContext,
   ): Promise<AdvancedOptimizationResult | null> {
     try {
       // Check if problem is large enough for GPU (20+ items)
       if (expanded.length < 20) {
-        this.logger.debug('Problem too small for GPU, using CPU', {
+        this.logger.debug("Problem too small for GPU, using CPU", {
           items: expanded.length,
-          threshold: 20
+          threshold: 20,
         });
         return null;
       }
@@ -260,59 +280,65 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       const initialized = await this.gpuEvolutionService.initialize();
 
       if (!initialized) {
-        this.logger.info('GPU not available, will use CPU');
+        this.logger.info("GPU not available, will use CPU");
         return null;
       }
 
       const adaptiveParams = this.getAdaptiveParameters(expanded.length);
-      const populationSize = context.performance.populationSize ?? adaptiveParams.populationSize;
-      const generations = context.performance.generations ?? adaptiveParams.generations;
+      const populationSize =
+        context.performance.populationSize ?? adaptiveParams.populationSize;
+      const generations =
+        context.performance.generations ?? adaptiveParams.generations;
 
-      this.logger.info('GPU acceleration enabled - running full evolution on GPU', {
-        items: expanded.length,
-        populationSize,
-        generations
-      });
+      this.logger.info(
+        "GPU acceleration enabled - running full evolution on GPU",
+        {
+          items: expanded.length,
+          populationSize,
+          generations,
+        },
+      );
 
       // Get primary stock length
       const primaryStockLength = context.stockLengths[0] ?? 6000;
 
       // Run full evolution on GPU (all operators: fitness, selection, crossover, mutation)
-    const gpuResult = await this.gpuEvolutionService.runEvolution({
-      items: expanded,
-      stockLength: primaryStockLength,
-      populationSize,
-      generations,
-      mutationRate: 0.15,
-      crossoverRate: 0.80,
-      objectives: context.objectives.map(obj => obj.type),
-      seed: this.rngState
-    });
+      const gpuResult = await this.gpuEvolutionService.runEvolution({
+        items: expanded,
+        stockLength: primaryStockLength,
+        populationSize,
+        generations,
+        mutationRate: 0.15,
+        crossoverRate: 0.8,
+        objectives: context.objectives.map((obj) => obj.type),
+        seed: this.rngState,
+      });
 
-      this.logger.info('GPU optimization completed successfully', {
+      this.logger.info("GPU optimization completed successfully", {
         generations: gpuResult.metrics.totalGenerations,
         fitness: gpuResult.metrics.finalFitness.toFixed(4),
         gpuTime: `${gpuResult.metrics.performanceMetrics.totalTime.toFixed(2)}ms`,
-        speedupEstimate: `~${(5000 / gpuResult.metrics.performanceMetrics.totalTime).toFixed(1)}x vs CPU`
+        speedupEstimate: `~${(5000 / gpuResult.metrics.performanceMetrics.totalTime).toFixed(1)}x vs CPU`,
       });
 
       // Evaluate GPU sequence on CPU to get full result with cuts
-      const sequenceItems = gpuResult.bestSequence.map(index => expanded[index]);
+      const sequenceItems = gpuResult.bestSequence.map(
+        (index) => expanded[index],
+      );
       const cuts = this.evaluateSequence(sequenceItems, context);
       const finalizedCuts = this.finalizeCuts(cuts, context);
-      
+
       // Convert to AdvancedOptimizationResult
       return this.createResult(finalizedCuts, context);
-
     } catch (error) {
-      this.logger.warn('GPU optimization failed, will use CPU fallback', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+      this.logger.warn("GPU optimization failed, will use CPU fallback", {
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       return null;
     } finally {
       // Cleanup GPU resources
-    this.gpuEvolutionService?.dispose();
-    this.gpuEvolutionService = null;
+      this.gpuEvolutionService?.dispose();
+      this.gpuEvolutionService = null;
     }
   }
 
@@ -369,48 +395,57 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    */
   private async optimizeWithCPU(
     expanded: OptimizationItem[],
-    context: OptimizationContext
+    context: OptimizationContext,
   ): Promise<AdvancedOptimizationResult> {
     // Get adaptive parameters
     const adaptiveParams = this.getAdaptiveParameters(expanded.length);
-    const populationSize = context.performance.populationSize ?? adaptiveParams.populationSize;
-    const generations = context.performance.generations ?? adaptiveParams.generations;
+    const populationSize =
+      context.performance.populationSize ?? adaptiveParams.populationSize;
+    const generations =
+      context.performance.generations ?? adaptiveParams.generations;
     const mutationRate = adaptiveParams.mutationRate;
     const crossoverRate = adaptiveParams.crossoverRate;
 
     // Use aluminum-optimized objectives if no specific objectives provided
-    const objectives = context.objectives.length > 0 ? context.objectives : ALUMINUM_OPTIMIZED_OBJECTIVES;
+    const objectives =
+      context.objectives.length > 0
+        ? context.objectives
+        : ALUMINUM_OPTIMIZED_OBJECTIVES;
     const normalizedObjectives = this.normalizeWeights(objectives);
 
-    this.logger.debug('CPU GA settings (adaptive)', { 
-      populationSize, 
+    this.logger.debug("CPU GA settings (adaptive)", {
+      populationSize,
       generations,
       mutationRate,
       crossoverRate,
       itemCount: expanded.length,
-      objectives: normalizedObjectives.map(o => ({ 
-        type: o.type, 
-        weight: o.weight.toFixed(3) 
+      objectives: normalizedObjectives.map((o) => ({
+        type: o.type,
+        weight: o.weight.toFixed(3),
       })),
     });
 
     // Initialize population with fitness scores
-    let population = this.initializePopulation(expanded, populationSize).map(seq => {
-      const cuts = this.evaluateSequence(seq, context);
-      const finalizedCuts = this.finalizeCuts(cuts, context);
-      const result = this.createResult(finalizedCuts, context);
-      return {
-      sequence: seq,
-        result,
-        fitness: 0, // Will be calculated after stats collection
-      };
-    });
+    let population = this.initializePopulation(expanded, populationSize).map(
+      (seq) => {
+        const cuts = this.evaluateSequence(seq, context);
+        const finalizedCuts = this.finalizeCuts(cuts, context);
+        const result = this.createResult(finalizedCuts, context);
+        return {
+          sequence: seq,
+          result,
+          fitness: 0, // Will be calculated after stats collection
+        };
+      },
+    );
 
     // Collect fitness statistics for dynamic normalization
-    this.fitnessStats = this.collectFitnessStats(population.map(p => p.result));
-    
+    this.fitnessStats = this.collectFitnessStats(
+      population.map((p) => p.result),
+    );
+
     // Now calculate fitness with proper normalization (using normalized objectives)
-    population = population.map(p => ({
+    population = population.map((p) => ({
       ...p,
       fitness: this.calculateFitness(p.result, normalizedObjectives),
     }));
@@ -434,33 +469,40 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       } else {
         stagnationCounter++;
       }
-      
+
       // Track improvement from previous generation for convergence check
       const generationImprovement = Math.abs(currentBest - prevBestFitness);
       prevBestFitness = currentBest;
 
       // Elitism: keep best individuals
-      const eliteCount = Math.max(1, Math.floor(populationSize * GA_CONFIG.ELITE_RATIO));
+      const eliteCount = Math.max(
+        1,
+        Math.floor(populationSize * GA_CONFIG.ELITE_RATIO),
+      );
       const newPopulation = population.slice(0, eliteCount);
 
       // Adaptive mutation rate (increase if stagnant)
-      const adaptiveMutationRate = stagnationCounter > 5 
-        ? Math.min(mutationRate * 1.5, 0.3) 
-        : mutationRate;
+      const adaptiveMutationRate =
+        stagnationCounter > 5
+          ? Math.min(mutationRate * 1.5, 0.3)
+          : mutationRate;
 
       // Generate offspring
       let offspringAttempts = 0;
       const maxOffspringAttempts = populationSize * 3; // ✅ CRITICAL FIX: Prevent infinite loop
-      
-      while (newPopulation.length < populationSize && offspringAttempts < maxOffspringAttempts) {
+
+      while (
+        newPopulation.length < populationSize &&
+        offspringAttempts < maxOffspringAttempts
+      ) {
         offspringAttempts++;
-        
+
         const parent1 = this.tournamentSelection(population);
         const parent2 = this.tournamentSelection(population);
 
         // Ensure valid parents
         if (!parent1) {
-          this.logger.warn('Tournament selection failed to select parent1');
+          this.logger.warn("Tournament selection failed to select parent1");
           break;
         }
 
@@ -473,9 +515,10 @@ export class GeneticAlgorithm extends BaseAlgorithm {
 
         // Apply mutation (inversion for high stagnation, swap otherwise)
         if (this.random() < adaptiveMutationRate) {
-          offspring = stagnationCounter > 8 
-            ? this.inversionMutation(offspring)
-            : this.swapMutation(offspring);
+          offspring =
+            stagnationCounter > 8
+              ? this.inversionMutation(offspring)
+              : this.swapMutation(offspring);
         }
 
         // Evaluate offspring
@@ -490,34 +533,42 @@ export class GeneticAlgorithm extends BaseAlgorithm {
           fitness,
         });
       }
-      
+
       // ✅ CRITICAL: Log if max attempts reached (should never happen)
       if (offspringAttempts >= maxOffspringAttempts) {
-        this.logger.error('GA offspring generation hit max attempts - possible infinite loop prevented', {
-          generation: gen,
-          populationSize,
-          newPopulationSize: newPopulation.length,
-        });
+        this.logger.error(
+          "GA offspring generation hit max attempts - possible infinite loop prevented",
+          {
+            generation: gen,
+            populationSize,
+            newPopulationSize: newPopulation.length,
+          },
+        );
       }
 
       population = newPopulation;
 
       // Rolling fitness statistics update for adaptation
       if (gen > 0 && gen % GA_CONFIG.STATS_UPDATE_INTERVAL === 0) {
-        this.fitnessStats = this.collectFitnessStats(population.map(p => p.result));
-        
+        this.fitnessStats = this.collectFitnessStats(
+          population.map((p) => p.result),
+        );
+
         // Recalculate fitness with updated stats (using normalized objectives)
-        population = population.map(p => ({
+        population = population.map((p) => ({
           ...p,
           fitness: this.calculateFitness(p.result, normalizedObjectives),
         }));
-        
+
         // Re-sort after recalculation
         population.sort((a, b) => b.fitness - a.fitness);
-        
+
         // Synchronize bestEverFitness with new scale
-        bestEverFitness = Math.max(bestEverFitness, population[0]?.fitness ?? 0);
-        
+        bestEverFitness = Math.max(
+          bestEverFitness,
+          population[0]?.fitness ?? 0,
+        );
+
         this.logger.debug(`Updated fitness statistics at generation ${gen}`, {
           costRange: `${this.fitnessStats.costMin.toFixed(0)}-${this.fitnessStats.costMax.toFixed(0)}`,
           wasteRatioRange: `${this.fitnessStats.wasteRatioMin.toFixed(3)}-${this.fitnessStats.wasteRatioMax.toFixed(3)}`,
@@ -528,24 +579,33 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       // Check convergence (with early stopping)
       if (gen > GA_CONFIG.MIN_CONVERGENCE_GENERATION) {
         const converged = this.checkConvergence(population);
-        
+
         // Combined condition: low diversity AND minimal improvement from previous generation
-        if (converged && generationImprovement < GA_CONFIG.FITNESS_IMPROVEMENT_THRESHOLD) {
-          this.logger.debug(`GA converged at generation ${gen}/${generations}`, {
-            bestFitness: currentBest.toFixed(4),
-            generationImprovement: generationImprovement.toExponential(2),
-            cv: 'below threshold',
-          });
-        break;
+        if (
+          converged &&
+          generationImprovement < GA_CONFIG.FITNESS_IMPROVEMENT_THRESHOLD
+        ) {
+          this.logger.debug(
+            `GA converged at generation ${gen}/${generations}`,
+            {
+              bestFitness: currentBest.toFixed(4),
+              generationImprovement: generationImprovement.toExponential(2),
+              cv: "below threshold",
+            },
+          );
+          break;
         }
-        
+
         // Stagnation check with adaptive threshold
         const stagnationThreshold = Math.min(15, Math.floor(generations * 0.2));
         if (stagnationCounter > stagnationThreshold) {
-          this.logger.debug(`GA stopped due to stagnation at generation ${gen}`, {
-            stagnationGenerations: stagnationCounter,
-            threshold: stagnationThreshold,
-          });
+          this.logger.debug(
+            `GA stopped due to stagnation at generation ${gen}`,
+            {
+              stagnationGenerations: stagnationCounter,
+              threshold: stagnationThreshold,
+            },
+          );
           break;
         }
       }
@@ -553,18 +613,19 @@ export class GeneticAlgorithm extends BaseAlgorithm {
 
     // Best solution is already at index 0 (sorted)
     const best = population[0];
-    
+
     if (!best) {
-      throw new Error('GA failed to produce any valid solution');
+      throw new Error("GA failed to produce any valid solution");
     }
 
-    this.logger.info('CPU genetic algorithm completed', {
+    this.logger.info("CPU genetic algorithm completed", {
       efficiency: best.result.efficiency.toFixed(2),
       cuts: best.result.cuts.length,
       executionTime: this.getExecutionTime(context),
       effectiveComplexity: `O(${populationSize} × ${expanded.length}² × ${finalGeneration + 1})`,
       actualGenerations: finalGeneration + 1,
-      convergenceReason: finalGeneration + 1 < generations ? 'early_stop' : 'max_generations'
+      convergenceReason:
+        finalGeneration + 1 < generations ? "early_stop" : "max_generations",
     });
 
     return best.result;
@@ -573,27 +634,30 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   /**
    * Initialize population with diverse sequences for better mixed-item cutting
    */
-  protected initializePopulation(items: OptimizationItem[], size: number): OptimizationItem[][] {
+  protected initializePopulation(
+    items: OptimizationItem[],
+    size: number,
+  ): OptimizationItem[][] {
     const population: OptimizationItem[][] = [];
-    
+
     // Strategy 1: Sorted by length (baseline)
     population.push([...items].sort((a, b) => b.length - a.length));
-    
+
     // Strategy 2: Grouped by profileType, then shuffled
     const grouped = this.groupByProfile(items);
     population.push(this.shuffleGroups(grouped));
-    
+
     // Strategy 3: Round-robin mixing (cycle through different lengths)
     population.push(this.roundRobinMix(items));
-    
+
     // Strategy 4: Greedy packing (should get close to theoretical minimum)
     population.push(this.greedyPackingStrategy(items));
-    
+
     // Strategy 5-N: Random shuffles with clustering
     for (let i = 4; i < size; i++) {
       population.push(this.clusterShuffle(items, this.random()));
     }
-    
+
     return population;
   }
 
@@ -614,10 +678,12 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   /**
    * Group items by profile type
    */
-  private groupByProfile(items: OptimizationItem[]): Map<string, OptimizationItem[]> {
+  private groupByProfile(
+    items: OptimizationItem[],
+  ): Map<string, OptimizationItem[]> {
     const grouped = new Map<string, OptimizationItem[]>();
-    items.forEach(item => {
-      const profileType = item.profileType || 'Unknown';
+    items.forEach((item) => {
+      const profileType = item.profileType || "Unknown";
       if (!grouped.has(profileType)) {
         grouped.set(profileType, []);
       }
@@ -629,12 +695,14 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   /**
    * Shuffle groups while maintaining group integrity
    */
-  private shuffleGroups(grouped: Map<string, OptimizationItem[]>): OptimizationItem[] {
+  private shuffleGroups(
+    grouped: Map<string, OptimizationItem[]>,
+  ): OptimizationItem[] {
     const result: OptimizationItem[] = [];
     const groups = Array.from(grouped.values());
-    
+
     // Shuffle each group internally
-    groups.forEach(group => {
+    groups.forEach((group) => {
       for (let i = group.length - 1; i > 0; i--) {
         const j = Math.floor(this.random() * (i + 1));
         if (group[i] && group[j]) {
@@ -642,17 +710,17 @@ export class GeneticAlgorithm extends BaseAlgorithm {
         }
       }
     });
-    
+
     // Interleave groups round-robin style
-    const maxGroupSize = Math.max(...groups.map(g => g.length));
+    const maxGroupSize = Math.max(...groups.map((g) => g.length));
     for (let i = 0; i < maxGroupSize; i++) {
-      groups.forEach(group => {
+      groups.forEach((group) => {
         if (group[i]) {
           result.push(group[i]!);
         }
       });
     }
-    
+
     return result;
   }
 
@@ -662,43 +730,46 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   private roundRobinMix(items: OptimizationItem[]): OptimizationItem[] {
     // Group by unique lengths
     const byLength = new Map<number, OptimizationItem[]>();
-    items.forEach(item => {
+    items.forEach((item) => {
       if (!byLength.has(item.length)) {
         byLength.set(item.length, []);
       }
       byLength.get(item.length)!.push(item);
     });
-    
+
     // Mix round-robin style
     const result: OptimizationItem[] = [];
     const queues = Array.from(byLength.values());
-    
-    while (queues.some(q => q.length > 0)) {
+
+    while (queues.some((q) => q.length > 0)) {
       for (const queue of queues) {
         if (queue.length > 0) {
           result.push(queue.shift()!);
         }
       }
     }
-    
+
     return result;
   }
 
   /**
    * Shuffle with clustering: group similar lengths, then shuffle groups
    */
-  private clusterShuffle(items: OptimizationItem[], seed: number): OptimizationItem[] {
+  private clusterShuffle(
+    items: OptimizationItem[],
+    seed: number,
+  ): OptimizationItem[] {
     // Shuffle with clustering: group similar lengths, then shuffle groups
     const sorted = [...items].sort((a, b) => b.length - a.length);
     const clusterSize = Math.max(2, Math.floor(items.length / 10));
     const result: OptimizationItem[] = [];
-    
+
     for (let i = 0; i < sorted.length; i += clusterSize) {
       const cluster = sorted.slice(i, i + clusterSize);
       this.shuffleArray(cluster, seed + i);
       result.push(...cluster);
     }
-    
+
     return result;
   }
 
@@ -712,7 +783,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       currentSeed = (currentSeed * 9301 + 49297) % 233280;
       return currentSeed / 233280;
     };
-    
+
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(seededRandom() * (i + 1));
       if (array[i] && array[j]) {
@@ -725,12 +796,15 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    * Evaluate sequence to create cuts with DP-optimized approach
    * Uses Dynamic Programming for optimal cutting patterns when kerf=0
    */
-  protected evaluateSequence(sequence: OptimizationItem[], context: OptimizationContext): Cut[] {
+  protected evaluateSequence(
+    sequence: OptimizationItem[],
+    context: OptimizationContext,
+  ): Cut[] {
     // If kerf is 0, use DP optimization for better results
     if (context.constraints.kerfWidth === 0) {
       return this.evaluateSequenceWithDP(sequence, context);
     }
-    
+
     // Otherwise use the existing look-ahead approach
     return this.evaluateSequenceWithLookAhead(sequence, context);
   }
@@ -739,54 +813,77 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    * DP-optimized sequence evaluation (kerf=0)
    * Based on the reference implementation for optimal cutting patterns
    */
-  private evaluateSequenceWithDP(sequence: OptimizationItem[], context: OptimizationContext): Cut[] {
+  private evaluateSequenceWithDP(
+    sequence: OptimizationItem[],
+    context: OptimizationContext,
+  ): Cut[] {
     const cuts: Cut[] = [];
     const constraints = context.constraints;
-    
+
     // Group items by length for pattern generation
     const itemGroups = this.groupItemsByLength(sequence);
     const stockLengths = context.stockLengths;
-    
+
     // CRITICAL: Check problem size - pattern-based approach has combinatorial explosion
     const uniqueLengths = itemGroups.length;
     const totalDemand = itemGroups.reduce((sum, g) => sum + g.quantity, 0);
-    
+
     // STRATEGY: Large problems use look-ahead (greedy) for guaranteed low waste
     if (uniqueLengths > 15 || totalDemand > 1000) {
-      this.logger.info(`[GeneticAlgorithm] Large problem (${uniqueLengths} lengths, ${totalDemand} items) - using look-ahead`);
+      this.logger.info(
+        `[GeneticAlgorithm] Large problem (${uniqueLengths} lengths, ${totalDemand} items) - using look-ahead`,
+      );
       return this.evaluateSequenceWithLookAhead(sequence, context);
     }
-    
+
     this.logger.debug(`[GeneticAlgorithm] 🧮 DP evaluation starting:`, {
       itemGroups: itemGroups.length,
       stockLengths: stockLengths.length,
-      kerfWidth: constraints.kerfWidth
+      kerfWidth: constraints.kerfWidth,
     });
-    
+
     // Generate all possible cutting patterns for each stock length
-    const patterns = this.generateCuttingPatterns(itemGroups, [...stockLengths], constraints);
-    
+    const patterns = this.generateCuttingPatterns(
+      itemGroups,
+      [...stockLengths],
+      constraints,
+    );
+
     if (patterns.length === 0) {
-      this.logger.warn('No valid patterns found, falling back to greedy approach');
+      this.logger.warn(
+        "No valid patterns found, falling back to greedy approach",
+      );
       return this.evaluateSequenceWithLookAhead(sequence, context);
     }
-    
+
     // CRITICAL: Try pattern-based approach, fall back to look-ahead if it fails
     try {
       // Use DP to find optimal pattern combination
-      const optimalSolution = this.findOptimalPatternCombination(patterns, itemGroups, constraints);
-      
+      const optimalSolution = this.findOptimalPatternCombination(
+        patterns,
+        itemGroups,
+        constraints,
+      );
+
       // Convert solution to cuts with validation
-      return this.convertSolutionToCuts(optimalSolution, [...stockLengths], constraints, itemGroups);
+      return this.convertSolutionToCuts(
+        optimalSolution,
+        [...stockLengths],
+        constraints,
+        itemGroups,
+      );
     } catch (error) {
       // Pattern-based approach failed (shortage, maxStates limit, etc.)
       // Fall back to look-ahead (greedy) which ALWAYS guarantees a solution
-      this.logger.warn('[GeneticAlgorithm] Pattern-based approach failed, falling back to look-ahead:', {
-        error: error instanceof Error ? error.message : String(error),
-        patternsGenerated: patterns.length,
-        uniqueLengths: itemGroups.length
-      });
-      
+      this.logger.warn(
+        "[GeneticAlgorithm] Pattern-based approach failed, falling back to look-ahead:",
+        {
+          error: error instanceof Error ? error.message : String(error),
+          patternsGenerated: patterns.length,
+          uniqueLengths: itemGroups.length,
+        },
+      );
+
       return this.evaluateSequenceWithLookAhead(sequence, context);
     }
   }
@@ -794,92 +891,115 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   /**
    * Original look-ahead evaluation (kerf > 0)
    */
-  private evaluateSequenceWithLookAhead(sequence: OptimizationItem[], context: OptimizationContext): Cut[] {
+  private evaluateSequenceWithLookAhead(
+    sequence: OptimizationItem[],
+    context: OptimizationContext,
+  ): Cut[] {
     const cuts: Cut[] = [];
     let stockIdx = 0;
     const constraints = context.constraints;
     const usedItems = new Set<number>(); // Track used item indices
-    
+
     this.logger.debug(`[GeneticAlgorithm] 🚀 Starting sequence evaluation:`, {
       totalItems: sequence.length,
-      sequenceLengths: sequence.map(item => item.length)
+      sequenceLengths: sequence.map((item) => item.length),
     });
-    
+
     for (let i = 0; i < sequence.length; i++) {
       if (usedItems.has(i)) {
-        this.logger.debug(`[GeneticAlgorithm] ⏭️ Skipping already used item at index ${i}`);
+        this.logger.debug(
+          `[GeneticAlgorithm] ⏭️ Skipping already used item at index ${i}`,
+        );
         continue; // Skip already used items
       }
-      
+
       const item = sequence[i];
       let placed = false;
-      
-      this.logger.debug(`[GeneticAlgorithm] 🔍 Processing item ${i}/${sequence.length}: ${item.length}mm`);
-      
+
+      this.logger.debug(
+        `[GeneticAlgorithm] 🔍 Processing item ${i}/${sequence.length}: ${item.length}mm`,
+      );
+
       // Try to place in existing cuts
       for (let cutIdx = 0; cutIdx < cuts.length && !placed; cutIdx++) {
         const cut = cuts[cutIdx];
         if (!cut) continue;
-        
+
         const kerfNeeded = StockCalculator.calculateKerfNeeded(
-          cut.segmentCount, 
-          constraints.kerfWidth
+          cut.segmentCount,
+          constraints.kerfWidth,
         );
-        
-        if (StockCalculator.canFitItem(
-          item.length, 
-          cut.remainingLength, 
-          cut.segmentCount, 
-          constraints.kerfWidth
-        )) {
+
+        if (
+          StockCalculator.canFitItem(
+            item.length,
+            cut.remainingLength,
+            cut.segmentCount,
+            constraints.kerfWidth,
+          )
+        ) {
           cuts[cutIdx] = this.addSegmentToCut(cut, item, kerfNeeded, context);
           usedItems.add(i);
           placed = true;
-          
+
           // Look-ahead: try to fill remaining space
           cuts[cutIdx] = this.fillRemainingSpace(
-            cuts[cutIdx], 
-            sequence, 
-            i + 1, 
-            usedItems, 
-            context
+            cuts[cutIdx],
+            sequence,
+            i + 1,
+            usedItems,
+            context,
           );
         }
       }
-      
+
       // Create new stock if not placed
       if (!placed) {
-        this.logger.debug(`[GeneticAlgorithm] 🆕 Creating new stock for item ${i}: ${item.length}mm`);
-        const selectedLength = this.selectOptimalStockLength(item, cuts, context);
-        const newCut = this.createNewStock(selectedLength, stockIdx, constraints);
+        this.logger.debug(
+          `[GeneticAlgorithm] 🆕 Creating new stock for item ${i}: ${item.length}mm`,
+        );
+        const selectedLength = this.selectOptimalStockLength(
+          item,
+          cuts,
+          context,
+        );
+        const newCut = this.createNewStock(
+          selectedLength,
+          stockIdx,
+          constraints,
+        );
         let updatedCut = this.addSegmentToCut(newCut, item, 0, context);
         usedItems.add(i);
-        
+
         // Look-ahead: try to fill remaining space
         updatedCut = this.fillRemainingSpace(
-          updatedCut, 
-          sequence, 
-          i + 1, 
-          usedItems, 
-          context
+          updatedCut,
+          sequence,
+          i + 1,
+          usedItems,
+          context,
         );
-        
+
         cuts.push(updatedCut);
         stockIdx++;
-        this.logger.debug(`[GeneticAlgorithm] ✅ Created new cut with ${updatedCut.segmentCount} segments`);
+        this.logger.debug(
+          `[GeneticAlgorithm] ✅ Created new cut with ${updatedCut.segmentCount} segments`,
+        );
       } else {
-        this.logger.debug(`[GeneticAlgorithm] ✅ Placed item ${i} in existing cut`);
+        this.logger.debug(
+          `[GeneticAlgorithm] ✅ Placed item ${i} in existing cut`,
+        );
       }
     }
-    
+
     this.logger.debug(`[GeneticAlgorithm] ✅ Sequence evaluation completed:`, {
       totalItems: sequence.length,
       usedItems: usedItems.size,
       skippedItems: sequence.length - usedItems.size,
       totalCuts: cuts.length,
-      totalSegments: cuts.reduce((sum, cut) => sum + cut.segmentCount, 0)
+      totalSegments: cuts.reduce((sum, cut) => sum + cut.segmentCount, 0),
     });
-    
+
     return cuts;
   }
 
@@ -887,69 +1007,75 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    * Select optimal stock length for a new cut
    */
   private selectOptimalStockLength(
-    item: OptimizationItem, 
-    existingCuts: Cut[], 
-    context: OptimizationContext
+    item: OptimizationItem,
+    existingCuts: Cut[],
+    context: OptimizationContext,
   ): number {
     const constraints = context.constraints;
-    
+
     // Multi-stock optimization with waste minimization priority
-    const stockLengthUsage = context.stockLengths.map(length => ({
+    const stockLengthUsage = context.stockLengths.map((length) => ({
       length,
-      count: existingCuts.filter(cut => cut.stockLength === length).length,
-      totalWaste: existingCuts.filter(cut => cut.stockLength === length).reduce((sum, cut) => sum + cut.remainingLength, 0),
-      avgWaste: existingCuts.filter(cut => cut.stockLength === length).length > 0 
-        ? existingCuts.filter(cut => cut.stockLength === length).reduce((sum, cut) => sum + cut.remainingLength, 0) / 
-          existingCuts.filter(cut => cut.stockLength === length).length 
-        : 0
+      count: existingCuts.filter((cut) => cut.stockLength === length).length,
+      totalWaste: existingCuts
+        .filter((cut) => cut.stockLength === length)
+        .reduce((sum, cut) => sum + cut.remainingLength, 0),
+      avgWaste:
+        existingCuts.filter((cut) => cut.stockLength === length).length > 0
+          ? existingCuts
+              .filter((cut) => cut.stockLength === length)
+              .reduce((sum, cut) => sum + cut.remainingLength, 0) /
+            existingCuts.filter((cut) => cut.stockLength === length).length
+          : 0,
     }));
-    
+
     // Calculate waste efficiency for each stock length if we add this item
-    const stockEfficiency = context.stockLengths.map(length => {
+    const stockEfficiency = context.stockLengths.map((length) => {
       const maxPieces = StockCalculator.calculateMaxPiecesOnBar(
-        item.length, 
-        length, 
-        constraints.kerfWidth, 
-        constraints.startSafety, 
-        constraints.endSafety
+        item.length,
+        length,
+        constraints.kerfWidth,
+        constraints.startSafety,
+        constraints.endSafety,
       );
-      
-      if (maxPieces === 0) return { length, efficiency: 0, wastePerPiece: Infinity };
-      
-      const usedLength = constraints.startSafety + 
-        item.length + 
-        constraints.endSafety;
+
+      if (maxPieces === 0)
+        return { length, efficiency: 0, wastePerPiece: Infinity };
+
+      const usedLength =
+        constraints.startSafety + item.length + constraints.endSafety;
       const remainder = length - usedLength;
       const wastePerPiece = remainder;
       const efficiency = (usedLength / length) * 100;
-      
+
       return { length, efficiency, wastePerPiece };
     });
-    
+
     // Filter to only viable stock lengths (can fit the item)
-    const viableStocks = stockEfficiency.filter(s => s.efficiency > 0);
-    
+    const viableStocks = stockEfficiency.filter((s) => s.efficiency > 0);
+
     if (viableStocks.length === 0) {
       // Fallback to largest stock if no viable option
       return Math.max(...context.stockLengths);
     }
-    
+
     // Multi-criteria selection: waste minimization + usage balance
-    const usageThreshold = Math.min(...stockLengthUsage.map(u => u.count)) + 1;
-    const underusedStocks = viableStocks.filter(s => {
-      const usage = stockLengthUsage.find(u => u.length === s.length);
+    const usageThreshold =
+      Math.min(...stockLengthUsage.map((u) => u.count)) + 1;
+    const underusedStocks = viableStocks.filter((s) => {
+      const usage = stockLengthUsage.find((u) => u.length === s.length);
       return usage && usage.count < usageThreshold;
     });
-    
+
     if (underusedStocks.length > 0) {
       // Prefer underused stocks with minimal waste
-      return underusedStocks.reduce((best, current) => 
-        current.wastePerPiece < best.wastePerPiece ? current : best
+      return underusedStocks.reduce((best, current) =>
+        current.wastePerPiece < best.wastePerPiece ? current : best,
       ).length;
     } else {
       // All stocks equally used, prioritize waste minimization
-      return viableStocks.reduce((best, current) => 
-        current.wastePerPiece < best.wastePerPiece ? current : best
+      return viableStocks.reduce((best, current) =>
+        current.wastePerPiece < best.wastePerPiece ? current : best,
       ).length;
     }
   }
@@ -959,7 +1085,9 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    * Prevents baseline-dependent distortion across different problem scales
    * Includes waste ratio normalization for consistency
    */
-  private collectFitnessStats(results: ReadonlyArray<AdvancedOptimizationResult>): FitnessStats {
+  private collectFitnessStats(
+    results: ReadonlyArray<AdvancedOptimizationResult>,
+  ): FitnessStats {
     if (results.length === 0) {
       return {
         costMin: 0,
@@ -973,12 +1101,12 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       };
     }
 
-    const costs = results.map(r => r.totalCost);
-    const times = results.map(r => r.totalTime ?? 0);
-    const wastes = results.map(r => r.totalWaste);
-    
+    const costs = results.map((r) => r.totalCost);
+    const times = results.map((r) => r.totalTime ?? 0);
+    const wastes = results.map((r) => r.totalWaste);
+
     // Calculate waste ratios for normalization
-    const wasteRatios = results.map(r => {
+    const wasteRatios = results.map((r) => {
       const totalStock = r.cuts.reduce((sum, cut) => sum + cut.stockLength, 0);
       return totalStock > 0 ? r.totalWaste / totalStock : 0;
     });
@@ -1001,14 +1129,14 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    */
   private normalize01(value: number, min: number, max: number): number {
     const range = max - min;
-    
+
     // ✅ FIXED: Population converged - maintain relative order using raw values
     if (range < 1e-6) {
       const mid = (min + max) / 2;
       if (mid < 1e-9) return 0.5;
-      return value / mid;  // Return ratio to mean
+      return value / mid; // Return ratio to mean
     }
-    
+
     const normalized = (value - min) / range;
     return Math.max(0, Math.min(1, normalized));
   }
@@ -1017,26 +1145,28 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    * Normalize objective weights to sum to 1.0
    * Logs warning if weights are significantly off
    */
-  private normalizeWeights(objectives: ReadonlyArray<OptimizationObjective>): ReadonlyArray<OptimizationObjective> {
+  private normalizeWeights(
+    objectives: ReadonlyArray<OptimizationObjective>,
+  ): ReadonlyArray<OptimizationObjective> {
     const totalWeight = objectives.reduce((sum, obj) => sum + obj.weight, 0);
-    
+
     if (totalWeight <= 0) {
-      this.logger.warn('Invalid objective weights (sum ≤ 0), using defaults');
+      this.logger.warn("Invalid objective weights (sum ≤ 0), using defaults");
       return DEFAULT_OBJECTIVES;
     }
-    
+
     // If weights already normalized, return as-is
     if (Math.abs(totalWeight - 1.0) < 0.001) {
       return objectives;
     }
-    
+
     // Normalize and log warning
-    this.logger.warn('Objective weights not normalized, auto-normalizing', {
+    this.logger.warn("Objective weights not normalized, auto-normalizing", {
       originalSum: totalWeight.toFixed(3),
-      objectives: objectives.map(o => ({ type: o.type, weight: o.weight })),
+      objectives: objectives.map((o) => ({ type: o.type, weight: o.weight })),
     });
-    
-    return objectives.map(obj => ({
+
+    return objectives.map((obj) => ({
       ...obj,
       weight: obj.weight / totalWeight,
     }));
@@ -1047,13 +1177,16 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    * Uses dynamic min-max normalization with fallback to baseline
    */
   private calculateFitness(
-    result: AdvancedOptimizationResult, 
-    objectives: ReadonlyArray<OptimizationObjective> = DEFAULT_OBJECTIVES
+    result: AdvancedOptimizationResult,
+    objectives: ReadonlyArray<OptimizationObjective> = DEFAULT_OBJECTIVES,
   ): number {
     // Normalize weights once per call
     const normalizedObjectives = this.normalizeWeights(objectives);
-    const totalStockLength = result.cuts.reduce((sum, cut) => sum + cut.stockLength, 0);
-    
+    const totalStockLength = result.cuts.reduce(
+      (sum, cut) => sum + cut.stockLength,
+      0,
+    );
+
     // Avoid division by zero
     if (totalStockLength === 0) return 0;
 
@@ -1061,25 +1194,38 @@ export class GeneticAlgorithm extends BaseAlgorithm {
     const wasteRatio = result.totalWaste / totalStockLength;
 
     // Use dynamic normalization if stats available, otherwise fallback to baseline
-    const costScore = stats 
+    const costScore = stats
       ? 1 - this.normalize01(result.totalCost, stats.costMin, stats.costMax)
-      : Math.max(0, 1 - (result.totalCost / (result.totalCost + FITNESS_NORMALIZATION.COST_BASELINE)));
-    
+      : Math.max(
+          0,
+          1 -
+            result.totalCost /
+              (result.totalCost + FITNESS_NORMALIZATION.COST_BASELINE),
+        );
+
     const timeScore = stats
-      ? 1 - this.normalize01(result.totalTime ?? 0, stats.timeMin, stats.timeMax)
-      : Math.max(0, 1 - ((result.totalTime ?? 0) / ((result.totalTime ?? 0) + FITNESS_NORMALIZATION.TIME_BASELINE_MIN)));
-    
+      ? 1 -
+        this.normalize01(result.totalTime ?? 0, stats.timeMin, stats.timeMax)
+      : Math.max(
+          0,
+          1 -
+            (result.totalTime ?? 0) /
+              ((result.totalTime ?? 0) +
+                FITNESS_NORMALIZATION.TIME_BASELINE_MIN),
+        );
+
     // Dynamic waste ratio normalization when stats available
     const wasteScore = stats
-      ? 1 - this.normalize01(wasteRatio, stats.wasteRatioMin, stats.wasteRatioMax)
+      ? 1 -
+        this.normalize01(wasteRatio, stats.wasteRatioMin, stats.wasteRatioMax)
       : Math.max(0, 1 - wasteRatio);
 
     // Normalize each objective to [0, 1] range
-    const scores: Record<OptimizationObjective['type'], number> = {
-      'maximize-efficiency': result.efficiency / 100,
-      'minimize-waste': wasteScore,
-      'minimize-cost': costScore,
-      'minimize-time': timeScore,
+    const scores: Record<OptimizationObjective["type"], number> = {
+      "maximize-efficiency": result.efficiency / 100,
+      "minimize-waste": wasteScore,
+      "minimize-cost": costScore,
+      "minimize-time": timeScore,
     };
 
     // Weighted sum of objectives (using normalized weights)
@@ -1091,13 +1237,17 @@ export class GeneticAlgorithm extends BaseAlgorithm {
     // HEAVY PENALTY for exceeding theoretical minimum stock count
     const stockCount = result.cuts.length;
     if (stockCount > this.targetStockCount) {
-      const stockPenalty = Math.pow(stockCount - this.targetStockCount, 2) * 0.1; // Quadratic penalty
+      const stockPenalty =
+        Math.pow(stockCount - this.targetStockCount, 2) * 0.1; // Quadratic penalty
       fitness = Math.max(0, fitness - stockPenalty);
-      
-      this.logger.debug(`[Genetic] Stock count penalty applied: ${stockCount} cuts vs ${this.targetStockCount} target`, {
-        penalty: stockPenalty,
-        adjustedFitness: fitness
-      });
+
+      this.logger.debug(
+        `[Genetic] Stock count penalty applied: ${stockCount} cuts vs ${this.targetStockCount} target`,
+        {
+          penalty: stockPenalty,
+          adjustedFitness: fitness,
+        },
+      );
     }
 
     // Clamp to [0, 1]
@@ -1108,12 +1258,18 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    * Get fitness weights for WebGPU
    * Returns actual weights from objectives, not just presence flags
    */
-  private getFitnessWeights(objectives: ReadonlyArray<OptimizationObjective>): readonly [number, number, number, number] {
-    const wasteWeight = objectives.find(obj => obj.type === 'minimize-waste')?.weight ?? 0;
-    const costWeight = objectives.find(obj => obj.type === 'minimize-cost')?.weight ?? 0;
-    const efficiencyWeight = objectives.find(obj => obj.type === 'maximize-efficiency')?.weight ?? 0;
-    const timeWeight = objectives.find(obj => obj.type === 'minimize-time')?.weight ?? 0;
-    
+  private getFitnessWeights(
+    objectives: ReadonlyArray<OptimizationObjective>,
+  ): readonly [number, number, number, number] {
+    const wasteWeight =
+      objectives.find((obj) => obj.type === "minimize-waste")?.weight ?? 0;
+    const costWeight =
+      objectives.find((obj) => obj.type === "minimize-cost")?.weight ?? 0;
+    const efficiencyWeight =
+      objectives.find((obj) => obj.type === "maximize-efficiency")?.weight ?? 0;
+    const timeWeight =
+      objectives.find((obj) => obj.type === "minimize-time")?.weight ?? 0;
+
     return [wasteWeight, costWeight, efficiencyWeight, timeWeight] as const;
   }
 
@@ -1122,32 +1278,35 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    * Uses unique sampling to avoid selecting same individual multiple times
    */
   private tournamentSelection(
-    population: ReadonlyArray<{ 
-      readonly sequence: OptimizationItem[]; 
-      readonly result: AdvancedOptimizationResult; 
-      readonly fitness: number 
-    }>
-  ): typeof population[0] | undefined {
+    population: ReadonlyArray<{
+      readonly sequence: OptimizationItem[];
+      readonly result: AdvancedOptimizationResult;
+      readonly fitness: number;
+    }>,
+  ): (typeof population)[0] | undefined {
     if (population.length === 0) return undefined;
     if (population.length === 1) return population[0];
 
-    const tournamentSize = Math.min(GA_CONFIG.TOURNAMENT_SIZE, population.length);
-    
+    const tournamentSize = Math.min(
+      GA_CONFIG.TOURNAMENT_SIZE,
+      population.length,
+    );
+
     // Sample unique indices to avoid duplicate competitors
     const selectedIndices = new Set<number>();
     let attempts = 0;
     const maxAttempts = tournamentSize * 10; // ✅ CRITICAL FIX: Prevent infinite loop
-    
+
     while (selectedIndices.size < tournamentSize && attempts < maxAttempts) {
       attempts++;
       selectedIndices.add(Math.floor(this.random() * population.length));
     }
-    
+
     // Find best among unique competitors
     const indices = Array.from(selectedIndices);
     const firstIdx = indices[0];
     if (firstIdx === undefined) return undefined;
-    
+
     let best = population[firstIdx];
     for (const idx of indices) {
       const competitor = population[idx];
@@ -1167,47 +1326,47 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   private initializeItemKeys(items: ReadonlyArray<OptimizationItem>): void {
     this.itemKeyCounter = 0;
     this.itemKeyCache = new WeakMap(); // Reset cache
-    
+
     for (const item of items) {
-      const base = item.workOrderId?.trim() 
-        ? item.workOrderId 
+      const base = item.workOrderId?.trim()
+        ? item.workOrderId
         : `${item.profileType}_${item.length}`;
-      
+
       // Counter ensures uniqueness even for identical properties
       const key = `${base}#${this.itemKeyCounter++}`;
       this.itemKeyCache.set(item, key);
     }
-    
-    this.logger.debug('Initialized stable item keys', { 
+
+    this.logger.debug("Initialized stable item keys", {
       totalItems: items.length,
-      uniqueKeys: this.itemKeyCounter 
+      uniqueKeys: this.itemKeyCounter,
     });
   }
 
   /**
    * Get stable deterministic key for item tracking in crossover
    * Keys must be pre-initialized via initializeItemKeys()
-   * 
+   *
    * ⚠️ ZERO RNG CONSUMPTION - preserves RNG stream for mutations
    */
   private getStableItemKey(item: OptimizationItem): string {
     const cached = this.itemKeyCache.get(item);
-    
+
     if (cached) {
       return cached;
     }
-    
+
     // Fallback: should never happen if initializeItemKeys() was called
-    this.logger.warn('Item key not pre-initialized, generating on-demand', {
+    this.logger.warn("Item key not pre-initialized, generating on-demand", {
       profileType: item.profileType,
       length: item.length,
     });
-    
-    const base = item.workOrderId?.trim() 
-      ? item.workOrderId 
+
+    const base = item.workOrderId?.trim()
+      ? item.workOrderId
       : `${item.profileType}_${item.length}`;
     const key = `${base}#${this.itemKeyCounter++}`;
-    
+
     this.itemKeyCache.set(item, key);
     return key;
   }
@@ -1215,16 +1374,21 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   /**
    * Order crossover (preserves sequence)
    * Uses stable deterministic keys to prevent duplicate/loss issues
-   * 
+   *
    * @see getStableItemKey for key generation strategy
    */
-  protected orderCrossover(parent1: OptimizationItem[], parent2: OptimizationItem[]): OptimizationItem[] {
+  protected orderCrossover(
+    parent1: OptimizationItem[],
+    parent2: OptimizationItem[],
+  ): OptimizationItem[] {
     const size = parent1.length;
     const start = Math.floor(this.random() * size);
     const end = Math.floor(this.random() * (size - start)) + start;
 
     // Type-safe array with explicit null handling
-    const offspring: Array<OptimizationItem | null> = new Array(size).fill(null);
+    const offspring: Array<OptimizationItem | null> = new Array(size).fill(
+      null,
+    );
     const usedKeys = new Set<string>();
 
     // Copy segment from parent1
@@ -1252,24 +1416,29 @@ export class GeneticAlgorithm extends BaseAlgorithm {
     }
 
     // Filter nulls with type safety
-    let result = offspring.filter((item): item is OptimizationItem => item !== null);
-    
+    const result = offspring.filter(
+      (item): item is OptimizationItem => item !== null,
+    );
+
     // Recovery: fill missing items from parent1 (should never happen with correct keys)
     if (result.length !== size) {
       const targetSize = size;
       let recoveredCount = 0;
-      
-      this.logger.warn('Order crossover produced incomplete offspring, recovering', {
-        expected: size,
-        actual: result.length,
-        parent1Length: parent1.length,
-        parent2Length: parent2.length,
-        lostItems: size - result.length,
-        usedKeysCount: usedKeys.size,
-      });
-      
+
+      this.logger.warn(
+        "Order crossover produced incomplete offspring, recovering",
+        {
+          expected: size,
+          actual: result.length,
+          parent1Length: parent1.length,
+          parent2Length: parent2.length,
+          lostItems: size - result.length,
+          usedKeysCount: usedKeys.size,
+        },
+      );
+
       // Recovery strategy: add missing items from parent1
-      const usedSet = new Set(result.map(it => this.getStableItemKey(it)));
+      const usedSet = new Set(result.map((it) => this.getStableItemKey(it)));
       for (const item of parent1) {
         if (result.length >= targetSize) break;
         const key = this.getStableItemKey(item);
@@ -1279,21 +1448,24 @@ export class GeneticAlgorithm extends BaseAlgorithm {
           recoveredCount++;
         }
       }
-      
-      this.logger.debug('Recovery completed', { 
+
+      this.logger.debug("Recovery completed", {
         finalSize: result.length,
         recovered: recoveredCount,
       });
-      
+
       // Alert: This should NEVER happen in production with correct key implementation
       if (recoveredCount > 0) {
-        this.logger.error('CRITICAL: Order crossover recovery triggered - key collision suspected!', {
-          recoveredCount,
-          totalKeys: this.itemKeyCounter,
-        });
+        this.logger.error(
+          "CRITICAL: Order crossover recovery triggered - key collision suspected!",
+          {
+            recoveredCount,
+            totalKeys: this.itemKeyCounter,
+          },
+        );
       }
     }
-    
+
     return result;
   }
 
@@ -1301,7 +1473,9 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    * Swap mutation with safety checks
    * Standard mutation operator for local search
    */
-  protected swapMutation(sequence: ReadonlyArray<OptimizationItem>): OptimizationItem[] {
+  protected swapMutation(
+    sequence: ReadonlyArray<OptimizationItem>,
+  ): OptimizationItem[] {
     if (sequence.length < 2) return [...sequence];
 
     const mutated = [...sequence];
@@ -1328,7 +1502,9 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    * Reverses a random segment to escape local optima
    * More disruptive than swap, used when stagnant
    */
-  private inversionMutation(sequence: ReadonlyArray<OptimizationItem>): OptimizationItem[] {
+  private inversionMutation(
+    sequence: ReadonlyArray<OptimizationItem>,
+  ): OptimizationItem[] {
     if (sequence.length < 3) return [...sequence];
 
     const a = Math.floor(this.random() * sequence.length);
@@ -1350,23 +1526,25 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    * Scale-independent measure of population diversity
    */
   private checkConvergence(
-    population: ReadonlyArray<{ readonly fitness: number }>
+    population: ReadonlyArray<{ readonly fitness: number }>,
   ): boolean {
     if (population.length < 2) return false;
 
-    const fitnesses = population.map(p => p.fitness);
+    const fitnesses = population.map((p) => p.fitness);
     const mean = fitnesses.reduce((a, b) => a + b, 0) / fitnesses.length;
-    
+
     // Avoid division by zero
     if (mean <= 0) return true;
-    
-    const variance = fitnesses.reduce((sum, f) => sum + Math.pow(f - mean, 2), 0) / fitnesses.length;
+
+    const variance =
+      fitnesses.reduce((sum, f) => sum + Math.pow(f - mean, 2), 0) /
+      fitnesses.length;
     const stdDev = Math.sqrt(variance);
-    
+
     // Coefficient of Variation (CV) = std / mean
     // More robust than fixed variance threshold
     const cv = stdDev / mean;
-    
+
     // Converged if diversity drops below threshold
     return cv < GA_CONFIG.CONVERGENCE_CV_THRESHOLD;
   }
@@ -1382,7 +1560,11 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   /**
    * Create new stock with initialized properties
    */
-  private createNewStock(stockLength: number, index: number, constraints: OptimizationContext['constraints']): Cut {
+  private createNewStock(
+    stockLength: number,
+    index: number,
+    constraints: OptimizationContext["constraints"],
+  ): Cut {
     return {
       id: this.generateCutId(),
       cuttingPlanId: `genetic-plan-${index}`,
@@ -1392,7 +1574,8 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       segments: [],
       segmentCount: 0,
       usedLength: constraints.startSafety,
-      remainingLength: stockLength - constraints.startSafety - constraints.endSafety,
+      remainingLength:
+        stockLength - constraints.startSafety - constraints.endSafety,
       wasteCategory: WasteCategory.MINIMAL,
       isReclaimable: false,
       estimatedCuttingTime: 0,
@@ -1400,14 +1583,19 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       kerfLoss: 0,
       safetyMargin: constraints.startSafety + constraints.endSafety,
       toleranceCheck: true,
-      sequence: index
+      sequence: index,
     };
   }
 
   /**
    * Add segment to existing cut with cost calculation
    */
-  private addSegmentToCut(cut: Cut, item: OptimizationItem, kerfNeeded: number, context: OptimizationContext): Cut {
+  private addSegmentToCut(
+    cut: Cut,
+    item: OptimizationItem,
+    kerfNeeded: number,
+    context: OptimizationContext,
+  ): Cut {
     const newSegmentCount = cut.segmentCount + 1;
     const position = cut.usedLength + kerfNeeded;
     const { constraints, costModel } = context;
@@ -1423,18 +1611,19 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       position,
       endPosition: position + item.length,
       tolerance: TIME_ESTIMATES.DEFAULT_TOLERANCE,
-      workOrderItemId: item.workOrderId || '',
+      workOrderItemId: item.workOrderId || "",
       profileType: item.profileType,
       originalLength: item.length,
       qualityCheck: true,
       unitCost: segmentCost,
       totalCost: segmentCost,
       ...(item.workOrderId ? { workOrderId: item.workOrderId } : {}),
-      note: item.profileType
+      note: item.profileType,
     };
 
     const newUsedLength = cut.usedLength + item.length + kerfNeeded;
-    const newRemainingLength = cut.stockLength - newUsedLength - constraints.endSafety;
+    const newRemainingLength =
+      cut.stockLength - newUsedLength - constraints.endSafety;
 
     return {
       ...cut,
@@ -1442,43 +1631,61 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       segmentCount: newSegmentCount,
       usedLength: newUsedLength,
       remainingLength: newRemainingLength,
-      kerfLoss: (cut.kerfLoss ?? 0) + kerfNeeded
+      kerfLoss: (cut.kerfLoss ?? 0) + kerfNeeded,
     };
   }
 
   protected finalizeCuts(cuts: Cut[], context: OptimizationContext): Cut[] {
     const constraints = context.constraints;
-    return cuts.map(cut => {
+    return cuts.map((cut) => {
       const finalUsedLength = cut.usedLength + constraints.endSafety;
       const finalRemaining = Math.max(0, cut.stockLength - finalUsedLength);
 
       // Verify accounting with detailed error message
-      if (!StockCalculator.validateStockAccounting(finalUsedLength, finalRemaining, cut.stockLength)) {
-        throw new Error(`Accounting violation in cut ${cut.id}: ${finalUsedLength} + ${finalRemaining} ≠ ${cut.stockLength}`);
+      if (
+        !StockCalculator.validateStockAccounting(
+          finalUsedLength,
+          finalRemaining,
+          cut.stockLength,
+        )
+      ) {
+        throw new Error(
+          `Accounting violation in cut ${cut.id}: ${finalUsedLength} + ${finalRemaining} ≠ ${cut.stockLength}`,
+        );
       }
-      
+
       // Additional validation for debugging
-      if (Math.abs((finalUsedLength + finalRemaining) - cut.stockLength) > 0.01) {
-        throw new Error(`Accounting error in cut ${cut.id}: ${finalUsedLength} + ${finalRemaining} ≠ ${cut.stockLength}`);
+      if (Math.abs(finalUsedLength + finalRemaining - cut.stockLength) > 0.01) {
+        throw new Error(
+          `Accounting error in cut ${cut.id}: ${finalUsedLength} + ${finalRemaining} ≠ ${cut.stockLength}`,
+        );
       }
 
       const plan = this.generateCuttingPlan(cut.segments);
-      const planLabel = plan.map(p => `${p.count} × ${p.length} mm`).join(' + ');
+      const planLabel = plan
+        .map((p) => `${p.count} × ${p.length} mm`)
+        .join(" + ");
 
       return {
         ...cut,
         usedLength: finalUsedLength,
         remainingLength: finalRemaining,
         wasteCategory: WasteAnalyzer.calculateWasteCategory(finalRemaining),
-        isReclaimable: WasteAnalyzer.isReclaimable(finalRemaining, constraints.minScrapLength),
+        isReclaimable: WasteAnalyzer.isReclaimable(
+          finalRemaining,
+          constraints.minScrapLength,
+        ),
         plan,
         planLabel,
-        profileType: cut.profileType || cut.segments[0]?.profileType || 'Unknown'
+        profileType:
+          cut.profileType || cut.segments[0]?.profileType || "Unknown",
       };
     });
   }
 
-  private generateCuttingPlan(segments: CuttingSegment[]): Array<{ length: number; count: number }> {
+  private generateCuttingPlan(
+    segments: CuttingSegment[],
+  ): Array<{ length: number; count: number }> {
     const lengthMap = new Map<number, number>();
     for (const segment of segments) {
       lengthMap.set(segment.length, (lengthMap.get(segment.length) || 0) + 1);
@@ -1491,18 +1698,35 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   /**
    * Create comprehensive optimization result with metrics
    */
-  protected createResult(cuts: Cut[], context: OptimizationContext): AdvancedOptimizationResult {
-    const totalStockLength = cuts.reduce((sum, cut) => sum + cut.stockLength, 0);
+  protected createResult(
+    cuts: Cut[],
+    context: OptimizationContext,
+  ): AdvancedOptimizationResult {
+    const totalStockLength = cuts.reduce(
+      (sum, cut) => sum + cut.stockLength,
+      0,
+    );
     const totalWaste = WasteAnalyzer.calculateTotalWaste(cuts);
     const totalLength = cuts.reduce((sum, cut) => sum + cut.usedLength, 0);
     const totalSegments = cuts.reduce((sum, cut) => sum + cut.segmentCount, 0);
-    const efficiency = StockCalculator.calculateEfficiency(totalStockLength, totalWaste);
+    const efficiency = StockCalculator.calculateEfficiency(
+      totalStockLength,
+      totalWaste,
+    );
 
-    const costBreakdown = CostCalculator.calculateCostBreakdown(cuts, context.costModel, context.constraints);
+    const costBreakdown = CostCalculator.calculateCostBreakdown(
+      cuts,
+      context.costModel,
+      context.constraints,
+    );
     const wasteDistribution = WasteAnalyzer.calculateWasteDistribution(cuts);
-    const detailedWasteAnalysis = WasteAnalyzer.calculateDetailedWasteAnalysis(cuts);
-    const performanceMetrics = MetricsCalculator.calculatePerformanceMetrics('genetic', context.items.length);
-    
+    const detailedWasteAnalysis =
+      WasteAnalyzer.calculateDetailedWasteAnalysis(cuts);
+    const performanceMetrics = MetricsCalculator.calculatePerformanceMetrics(
+      "genetic",
+      context.items.length,
+    );
+
     // Calculate stock summary for multi-stock optimization display
     const stockSummary = this.calculateStockSummary(cuts);
 
@@ -1524,16 +1748,29 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       averageCutsPerStock: cuts.length > 0 ? totalSegments / cuts.length : 0,
       setupTime,
       materialUtilization: efficiency,
-      cuttingComplexity: MetricsCalculator.calculateCuttingComplexity(totalSegments, cuts.length),
+      cuttingComplexity: MetricsCalculator.calculateCuttingComplexity(
+        totalSegments,
+        cuts.length,
+      ),
       cuttingTime,
       totalTime,
       materialCost: costBreakdown.materialCost,
       wasteCost: costBreakdown.wasteCost,
       laborCost: costBreakdown.timeCost,
-      costPerMeter: CostCalculator.calculateCostPerMeter(costBreakdown.totalCost, totalLength),
-      qualityScore: MetricsCalculator.calculateQualityScore(efficiency, totalWaste),
-      reclaimableWastePercentage: WasteAnalyzer.calculateReclaimableWastePercentage(cuts),
-      wastePercentage: WasteAnalyzer.calculateWastePercentage(totalWaste, totalStockLength),
+      costPerMeter: CostCalculator.calculateCostPerMeter(
+        costBreakdown.totalCost,
+        totalLength,
+      ),
+      qualityScore: MetricsCalculator.calculateQualityScore(
+        efficiency,
+        totalWaste,
+      ),
+      reclaimableWastePercentage:
+        WasteAnalyzer.calculateReclaimableWastePercentage(cuts),
+      wastePercentage: WasteAnalyzer.calculateWastePercentage(
+        totalWaste,
+        totalStockLength,
+      ),
       wasteDistribution,
       constraints: context.constraints,
       detailedWasteAnalysis,
@@ -1542,48 +1779,59 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       optimizationScore: MetricsCalculator.calculateOptimizationScore(
         efficiency,
         WasteAnalyzer.calculateWastePercentage(totalWaste, totalStockLength),
-        MetricsCalculator.calculateQualityScore(efficiency, totalWaste)
+        MetricsCalculator.calculateQualityScore(efficiency, totalWaste),
       ),
-      paretoFrontier: CostCalculator.calculateParetoFrontier(totalWaste, costBreakdown.totalCost, totalTime, efficiency),
+      paretoFrontier: CostCalculator.calculateParetoFrontier(
+        totalWaste,
+        costBreakdown.totalCost,
+        totalTime,
+        efficiency,
+      ),
       costBreakdown,
       performanceMetrics,
-      confidence: MetricsCalculator.calculateConfidence(efficiency, totalWaste, costBreakdown.totalCost),
+      confidence: MetricsCalculator.calculateConfidence(
+        efficiency,
+        totalWaste,
+        costBreakdown.totalCost,
+      ),
       totalKerfLoss: cuts.reduce((sum, cut) => sum + (cut.kerfLoss || 0), 0),
-      totalSafetyReserve: cuts.length * (context.constraints.startSafety + context.constraints.endSafety),
+      totalSafetyReserve:
+        cuts.length *
+        (context.constraints.startSafety + context.constraints.endSafety),
       optimizationHistory: [],
       convergenceData: {
         generations: [],
         fitnessValues: [],
-        diversityValues: []
+        diversityValues: [],
       },
       algorithmParameters: {
         populationSize: 0,
         generations: 0,
         mutationRate: 0,
-        crossoverRate: 0
+        crossoverRate: 0,
       },
       resourceUtilization: {
         cpuUsage: 0,
         memoryUsage: 0,
         gpuUsage: 0,
-        networkUsage: 0
+        networkUsage: 0,
       },
       errorAnalysis: {
         errors: [],
         warnings: [],
-        suggestions: []
+        suggestions: [],
       },
       validationResults: {
         isValid: true,
         errors: [],
-        warnings: []
+        warnings: [],
       },
       metadata: {
-        version: '1.0.0',
+        version: "1.0.0",
         timestamp: new Date().toISOString(),
-        environment: 'production'
+        environment: "production",
       },
-      stockSummary
+      stockSummary,
     };
   }
 
@@ -1595,60 +1843,77 @@ export class GeneticAlgorithm extends BaseAlgorithm {
     sequence: OptimizationItem[],
     startIndex: number,
     usedItems: Set<number>,
-    context: OptimizationContext
+    context: OptimizationContext,
   ): Cut {
     let optimizedCut = cut;
     const constraints = context.constraints;
     const LOOK_AHEAD_LIMIT = 20; // Increased from 10 to 20 for better packing
     let itemsAdded = 0;
-    
+
     // Only look ahead if there's significant remaining space
-    if (optimizedCut.remainingLength < 50) { // Reduced from 100mm to 50mm for more aggressive packing
+    if (optimizedCut.remainingLength < 50) {
+      // Reduced from 100mm to 50mm for more aggressive packing
       return optimizedCut;
     }
-    
-    for (let i = startIndex; i < Math.min(sequence.length, startIndex + LOOK_AHEAD_LIMIT); i++) {
+
+    for (
+      let i = startIndex;
+      i < Math.min(sequence.length, startIndex + LOOK_AHEAD_LIMIT);
+      i++
+    ) {
       if (usedItems.has(i)) continue;
-      
+
       const item = sequence[i];
-      
+
       // Removed 80% size filter for more aggressive packing
-      
+
       const kerfNeeded = StockCalculator.calculateKerfNeeded(
-        optimizedCut.segmentCount, 
-        constraints.kerfWidth
+        optimizedCut.segmentCount,
+        constraints.kerfWidth,
       );
-      
-      if (StockCalculator.canFitItem(
-        item.length, 
-        optimizedCut.remainingLength, 
-        optimizedCut.segmentCount, 
-        constraints.kerfWidth
-      )) {
-        optimizedCut = this.addSegmentToCut(optimizedCut, item, kerfNeeded, context);
+
+      if (
+        StockCalculator.canFitItem(
+          item.length,
+          optimizedCut.remainingLength,
+          optimizedCut.segmentCount,
+          constraints.kerfWidth,
+        )
+      ) {
+        optimizedCut = this.addSegmentToCut(
+          optimizedCut,
+          item,
+          kerfNeeded,
+          context,
+        );
         usedItems.add(i);
         itemsAdded++;
-        
-        this.logger.debug(`[GeneticAlgorithm] ✅ Filled remaining space with ${item.length}mm item:`, {
-          originalRemaining: cut.remainingLength,
-          newRemaining: optimizedCut.remainingLength,
-          itemLength: item.length,
-          stockLength: optimizedCut.stockLength,
-          itemIndex: i,
-          itemsAdded
-        });
-        
+
+        this.logger.debug(
+          `[GeneticAlgorithm] ✅ Filled remaining space with ${item.length}mm item:`,
+          {
+            originalRemaining: cut.remainingLength,
+            newRemaining: optimizedCut.remainingLength,
+            itemLength: item.length,
+            stockLength: optimizedCut.stockLength,
+            itemIndex: i,
+            itemsAdded,
+          },
+        );
+
         // Stop if we've added enough items or remaining space is small
         if (itemsAdded >= 3 || optimizedCut.remainingLength < 50) {
           break;
         }
       }
     }
-    
+
     if (itemsAdded > 0) {
-      this.logger.debug(`[GeneticAlgorithm] 🎯 Look-ahead optimization added ${itemsAdded} items to cut`);
+      this.logger.debug(
+        `[GeneticAlgorithm] 🎯 Look-ahead optimization added ${itemsAdded} items to cut`,
+      );
     }
-    
+
     return optimizedCut;
   }
 
@@ -1658,7 +1923,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   private calculateStockSummary(cuts: Cut[]): ReadonlyArray<StockSummary> {
     // Group cuts by stock length
     const grouped = new Map<number, Cut[]>();
-    cuts.forEach(cut => {
+    cuts.forEach((cut) => {
       const stockLength = cut.stockLength;
       if (!grouped.has(stockLength)) {
         grouped.set(stockLength, []);
@@ -1670,19 +1935,27 @@ export class GeneticAlgorithm extends BaseAlgorithm {
     return Array.from(grouped.entries()).map(([stockLength, stockCuts]) => {
       // Group patterns by planLabel
       const patternMap = new Map<string, number>();
-      stockCuts.forEach(cut => {
+      stockCuts.forEach((cut) => {
         const pattern = cut.planLabel || `${cut.segmentCount} segments`;
         patternMap.set(pattern, (patternMap.get(pattern) || 0) + 1);
       });
 
-      const patterns = Array.from(patternMap.entries()).map(([pattern, count]) => ({
-        pattern,
-        count
-      }));
+      const patterns = Array.from(patternMap.entries()).map(
+        ([pattern, count]) => ({
+          pattern,
+          count,
+        }),
+      );
 
-      const totalWaste = stockCuts.reduce((sum, cut) => sum + cut.remainingLength, 0);
+      const totalWaste = stockCuts.reduce(
+        (sum, cut) => sum + cut.remainingLength,
+        0,
+      );
       const totalUsed = stockCuts.reduce((sum, cut) => sum + cut.usedLength, 0);
-      const totalStock = stockCuts.reduce((sum, cut) => sum + cut.stockLength, 0);
+      const totalStock = stockCuts.reduce(
+        (sum, cut) => sum + cut.stockLength,
+        0,
+      );
       const efficiency = totalStock > 0 ? (totalUsed / totalStock) * 100 : 0;
 
       return {
@@ -1691,7 +1964,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
         patterns,
         avgWaste: stockCuts.length > 0 ? totalWaste / stockCuts.length : 0,
         totalWaste,
-        efficiency
+        efficiency,
       };
     });
   }
@@ -1703,15 +1976,20 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   /**
    * Group items by length for pattern generation
    */
-  private groupItemsByLength(sequence: OptimizationItem[]): Array<{ length: number; quantity: number }> {
+  private groupItemsByLength(
+    sequence: OptimizationItem[],
+  ): Array<{ length: number; quantity: number }> {
     const groups = new Map<number, number>();
-    
-    sequence.forEach(item => {
+
+    sequence.forEach((item) => {
       const current = groups.get(item.length) || 0;
       groups.set(item.length, current + (item.quantity || 1));
     });
-    
-    return Array.from(groups.entries()).map(([length, quantity]) => ({ length, quantity }));
+
+    return Array.from(groups.entries()).map(([length, quantity]) => ({
+      length,
+      quantity,
+    }));
   }
 
   /**
@@ -1721,7 +1999,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   private generateCuttingPatterns(
     itemGroups: Array<{ length: number; quantity: number }>,
     stockLengths: number[],
-    constraints: OptimizationConstraints
+    constraints: OptimizationConstraints,
   ): Array<{
     stockLength: number;
     pattern: Map<number, number>; // length -> count
@@ -1737,23 +2015,31 @@ export class GeneticAlgorithm extends BaseAlgorithm {
 
     // ✅ Sort stock lengths descending to prioritize larger stocks first
     const sortedStockLengths = [...stockLengths].sort((a, b) => b - a);
-    
+
     for (const stockLength of sortedStockLengths) {
       // ✅ CRITICAL FIX: Only subtract safetyMargin for pattern generation
       // endSafety is only applied when actual cutting position reaches near stock end
       // This is handled in convertSolutionToCuts when creating final segments
       const usableLength = stockLength - (constraints.safetyMargin || 0);
-      
+
       // Generate all possible combinations of items that fit in this stock
-      this.generatePatternsForStock(itemGroups, stockLength, usableLength, patterns, constraints);
+      this.generatePatternsForStock(
+        itemGroups,
+        stockLength,
+        usableLength,
+        patterns,
+        constraints,
+      );
     }
 
     // CRITICAL: For high-demand problems, Pareto filtering can remove necessary patterns
     const totalDemand = itemGroups.reduce((sum, g) => sum + g.quantity, 0);
-    const maxDemand = Math.max(...itemGroups.map(g => g.quantity));
-    
+    const maxDemand = Math.max(...itemGroups.map((g) => g.quantity));
+
     // CRITICAL: Skip Pareto to preserve pattern diversity
-    this.logger.info(`[Genetic] Skipping Pareto filter to preserve all ${patterns.length} patterns`);
+    this.logger.info(
+      `[Genetic] Skipping Pareto filter to preserve all ${patterns.length} patterns`,
+    );
     return patterns;
   }
 
@@ -1770,14 +2056,14 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       used: number;
       waste: number;
     }>,
-    constraints?: OptimizationConstraints
+    constraints?: OptimizationConstraints,
   ): void {
-    const lengths = itemGroups.map(g => g.length);
+    const lengths = itemGroups.map((g) => g.length);
     const kerfWidth = constraints?.kerfWidth ?? 0;
-    
+
     // ✅ FIX: Calculate max counts considering kerf
     // Each item needs: length + kerfWidth (except maybe the first one)
-    const maxCounts = itemGroups.map(g => {
+    const maxCounts = itemGroups.map((g) => {
       if (kerfWidth === 0) {
         return Math.floor(usableLength / g.length);
       }
@@ -1785,7 +2071,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       // This accounts for kerf between segments
       return Math.floor((usableLength + kerfWidth) / (g.length + kerfWidth));
     });
-    
+
     // Generate all combinations using recursive approach
     this.generateCombinations(
       lengths,
@@ -1795,7 +2081,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       kerfWidth,
       new Map<number, number>(),
       0,
-      patterns
+      patterns,
     );
   }
 
@@ -1816,7 +2102,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       pattern: Map<number, number>;
       used: number;
       waste: number;
-    }>
+    }>,
   ): void {
     if (itemIndex >= lengths.length) {
       // Check if this pattern is valid (has at least one item)
@@ -1824,25 +2110,25 @@ export class GeneticAlgorithm extends BaseAlgorithm {
         // ✅ FIX: Calculate used length with kerf
         let used = 0;
         let totalSegments = 0;
-        
+
         for (const [length, count] of currentPattern.entries()) {
           used += length * count;
           totalSegments += count;
         }
-        
+
         // ✅ Add kerf: (totalSegments - 1) × kerfWidth (kerf between segments)
         if (kerfWidth > 0 && totalSegments > 0) {
           const kerfNeeded = (totalSegments - 1) * kerfWidth;
           used += kerfNeeded;
         }
-        
+
         if (used <= usableLength) {
           const waste = usableLength - used;
           patterns.push({
             stockLength,
             pattern: new Map(currentPattern),
             used,
-            waste
+            waste,
           });
         }
       }
@@ -1850,7 +2136,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
     }
 
     const currentLength = lengths[itemIndex]!;
-    
+
     // ✅ CRITICAL FIX: Calculate remaining space in current pattern
     let currentUsed = 0;
     let currentTotalSegments = 0;
@@ -1858,26 +2144,30 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       currentUsed += length * count;
       currentTotalSegments += count;
     }
-    
+
     // Calculate kerf already used
-    const currentKerf = kerfWidth > 0 && currentTotalSegments > 0 
-      ? (currentTotalSegments - 1) * kerfWidth 
-      : 0;
-    
+    const currentKerf =
+      kerfWidth > 0 && currentTotalSegments > 0
+        ? (currentTotalSegments - 1) * kerfWidth
+        : 0;
+
     const remainingSpace = usableLength - currentUsed - currentKerf;
-    
+
     // Calculate max count for current item based on remaining space
-    const maxCount = kerfWidth === 0
-      ? Math.floor(remainingSpace / currentLength)
-      : Math.floor((remainingSpace + kerfWidth) / (currentLength + kerfWidth));
-    
+    const maxCount =
+      kerfWidth === 0
+        ? Math.floor(remainingSpace / currentLength)
+        : Math.floor(
+            (remainingSpace + kerfWidth) / (currentLength + kerfWidth),
+          );
+
     // Try all possible counts for current item (0 to maxCount)
     for (let count = 0; count <= maxCount; count++) {
       const newPattern = new Map(currentPattern);
       if (count > 0) {
         newPattern.set(currentLength, count);
       }
-      
+
       this.generateCombinations(
         lengths,
         maxCounts,
@@ -1886,7 +2176,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
         kerfWidth,
         newPattern,
         itemIndex + 1,
-        patterns
+        patterns,
       );
     }
   }
@@ -1895,12 +2185,14 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    * Filter patterns using Pareto optimality
    * FIXED: Removed aggressive filtering that was causing missing patterns
    */
-  private filterParetoOptimal(patterns: Array<{
-    stockLength: number;
-    pattern: Map<number, number>;
-    used: number;
-    waste: number;
-  }>): Array<{
+  private filterParetoOptimal(
+    patterns: Array<{
+      stockLength: number;
+      pattern: Map<number, number>;
+      used: number;
+      waste: number;
+    }>,
+  ): Array<{
     stockLength: number;
     pattern: Map<number, number>;
     used: number;
@@ -1917,8 +2209,12 @@ export class GeneticAlgorithm extends BaseAlgorithm {
         const q = patterns[j]!;
         if (q.stockLength !== p.stockLength) continue;
 
-        const qHasMoreOrEqual = this.patternHasMoreOrEqualItems(q.pattern, p.pattern);
-        const qStrictlyBetter = qHasMoreOrEqual && q.waste <= p.waste && (q.waste < p.waste);
+        const qHasMoreOrEqual = this.patternHasMoreOrEqualItems(
+          q.pattern,
+          p.pattern,
+        );
+        const qStrictlyBetter =
+          qHasMoreOrEqual && q.waste <= p.waste && q.waste < p.waste;
 
         if (qStrictlyBetter) {
           dominated = true;
@@ -1935,7 +2231,10 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   /**
    * Check if pattern q has more or equal items than pattern p
    */
-  private patternHasMoreOrEqualItems(q: Map<number, number>, p: Map<number, number>): boolean {
+  private patternHasMoreOrEqualItems(
+    q: Map<number, number>,
+    p: Map<number, number>,
+  ): boolean {
     for (const [length, count] of p.entries()) {
       const qCount = q.get(length) || 0;
       if (qCount < count) return false;
@@ -1946,7 +2245,10 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   /**
    * Check if pattern q is strictly better than pattern p
    */
-  private patternIsStrictlyBetter(q: Map<number, number>, p: Map<number, number>): boolean {
+  private patternIsStrictlyBetter(
+    q: Map<number, number>,
+    p: Map<number, number>,
+  ): boolean {
     let hasMore = false;
     for (const [length, count] of p.entries()) {
       const qCount = q.get(length) || 0;
@@ -1967,20 +2269,20 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       waste: number;
     }>,
     itemGroups: Array<{ length: number; quantity: number }>,
-    constraints: OptimizationConstraints
+    constraints: OptimizationConstraints,
   ): Array<{
-    pattern: typeof patterns[0];
+    pattern: (typeof patterns)[0];
     count: number;
   }> {
     // Create demand map - this is our target
     const targetDemand = new Map<number, number>();
-    itemGroups.forEach(group => {
+    itemGroups.forEach((group) => {
       targetDemand.set(group.length, group.quantity);
     });
 
     this.logger.debug(`[GeneticAlgorithm] 🎯 DP with exact demand tracking:`, {
       targetDemand: Object.fromEntries(targetDemand),
-      patternsCount: patterns.length
+      patternsCount: patterns.length,
     });
 
     // Use greedy backtracking with exact demand control
@@ -1990,7 +2292,10 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   /**
    * Calculate how much demand a pattern satisfies
    */
-  private calculatePatternDemand(pattern: Map<number, number>, demand: Map<number, number>): number {
+  private calculatePatternDemand(
+    pattern: Map<number, number>,
+    demand: Map<number, number>,
+  ): number {
     let satisfied = 0;
     for (const [length, count] of pattern.entries()) {
       const needed = demand.get(length) || 0;
@@ -2003,16 +2308,24 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    * Convert DP solution to cuts with demand validation
    */
   private convertSolutionToCuts(
-    solution: Array<{ pattern: { stockLength: number; pattern: Map<number, number>; used: number; waste: number }; count: number }>,
+    solution: Array<{
+      pattern: {
+        stockLength: number;
+        pattern: Map<number, number>;
+        used: number;
+        waste: number;
+      };
+      count: number;
+    }>,
     stockLengths: number[],
     constraints: OptimizationConstraints,
-    itemGroups?: Array<{ length: number; quantity: number }>
+    itemGroups?: Array<{ length: number; quantity: number }>,
   ): Cut[] {
     const cuts: Cut[] = [];
     let cutIndex = 0;
 
     const kerfWidth = constraints.kerfWidth ?? 0;
-    
+
     for (const { pattern, count } of solution) {
       for (let i = 0; i < count; i++) {
         const segments: CuttingSegment[] = [];
@@ -2026,7 +2339,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
             if (segmentIndex > 0 && kerfWidth > 0) {
               usedLength += kerfWidth;
             }
-            
+
             const segment: CuttingSegment = {
               id: `segment-${cutIndex}-${segmentIndex}`,
               cutId: `cut-${cutIndex}`,
@@ -2043,11 +2356,11 @@ export class GeneticAlgorithm extends BaseAlgorithm {
               qualityCheck: true,
               unitCost: 0,
               totalCost: 0,
-              color: '#3B82F6',
-              version: '1.0',
-              size: 'standard'
+              color: "#3B82F6",
+              version: "1.0",
+              size: "standard",
             };
-            
+
             segments.push(segment);
             usedLength += length;
             segmentIndex++;
@@ -2055,15 +2368,19 @@ export class GeneticAlgorithm extends BaseAlgorithm {
         }
 
         // ✅ Calculate kerf loss
-        const kerfLoss = kerfWidth > 0 && segments.length > 0 
-          ? (segments.length - 1) * kerfWidth 
-          : 0;
+        const kerfLoss =
+          kerfWidth > 0 && segments.length > 0
+            ? (segments.length - 1) * kerfWidth
+            : 0;
 
         // ✅ CRITICAL FIX: endSafety is 0 (all fire is cut from start)
         // Pattern generation already subtracted startSafety (100mm)
         // So finalUsedLength = usedLength (no additional safety zones)
         const finalUsedLength = usedLength;
-        const finalRemaining = Math.max(0, pattern.stockLength - finalUsedLength);
+        const finalRemaining = Math.max(
+          0,
+          pattern.stockLength - finalUsedLength,
+        );
 
         const cut: Cut = {
           id: `cut-${cutIndex}`,
@@ -2083,7 +2400,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
           safetyMargin: 0,
           toleranceCheck: true,
           sequence: cutIndex,
-          planLabel: this.generatePlanLabel(pattern.pattern)
+          planLabel: this.generatePlanLabel(pattern.pattern),
         };
 
         cuts.push(cut);
@@ -2104,36 +2421,41 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    */
   private validateDemandFulfillment(
     cuts: Cut[],
-    itemGroups: Array<{ length: number; quantity: number }>
+    itemGroups: Array<{ length: number; quantity: number }>,
   ): void {
     this.logger.info(`[GeneticAlgorithm] 🔍 Starting demand validation:`, {
       totalCuts: cuts.length,
-      itemGroups: itemGroups.map(g => `${g.length}mm: ${g.quantity}`).join(', ')
+      itemGroups: itemGroups
+        .map((g) => `${g.length}mm: ${g.quantity}`)
+        .join(", "),
     });
-    
+
     // Calculate actual cuts by length
     const actualCuts = new Map<number, number>();
     cuts.forEach((cut, cutIndex) => {
-    this.logger.info(`[GeneticAlgorithm] 🔍 Processing cut ${cutIndex}:`, {
-      cutId: cut.id,
-      stockLength: cut.stockLength,
-      segmentCount: cut.segmentCount,
-      segments: cut.segments.map(s => `${s.length}mm`).join(', ')
-    });
-      
+      this.logger.info(`[GeneticAlgorithm] 🔍 Processing cut ${cutIndex}:`, {
+        cutId: cut.id,
+        stockLength: cut.stockLength,
+        segmentCount: cut.segmentCount,
+        segments: cut.segments.map((s) => `${s.length}mm`).join(", "),
+      });
+
       cut.segments.forEach((seg, segIndex) => {
         const current = actualCuts.get(seg.length) || 0;
         actualCuts.set(seg.length, current + 1);
-        
-        this.logger.info(`[GeneticAlgorithm] 🔍 Added segment ${segIndex}: ${seg.length}mm`, {
-          currentCount: current + 1,
-          totalForLength: actualCuts.get(seg.length)
-        });
+
+        this.logger.info(
+          `[GeneticAlgorithm] 🔍 Added segment ${segIndex}: ${seg.length}mm`,
+          {
+            currentCount: current + 1,
+            totalForLength: actualCuts.get(seg.length),
+          },
+        );
       });
     });
 
     this.logger.info(`[GeneticAlgorithm] 📊 Final actual counts:`, {
-      actualCuts: Object.fromEntries(actualCuts)
+      actualCuts: Object.fromEntries(actualCuts),
     });
 
     // Compare with required demand (allow minimal overproduction; deficits are errors)
@@ -2141,31 +2463,42 @@ export class GeneticAlgorithm extends BaseAlgorithm {
     for (const group of itemGroups) {
       const actual = actualCuts.get(group.length) || 0;
       const required = group.quantity;
-      
+
       this.logger.info(`[GeneticAlgorithm] 🔍 Checking ${group.length}mm:`, {
         required,
         actual,
-        diff: actual - required
+        diff: actual - required,
       });
-      
+
       if (actual < required) {
         const diff = actual - required;
-        errors.push(`${group.length}mm: required ${required}, got ${actual} (diff: ${diff})`);
+        errors.push(
+          `${group.length}mm: required ${required}, got ${actual} (diff: ${diff})`,
+        );
       }
     }
 
     if (errors.length > 0) {
-      this.logger.error(`[GeneticAlgorithm] ❌ DEMAND MISMATCH in convertSolutionToCuts:`, {
-        errors,
-        actualCuts: Object.fromEntries(actualCuts),
-        requiredDemand: itemGroups.map(g => ({ length: g.length, quantity: g.quantity }))
-      });
-      throw new Error(`Demand mismatch: ${errors.join(', ')}`);
+      this.logger.error(
+        `[GeneticAlgorithm] ❌ DEMAND MISMATCH in convertSolutionToCuts:`,
+        {
+          errors,
+          actualCuts: Object.fromEntries(actualCuts),
+          requiredDemand: itemGroups.map((g) => ({
+            length: g.length,
+            quantity: g.quantity,
+          })),
+        },
+      );
+      throw new Error(`Demand mismatch: ${errors.join(", ")}`);
     }
 
     this.logger.debug(`[GeneticAlgorithm] ✅ Demand validation passed:`, {
       actualCuts: Object.fromEntries(actualCuts),
-      requiredDemand: itemGroups.map(g => ({ length: g.length, quantity: g.quantity }))
+      requiredDemand: itemGroups.map((g) => ({
+        length: g.length,
+        quantity: g.quantity,
+      })),
     });
   }
 
@@ -2177,7 +2510,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
     for (const [length, count] of pattern.entries()) {
       parts.push(`${count}×${length}mm`);
     }
-    return parts.join(' + ');
+    return parts.join(" + ");
   }
 
   /**
@@ -2192,29 +2525,29 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       waste: number;
     }>,
     itemGroups: Array<{ length: number; quantity: number }>,
-    constraints: OptimizationConstraints
+    constraints: OptimizationConstraints,
   ): Array<{
-    pattern: typeof patterns[0];
+    pattern: (typeof patterns)[0];
     count: number;
   }> {
     // Initialize demand map using only length (not profileType)
     const demand = new Map<number, number>();
-    itemGroups.forEach(group => {
+    itemGroups.forEach((group) => {
       // ✅ CRITICAL: Use only length as key (not profileType+length combination)
       demand.set(group.length, group.quantity);
     });
 
     this.logger.debug(`[GeneticAlgorithm] 🔍 Starting priority search:`, {
       initialDemand: Object.fromEntries(demand),
-      patternsAvailable: patterns.length
+      patternsAvailable: patterns.length,
     });
 
     // Convert patterns to SearchPattern format
-    const searchPatterns: SearchPattern[] = patterns.map(p => ({
+    const searchPatterns: SearchPattern[] = patterns.map((p) => ({
       stockLength: p.stockLength,
       pattern: p.pattern,
       used: p.used,
-      waste: p.waste
+      waste: p.waste,
     }));
 
     // Run priority search with original working parameters
@@ -2222,32 +2555,41 @@ export class GeneticAlgorithm extends BaseAlgorithm {
     const result = solver.solve(searchPatterns, demand, {
       maxStates: 5000,
       overProductionTolerance: 2,
-      wasteNormalization: 1500
+      wasteNormalization: 1500,
     });
 
     if (!result) {
-      throw new Error('No solution found with priority search');
+      throw new Error("No solution found with priority search");
     }
 
     this.logger.info(`[GeneticAlgorithm] 🎯 Priority search completed:`, {
       totalBars: result.totalBars,
       totalWaste: result.totalWaste,
-      patternCount: result.picks.length
+      patternCount: result.picks.length,
     });
 
     // Convert search result to solution format
-    const solution = this.convertSearchStateToSolution(result, patterns, itemGroups);
+    const solution = this.convertSearchStateToSolution(
+      result,
+      patterns,
+      itemGroups,
+    );
 
     // Validate final solution
     const finalValidation = this.validateExactDemand(solution, itemGroups);
     if (!finalValidation.isValid) {
-      this.logger.error(`[GeneticAlgorithm] ❌ Exact demand validation failed:`, finalValidation.errors);
-      throw new Error(`Demand validation failed: ${finalValidation.errors.join(', ')}`);
+      this.logger.error(
+        `[GeneticAlgorithm] ❌ Exact demand validation failed:`,
+        finalValidation.errors,
+      );
+      throw new Error(
+        `Demand validation failed: ${finalValidation.errors.join(", ")}`,
+      );
     }
 
     this.logger.info(`[GeneticAlgorithm] ✅ Solution validated:`, {
       totalCuts: solution.reduce((sum, s) => sum + s.count, 0),
-      uniquePatterns: solution.length
+      uniquePatterns: solution.length,
     });
 
     return solution;
@@ -2265,12 +2607,13 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       used: number;
       waste: number;
     }>,
-    itemGroups: Array<{ length: number; quantity: number }>
+    itemGroups: Array<{ length: number; quantity: number }>,
   ): Array<{
-    pattern: typeof patterns[0];
+    pattern: (typeof patterns)[0];
     count: number;
   }> {
-    const solution: Array<{ pattern: typeof patterns[0]; count: number }> = [];
+    const solution: Array<{ pattern: (typeof patterns)[0]; count: number }> =
+      [];
     const patternCounts = new Map<number, number>(); // pattern index -> count
 
     // Count occurrences of each pattern
@@ -2287,11 +2630,18 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       }
     }
 
-    this.logger.debug('[GeneticAlgorithm] Converted search state to solution:', {
-      uniquePatterns: solution.length,
-      totalCuts: solution.reduce((sum, s) => sum + s.count, 0),
-      patterns: solution.map(s => `${s.count}x(${this.generatePlanLabel(s.pattern.pattern)})`).join(', ')
-    });
+    this.logger.debug(
+      "[GeneticAlgorithm] Converted search state to solution:",
+      {
+        uniquePatterns: solution.length,
+        totalCuts: solution.reduce((sum, s) => sum + s.count, 0),
+        patterns: solution
+          .map(
+            (s) => `${s.count}x(${this.generatePlanLabel(s.pattern.pattern)})`,
+          )
+          .join(", "),
+      },
+    );
 
     return solution;
   }
@@ -2321,12 +2671,12 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       used: number;
       waste: number;
     }>,
-    remainingDemand: Map<number, number>
-  ): typeof patterns[0] | null {
-    let bestPattern: typeof patterns[0] | null = null;
+    remainingDemand: Map<number, number>,
+  ): (typeof patterns)[0] | null {
+    let bestPattern: (typeof patterns)[0] | null = null;
     let bestScore = -1;
 
-    let fallbackPattern: typeof patterns[0] | null = null;
+    let fallbackPattern: (typeof patterns)[0] | null = null;
     let fallbackScore = -1;
 
     const maxWastePct = 30 / 100; // conservative default
@@ -2338,15 +2688,19 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       }
 
       // ✅ FIXED: Demand-coverage-first scoring - prioritize remaining demand fulfillment
-      const demandUsage = this.calculateDemandUsage(pattern.pattern, remainingDemand);
+      const demandUsage = this.calculateDemandUsage(
+        pattern.pattern,
+        remainingDemand,
+      );
       const demandScore = demandUsage * 10000; // High weight for demand coverage
       const wasteScore = -pattern.waste; // Negative penalty for waste
       const score = demandScore + wasteScore;
 
       // Check utilization for fallback
-      const efficiency = (pattern.used + pattern.waste) > 0
-        ? pattern.used / (pattern.used + pattern.waste)
-        : 0;
+      const efficiency =
+        pattern.used + pattern.waste > 0
+          ? pattern.used / (pattern.used + pattern.waste)
+          : 0;
 
       if (efficiency < minUtilization) {
         if (score > fallbackScore) {
@@ -2360,7 +2714,10 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       if (score > bestScore) {
         bestScore = score;
         bestPattern = pattern;
-      } else if (bestPattern && Math.abs(score - bestScore) < 0.05 * bestScore) {
+      } else if (
+        bestPattern &&
+        Math.abs(score - bestScore) < 0.05 * bestScore
+      ) {
         if (pattern.stockLength > bestPattern.stockLength) {
           bestPattern = pattern;
         }
@@ -2376,7 +2733,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    */
   private patternFitsDemand(
     pattern: Map<number, number>,
-    remainingDemand: Map<number, number>
+    remainingDemand: Map<number, number>,
   ): boolean {
     for (const [length, count] of pattern.entries()) {
       const remaining = remainingDemand.get(length) || 0;
@@ -2392,7 +2749,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    */
   private calculateDemandUsage(
     pattern: Map<number, number>,
-    remainingDemand: Map<number, number>
+    remainingDemand: Map<number, number>,
   ): number {
     let totalUsed = 0;
     let totalRemaining = 0;
@@ -2410,17 +2767,20 @@ export class GeneticAlgorithm extends BaseAlgorithm {
    * Validate that solution exactly matches demand
    */
   private validateExactDemand(
-    solution: Array<{ pattern: { pattern: Map<number, number> }; count: number }>,
-    itemGroups: Array<{ length: number; quantity: number }>
+    solution: Array<{
+      pattern: { pattern: Map<number, number> };
+      count: number;
+    }>,
+    itemGroups: Array<{ length: number; quantity: number }>,
   ): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
-    
+
     // Calculate actual cuts by length
     const actualCuts = new Map<number, number>();
     solution.forEach(({ pattern, count }) => {
       for (const [length, patternCount] of pattern.pattern.entries()) {
         const current = actualCuts.get(length) || 0;
-        actualCuts.set(length, current + (patternCount * count));
+        actualCuts.set(length, current + patternCount * count);
       }
     });
 
@@ -2429,21 +2789,24 @@ export class GeneticAlgorithm extends BaseAlgorithm {
     for (const group of itemGroups) {
       const actual = actualCuts.get(group.length) || 0;
       const required = group.quantity;
-      
+
       if (actual < required) {
         // Shortage is always an error
         const diff = actual - required;
-        errors.push(`${group.length}mm: shortage ${Math.abs(diff)} (required ${required}, got ${actual})`);
+        errors.push(
+          `${group.length}mm: shortage ${Math.abs(diff)} (required ${required}, got ${actual})`,
+        );
       } else if (actual > required + maxExtraPerPiece) {
         // Over-production beyond tolerance: warn but don't fail
-        this.logger.warn(`[GeneticAlgorithm] Over-produced ${group.length}mm: ${actual - required} extra (limit: ${maxExtraPerPiece})`);
+        this.logger.warn(
+          `[GeneticAlgorithm] Over-produced ${group.length}mm: ${actual - required} extra (limit: ${maxExtraPerPiece})`,
+        );
       }
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 }
-

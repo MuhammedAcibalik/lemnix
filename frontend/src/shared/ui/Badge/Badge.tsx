@@ -7,6 +7,12 @@
 import React, { forwardRef } from "react";
 import { Box, BoxProps, alpha } from "@mui/material";
 import { useDesignSystem } from "@/shared/hooks";
+import {
+  fluidHeight,
+  fluidSpacing,
+  fluidFontSize,
+  pxToRem,
+} from "@/shared/lib/zoom-aware";
 
 type BadgeVariant = "solid" | "soft" | "outline" | "gradient" | "glass";
 type BadgeColor =
@@ -98,27 +104,43 @@ export const Badge = forwardRef<HTMLDivElement, BadgeProps>(
 
     const colors = colorMap[color];
 
-    // Size mapping
+    // ✅ Zoom-aware size mapping with fluid values
     const sizeMap = {
       xs: {
-        height: 18,
-        padding: `${ds.spacing["0.5"]}px ${ds.spacing["1.5"]}px`,
-        fontSize: ds.fontSize["2xs"],
+        height: fluidHeight(pxToRem(16), pxToRem(20), pxToRem(18)), // 16-20px, preferred 18px
+        padding: fluidSpacing(
+          `${pxToRem(ds.spacing["0.5"] * 0.8)} ${pxToRem(ds.spacing["1.5"] * 0.8)}`, // Min: 80%
+          `${pxToRem(ds.spacing["0.5"] * 1.2)} ${pxToRem(ds.spacing["1.5"] * 1.2)}`, // Max: 120%
+          0.3,
+        ),
+        fontSize: fluidFontSize(pxToRem(10), pxToRem(12), 0.3), // 10-12px
       },
       sm: {
-        height: 20,
-        padding: `${ds.spacing["1"]}px ${ds.spacing["2"]}px`,
-        fontSize: ds.fontSize.xs,
+        height: fluidHeight(pxToRem(18), pxToRem(22), pxToRem(20)), // 18-22px, preferred 20px
+        padding: fluidSpacing(
+          `${pxToRem(ds.spacing["1"] * 0.8)} ${pxToRem(ds.spacing["2"] * 0.8)}`,
+          `${pxToRem(ds.spacing["1"] * 1.2)} ${pxToRem(ds.spacing["2"] * 1.2)}`,
+          0.3,
+        ),
+        fontSize: fluidFontSize(pxToRem(11), pxToRem(13), 0.3), // 11-13px
       },
       md: {
-        height: 24,
-        padding: `${ds.spacing["1"]}px ${ds.spacing["2.5"]}px`,
-        fontSize: ds.fontSize.sm,
+        height: fluidHeight(pxToRem(22), pxToRem(26), pxToRem(24)), // 22-26px, preferred 24px
+        padding: fluidSpacing(
+          `${pxToRem(ds.spacing["1"] * 0.8)} ${pxToRem(ds.spacing["2.5"] * 0.8)}`,
+          `${pxToRem(ds.spacing["1"] * 1.2)} ${pxToRem(ds.spacing["2.5"] * 1.2)}`,
+          0.3,
+        ),
+        fontSize: fluidFontSize(pxToRem(12), pxToRem(14), 0.3), // 12-14px
       },
       lg: {
-        height: 28,
-        padding: `${ds.spacing["1.5"]}px ${ds.spacing["3"]}px`,
-        fontSize: ds.fontSize.base,
+        height: fluidHeight(pxToRem(26), pxToRem(30), pxToRem(28)), // 26-30px, preferred 28px
+        padding: fluidSpacing(
+          `${pxToRem(ds.spacing["1.5"] * 0.8)} ${pxToRem(ds.spacing["3"] * 0.8)}`,
+          `${pxToRem(ds.spacing["1.5"] * 1.2)} ${pxToRem(ds.spacing["3"] * 1.2)}`,
+          0.3,
+        ),
+        fontSize: fluidFontSize(pxToRem(14), pxToRem(16), 0.3), // 14-16px
       },
     };
 
@@ -130,7 +152,10 @@ export const Badge = forwardRef<HTMLDivElement, BadgeProps>(
         background: colors.main,
         color: colors.contrast,
         border: "none",
-        boxShadow: glow ? ds.shadows.glow[color] : ds.shadows.none,
+        boxShadow: glow
+          ? ds.shadows.glow[color as keyof typeof ds.shadows.glow] ||
+            ds.shadows.glow.primary
+          : ds.shadows.none,
       },
       soft: {
         background: alpha(colors.main, 0.12),
@@ -148,7 +173,10 @@ export const Badge = forwardRef<HTMLDivElement, BadgeProps>(
         background: `linear-gradient(135deg, ${colors.main} 0%, ${colors.light} 100%)`,
         color: colors.contrast,
         border: "none",
-        boxShadow: glow ? ds.shadows.glow[color] : ds.shadows.soft.xs,
+        boxShadow: glow
+          ? ds.shadows.glow[color as keyof typeof ds.shadows.glow] ||
+            ds.shadows.glow.primary
+          : ds.shadows.soft.xs,
       },
       glass: {
         ...ds.getGlassStyle("light"),

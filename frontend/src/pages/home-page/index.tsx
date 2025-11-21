@@ -4,8 +4,8 @@
  */
 
 import React from "react";
-import { Box } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { Box } from "@mui/material";
 
 // Import widget components
 import HeroSection from "../../widgets/home-page/components/HeroSection";
@@ -39,7 +39,13 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh" }}>
+    <Box
+      component="div"
+      sx={{
+        minHeight: "100vh",
+        bgcolor: "background.default",
+      }}
+    >
       {/* Hero Section */}
       <HeroSection
         onDemoStart={handleDemoStart}
