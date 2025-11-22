@@ -1,32 +1,34 @@
 /**
  * @fileoverview Responsive Breakpoints Configuration
  * @module shared/config/breakpoints
- * @description Mobile-first responsive breakpoint definitions for FSD architecture
+ * @description Mobile-first responsive breakpoint definitions aligned with Design System v3
+ *
+ * @deprecated This file uses FSD-specific breakpoint names. For new code, use Design System v3 breakpoints directly.
+ * This file is kept for backward compatibility and provides mapping to Design System v3 breakpoints.
  */
 
+import { breakpoints as DSBreakpoints } from "@/App/theme/designSystem.v3";
+
 /**
- * Responsive breakpoints following mobile-first approach
+ * Responsive breakpoints aligned with Design System v3
+ * Maps FSD-specific names to Design System v3 breakpoints
  */
 export const breakpoints = {
-  /** Mobile devices (320px+) */
-  mobile: 320,
-  /** Small tablets (640px+) */
-  sm: 640,
-  /** Tablets (768px+) */
-  tablet: 768,
-  md: 768,
-  /** Small laptops (1024px+) */
-  desktop: 1024,
-  lg: 1024,
-  /** Desktop (1280px+) */
-  wide: 1280,
-  xl: 1280,
-  /** Large desktop (1536px+) */
-<<<<<<< HEAD
-  "2xl": 1536,
-=======
-  '2xl': 1536,
->>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
+  /** Mobile devices (320px+) - Maps to DS xs */
+  mobile: DSBreakpoints.xs,
+  /** Small tablets (480px+) - Maps to DS sm */
+  sm: DSBreakpoints.sm,
+  /** Tablets (768px+) - Maps to DS md */
+  tablet: DSBreakpoints.md,
+  md: DSBreakpoints.md,
+  /** Small laptops (1024px+) - Maps to DS lg */
+  desktop: DSBreakpoints.lg,
+  lg: DSBreakpoints.lg,
+  /** Desktop (1366px+) - Maps to DS xl */
+  wide: DSBreakpoints.xl,
+  xl: DSBreakpoints.xl,
+  /** Large desktop (1920px+) - Maps to DS xxl */
+  "2xl": DSBreakpoints.xxl,
 } as const;
 
 export type Breakpoint = keyof typeof breakpoints;
@@ -43,30 +45,17 @@ export const mediaQuery = {
   lg: `(min-width: ${breakpoints.lg}px)`,
   wide: `(min-width: ${breakpoints.wide}px)`,
   xl: `(min-width: ${breakpoints.xl}px)`,
-<<<<<<< HEAD
   "2xl": `(min-width: ${breakpoints["2xl"]}px)`,
-=======
-  '2xl': `(min-width: ${breakpoints['2xl']}px)`,
->>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
 } as const;
 
 /**
  * Get current breakpoint name based on window width
  */
 export function getCurrentBreakpoint(width: number): Breakpoint {
-<<<<<<< HEAD
   if (width >= breakpoints["2xl"]) return "2xl";
   if (width >= breakpoints.xl) return "xl";
   if (width >= breakpoints.lg) return "lg";
   if (width >= breakpoints.md) return "md";
   if (width >= breakpoints.sm) return "sm";
   return "mobile";
-=======
-  if (width >= breakpoints['2xl']) return '2xl';
-  if (width >= breakpoints.xl) return 'xl';
-  if (width >= breakpoints.lg) return 'lg';
-  if (width >= breakpoints.md) return 'md';
-  if (width >= breakpoints.sm) return 'sm';
-  return 'mobile';
->>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
 }

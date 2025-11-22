@@ -7,6 +7,10 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Box } from "@mui/material";
 
+// Import route constants
+// Using shared config for consistency
+import { routes } from "@/shared/config";
+
 // Import widget components
 import HeroSection from "../../widgets/home-page/components/HeroSection";
 import FeaturesSection from "../../widgets/home-page/components/FeaturesSection";
@@ -21,21 +25,21 @@ import CTASection from "../../widgets/home-page/components/CTASection";
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
 
-  // Event handlers
+  // Event handlers - Using route constants for type safety
   const handleDemoStart = () => {
-    navigate("/optimize");
+    navigate(routes.enterpriseOptimization);
   };
 
   const handleExcelImport = () => {
-    navigate("/optimize");
+    navigate(routes.enterpriseOptimization);
   };
 
   const handleFreeTrial = () => {
-    navigate("/optimize");
+    navigate(routes.enterpriseOptimization);
   };
 
   const handleViewDemo = () => {
-    navigate("/cutting-list");
+    navigate(routes.cuttingList);
   };
 
   return (

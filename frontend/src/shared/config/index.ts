@@ -23,3 +23,6 @@ export {
   getCurrentBreakpoint,
   type Breakpoint,
 } from "./breakpoints";
+
+// Export route constants (re-export from App/constants for convenience)
+export { routes } from "@/App/constants";

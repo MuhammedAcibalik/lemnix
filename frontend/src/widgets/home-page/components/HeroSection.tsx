@@ -5,11 +5,7 @@
  */
 
 import React, { useMemo, useCallback, memo } from "react";
-<<<<<<< HEAD
 import { Box, Typography, Grid, Stack, alpha } from "@mui/material";
-=======
-import { Box, Typography, Container, Grid, Stack, alpha } from "@mui/material";
->>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
 import {
   TrendingUp,
   Speed,
@@ -508,7 +504,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               </Typography>
             </Box>
 
-<<<<<<< HEAD
             {/* CTA Buttons - Örnek uygulamadaki pattern: flex flex-wrap gap-4 */}
             <Box
               sx={{
@@ -517,16 +512,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 gap: ds.spacing["4"], // gap-4 (16px) - örnek uygulamadaki gibi
                 mt: ds.spacing["6"], // mb-6 equivalent
                 justifyContent: { xs: "center", sm: "flex-start" },
-=======
-            {/* CTA Buttons */}
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={ds.spacing["3"]}
-              sx={{
-                width: { xs: "100%", sm: "auto" },
-                alignItems: "center",
-                mt: ds.spacing["2"],
->>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
               }}
             >
               <PrimaryButton
@@ -534,7 +519,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 onClick={handleDemoStart}
                 aria-label="Optimizasyon işlemine başla"
                 sx={{
-<<<<<<< HEAD
                   // Gradient background - örnek uygulamadaki gibi: bg-gradient-to-r from-purple-600 to-pink-600
                   background: `linear-gradient(135deg, ${ds.colors.primary[600]} 0%, ${ds.colors.secondary?.[600] || ds.colors.primary[500]} 100%)`,
                   color: "white",
@@ -551,16 +535,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                     boxShadow: `0 10px 15px -3px ${alpha(ds.colors.primary[600], 0.3)}`,
                     transform: "translateY(-1px)",
                   },
-=======
-                  px: { xs: ds.spacing["8"], sm: ds.spacing["10"] },
-                  py: { xs: ds.spacing["2"], sm: ds.spacing["2.5"] },
-                  fontSize: {
-                    xs: tokens.typography.base,
-                    sm: tokens.typography.lg,
-                  },
-                  fontWeight: 600,
-                  minWidth: { xs: "100%", sm: "200px" },
->>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
                 }}
               >
                 Optimizasyona Başla
@@ -571,7 +545,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 onClick={handleExcelImport}
                 aria-label="Excel dosyasından kesim listesi oluştur"
                 sx={{
-<<<<<<< HEAD
                   // Outline variant - örnek uygulamadaki gibi: variant="outline"
                   borderWidth: "1px",
                   borderStyle: "solid",
@@ -590,16 +563,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                     borderColor: ds.colors.primary.main,
                     color: ds.colors.primary.main,
                   },
-=======
-                  px: { xs: ds.spacing["8"], sm: ds.spacing["10"] },
-                  py: { xs: ds.spacing["2"], sm: ds.spacing["2.5"] },
-                  fontSize: {
-                    xs: tokens.typography.base,
-                    sm: tokens.typography.lg,
-                  },
-                  fontWeight: 600,
-                  minWidth: { xs: "100%", sm: "220px" },
->>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
                 }}
               >
                 Kesim Listesi Oluştur

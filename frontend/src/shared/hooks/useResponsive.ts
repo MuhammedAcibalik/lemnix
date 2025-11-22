@@ -9,29 +9,34 @@ import { useTheme, Breakpoint } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
 /**
- * MUI Breakpoints (Material UI standard)
- * xs: 0px
- * sm: 600px
- * md: 900px
- * lg: 1200px
- * xl: 1536px
+ * Design System v3 Breakpoints (aligned with MUI theme)
+ * xs: 320px
+ * sm: 480px
+ * md: 768px
+ * lg: 1024px
+ * xl: 1366px
+ * xxl: 1920px
+ * xxxl: 2560px
  */
 
 export interface ResponsiveState {
   // Current breakpoint
   breakpoint: Breakpoint;
 
-  // Breakpoint checks
+  // Breakpoint checks (Design System v3: xs(320), sm(480), md(768), lg(1024), xl(1366), xxl(1920), xxxl(2560))
   isXs: boolean;
   isSm: boolean;
   isMd: boolean;
   isLg: boolean;
   isXl: boolean;
+  isXxl: boolean;
+  isXxxl: boolean;
 
   // Device groups
   isMobile: boolean;
   isTablet: boolean;
   isDesktop: boolean;
+  isWide: boolean;
 
   // Orientation
   isPortrait: boolean;
@@ -48,13 +53,17 @@ export interface ResponsiveState {
 
 /**
  * Get current breakpoint based on window width
+ * Uses Design System v3 breakpoints: xs(320), sm(480), md(768), lg(1024), xl(1366), xxl(1920), xxxl(2560)
  */
 function getCurrentBreakpoint(width: number): Breakpoint {
-  if (width < 600) return "xs";
-  if (width < 900) return "sm";
-  if (width < 1200) return "md";
-  if (width < 1536) return "lg";
-  return "xl";
+  // Design System v3 breakpoints
+  if (width >= 2560) return "xxxl" as Breakpoint;
+  if (width >= 1920) return "xxl" as Breakpoint;
+  if (width >= 1366) return "xl";
+  if (width >= 1024) return "lg";
+  if (width >= 768) return "md";
+  if (width >= 480) return "sm";
+  return "xs";
 }
 
 /**
@@ -90,8 +99,8 @@ function isRetinaDisplay(): boolean {
  * useResponsive Hook
  *
  * Provides comprehensive responsive design utilities including:
- * - Breakpoint detection (xs, sm, md, lg, xl)
- * - Device type detection (mobile, tablet, desktop)
+ * - Breakpoint detection (xs, sm, md, lg, xl, xxl, xxxl) - Design System v3
+ * - Device type detection (mobile, tablet, desktop, wide)
  * - Orientation detection (portrait, landscape)
  * - Feature detection (touch, retina)
  * - Viewport dimensions
@@ -109,12 +118,23 @@ function isRetinaDisplay(): boolean {
 export function useResponsive(): ResponsiveState {
   const theme = useTheme();
 
-  // Media queries for breakpoints
+  // Media queries for breakpoints (Design System v3)
+  // Using MUI theme breakpoints for consistency
   const isXs = useMediaQuery(theme.breakpoints.only("xs"));
   const isSm = useMediaQuery(theme.breakpoints.only("sm"));
   const isMd = useMediaQuery(theme.breakpoints.only("md"));
   const isLg = useMediaQuery(theme.breakpoints.only("lg"));
   const isXl = useMediaQuery(theme.breakpoints.only("xl"));
+
+  // xxl and xxxl: Using theme breakpoint values for consistency
+  // MUI's breakpoints.only() may not support custom breakpoints in all versions,
+  // so we use theme values to construct media queries
+  const xxlValue = theme.breakpoints.values.xxl ?? 1920;
+  const xxxlValue = theme.breakpoints.values.xxxl ?? 2560;
+  const isXxl = useMediaQuery(
+    `(min-width: ${xxlValue}px) and (max-width: ${xxxlValue - 1}px)`,
+  );
+  const isXxxl = useMediaQuery(`(min-width: ${xxxlValue}px)`);
 
   // Orientation
   const isPortrait = useMediaQuery("(orientation: portrait)");
@@ -160,16 +180,18 @@ export function useResponsive(): ResponsiveState {
     setIsRetina(isRetinaDisplay());
   }, [dimensions.width, dimensions.height]);
 
-  // Determine current breakpoint
+  // Determine current breakpoint (Design System v3)
   const breakpoint = getCurrentBreakpoint(dimensions.width);
 
-  // Device groups
-  // Mobile: xs and sm (0-899px)
+  // Device groups (Design System v3 breakpoints)
+  // Mobile: xs and sm (320-767px)
   const isMobile = isXs || isSm;
-  // Tablet: md (900-1199px)
+  // Tablet: md (768-1023px)
   const isTablet = isMd;
-  // Desktop: lg and xl (1200px+)
+  // Desktop: lg and xl (1024-1919px)
   const isDesktop = isLg || isXl;
+  // Wide: xxl and xxxl (1920px+)
+  const isWide = isXxl || isXxxl;
 
   return {
     breakpoint,
@@ -178,9 +200,12 @@ export function useResponsive(): ResponsiveState {
     isMd,
     isLg,
     isXl,
+    isXxl,
+    isXxxl,
     isMobile,
     isTablet,
     isDesktop,
+    isWide,
     isPortrait,
     isLandscape,
     isTouchDevice,

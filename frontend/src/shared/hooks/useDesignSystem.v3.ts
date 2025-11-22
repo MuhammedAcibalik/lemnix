@@ -7,7 +7,7 @@
  */
 
 import { useTheme } from "@mui/material";
-import * as DS from "@/app/theme/designSystem.v3";
+import * as DS from "@/App/theme/designSystem.v3";
 
 // Helper type for nested object access
 type NestedObject = {
@@ -280,4 +280,4 @@ export {
   withOpacity,
   createGradient,
   createGlow,
-} from "@/app/theme/designSystem.v3";
+} from "@/App/theme/designSystem.v3";

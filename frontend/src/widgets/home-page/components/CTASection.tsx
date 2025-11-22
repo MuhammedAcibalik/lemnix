@@ -79,7 +79,6 @@ const CTASection: React.FC<CTASectionProps> = ({ onFreeTrial, onViewDemo }) => {
               sonuçlar görün.
             </Typography>
 
-<<<<<<< HEAD
             {/* CTA Buttons - Örnek uygulamadaki pattern: flex flex-wrap gap-4 */}
             <Box
               sx={{
@@ -87,21 +86,11 @@ const CTASection: React.FC<CTASectionProps> = ({ onFreeTrial, onViewDemo }) => {
                 flexWrap: "wrap",
                 gap: ds.spacing["4"], // gap-4 (16px) - örnek uygulamadaki gibi
                 justifyContent: "center",
-=======
-            {/* CTA Buttons */}
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={ds.spacing["3"]}
-              sx={{
-                width: { xs: "100%", sm: "auto" },
-                alignItems: "center",
->>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
               }}
             >
               <PrimaryButton
                 size="large"
                 onClick={onFreeTrial}
-<<<<<<< HEAD
                 aria-label="Ücretsiz deneme başlat"
                 sx={{
                   // Gradient background - örnek uygulamadaki gibi: bg-gradient-to-r from-purple-600 to-pink-600
@@ -120,18 +109,6 @@ const CTASection: React.FC<CTASectionProps> = ({ onFreeTrial, onViewDemo }) => {
                     boxShadow: `0 10px 15px -3px ${alpha(ds.colors.primary[600], 0.3)}`,
                     transform: "translateY(-1px)",
                   },
-=======
-                endIcon={<ArrowForward sx={{ fontSize: 20 }} />}
-                sx={{
-                  px: { xs: ds.spacing["8"], sm: ds.spacing["10"] },
-                  py: { xs: ds.spacing["2"], sm: ds.spacing["2.5"] },
-                  fontSize: {
-                    xs: tokens.typography.base,
-                    sm: tokens.typography.lg,
-                  },
-                  fontWeight: 600,
-                  minWidth: { xs: "100%", sm: "220px" },
->>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
                 }}
               >
                 Optimizasyon Başlat
@@ -140,7 +117,6 @@ const CTASection: React.FC<CTASectionProps> = ({ onFreeTrial, onViewDemo }) => {
               <SecondaryButton
                 size="large"
                 onClick={onViewDemo}
-<<<<<<< HEAD
                 aria-label="Kesim listesi görüntüle"
                 sx={{
                   // Outline variant - örnek uygulamadaki gibi: variant="outline"
@@ -161,18 +137,6 @@ const CTASection: React.FC<CTASectionProps> = ({ onFreeTrial, onViewDemo }) => {
                     borderColor: ds.colors.primary.main,
                     color: ds.colors.primary.main,
                   },
-=======
-                startIcon={<AutoAwesome sx={{ fontSize: 20 }} />}
-                sx={{
-                  px: { xs: ds.spacing["8"], sm: ds.spacing["10"] },
-                  py: { xs: ds.spacing["2"], sm: ds.spacing["2.5"] },
-                  fontSize: {
-                    xs: tokens.typography.base,
-                    sm: tokens.typography.lg,
-                  },
-                  fontWeight: 600,
-                  minWidth: { xs: "100%", sm: "220px" },
->>>>>>> a544613c6dd123e2bcee66e2b17a4986c17015ce
                 }}
               >
                 Kesim Listesi Oluştur

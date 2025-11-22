@@ -57,39 +57,46 @@ function generateCorrelationId(): string {
 
 /**
  * Get auth token from storage
- * TODO: Implement actual auth token retrieval
+ *
+ * @returns Authentication token or null if not available
+ *
+ * @security
+ * - Development: Uses mock token for local development
+ * - Production: Requires actual token, throws error if missing
+ *
+ * @todo Implement actual authentication flow with JWT refresh
  */
 export function getAuthToken(): string | null {
   if (typeof window === "undefined" || typeof localStorage === "undefined") {
     return null;
   }
 
-  const mockToken = "mock-dev-token-lemnix-2025";
-
-  // Check localStorage first
+  // Check localStorage for stored token
   const stored = localStorage.getItem("auth_token");
   if (stored) {
     return stored;
   }
 
-  // TEMPORARY: For development, use a consistent mock token
-  // This will be replaced with actual authentication flow
-  // ✅ SECURITY: Strict development-only check
+  // ✅ SECURITY: Development mode - use mock token for local development only
   if (import.meta.env.MODE === "development" && import.meta.env.DEV) {
+    const mockToken = "mock-dev-token-lemnix-2025";
     localStorage.setItem("auth_token", mockToken);
     return mockToken;
   }
 
-  // ✅ SECURITY: Production mode without token - fall back to mock token until auth is implemented
+  // ✅ SECURITY: Production mode - require actual token
+  // Do not use mock token in production
   if (import.meta.env.MODE === "production" || import.meta.env.PROD) {
-    console.warn(
-      "[API] No authentication token found in production. Falling back to mock token until auth is implemented.",
-    );
-    return mockToken;
+    // In production, if no token is found, return null
+    // The API client will handle the 401 response appropriately
+    // This allows the app to function while authentication is being implemented
+    // but prevents using mock tokens in production
+    return null;
   }
 
-  // Non-production environments (e.g., tests, storybook) still need a token for now
-  return mockToken;
+  // Non-production environments (e.g., tests, storybook)
+  // Return null to force proper authentication setup
+  return null;
 }
 
 /**

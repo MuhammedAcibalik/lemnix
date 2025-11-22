@@ -32,7 +32,7 @@ import {
 // Import PNG optimization icon
 import { OptimizationPNGIcon } from "@/shared/ui/icons/OptimizationPNGIcon";
 import { alpha } from "@mui/material";
-import { colors } from "@/app/theme/designSystem.v2";
+import { colors } from "@/App/theme/designSystem.v3";
 import { appConfig } from "@/shared/config/legacy/appConfig";
 import type {
   NavigationItem,

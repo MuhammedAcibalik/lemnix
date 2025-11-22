@@ -7,6 +7,19 @@
 import { createTheme, alpha } from "@mui/material/styles";
 import * as DS from "./designSystem.v3";
 
+// Extend MUI Breakpoint type to include xxl and xxxl
+declare module "@mui/material/styles" {
+  interface BreakpointOverrides {
+    xs: true;
+    sm: true;
+    md: true;
+    lg: true;
+    xl: true;
+    xxl: true; // Custom breakpoint
+    xxxl: true; // Custom breakpoint
+  }
+}
+
 // ============================================================================
 // SPACING FUNCTION
 // ============================================================================
@@ -381,14 +394,16 @@ export const theme = createTheme({
   // Shadows
   shadows: createMuiShadows(),
 
-  // Breakpoints
+  // Breakpoints - Design System v3
   breakpoints: {
     values: {
-      xs: DS.breakpoints.xs,
-      sm: DS.breakpoints.sm,
-      md: DS.breakpoints.md,
-      lg: DS.breakpoints.lg,
-      xl: DS.breakpoints.xl,
+      xs: DS.breakpoints.xs, // 320
+      sm: DS.breakpoints.sm, // 480
+      md: DS.breakpoints.md, // 768
+      lg: DS.breakpoints.lg, // 1024
+      xl: DS.breakpoints.xl, // 1366
+      xxl: DS.breakpoints.xxl, // 1920
+      xxxl: DS.breakpoints.xxxl, // 2560
     },
   },
 
