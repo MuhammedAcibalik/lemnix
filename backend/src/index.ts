@@ -41,11 +41,9 @@ async function bootstrap(): Promise<void> {
           port: env.PORT,
         });
         process.exit(1);
-        break; // Unreachable but satisfies linter
       case "EADDRINUSE":
         logger.error("Port is already in use", error, { port: env.PORT });
         process.exit(1);
-        break; // Unreachable but satisfies linter
       default:
         throw error;
     }
