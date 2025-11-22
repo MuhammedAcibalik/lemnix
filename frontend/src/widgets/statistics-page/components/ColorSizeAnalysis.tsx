@@ -455,9 +455,9 @@ export const ColorSizeAnalysis: React.FC<ColorSizeAnalysisProps> = ({
                               height: 10,
                               borderRadius: "50%",
                               bgcolor:
-                                colorDoughnutData.datasets[0].backgroundColor[
+                                colorDoughnutData.datasets[0]?.backgroundColor?.[
                                   index
-                                ],
+                                ] ?? "#cccccc",
                               mr: 1,
                             }}
                           />
@@ -553,9 +553,9 @@ export const ColorSizeAnalysis: React.FC<ColorSizeAnalysisProps> = ({
                             height: 10,
                             borderRadius: "50%",
                             bgcolor:
-                              sizeDoughnutData.datasets[0].backgroundColor[
+                              sizeDoughnutData.datasets[0]?.backgroundColor?.[
                                 index
-                              ],
+                              ] ?? "#cccccc",
                             mr: 1,
                           }}
                         />
@@ -656,7 +656,7 @@ export const ColorSizeAnalysis: React.FC<ColorSizeAnalysisProps> = ({
                               borderRadius: "50%",
                               bgcolor:
                                 combinationDoughnutData.datasets[0]
-                                  .backgroundColor[index],
+                                  ?.backgroundColor?.[index] ?? "#cccccc",
                               mr: 1,
                             }}
                           />
@@ -757,7 +757,7 @@ export const ColorSizeAnalysis: React.FC<ColorSizeAnalysisProps> = ({
                               borderRadius: "50%",
                               bgcolor:
                                 combinationDoughnutData.datasets[0]
-                                  .backgroundColor[index],
+                                  ?.backgroundColor?.[index] ?? "#cccccc",
                               mr: 1,
                             }}
                           />

@@ -196,50 +196,56 @@ export async function getBatchStatistics(
     }
 
     // Return empty structure
-    return {
-      overview: types.includes("overview")
-        ? {
-            totalCuttingLists: 0,
-            totalWorkOrders: 0,
-            totalProfiles: 0,
-            totalProductSections: 0,
-            completedWorkOrders: 0,
-            pendingWorkOrders: 0,
-            mostUsedColor: "-",
-            mostUsedSize: "-",
-            averageEfficiency: 0,
-            totalWasteReduction: 0,
-            optimizationSuccessRate: 0,
-            activeUsers: 0,
-            systemUptime: 0,
-          }
-        : undefined,
-      performance: types.includes("performance")
-        ? {
-            averageOptimizationTime: 0,
-            throughput: 0,
-            errorRate: 0,
-          }
-        : undefined,
-      usage: types.includes("usage")
-        ? {
-            totalRequests: 0,
-            activeUsers: 0,
-          }
-        : undefined,
-      optimization: types.includes("optimization")
-        ? {
-            totalOptimizations: 0,
-            averageEfficiency: 0,
-          }
-        : undefined,
-      health: types.includes("health")
-        ? {
-            status: "healthy",
-            uptime: 0,
-          }
-        : undefined,
-    };
+    const result: BatchStatisticsResponse = {};
+    
+    if (types.includes("overview")) {
+      result.overview = {
+        totalCuttingLists: 0,
+        totalWorkOrders: 0,
+        totalProfiles: 0,
+        totalProductSections: 0,
+        completedWorkOrders: 0,
+        pendingWorkOrders: 0,
+        mostUsedColor: "-",
+        mostUsedSize: "-",
+        averageEfficiency: 0,
+        totalWasteReduction: 0,
+        optimizationSuccessRate: 0,
+        activeUsers: 0,
+        systemUptime: 0,
+      };
+    }
+    
+    if (types.includes("performance")) {
+      result.performance = {
+        averageOptimizationTime: 0,
+        throughput: 0,
+        errorRate: 0,
+      };
+    }
+    
+    if (types.includes("usage")) {
+      result.usage = {
+        totalRequests: 0,
+        activeUsers: 0,
+      };
+    }
+    
+    if (types.includes("optimization")) {
+      result.optimization = {
+        totalOptimizations: 0,
+        averageEfficiency: 0,
+      };
+    }
+    
+    if (types.includes("health")) {
+      result.health = {
+        status: "healthy",
+        uptime: 0,
+      };
+    }
+    
+    return result;
   }
 }
 

@@ -51,7 +51,7 @@ export class ProductionPlanApi {
       formData,
     );
 
-    return response;
+    return response.data;
   }
 
   /**
@@ -83,7 +83,8 @@ export class ProductionPlanApi {
       },
     );
 
-    const { success, data, pagination } = response;
+    const result = response.data;
+    const { success, data, pagination } = result;
 
     console.log("📊 [API] Data fetched from database:", {
       success,
@@ -92,7 +93,7 @@ export class ProductionPlanApi {
       source: "database-only",
     });
 
-    return response;
+    return result;
   }
 
   /**
@@ -103,11 +104,12 @@ export class ProductionPlanApi {
       `${this.baseUrl}/${id}`,
     );
 
-    if (!response.success || !response.data) {
+    const result = response.data;
+    if (!result.success || !result.data) {
       throw new Error("Production plan not found");
     }
 
-    return response.data;
+    return result.data;
   }
 
   /**
@@ -121,11 +123,12 @@ export class ProductionPlanApi {
       `${this.baseUrl}/week/${weekNumber}/${year}`,
     );
 
-    if (!response.success || !response.data) {
+    const result = response.data;
+    if (!result.success || !result.data) {
       throw new Error("Production plan not found");
     }
 
-    return response.data;
+    return result.data;
   }
 
   /**
@@ -139,7 +142,7 @@ export class ProductionPlanApi {
       message: string;
     }>(`${this.baseUrl}/${id}`);
 
-    return response;
+    return response.data;
   }
 
   async deleteAllProductionPlans(): Promise<{
@@ -153,7 +156,7 @@ export class ProductionPlanApi {
       count: number;
     }>(this.baseUrl);
 
-    return response;
+    return response.data;
   }
 
   /**
@@ -173,11 +176,12 @@ export class ProductionPlanApi {
       `${this.baseUrl}/metrics?${params.toString()}`,
     );
 
-    if (!response.success || !response.data) {
+    const result = response.data;
+    if (!result.success || !result.data) {
       throw new Error("Failed to fetch metrics");
     }
 
-    return response.data;
+    return result.data;
   }
 
   /**
@@ -190,11 +194,12 @@ export class ProductionPlanApi {
       `${this.baseUrl}/items/work-order/${workOrderId}`,
     );
 
-    if (!response.success || !response.data) {
+    const result = response.data;
+    if (!result.success || !result.data) {
       throw new Error("Production plan items not found");
     }
 
-    return response.data;
+    return result.data;
   }
 
   /**
@@ -232,7 +237,7 @@ export class ProductionPlanApi {
       error?: string;
     }>(`${this.baseUrl}/create-cutting-list`, request);
 
-    return response;
+    return response.data;
   }
 
   /**
@@ -247,11 +252,12 @@ export class ProductionPlanApi {
       error?: string;
     }>(`${this.baseUrl}/cutting-list/${cuttingListId}/plan-items`);
 
-    if (!response.success || !response.data) {
-      throw new Error(response.error || "Linked plan items not found");
+    const result = response.data;
+    if (!result.success || !result.data) {
+      throw new Error(result.error || "Linked plan items not found");
     }
 
-    return response.data;
+    return result.data;
   }
 
   /**
@@ -264,8 +270,9 @@ export class ProductionPlanApi {
       error?: string;
     }>(`${this.baseUrl}/plan-item/${planItemId}/unlink`);
 
-    if (!response.success) {
-      throw new Error(response.error || "Failed to unlink plan item");
+    const result = response.data;
+    if (!result.success) {
+      throw new Error(result.error || "Failed to unlink plan item");
     }
   }
 
@@ -285,11 +292,12 @@ export class ProductionPlanApi {
       data: BackorderItem[];
     }>(`${this.baseUrl}/backorder?${params.toString()}`);
 
-    if (!response.success || !response.data) {
+    const result = response.data;
+    if (!result.success || !result.data) {
       throw new Error("Failed to fetch backorder items");
     }
 
-    return response.data;
+    return result.data;
   }
 
   /**
@@ -308,11 +316,12 @@ export class ProductionPlanApi {
       data: ProductionPlanStatistics;
     }>(`${this.baseUrl}/statistics?${params.toString()}`);
 
-    if (!response.success || !response.data) {
+    const result = response.data;
+    if (!result.success || !result.data) {
       throw new Error("Failed to fetch statistics");
     }
 
-    return response.data;
+    return result.data;
   }
 }
 

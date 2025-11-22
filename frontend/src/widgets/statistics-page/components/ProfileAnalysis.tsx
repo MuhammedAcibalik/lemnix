@@ -448,9 +448,9 @@ export const ProfileAnalysis: React.FC<ProfileAnalysisProps> = ({ data }) => {
                             height: 12,
                             borderRadius: "50%",
                             bgcolor:
-                              profileDoughnutData.datasets[0].backgroundColor[
+                              profileDoughnutData.datasets[0]?.backgroundColor?.[
                                 index
-                              ],
+                              ] ?? "#cccccc",
                             mr: 1,
                           }}
                         />
@@ -544,9 +544,9 @@ export const ProfileAnalysis: React.FC<ProfileAnalysisProps> = ({ data }) => {
                             height: 12,
                             borderRadius: "50%",
                             bgcolor:
-                              sizeDoughnutData.datasets[0].backgroundColor[
+                              sizeDoughnutData.datasets[0]?.backgroundColor?.[
                                 index
-                              ],
+                              ] ?? "#cccccc",
                             mr: 1,
                           }}
                         />

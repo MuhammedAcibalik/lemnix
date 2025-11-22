@@ -91,10 +91,9 @@ export const DEFAULT_PARAMS: OptimizationParams = {
   unit: "mm",
   // ✅ P1-7: GA Advanced Settings (Adaptive defaults)
   performanceSettings: {
-    populationSize: undefined, // Backend auto-tune
-    generations: undefined, // Backend auto-tune
     mutationRate: 0.15,
     crossoverRate: 0.8,
+    // populationSize and generations omitted for backend auto-tuning
   },
   // ✅ P1-6: Cost Model (Industry standard defaults)
   costModel: {

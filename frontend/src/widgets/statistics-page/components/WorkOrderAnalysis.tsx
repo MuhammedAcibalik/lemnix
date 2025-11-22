@@ -566,9 +566,9 @@ const WorkOrderAnalysis: React.FC<WorkOrderAnalysisProps> = ({
                             height: 12,
                             borderRadius: "50%",
                             bgcolor:
-                              statusDoughnutData.datasets[0].backgroundColor[
+                              statusDoughnutData.datasets[0]?.backgroundColor?.[
                                 index
-                              ],
+                              ] ?? "#cccccc",
                             mr: 1,
                           }}
                         />
@@ -661,9 +661,9 @@ const WorkOrderAnalysis: React.FC<WorkOrderAnalysisProps> = ({
                             height: 12,
                             borderRadius: "50%",
                             bgcolor:
-                              priorityDoughnutData.datasets[0].backgroundColor[
+                              priorityDoughnutData.datasets[0]?.backgroundColor?.[
                                 index
-                              ],
+                              ] ?? "#cccccc",
                             mr: 1,
                           }}
                         />
