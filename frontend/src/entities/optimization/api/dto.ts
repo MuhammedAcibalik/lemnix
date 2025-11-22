@@ -179,8 +179,8 @@ export function normalizeOptimizationResult(
       totalPieces: 0,
     },
     recommendations,
-    algorithmMetadata,
-    costBreakdown,
+    ...(algorithmMetadata && { algorithmMetadata }),
+    ...(costBreakdown && { costBreakdown }),
     qualityScore: backendResult.qualityScore,
     confidence: backendResult.confidence,
     optimizationScore: backendResult.optimizationScore,
@@ -239,6 +239,9 @@ function normalizeCut(backendCut: BackendCut): Cut {
     (backendCut as { profileType?: string; materialType?: string })
       .materialType;
 
+  const workOrderId = (backendCut as { workOrderId?: string }).workOrderId;
+  const quantity = (backendCut as { quantity?: number }).quantity;
+
   return {
     id: (backendCut.id ??
       `cut-${Math.random().toString(36).substr(2, 9)}`) as unknown as ID,
@@ -251,9 +254,9 @@ function normalizeCut(backendCut: BackendCut): Cut {
     ),
     isReclaimable:
       (backendCut as { isReclaimable?: boolean }).isReclaimable ?? false,
-    workOrderId: (backendCut as { workOrderId?: string }).workOrderId,
-    profileType,
-    quantity: (backendCut as { quantity?: number }).quantity,
+    ...(workOrderId && { workOrderId }),
+    ...(profileType && { profileType }),
+    ...(quantity !== undefined && { quantity }),
   };
 }
 
@@ -261,6 +264,8 @@ function normalizeCut(backendCut: BackendCut): Cut {
  * Normalize backend CuttingSegment to frontend type
  */
 function normalizeSegment(backendSegment: BackendSegment): CuttingSegment {
+  const note = (backendSegment as { note?: string }).note;
+
   return {
     id: (backendSegment.id ??
       `segment-${Math.random().toString(36).substr(2, 9)}`) as unknown as ID,
@@ -284,7 +289,7 @@ function normalizeSegment(backendSegment: BackendSegment): CuttingSegment {
     profileType: backendSegment.profileType,
     color: (backendSegment as { color?: string }).color ?? "#000000",
     version: (backendSegment as { version?: string }).version ?? "1.0",
-    note: (backendSegment as { note?: string }).note,
+    ...(note && { note }),
   };
 }
 
@@ -328,14 +333,17 @@ function normalizeWasteDistribution(
 function normalizeRecommendation(
   rec: BackendRecommendation,
 ): OptimizationRecommendation {
+  const impact = rec.impact;
+  const actionable = rec.actionable;
+
   return {
     type:
       (rec.type as "performance" | "cost" | "quality" | "waste") ??
       "performance",
     priority: (rec.priority as "low" | "medium" | "high") ?? "medium",
     message: rec.message ?? "",
-    impact: rec.impact,
-    actionable: rec.actionable,
+    ...(impact !== undefined && { impact }),
+    ...(actionable !== undefined && { actionable }),
   };
 }
 
@@ -345,6 +353,13 @@ function normalizeRecommendation(
 function normalizeAlgorithmMetadata(
   metadata: BackendAlgorithmMetadata,
 ): AlgorithmMetadata {
+  const deterministicSeed =
+    typeof metadata.deterministicSeed === "number"
+      ? metadata.deterministicSeed
+      : undefined;
+  const populationSize = (metadata as { populationSize?: number }).populationSize;
+  const finalGeneration = (metadata as { finalGeneration?: number }).finalGeneration;
+
   return {
     effectiveComplexity: metadata.effectiveComplexity ?? "N/A",
     actualGenerations: metadata.actualGenerations ?? 0,
@@ -355,12 +370,9 @@ function normalizeAlgorithmMetadata(
         | "stagnation") ?? "max_generations",
     bestFitness: metadata.bestFitness ?? 0,
     executionTimeMs: metadata.executionTimeMs ?? 0,
-    deterministicSeed:
-      typeof metadata.deterministicSeed === "number"
-        ? metadata.deterministicSeed
-        : undefined,
-    populationSize: (metadata as { populationSize?: number }).populationSize,
-    finalGeneration: (metadata as { finalGeneration?: number }).finalGeneration,
+    ...(deterministicSeed !== undefined && { deterministicSeed }),
+    ...(populationSize !== undefined && { populationSize }),
+    ...(finalGeneration !== undefined && { finalGeneration }),
   };
 }
 
@@ -370,14 +382,17 @@ function normalizeAlgorithmMetadata(
 function normalizeCostBreakdown(
   breakdown: BackendCostBreakdown,
 ): CostBreakdown {
+  const cuttingCost = breakdown.cuttingCost;
+  const timeCost = (breakdown as { timeCost?: number }).timeCost;
+
   return {
     materialCost: breakdown.materialCost ?? 0,
     laborCost: breakdown.laborCost ?? 0,
     wasteCost: breakdown.wasteCost ?? 0,
     setupCost: breakdown.setupCost ?? 0,
     totalCost: breakdown.totalCost ?? 0,
-    cuttingCost: breakdown.cuttingCost,
-    timeCost: (breakdown as { timeCost?: number }).timeCost,
+    ...(cuttingCost !== undefined && { cuttingCost }),
+    ...(timeCost !== undefined && { timeCost }),
   };
 }
 
