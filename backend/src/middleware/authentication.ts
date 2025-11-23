@@ -14,7 +14,7 @@ import {
   JWTPayload,
 } from "./authorization";
 import {
-  InMemorySessionStore,
+  createSessionStore,
   SessionRecord,
   SessionStore,
 } from "./sessionStore";
@@ -23,25 +23,24 @@ import {
 // SESSION MANAGEMENT
 // ============================================================================
 
-class SessionManager {
+export class SessionManager {
   private readonly SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
   private readonly ABSOLUTE_TIMEOUT = 8 * 60 * 60 * 1000; // 8 hours
   private readonly cleanupInterval: NodeJS.Timeout;
   private readonly activeSessionIds = new Set<string>();
   private readonly activeUsers = new Map<string, number>();
 
-  constructor(
-    private readonly store: SessionStore = new InMemorySessionStore(),
-  ) {
+  constructor(private readonly store: SessionStore = createSessionStore()) {
     this.cleanupInterval = setInterval(
       () => {
-        this.cleanupInactiveSessions();
+        void this.cleanupInactiveSessions();
       },
       5 * 60 * 1000,
     );
+    this.cleanupInterval.unref?.();
   }
 
-  createSession(userId: string, role: UserRole): string {
+  async createSession(userId: string, role: UserRole): Promise<string> {
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
     const now = Date.now();
 
@@ -55,16 +54,15 @@ class SessionManager {
       isActive: true,
     };
 
-    this.store.create(session);
-    this.activeSessionIds.add(sessionId);
-    this.activeUsers.set(userId, (this.activeUsers.get(userId) ?? 0) + 1);
+    await this.store.create(session);
+    this.trackSession(session);
 
     logger.info("Session created", { sessionId, userId, role });
     return sessionId;
   }
 
-  validateSession(sessionId: string, tokenId: string): boolean {
-    const session = this.store.find(sessionId);
+  async validateSession(sessionId: string, tokenId: string): Promise<boolean> {
+    const session = await this.store.find(sessionId);
 
     if (!session || !session.isActive) {
       return false;
@@ -76,52 +74,52 @@ class SessionManager {
       now - session.lastActivity > this.SESSION_TIMEOUT ||
       now - session.createdAt > this.ABSOLUTE_TIMEOUT
     ) {
-      this.invalidateSession(sessionId);
+      await this.invalidateSession(sessionId);
       return false;
     }
 
     session.lastActivity = now;
     session.tokenIds.add(tokenId);
-    this.store.update(sessionId, session);
+    await this.store.update(sessionId, session);
+
+    if (!this.activeSessionIds.has(sessionId)) {
+      this.trackSession(session);
+    }
     return true;
   }
 
-  invalidateSession(sessionId: string): void {
-    const session = this.store.find(sessionId);
+  async invalidateSession(sessionId: string): Promise<void> {
+    const session = await this.store.find(sessionId);
     if (!session) {
+      this.activeSessionIds.delete(sessionId);
       return;
     }
 
     session.isActive = false;
-    this.store.update(sessionId, session);
-    this.store.delete(sessionId);
-    this.activeSessionIds.delete(sessionId);
-
-    const userCount = this.activeUsers.get(session.userId) ?? 0;
-    if (userCount <= 1) {
-      this.activeUsers.delete(session.userId);
-    } else {
-      this.activeUsers.set(session.userId, userCount - 1);
-    }
+    await this.store.update(sessionId, session);
+    await this.store.delete(sessionId);
+    this.untrackSession(session);
 
     logger.info("Session invalidated", { sessionId, userId: session.userId });
   }
 
-  invalidateUserSessions(userId: string): void {
-    const sessions = this.store.findByUser(userId);
-    sessions.forEach((session) => this.invalidateSession(session.sessionId));
+  async invalidateUserSessions(userId: string): Promise<void> {
+    const sessions = await this.store.findByUser(userId);
+    await Promise.all(
+      sessions.map((session) => this.invalidateSession(session.sessionId)),
+    );
     logger.info("All user sessions invalidated", {
       userId,
       sessionCount: sessions.length,
     });
   }
 
-  private cleanupInactiveSessions(): void {
+  private async cleanupInactiveSessions(): Promise<void> {
     const now = Date.now();
     const expiredSessions: string[] = [];
 
     for (const sessionId of Array.from(this.activeSessionIds)) {
-      const session = this.store.find(sessionId);
+      const session = await this.store.find(sessionId);
       if (!session) {
         this.activeSessionIds.delete(sessionId);
         continue;
@@ -136,12 +134,31 @@ class SessionManager {
       }
     }
 
-    expiredSessions.forEach((id) => this.invalidateSession(id));
+    await Promise.all(expiredSessions.map((id) => this.invalidateSession(id)));
 
     if (expiredSessions.length > 0) {
       logger.debug("Cleaned up inactive sessions", {
         removedCount: expiredSessions.length,
       });
+    }
+  }
+
+  private trackSession(session: SessionRecord): void {
+    this.activeSessionIds.add(session.sessionId);
+    this.activeUsers.set(
+      session.userId,
+      (this.activeUsers.get(session.userId) ?? 0) + 1,
+    );
+  }
+
+  private untrackSession(session: SessionRecord): void {
+    this.activeSessionIds.delete(session.sessionId);
+
+    const userCount = this.activeUsers.get(session.userId) ?? 0;
+    if (userCount <= 1) {
+      this.activeUsers.delete(session.userId);
+    } else {
+      this.activeUsers.set(session.userId, userCount - 1);
     }
   }
 
@@ -153,7 +170,8 @@ class SessionManager {
   }
 }
 
-export const sessionManager = new SessionManager();
+const defaultSessionStore = createSessionStore();
+export const sessionManager = new SessionManager(defaultSessionStore);
 
 // ============================================================================
 // AUTHENTICATION MIDDLEWARE
@@ -206,7 +224,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const sessionId = sessionManager.createSession(
+    const sessionId = await sessionManager.createSession(
       authResult.userId,
       authResult.role,
     );
@@ -238,10 +256,10 @@ export const login = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export const logout = (req: Request, res: Response): void => {
+export const logout = async (req: Request, res: Response): Promise<void> => {
   try {
     if (req.user?.sessionId) {
-      sessionManager.invalidateSession(req.user.sessionId);
+      await sessionManager.invalidateSession(req.user.sessionId);
     }
 
     res.json({ success: true, message: "Logged out successfully" });
@@ -254,7 +272,10 @@ export const logout = (req: Request, res: Response): void => {
   }
 };
 
-export const refreshToken = (req: Request, res: Response): void => {
+export const refreshToken = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
   try {
     const { refreshToken } = req.body;
 
@@ -268,7 +289,9 @@ export const refreshToken = (req: Request, res: Response): void => {
     const jwtSecret = process.env.JWT_SECRET || "default-secret-key";
     const decoded = jwt.verify(refreshToken, jwtSecret) as JWTPayload;
 
-    if (!sessionManager.validateSession(decoded.sessionId, decoded.jti)) {
+    if (
+      !(await sessionManager.validateSession(decoded.sessionId, decoded.jti))
+    ) {
       res
         .status(401)
         .json({ error: "Unauthorized", message: "Invalid or expired session" });
@@ -363,11 +386,11 @@ export const authenticateToken = (
   }
 };
 
-export const validateSession = (
+export const validateSession = async (
   req: Request,
   res: Response,
   next: NextFunction,
-): void => {
+): Promise<void> => {
   if (!req.user) {
     res
       .status(401)
@@ -384,12 +407,29 @@ export const validateSession = (
     return;
   }
 
-  if (!sessionManager.validateSession(req.user.sessionId, req.user.tokenId)) {
-    res
-      .status(401)
-      .json({ error: "Unauthorized", message: "Session expired or invalid" });
-    return;
-  }
+  try {
+    const isValid = await sessionManager.validateSession(
+      req.user.sessionId,
+      req.user.tokenId,
+    );
 
-  next();
+    if (!isValid) {
+      res
+        .status(401)
+        .json({ error: "Unauthorized", message: "Session expired or invalid" });
+      return;
+    }
+
+    next();
+  } catch (error) {
+    logger.error("Session validation error", {
+      error: (error as Error).message,
+    });
+    res
+      .status(500)
+      .json({
+        error: "Internal Server Error",
+        message: "Session validation failed",
+      });
+  }
 };

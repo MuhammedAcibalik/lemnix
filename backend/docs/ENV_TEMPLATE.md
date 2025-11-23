@@ -35,6 +35,11 @@ RATE_LIMIT_MAX_REQUESTS=100
 
 # Logging
 LOG_LEVEL=info
+
+# Session Store (Redis is required in production)
+SESSION_STORE_DRIVER=memory
+# REDIS_URL is required when SESSION_STORE_DRIVER=redis
+REDIS_URL=redis://localhost:6379/0
 ```
 
 ## PostgreSQL Setup Instructions

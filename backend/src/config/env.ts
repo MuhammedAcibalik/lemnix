@@ -16,86 +16,109 @@ import { z } from "zod";
 /**
  * Environment schema definition
  */
-const envSchema = z.object({
-  // Node environment
-  NODE_ENV: z
-    .enum(["development", "production", "test"])
-    .default("development"),
+const envSchema = z
+  .object({
+    // Node environment
+    NODE_ENV: z
+      .enum(["development", "production", "test"])
+      .default("development"),
 
-  // Server configuration
-  PORT: z
-    .string()
-    .regex(/^\d+$/, "PORT must be a number")
-    .transform(Number)
-    .pipe(z.number().int().positive().max(65535))
-    .default("3001"),
+    // Server configuration
+    PORT: z
+      .string()
+      .regex(/^\d+$/, "PORT must be a number")
+      .transform(Number)
+      .pipe(z.number().int().positive().max(65535))
+      .default("3001"),
 
-  // Frontend URL for CORS
-  FRONTEND_URL: z.string().url().default("http://localhost:3000"),
+    // Frontend URL for CORS
+    FRONTEND_URL: z.string().url().default("http://localhost:3000"),
 
-  // Database
-  DATABASE_URL: z
-    .string()
-    .regex(
-      /^postgres(?:ql)?:\/\/.+/,
-      "DATABASE_URL must be a valid PostgreSQL connection string (e.g. postgres://user:pass@host:5432/db)",
-    ),
+    // Database
+    DATABASE_URL: z
+      .string()
+      .regex(
+        /^postgres(?:ql)?:\/\/.+/,
+        "DATABASE_URL must be a valid PostgreSQL connection string (e.g. postgres://user:pass@host:5432/db)",
+      ),
 
-  // JWT Authentication (REQUIRED in production, optional in development)
-  JWT_SECRET: z
-    .string()
-    .min(32)
-    .optional()
-    .transform((val) => {
-      // In production, JWT_SECRET is required
-      if (process.env.NODE_ENV === "production" && !val) {
-        throw new Error("JWT_SECRET is required in production environment");
-      }
-      // In development, provide a default
-      return val || "dev-secret-key-DO-NOT-USE-IN-PRODUCTION-12345678";
-    }),
-  JWT_EXPIRES_IN: z.string().default("7d"),
+    // JWT Authentication (REQUIRED in production, optional in development)
+    JWT_SECRET: z
+      .string()
+      .min(32)
+      .optional()
+      .transform((val) => {
+        // In production, JWT_SECRET is required
+        if (process.env.NODE_ENV === "production" && !val) {
+          throw new Error("JWT_SECRET is required in production environment");
+        }
+        // In development, provide a default
+        return val || "dev-secret-key-DO-NOT-USE-IN-PRODUCTION-12345678";
+      }),
+    JWT_EXPIRES_IN: z.string().default("7d"),
 
-  // Rate limiting
-  RATE_LIMIT_WINDOW_MS: z
-    .string()
-    .regex(/^\d+$/)
-    .transform(Number)
-    .pipe(z.number().int().positive())
-    .default("60000"),
+    // Rate limiting
+    RATE_LIMIT_WINDOW_MS: z
+      .string()
+      .regex(/^\d+$/)
+      .transform(Number)
+      .pipe(z.number().int().positive())
+      .default("60000"),
 
-  RATE_LIMIT_MAX_REQUESTS: z
-    .string()
-    .regex(/^\d+$/)
-    .transform(Number)
-    .pipe(z.number().int().positive())
-    .default("100"),
+    RATE_LIMIT_MAX_REQUESTS: z
+      .string()
+      .regex(/^\d+$/)
+      .transform(Number)
+      .pipe(z.number().int().positive())
+      .default("100"),
 
-  // Logging
-  LOG_LEVEL: z
-    .enum(["error", "warn", "info", "debug", "verbose"])
-    .default("info"),
+    // Logging
+    LOG_LEVEL: z
+      .enum(["error", "warn", "info", "debug", "verbose"])
+      .default("info"),
 
-  // GPU optimization settings
-  ENABLE_GPU: z
-    .string()
-    .transform((val) => val === "true")
-    .pipe(z.boolean())
-    .default("false"),
+    // Session management
+    SESSION_STORE_DRIVER: z
+      .enum(["memory", "redis"])
+      .default(process.env.NODE_ENV === "production" ? "redis" : "memory"),
+    REDIS_URL: z
+      .string()
+      .regex(
+        /^rediss?:\/\/.+/,
+        "REDIS_URL must be a valid redis connection string (e.g. redis://user:pass@host:6379/0)",
+      )
+      .optional(),
 
-  // Security
-  ENABLE_HELMET: z
-    .string()
-    .transform((val) => val === "true")
-    .pipe(z.boolean())
-    .default("true"),
+    // GPU optimization settings
+    ENABLE_GPU: z
+      .string()
+      .transform((val) => val === "true")
+      .pipe(z.boolean())
+      .default("false"),
 
-  ENABLE_CORS: z
-    .string()
-    .transform((val) => val === "true")
-    .pipe(z.boolean())
-    .default("true"),
-});
+    // Security
+    ENABLE_HELMET: z
+      .string()
+      .transform((val) => val === "true")
+      .pipe(z.boolean())
+      .default("true"),
+
+    ENABLE_CORS: z
+      .string()
+      .transform((val) => val === "true")
+      .pipe(z.boolean())
+      .default("true"),
+  })
+  .superRefine((config, ctx) => {
+    if (config.SESSION_STORE_DRIVER === "redis" && !config.REDIS_URL) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          "REDIS_URL is required when SESSION_STORE_DRIVER is set to 'redis' (default in production)",
+        path: ["REDIS_URL"],
+      });
+    }
+  });
 
 /**
  * Parsed and validated environment variables

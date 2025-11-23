@@ -26,6 +26,10 @@ The backend uses SQLite by default. No additional setup required.
 ### Using PostgreSQL (Optional)
 For PostgreSQL setup, refer to [POSTGRESQL_MIGRATION_GUIDE.md](./POSTGRESQL_MIGRATION_GUIDE.md).
 
+### Session Store Requirements
+- **Production**: Provision a Redis instance and configure `SESSION_STORE_DRIVER=redis` with the corresponding `REDIS_URL`. Redis must be reachable by all API instances to ensure session sharing across nodes and restarts.
+- **Local development & tests**: The backend defaults to the in-memory session store. To exercise Redis locally, start the bundled service via `docker compose up redis` and set `SESSION_STORE_DRIVER=redis` in your `.env` file.
+
 ## Related Documentation
 
 For general project documentation, see [docs/README.md](../../docs/README.md) in the repository root.
