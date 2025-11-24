@@ -39,9 +39,7 @@ interface GAAdvancedSettingsProps {
   readonly readonly?: boolean;
 }
 
-const DEFAULT_GA_SETTINGS = {
-  populationSize: undefined, // Adaptive (50-200)
-  generations: undefined, // Adaptive (100-500)
+const DEFAULT_GA_SETTINGS: Partial<PerformanceSettings> = {
   mutationRate: 0.15,
   crossoverRate: 0.8,
 };
