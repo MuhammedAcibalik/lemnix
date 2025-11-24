@@ -23,6 +23,18 @@ import { ExportHandler } from "../services/enterprise-handlers/ExportHandler";
 import { EnterpriseValidationService } from "../services/enterprise-validation/ValidationService";
 import { prisma } from "../config/database";
 
+export const SUPPORTED_OPTIMIZATION_ALGORITHMS = [
+  "ffd",
+  "bfd",
+  "genetic",
+  "pooling",
+  "nsga-ii",
+  "pattern-exact",
+] as const;
+
+export type SupportedOptimizationAlgorithm =
+  (typeof SUPPORTED_OPTIMIZATION_ALGORITHMS)[number];
+
 /**
  * Enterprise Optimization Controller
  * Thin routing layer with dependency injection
@@ -112,6 +124,53 @@ export class EnterpriseOptimizationController {
     res: Response,
   ): Promise<void> => {
     await this.optimizationHandler.optimizeCompare(req, res);
+  };
+
+  public validateOptimizationData = async (
+    req: Request,
+    res: Response,
+  ): Promise<void> => {
+    const validation = this.validationService.validateRequest(req.body);
+
+    if (!validation.isValid) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: "VALIDATION_ERROR",
+          message: "Invalid optimization request",
+          details: validation.errors,
+        },
+        metadata: {
+          timestamp: new Date().toISOString(),
+          version: "5.0.0",
+        },
+      });
+      return;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Optimization request is valid",
+      metadata: {
+        timestamp: new Date().toISOString(),
+        version: "5.0.0",
+      },
+    });
+  };
+
+  public getSupportedAlgorithms = async (
+    _req: Request,
+    res: Response,
+  ): Promise<void> => {
+    res.status(200).json({
+      success: true,
+      algorithms: SUPPORTED_OPTIMIZATION_ALGORITHMS,
+      metadata: {
+        timestamp: new Date().toISOString(),
+        version: "5.0.0",
+        total: SUPPORTED_OPTIMIZATION_ALGORITHMS.length,
+      },
+    });
   };
 
   // ==========================================================================
