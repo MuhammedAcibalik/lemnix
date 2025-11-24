@@ -250,9 +250,9 @@ export const CuttingListsGrid: React.FC<CuttingListsGridProps> = ({
                           display: "flex",
                           flexDirection: "column",
                           position: "relative", // For delete button positioning
-                          border: isCurrentWeek
-                            ? `2px solid ${ds.colors.primary.main}`
-                            : undefined,
+                          ...(isCurrentWeek
+                            ? { border: `2px solid ${ds.colors.primary.main}` }
+                            : {}),
                           "&:hover": {
                             transform: "translateY(-4px)",
                             boxShadow: ds.shadows.soft.lg,

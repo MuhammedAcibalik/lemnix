@@ -123,6 +123,49 @@ interface HealthCheck {
 }
 
 /**
+ * Email alert configuration
+ */
+interface EmailAlertConfig {
+  readonly to: string;
+  readonly from?: string;
+  readonly subject?: string;
+  readonly cc?: readonly string[];
+  readonly bcc?: readonly string[];
+  readonly [key: string]: unknown;
+}
+
+/**
+ * Webhook alert configuration
+ */
+interface WebhookAlertConfig {
+  readonly url: string;
+  readonly method?: "GET" | "POST" | "PUT";
+  readonly headers?: Readonly<Record<string, string>>;
+  readonly timeout?: number;
+  readonly [key: string]: unknown;
+}
+
+/**
+ * Slack alert configuration
+ */
+interface SlackAlertConfig {
+  readonly channel: string;
+  readonly webhookUrl?: string;
+  readonly username?: string;
+  readonly iconEmoji?: string;
+  readonly [key: string]: unknown;
+}
+
+/**
+ * Alert action configuration union type
+ */
+type AlertActionConfig =
+  | EmailAlertConfig
+  | WebhookAlertConfig
+  | SlackAlertConfig
+  | Record<string, unknown>;
+
+/**
  * Alert configuration
  */
 interface AlertConfig {
@@ -151,7 +194,7 @@ interface AlertCondition {
  */
 interface AlertAction {
   readonly type: "email" | "sms" | "webhook" | "slack" | "log";
-  readonly config: Record<string, unknown>;
+  readonly config: AlertActionConfig;
 }
 
 /**
@@ -853,13 +896,13 @@ export class EnterpriseMonitoringService {
             );
             break;
           case "email":
-            this.sendEmailAlert(action.config, alert);
+            this.sendEmailAlert(action.config as EmailAlertConfig, alert);
             break;
           case "webhook":
-            this.sendWebhookAlert(action.config, alert);
+            this.sendWebhookAlert(action.config as WebhookAlertConfig, alert);
             break;
           case "slack":
-            this.sendSlackAlert(action.config, alert);
+            this.sendSlackAlert(action.config as SlackAlertConfig, alert);
             break;
         }
       } catch (error) {
@@ -871,23 +914,19 @@ export class EnterpriseMonitoringService {
     }
   }
 
-  private sendEmailAlert(config: Record<string, any>, alert: Alert): void {
+  private sendEmailAlert(config: EmailAlertConfig, alert: Alert): void {
     // Simplified email sending
-    console.log(`[Email] Sending alert to ${config["to"]}: ${alert.message}`);
+    console.log(`[Email] Sending alert to ${config.to}: ${alert.message}`);
   }
 
-  private sendWebhookAlert(config: Record<string, any>, alert: Alert): void {
+  private sendWebhookAlert(config: WebhookAlertConfig, alert: Alert): void {
     // Simplified webhook sending
-    console.log(
-      `[Webhook] Sending alert to ${config["url"]}: ${alert.message}`,
-    );
+    console.log(`[Webhook] Sending alert to ${config.url}: ${alert.message}`);
   }
 
-  private sendSlackAlert(config: Record<string, any>, alert: Alert): void {
+  private sendSlackAlert(config: SlackAlertConfig, alert: Alert): void {
     // Simplified Slack sending
-    console.log(
-      `[Slack] Sending alert to ${config["channel"]}: ${alert.message}`,
-    );
+    console.log(`[Slack] Sending alert to ${config.channel}: ${alert.message}`);
   }
 
   private determineOverallStatus(checks: HealthCheck[]): HealthStatus {

@@ -7,6 +7,16 @@
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
+/**
+ * Chart data point for trend visualization
+ */
+export interface ChartDataPoint {
+  readonly completed?: number;
+  readonly efficiency?: number;
+  readonly date?: string;
+  readonly [key: string]: unknown;
+}
+
 // Type definitions (inline for now)
 export interface ModernStatisticsData {
   overview?: {
@@ -28,7 +38,7 @@ export interface ModernStatisticsData {
   workOrders?: {
     completed?: number;
     total?: number;
-    trends?: Array<unknown>;
+    trends?: ReadonlyArray<ChartDataPoint>;
     averageProcessingTime?: number;
     [key: string]: unknown;
   };
@@ -195,9 +205,11 @@ export const createModernPDFExport = async (
 
   try {
     const doc = new jsPDF("p", "mm", "a4");
+    const templateKey = options.theme as keyof typeof PDF_TEMPLATES;
+    const selectedTemplate = templateKey && PDF_TEMPLATES[templateKey];
     const template: PDFTemplate =
-      PDF_TEMPLATES[options.theme as keyof typeof PDF_TEMPLATES] ||
-      PDF_TEMPLATES.corporate;
+      (selectedTemplate as PDFTemplate | undefined) ??
+      (PDF_TEMPLATES.corporate as PDFTemplate);
 
     // Sayfa ayarları
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -379,7 +391,10 @@ const addGradientBackground = (
 
   for (let i = 0; i < steps; i++) {
     const ratio = i / (steps - 1);
-    const color = interpolateColor(gradientColors[0], gradientColors[1], ratio);
+    const color1 = gradientColors[0];
+    const color2 = gradientColors[1];
+    if (!color1 || !color2) break;
+    const color = interpolateColor(color1, color2, ratio);
     doc.setFillColor(color);
     doc.rect(0, i * stepHeight, pageWidth, stepHeight + 1, "F");
   }
@@ -770,7 +785,7 @@ const addTrendCharts = async (
   if (chartData.length === 0) return;
 
   const maxValue = Math.max(
-    ...chartData.map((d: any) => (d.completed || 0) as number),
+    ...chartData.map((d: ChartDataPoint) => d.completed || 0),
   );
   const stepX = (chartWidth - 40) / (chartData.length - 1);
   const stepY = (chartHeight - 40) / maxValue;
@@ -780,11 +795,10 @@ const addTrendCharts = async (
 
   for (let i = 0; i < chartData.length - 1; i++) {
     const x1 = x + 20 + i * stepX;
-    const y1 =
-      y + chartHeight - 20 - ((chartData[i] as any).completed || 0) * stepY;
+    const y1 = y + chartHeight - 20 - (chartData[i]?.completed || 0) * stepY;
     const x2 = x + 20 + (i + 1) * stepX;
     const y2 =
-      y + chartHeight - 20 - ((chartData[i + 1] as any).completed || 0) * stepY;
+      y + chartHeight - 20 - (chartData[i + 1]?.completed || 0) * stepY;
 
     doc.line(x1, y1, x2, y2);
   }
@@ -802,14 +816,10 @@ const addTrendCharts = async (
 
   for (let i = 0; i < chartData.length - 1; i++) {
     const x1 = x + chartWidth + 30 + i * stepX;
-    const y1 =
-      y + chartHeight - 20 - ((chartData[i] as any).efficiency || 0) * stepY;
+    const y1 = y + chartHeight - 20 - (chartData[i]?.efficiency || 0) * stepY;
     const x2 = x + chartWidth + 30 + (i + 1) * stepX;
     const y2 =
-      y +
-      chartHeight -
-      20 -
-      ((chartData[i + 1] as any).efficiency || 0) * stepY;
+      y + chartHeight - 20 - (chartData[i + 1]?.efficiency || 0) * stepY;
 
     doc.line(x1, y1, x2, y2);
   }
@@ -850,7 +860,8 @@ const addSummaryAndRecommendations = (
 const generateModernFilename = (format: string): string => {
   const now = new Date();
   const dateStr = now.toISOString().split("T")[0];
-  const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-");
+  const timeStr =
+    now.toTimeString()?.split(" ")[0]?.replace(/:/g, "-") ?? "00-00-00";
   return `Lemnix-Modern-${format.toUpperCase()}-${dateStr}-${timeStr}.${format === "excel" ? "xlsx" : "pdf"}`;
 };
 

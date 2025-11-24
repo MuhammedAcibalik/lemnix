@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect } from "react";
+import type { NavigatorWithMsMaxTouchPoints } from "../types/browser";
 
 export interface TouchDeviceState {
   /** True if device supports touch */
@@ -31,8 +32,7 @@ function detectTouch(): boolean {
   return (
     "ontouchstart" in window ||
     navigator.maxTouchPoints > 0 ||
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (navigator as any).msMaxTouchPoints > 0
+    ((navigator as NavigatorWithMsMaxTouchPoints).msMaxTouchPoints ?? 0) > 0
   );
 }
 

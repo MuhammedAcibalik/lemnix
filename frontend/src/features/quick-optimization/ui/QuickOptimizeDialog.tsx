@@ -39,9 +39,7 @@ export const QuickOptimizeDialog: React.FC<QuickOptimizeDialogProps> = ({
   const ds = useDesignSystem();
   const { optimize, isLoading, error } = useQuickOptimize();
 
-  const [algorithm, setAlgorithm] = React.useState<
-    "ffd" | "bfd" | "genetic" | "pooling"
-  >("ffd");
+  const [algorithm, setAlgorithm] = React.useState<"bfd" | "genetic">("bfd");
   const [inputData, setInputData] = React.useState("");
 
   const handleSubmit = async () => {
@@ -54,10 +52,12 @@ export const QuickOptimizeDialog: React.FC<QuickOptimizeDialogProps> = ({
         .split("\n")
         .filter((line) => line.trim())
         .map((line) => {
-          const [length, quantity] = line.split(",").map((s) => s.trim());
+          const [lengthStr, quantityStr] = line.split(",").map((s) => s.trim());
+          const length = lengthStr ? parseFloat(lengthStr) : 0;
+          const quantity = quantityStr ? parseInt(quantityStr, 10) : 0;
           return {
-            length: parseFloat(length) || 0,
-            quantity: parseInt(quantity) || 0,
+            length: length || 0,
+            quantity: quantity || 0,
           };
         })
         .filter((item) => item.length > 0 && item.quantity > 0);
@@ -129,17 +129,13 @@ export const QuickOptimizeDialog: React.FC<QuickOptimizeDialogProps> = ({
             <Select
               value={algorithm}
               onChange={(e) =>
-                setAlgorithm(
-                  e.target.value as "ffd" | "bfd" | "genetic" | "pooling",
-                )
+                setAlgorithm(e.target.value as "bfd" | "genetic")
               }
               label="Algoritma"
               disabled={isLoading}
             >
-              <MenuItem value="ffd">FFD (First Fit Decreasing)</MenuItem>
               <MenuItem value="bfd">BFD (Best Fit Decreasing)</MenuItem>
               <MenuItem value="genetic">Genetic Algorithm</MenuItem>
-              <MenuItem value="pooling">Pooling Algorithm</MenuItem>
             </Select>
           </FormControl>
 

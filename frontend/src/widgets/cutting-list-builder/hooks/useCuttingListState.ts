@@ -61,7 +61,7 @@ export const useCuttingListState = () => {
   const [newItemForm, setNewItemForm] = useState<WorkOrderForm>({
     productName: "", // ✅ Section context for smart suggestions
     workOrderId: "",
-    date: new Date().toISOString().split("T")[0],
+    date: new Date().toISOString().split("T")[0] ?? "",
     version: "1.0",
     color: "",
     note: "",
@@ -206,7 +206,7 @@ export const useCuttingListState = () => {
     setNewItemForm({
       productName: "", // ✅ Reset product name
       workOrderId: "",
-      date: new Date().toISOString().split("T")[0],
+      date: new Date().toISOString().split("T")[0] ?? "",
       version: "1.0",
       color: "",
       note: "",
@@ -282,7 +282,7 @@ export const useCuttingListState = () => {
       let formattedDate = item.date;
       if (formattedDate && formattedDate.includes(".")) {
         const parts = formattedDate.split(".");
-        if (parts.length === 3) {
+        if (parts.length === 3 && parts[0] && parts[1] && parts[2]) {
           formattedDate = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
         }
       }
@@ -293,7 +293,7 @@ export const useCuttingListState = () => {
         date: formattedDate,
         version: item.version,
         color: item.color,
-        note: item.note,
+        note: item.note ?? "",
         orderQuantity: item.orderQuantity.toString(),
         size: item.size,
         priority: normalizedPriority,

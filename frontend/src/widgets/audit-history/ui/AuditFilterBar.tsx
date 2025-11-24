@@ -18,6 +18,7 @@ import {
   InputAdornment,
   FormControl,
   InputLabel,
+  Typography,
   type SelectChangeEvent,
 } from "@mui/material";
 import {
@@ -217,7 +218,7 @@ export const AuditFilterBar: React.FC<AuditFilterBarProps> = ({
                 size="small"
                 startIcon={<ExportIcon />}
                 onClick={handleExport}
-                disabled={!data || data.logs.length === 0}
+                disabled={!hasActiveFilters}
                 sx={{
                   background: ds.gradients.primary,
                   fontWeight: ds.typography.fontWeight.semibold,

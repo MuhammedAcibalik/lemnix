@@ -222,7 +222,7 @@ export interface OptimizationRecommendation {
 export interface OptimizationFormData {
   items: OptimizationItem[];
   // ALIGNED WITH BACKEND: Only 4 algorithms available
-  algorithm: "ffd" | "bfd" | "genetic" | "pooling";
+  algorithm: "bfd" | "genetic";
   stockLength: number;
   materialStockLengths?: MaterialStockLength[]; // Malzeme bazlı boy profil uzunlukları
 }

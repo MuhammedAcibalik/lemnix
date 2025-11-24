@@ -16,7 +16,8 @@ import { PerformanceOptimizationService } from "../optimization/performanceOptim
 import { EnterpriseMonitoringService } from "../monitoring/enterpriseMonitoringService";
 import { OptimizationItem, OptimizationResult } from "../../types";
 import type { EnterpriseOptimizationRequest } from "../../types/enterprise";
-import type { AlgorithmMode } from "../optimization/AlgorithmFactory";
+import type { AlgorithmMode } from "../optimization/AlgorithmModeSelector";
+import { logger } from "../logger";
 
 export class OptimizationHandler
   extends BaseHandler
@@ -78,30 +79,18 @@ export class OptimizationHandler
         request.algorithm,
       );
 
-      console.log(
-        "[OptimizationHandler] 🎯 Sending response with algorithm:",
-        algorithmDisplayName,
-      );
-      console.log(
-        "[OptimizationHandler] 🎯 Request algorithm was:",
-        request.algorithm,
-      );
-      console.log(
-        "[OptimizationHandler] 🎯 OptimizationResult keys:",
-        Object.keys(optimizationResult),
-      );
-
-      console.log("[OptimizationHandler] 🎯 Input items with workOrderId:", {
-        itemCount: request.items?.length || 0,
-        sampleItem: request.items?.[0],
-        workOrderIds:
-          request.items?.map((i) => i.workOrderId).filter(Boolean) || [],
-        profileParams: request.profileParams,
-      });
-
-      console.log(
-        "[OptimizationHandler] 🎯 Output segments with workOrderId:",
-        {
+      logger.debug("[OptimizationHandler] Sending response", {
+        algorithm: algorithmDisplayName,
+        requestAlgorithm: request.algorithm,
+        optimizationResultKeys: Object.keys(optimizationResult),
+        inputItems: {
+          itemCount: request.items?.length || 0,
+          sampleItem: request.items?.[0],
+          workOrderIds:
+            request.items?.map((i) => i.workOrderId).filter(Boolean) || [],
+          profileParams: request.profileParams,
+        },
+        outputSegments: {
           cutCount: optimizationResult.cuts.length,
           sampleCut: optimizationResult.cuts[0],
           sampleSegment: optimizationResult.cuts[0]?.segments?.[0],
@@ -109,7 +98,7 @@ export class OptimizationHandler
             .flatMap((c) => c.segments.map((s) => s.workOrderId))
             .filter(Boolean),
         },
-      );
+      });
 
       // ✅ FIX: Modify optimizationResult to include display name BEFORE adding to response
       const modifiedOptimizationResult = {
@@ -135,14 +124,10 @@ export class OptimizationHandler
         metadata: (optimizationResult as { metadata?: unknown }).metadata, // ✅ Profile badge için metadata
       };
 
-      console.log(
-        "[OptimizationHandler] 🎯 Response data keys:",
-        Object.keys(responseData),
-      );
-      console.log(
-        "[OptimizationHandler] 🎯 Response data.algorithm:",
-        responseData.algorithm,
-      );
+      logger.debug("[OptimizationHandler] Response data", {
+        keys: Object.keys(responseData),
+        algorithm: responseData.algorithm,
+      });
 
       this.sendSuccess(res, responseData, {
         requestId,
@@ -251,7 +236,7 @@ export class OptimizationHandler
       const mode: AlgorithmMode = request.algorithmMode ?? "standard";
 
       // DEBUG: Log incoming request
-      console.log("[OptimizationHandler] Incoming request:", {
+      logger.debug("[OptimizationHandler] Incoming request", {
         hasItems: !!request.items,
         itemsIsArray: Array.isArray(request.items),
         itemsLength: request.items?.length,
@@ -268,7 +253,7 @@ export class OptimizationHandler
         !Array.isArray(request.items) ||
         request.items.length === 0
       ) {
-        console.error(
+        logger.warn(
           "[OptimizationHandler] Validation failed: Invalid items array",
         );
         res.status(400).json({
@@ -286,7 +271,7 @@ export class OptimizationHandler
         !Array.isArray(request.objectives) ||
         request.objectives.length === 0
       ) {
-        console.error(
+        logger.warn(
           "[OptimizationHandler] Validation failed: Invalid objectives array",
         );
         res.status(400).json({
@@ -339,14 +324,10 @@ export class OptimizationHandler
         request.algorithm,
       );
 
-      console.log(
-        "[OptimizationHandler optimizeWithMode] 🎯 Sending response with algorithm:",
-        algorithmDisplayName,
-      );
-      console.log(
-        "[OptimizationHandler optimizeWithMode] 🎯 Request algorithm was:",
-        request.algorithm,
-      );
+      logger.debug("[OptimizationHandler] Sending response with algorithm", {
+        algorithm: algorithmDisplayName,
+        requestAlgorithm: request.algorithm,
+      });
 
       // ✅ FIX: Add algorithm field directly to response data at ROOT level
       const responseData = {
@@ -370,15 +351,14 @@ export class OptimizationHandler
         metadata: (optimizationResult as { metadata?: unknown }).metadata, // ✅ Profile badge için metadata
       };
 
-      console.log(
-        "[OptimizationHandler optimizeWithMode] 🎯 Response data.algorithm:",
-        responseData.algorithm,
-      );
-      console.log("[OptimizationHandler] 🎯 Response cuts:", {
-        cutsCount: optimizationResult.cuts.length,
-        sampleCut: optimizationResult.cuts[0],
-        sampleSegment: optimizationResult.cuts[0]?.segments?.[0],
-        totalWaste: optimizationResult.totalWaste,
+      logger.debug("[OptimizationHandler] Response data", {
+        algorithm: responseData.algorithm,
+        cuts: {
+          cutsCount: optimizationResult.cuts.length,
+          sampleCut: optimizationResult.cuts[0],
+          sampleSegment: optimizationResult.cuts[0]?.segments?.[0],
+          totalWaste: optimizationResult.totalWaste,
+        },
       });
 
       this.sendSuccess(res, responseData, {
@@ -393,62 +373,17 @@ export class OptimizationHandler
 
   /**
    * Multi-objective optimization (Pareto front)
-   * NSGA-II only - returns full Pareto front
+   * @deprecated NSGA-II has been removed. This endpoint returns 410 Gone.
    */
   public async optimizePareto(req: Request, res: Response): Promise<void> {
-    const requestId = this.generateRequestId();
-    const startTime = performance.now();
-
-    try {
-      const request = req.body as EnterpriseOptimizationRequest;
-
-      // DEBUG: Log incoming request
-      console.log("[OptimizationHandler] 🔍 optimizePareto called:", {
-        itemsCount: request.items?.length || 0,
-        algorithm: request.algorithm,
-        hasMaterialStockLengths: !!request.materialStockLengths,
-        materialStockLengthsCount: request.materialStockLengths?.length || 0,
-      });
-
-      const paretoResult = await this.advancedService.optimizeMultiObjective(
-        request.items,
-        {
-          algorithm: request.algorithm,
-          objectives: request.objectives,
-          constraints: request.constraints,
-          performance: request.performance,
-          costModel: request.costModel,
-        },
-        request.materialStockLengths,
-      );
-
-      this.sendSuccess(
-        res,
-        {
-          paretoFront: paretoResult.paretoFront,
-          recommendedSolution: paretoResult.recommendedSolution,
-          hypervolume: paretoResult.hypervolume,
-          spacing: paretoResult.spacing,
-          spread: paretoResult.spread,
-          frontSize: paretoResult.frontSize,
-          algorithm: paretoResult.algorithm,
-        },
-        {
-          requestId,
-          processingTime: performance.now() - startTime,
-          algorithm: "nsga-ii",
-        },
-      );
-    } catch (error) {
-      // DEBUG: Detailed error logging
-      console.error("[OptimizationHandler] 🚨 optimizePareto ERROR:", {
-        errorMessage: error instanceof Error ? error.message : "Unknown error",
-        errorStack: error instanceof Error ? error.stack : undefined,
-        requestId,
-      });
-
-      this.handleError(res, error, "PARETO_OPTIMIZATION_ERROR");
-    }
+    res.status(410).json({
+      success: false,
+      error: {
+        code: "FEATURE_REMOVED",
+        message:
+          "Pareto optimization (NSGA-II) has been removed. Please use standard optimization mode.",
+      },
+    });
   }
 
   /**
@@ -462,32 +397,29 @@ export class OptimizationHandler
     try {
       const request = req.body as EnterpriseOptimizationRequest;
 
-      // Run both algorithms in parallel
-      const [standardResult, advancedResult] = await Promise.all([
-        this.advancedService.optimizeWithMode(
-          request.items,
-          {
-            algorithm: request.algorithm,
-            objectives: request.objectives,
-            constraints: request.constraints,
-            performance: request.performance,
-            costModel: request.costModel,
-          },
-          "standard",
-          request.materialStockLengths,
-        ),
-        this.advancedService.optimizeMultiObjective(
-          request.items,
-          {
-            algorithm: request.algorithm,
-            objectives: request.objectives,
-            constraints: request.constraints,
-            performance: request.performance,
-            costModel: request.costModel,
-          },
-          request.materialStockLengths,
-        ),
-      ]);
+      // Run standard algorithm first
+      const standardResult = await this.advancedService.optimizeWithMode(
+        request.items,
+        {
+          algorithm: request.algorithm,
+          objectives: request.objectives,
+          constraints: request.constraints,
+          performance: request.performance,
+          costModel: request.costModel,
+        },
+        "standard",
+        request.materialStockLengths,
+      );
+
+      // optimizeMultiObjective removed - NSGA-II algorithm removed
+      // Return a 410 Gone response instead
+      const advancedResult = {
+        recommendedSolution: standardResult,
+        paretoFront: [],
+        frontSize: 0,
+        hypervolume: 0,
+        spread: 0,
+      };
 
       this.sendSuccess(
         res,
@@ -503,8 +435,8 @@ export class OptimizationHandler
             frontSize: advancedResult.frontSize,
             hypervolume: advancedResult.hypervolume,
             spread: advancedResult.spread,
-            algorithm: "nsga-ii",
-            mode: "advanced",
+            algorithm: "bfd", // NSGA-II removed, using BFD fallback
+            mode: "standard",
           },
           comparison: {
             efficiencyDiff:
@@ -540,7 +472,6 @@ export class OptimizationHandler
     if (algo === "genetic") return "Genetic Algorithm";
     if (algo === "pooling") return "Profile Pooling";
     if (algo === "pattern-exact") return "Pattern Exact Search";
-    if (algo === "nsga-ii") return "NSGA-II";
 
     return "Smart Algorithm";
   }

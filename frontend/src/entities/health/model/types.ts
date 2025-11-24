@@ -91,18 +91,3 @@ export interface CachePerformanceMetrics {
   };
   readonly recommendation: string;
 }
-
-/**
- * GPU status
- */
-export interface GPUStatus {
-  readonly available: boolean;
-  readonly webGPUSupported: boolean;
-  readonly environment: string;
-  readonly gpu: {
-    readonly message: string;
-    readonly backendSupport: boolean;
-  };
-  readonly recommendation: string;
-  readonly timestamp: string;
-}

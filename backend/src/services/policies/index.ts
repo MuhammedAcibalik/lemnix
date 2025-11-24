@@ -4,6 +4,9 @@
  */
 
 export {
+  DataValidationPolicyService,
+  getDataValidationPolicyService,
+  // Legacy exports for backward compatibility
   ValidationPolicyService,
   getValidationPolicyService,
 } from "./validationPolicyService";

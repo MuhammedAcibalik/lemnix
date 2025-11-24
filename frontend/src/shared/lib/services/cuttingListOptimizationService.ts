@@ -11,11 +11,18 @@ import { MeasurementConverter } from "../utils/measurementConverter";
 // INTERFACES & TYPES
 // ============================================================================
 
+export interface CuttingListProduct {
+  id: string;
+  name: string;
+  sections: CuttingListSection[];
+}
+
 export interface CuttingListData {
   id: string;
   title: string;
   weekNumber: number;
   sections: CuttingListSection[];
+  products?: CuttingListProduct[]; // Optional for backward compatibility
   createdAt: string;
   updatedAt: string;
 }
@@ -297,11 +304,14 @@ export class CuttingListOptimizationService {
         },
       };
 
-      return {
+      const result: SingleConversionResult = {
         success: true,
         item: optimizationItem,
-        warnings: warnings.length > 0 ? warnings : undefined,
       };
+      if (warnings.length > 0) {
+        result.warnings = warnings;
+      }
+      return result;
     } catch (error) {
       return {
         success: false,

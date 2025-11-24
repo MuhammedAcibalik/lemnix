@@ -180,10 +180,9 @@ export const useOptimizationData = (result: OptimizationResult | null) => {
       },
     };
 
-    return (
-      algorithmMap[algorithm?.toLowerCase() || "default"] ||
-      algorithmMap.default
-    );
+    const algorithmKey = algorithm?.toLowerCase() || "default";
+    const profile = algorithmMap[algorithmKey] ?? algorithmMap.default;
+    return profile as { icon: React.ReactElement; label: string };
   };
 
   // Get severity color - Modern pattern matching
@@ -201,7 +200,9 @@ export const useOptimizationData = (result: OptimizationResult | null) => {
   };
 
   // Get recommendation icon - Modern object mapping
-  const getRecommendationIcon = (severity: string): React.ReactElement => {
+  const getRecommendationIcon = (
+    severity: string | undefined,
+  ): React.ReactElement => {
     const iconMap: Record<string, React.ReactElement> = {
       critical: React.createElement("div", null, "Error"),
       error: React.createElement("div", null, "Error"),
@@ -209,7 +210,9 @@ export const useOptimizationData = (result: OptimizationResult | null) => {
       info: React.createElement("div", null, "Info"),
     };
 
-    return iconMap[severity.toLowerCase()] || iconMap.info;
+    const severityKey = severity?.toLowerCase() || "info";
+    const icon = iconMap[severityKey] ?? iconMap.info;
+    return icon as React.ReactElement;
   };
 
   // Generate cutting pattern explanation
@@ -317,7 +320,7 @@ function buildEnterpriseRows(result: OptimizationResult | null): {
 
     return {
       workOrderId: wo,
-      algorithm: result?.algorithm,
+      algorithm: result?.algorithm || "bfd",
       stockCount,
       totalSegments,
       efficiency: efficiencyResult.efficiency,

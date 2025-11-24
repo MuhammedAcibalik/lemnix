@@ -34,7 +34,9 @@ export const useVisualizationData = (
     try {
       // Step 1: Process segments from optimization result
       const segments = processOptimizationSegments(
-        optimizationResult,
+        optimizationResult as unknown as {
+          cuts?: Array<{ segments?: Array<Record<string, unknown>> }>;
+        },
         stockLength,
       );
 

@@ -113,7 +113,10 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
     ) {
       lastAutoSelectedRef.current = existingCategory.name;
       setProductCategory(existingCategory.name);
-      setErrors((prev) => ({ ...prev, productCategory: undefined }));
+      setErrors((prev) => {
+        const { productCategory, ...rest } = prev;
+        return rest;
+      });
     }
   }, [existingCategory, userManuallySelected]);
 
@@ -135,7 +138,15 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
         error = "Ürün adı en fazla 50 karakter olabilir";
       }
 
-      setErrors((prev) => ({ ...prev, productName: error }));
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        if (error) {
+          newErrors.productName = error;
+        } else {
+          delete newErrors.productName;
+        }
+        return newErrors;
+      });
     },
     [], // ✅ No dependencies = stable reference
   );
@@ -158,7 +169,10 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
     setUserManuallySelected(true); // ✅ Mark as manually selected
     // Clear error when category is selected
     if (value.trim()) {
-      setErrors((prev) => ({ ...prev, productCategory: undefined }));
+      setErrors((prev) => {
+        const { productCategory, ...rest } = prev;
+        return rest;
+      });
     }
   }, []);
 
@@ -236,8 +250,8 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
 
     if (nameError || categoryError) {
       setErrors({
-        productName: nameError,
-        productCategory: categoryError,
+        ...(nameError ? { productName: nameError } : {}),
+        ...(categoryError ? { productCategory: categoryError } : {}),
       });
       return;
     }
@@ -431,10 +445,11 @@ export const NewProductDialog: React.FC<NewProductDialogProps> = ({
                 value={productCategory}
                 onChange={(e) => {
                   setProductCategory(e.target.value);
-                  setErrors((prev) => ({
-                    ...prev,
-                    productCategory: undefined,
-                  }));
+                  setErrors((prev) => {
+                    const newErrors = { ...prev };
+                    delete newErrors.productCategory;
+                    return newErrors;
+                  });
                 }}
                 label="Ürün Grubu"
                 sx={{

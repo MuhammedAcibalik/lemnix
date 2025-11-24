@@ -77,7 +77,9 @@ export const CostBreakdownChart: React.FC<CostBreakdownChartProps> = ({
           borderColor: ds.colors.accent.main,
           borderWidth: 1,
         },
-      ].filter((dataset) => dataset.data[0] > 0), // Only show non-zero costs
+      ].filter(
+        (dataset) => dataset.data[0] !== undefined && dataset.data[0] > 0,
+      ), // Only show non-zero costs
     }),
     [costData, ds],
   );

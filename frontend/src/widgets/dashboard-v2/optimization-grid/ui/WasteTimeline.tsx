@@ -93,7 +93,7 @@ export const WasteTimeline: React.FC<WasteTimelineProps> = ({
           padding: 8,
           borderRadius: 6,
           callbacks: {
-            label: (context) => `Fire: ${context.parsed.y.toFixed(2)}%`,
+            label: (context) => `Fire: ${(context.parsed.y ?? 0).toFixed(2)}%`,
           },
         },
       },

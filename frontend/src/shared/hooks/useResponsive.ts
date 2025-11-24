@@ -7,6 +7,7 @@
 import { useState, useEffect } from "react";
 import { useTheme, Breakpoint } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import type { NavigatorWithMsMaxTouchPoints } from "../types/browser";
 
 /**
  * Design System v3 Breakpoints (aligned with MUI theme)
@@ -75,8 +76,7 @@ function isTouchSupported(): boolean {
   return (
     "ontouchstart" in window ||
     navigator.maxTouchPoints > 0 ||
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (navigator as any).msMaxTouchPoints > 0
+    ((navigator as NavigatorWithMsMaxTouchPoints).msMaxTouchPoints ?? 0) > 0
   );
 }
 

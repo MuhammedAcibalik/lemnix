@@ -22,7 +22,7 @@ describe('Enterprise Optimization Endpoints', () => {
         stockLengths: [6000],
         kerfWidth: 5,
         settings: {
-          algorithm: 'FFD',
+          algorithm: 'bfd',
           maxPatterns: 1000
         }
       };
@@ -51,27 +51,12 @@ describe('Enterprise Optimization Endpoints', () => {
       expect([400, 500]).toContain(response.status);
     });
 
-    it('should handle FFD algorithm', async () => {
-      const request_ffd = {
-        items: [{ length: 1000, quantity: 2, id: 'item-1' }],
-        stockLengths: [6000],
-        kerfWidth: 5,
-        settings: { algorithm: 'FFD' }
-      };
-
-      const response = await request(app)
-        .post('/api/enterprise/optimize')
-        .send(request_ffd);
-      
-      expect([200, 400, 500]).toContain(response.status);
-    });
-
     it('should handle BFD algorithm', async () => {
       const request_bfd = {
         items: [{ length: 1000, quantity: 2, id: 'item-1' }],
         stockLengths: [6000],
         kerfWidth: 5,
-        settings: { algorithm: 'BFD' }
+        settings: { algorithm: 'bfd' }
       };
 
       const response = await request(app)
@@ -86,7 +71,7 @@ describe('Enterprise Optimization Endpoints', () => {
         items: [{ length: 1000, quantity: 2, id: 'item-1' }],
         stockLengths: [6000],
         kerfWidth: 5,
-        settings: { algorithm: 'Genetic' }
+        settings: { algorithm: 'genetic' }
       };
 
       const response = await request(app)

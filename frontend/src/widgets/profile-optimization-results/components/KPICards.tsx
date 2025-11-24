@@ -59,7 +59,9 @@ export const KPICards: React.FC<KPICardsProps> = ({
             </Box>
             <LinearProgress
               variant="determinate"
-              value={performanceMetrics?.efficiency}
+              {...(performanceMetrics?.efficiency !== undefined
+                ? { value: performanceMetrics.efficiency }
+                : {})}
               color="success"
               sx={{ height: 8, borderRadius: 4 }}
             />

@@ -16,18 +16,18 @@ import type { EnterpriseOptimizationRequest } from "../../types/enterprise";
 /**
  * Validation result type
  */
-export interface ValidationResult<T> {
+export interface OptimizationValidationResult<T> {
   readonly isValid: boolean;
   readonly data?: T;
   readonly errors?: ReadonlyArray<string>;
 }
 
 /**
- * Enterprise Validation Service
+ * Optimization Request Validation Service
  * Validates enterprise optimization requests and results
- * Enterprise-specific validation logic
+ * Enterprise-specific validation logic for optimization requests
  */
-export class EnterpriseValidationService {
+export class OptimizationRequestValidationService {
   private readonly SUPPORTED_ALGORITHMS: ReadonlyArray<string> = [
     "ffd",
     "bfd",
@@ -40,7 +40,7 @@ export class EnterpriseValidationService {
    */
   public validateRequest(
     body: unknown,
-  ): ValidationResult<EnterpriseOptimizationRequest> {
+  ): OptimizationValidationResult<EnterpriseOptimizationRequest> {
     const errors: string[] = [];
 
     // Check if body is object
@@ -150,7 +150,7 @@ export class EnterpriseValidationService {
       costPerMeter: 0,
       qualityScore: 0,
       reclaimableWastePercentage: 0,
-      algorithm: OptimizationAlgorithm.FIRST_FIT_DECREASING,
+      algorithm: OptimizationAlgorithm.BEST_FIT_DECREASING, // FIRST_FIT_DECREASING removed
       executionTimeMs: 0,
       wasteDistribution: {
         minimal: 0,

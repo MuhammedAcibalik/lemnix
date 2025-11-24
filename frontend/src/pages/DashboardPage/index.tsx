@@ -94,10 +94,12 @@ export default function DashboardPage() {
               <HeroMetricCard
                 label={metric.label}
                 value={metric.value}
-                unit={metric.unit}
+                {...(metric.unit ? { unit: metric.unit } : {})}
                 icon={getMetricIcon(metric.id)}
-                trend={metric.trend}
-                sparklineData={metric.sparklineData}
+                {...(metric.trend !== undefined ? { trend: metric.trend } : {})}
+                {...(metric.sparklineData
+                  ? { sparklineData: metric.sparklineData }
+                  : {})}
                 color={metric.color}
                 loading={heroLoading}
               />

@@ -425,9 +425,8 @@ export const ProductCategoriesAnalysis: React.FC<
                             height: 12,
                             borderRadius: "50%",
                             bgcolor:
-                              categoryDoughnutData.datasets[0].backgroundColor[
-                                index
-                              ],
+                              categoryDoughnutData.datasets[0]
+                                ?.backgroundColor?.[index] ?? "#94a3b8",
                             mr: 1,
                           }}
                         />
@@ -522,7 +521,7 @@ export const ProductCategoriesAnalysis: React.FC<
                             borderRadius: "50%",
                             bgcolor:
                               performanceDoughnutData.datasets[0]
-                                .backgroundColor[index],
+                                ?.backgroundColor?.[index] ?? "#94a3b8",
                             mr: 1,
                           }}
                         />

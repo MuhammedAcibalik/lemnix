@@ -8,11 +8,12 @@ export {
   ErrorMetricsService,
   getErrorMetricsService,
 } from "./errorMetricsService";
-export { StatisticsService } from "./statisticsService";
+export { CuttingListStatisticsService } from "./cuttingListStatisticsService";
+export { cuttingListStatisticsService } from "./cuttingListStatisticsService";
 export type {
   StatisticsOverview,
   PerformanceMetrics,
   UsageAnalytics,
   OptimizationAnalytics,
   SystemHealthMetrics,
-} from "./statisticsService";
+} from "./cuttingListStatisticsService";

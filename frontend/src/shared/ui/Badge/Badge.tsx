@@ -14,8 +14,8 @@ import {
   pxToRem,
 } from "@/shared/lib/zoom-aware";
 
-type BadgeVariant = "solid" | "soft" | "outline" | "gradient" | "glass";
-type BadgeColor =
+export type BadgeVariant = "solid" | "soft" | "outline" | "gradient" | "glass";
+export type BadgeColor =
   | "primary"
   | "secondary"
   | "success"

@@ -75,6 +75,42 @@ ALTER SYSTEM SET log_connections = on;
 -- Log disconnections
 ALTER SYSTEM SET log_disconnections = on;
 
+-- Log lock waits
+ALTER SYSTEM SET log_lock_waits = on;
+
+-- ============================================================================
+-- QUERY TIMEOUT SETTINGS
+-- ============================================================================
+
+-- Statement timeout (30 seconds)
+ALTER SYSTEM SET statement_timeout = '30s';
+
+-- Lock timeout (10 seconds)
+ALTER SYSTEM SET lock_timeout = '10s';
+
+-- Idle in transaction timeout (5 minutes)
+ALTER SYSTEM SET idle_in_transaction_session_timeout = '5min';
+
+-- ============================================================================
+-- CONNECTION POOL SETTINGS
+-- ============================================================================
+
+-- Per-user connection limits (set via ALTER USER)
+-- ALTER USER lemnix_user WITH CONNECTION LIMIT 50;
+
+-- ============================================================================
+-- EXTENSIONS
+-- ============================================================================
+
+-- Enable pg_stat_statements for query performance monitoring
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+
+-- Enable pg_trgm for fuzzy text search
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- Enable btree_gin for JSONB indexing
+CREATE EXTENSION IF NOT EXISTS btree_gin;
+
 -- ============================================================================
 -- RELOAD CONFIGURATION
 -- ============================================================================

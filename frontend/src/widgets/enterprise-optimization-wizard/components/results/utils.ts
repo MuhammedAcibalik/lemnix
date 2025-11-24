@@ -16,12 +16,12 @@ export interface BackendCut {
   readonly remainingLength: number;
   readonly segments: ReadonlyArray<{
     readonly length: number;
-    readonly quantity?: number;
-    readonly workOrderId?: string;
-    readonly id?: string;
-    readonly position?: number;
-    readonly endPosition?: number;
-    readonly profileType?: string;
+    readonly quantity?: number | undefined;
+    readonly workOrderId?: string | undefined;
+    readonly id?: string | undefined;
+    readonly position?: number | undefined;
+    readonly endPosition?: number | undefined;
+    readonly profileType?: string | undefined;
   }>;
   readonly segmentCount: number;
   readonly efficiency?: number;
@@ -325,20 +325,27 @@ const WORK_ORDER_COLORS = [
   "#14b8a6", // teal
 ];
 
-export function getWorkOrderColor(workOrderId: string): string {
+export function getWorkOrderColor(workOrderId: string | undefined): string {
   if (!workOrderId || workOrderId === "N/A") {
     return "#94a3b8"; // neutral gray
   }
 
-  if (workOrderColorCache.has(workOrderId)) {
-    return workOrderColorCache.get(workOrderId)!;
+  // At this point, workOrderId is guaranteed to be a non-empty string
+  // Use type assertion to help TypeScript understand the control flow
+  const validWorkOrderId = workOrderId as string;
+
+  if (workOrderColorCache.has(validWorkOrderId)) {
+    return workOrderColorCache.get(validWorkOrderId)!;
   }
 
   const colorIndex = workOrderColorCache.size % WORK_ORDER_COLORS.length;
   const color = WORK_ORDER_COLORS[colorIndex];
-  workOrderColorCache.set(workOrderId, color);
-
-  return color;
+  if (color) {
+    workOrderColorCache.set(validWorkOrderId, color);
+    return color;
+  }
+  // Fallback (should never happen)
+  return "#94a3b8";
 }
 
 /**
@@ -414,7 +421,7 @@ export interface StockPlan {
   readonly totalPieces: number; // Bu iş emrinden kesilen toplam parça sayısı
   readonly efficiency: number; // Bu iş emrinin ortalama verimliliği
   readonly totalWaste: number; // Bu iş emrinin toplam atığı
-  readonly workOrderCount?: number; // ✅ FIX: Number of work orders in pooled results
+  readonly workOrderCount?: number | undefined; // ✅ FIX: Number of work orders in pooled results
   readonly cuts: ReadonlyArray<{
     readonly cutId: string;
     readonly segments: ReadonlyArray<CutSegment>;
@@ -429,8 +436,8 @@ export interface StockPlan {
 export interface CutSegment {
   readonly length: number;
   readonly quantity: number;
-  readonly workOrderId?: string; // ✅ FIX: Add workOrderId to CutSegment
-  readonly profileType?: string; // ✅ FIX: Add profileType to CutSegment
+  readonly workOrderId?: string | undefined; // ✅ FIX: Add workOrderId to CutSegment
+  readonly profileType?: string | undefined; // ✅ FIX: Add profileType to CutSegment
 }
 
 /**
@@ -495,8 +502,9 @@ export function groupCutsByStockLength(
           stockLength: cut.stockLength,
           planId: cut.id,
           workOrderId: workOrderId,
-          workOrderCount:
-            workOrderIds.length > 1 ? workOrderIds.length : undefined,
+          ...(workOrderIds.length > 1
+            ? { workOrderCount: workOrderIds.length }
+            : {}),
           algorithm: algorithm || "Unknown",
           stockCount: 1, // Each cut = 1 stock
           totalPieces: cut.segmentCount,

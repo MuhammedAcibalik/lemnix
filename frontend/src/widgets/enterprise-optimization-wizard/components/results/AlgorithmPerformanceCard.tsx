@@ -51,11 +51,8 @@ export const AlgorithmPerformanceCard: React.FC<
   });
 
   const algorithmLabels: Record<string, string> = {
-    ffd: "First Fit Decreasing (FFD)",
     bfd: "Best Fit Decreasing (BFD)",
     genetic: "Genetic Algorithm",
-    pooling: "Profile Pooling",
-    "nsga-ii": "NSGA-II",
   };
 
   const algorithmLabel = algorithmLabels[algorithm] || algorithm;

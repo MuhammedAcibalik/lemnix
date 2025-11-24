@@ -79,11 +79,11 @@ export const ProfileBadge: React.FC<ProfileBadgeProps> = ({
               }
             >
               <Chip
-                icon={
-                  source === "mapping" ? (
-                    <CheckIcon sx={{ fontSize: 10 }} />
-                  ) : undefined
-                }
+                {...(source === "mapping"
+                  ? {
+                      icon: <CheckIcon sx={{ fontSize: 10 }} />,
+                    }
+                  : {})}
                 label={source === "mapping" ? "Eşleşti" : "Varsayılan"}
                 size="small"
                 sx={{

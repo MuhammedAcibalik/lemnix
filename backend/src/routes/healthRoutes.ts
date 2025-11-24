@@ -219,42 +219,4 @@ router.get("/cache", (_req: Request, res: Response) => {
   }
 });
 
-/**
- * GET /health/gpu
- * GPU status and capabilities check
- */
-router.get("/gpu", async (_req: Request, res: Response) => {
-  try {
-    // In Node.js backend, WebGPU is not available
-    // This endpoint provides information about GPU support in browser environment
-    const isWebGPUSupported = false; // Always false in Node.js
-    const gpuAvailable = false;
-    const environment = "nodejs";
-
-    res.json({
-      success: true,
-      data: {
-        available: gpuAvailable,
-        webGPUSupported: isWebGPUSupported,
-        environment,
-        gpu: {
-          message: "GPU detection is handled by frontend browser environment",
-          backendSupport: false,
-        },
-        recommendation:
-          "GPU acceleration is handled by frontend WebGPU API. Backend provides CPU fallback for optimization algorithms.",
-        timestamp: new Date().toISOString(),
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: {
-        message: "GPU status check failed",
-        code: "GPU_STATUS_FAILED",
-      },
-    });
-  }
-});
-
 export default router;

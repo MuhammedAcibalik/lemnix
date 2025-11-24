@@ -41,13 +41,15 @@ export const Pulse: React.FC<PulseProps> = ({
     <motion.div
       animate={{
         scale: [1, scale, 1],
-        boxShadow: glow
-          ? [
-              "0 0 0px rgba(59, 130, 246, 0)",
-              `0 0 20px rgba(59, 130, 246, 0.4)`,
-              "0 0 0px rgba(59, 130, 246, 0)",
-            ]
-          : undefined,
+        ...(glow
+          ? {
+              boxShadow: [
+                "0 0 0px rgba(59, 130, 246, 0)",
+                `0 0 20px rgba(59, 130, 246, 0.4)`,
+                "0 0 0px rgba(59, 130, 246, 0)",
+              ],
+            }
+          : {}),
       }}
       transition={{
         duration,

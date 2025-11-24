@@ -12,12 +12,7 @@ import { OptimizationResult, OptimizationConstraints } from "../../types";
  * Algorithm labels (URL-safe identifiers)
  * Only includes active, supported algorithms
  */
-export type AlgorithmLabel =
-  | "ffd"
-  | "bfd"
-  | "genetic"
-  | "pooling"
-  | "pattern-exact";
+export type AlgorithmLabel = "bfd" | "genetic";
 
 /**
  * @deprecated Removed algorithms (no longer supported)
@@ -77,7 +72,6 @@ export interface NSGAParams {
   readonly generations?: number;
   readonly crossoverRate?: number;
   readonly mutationRate?: number;
-  readonly gpuThreshold?: number;
   readonly seed?: number;
   readonly convergenceWindow?: number; // HV stagnation window (generations)
   readonly convergenceThreshold?: number; // HV improvement threshold
@@ -102,16 +96,6 @@ export interface CostModel {
   readonly wasteCost: number;
   readonly timeCost: number;
   readonly energyCost: number;
-}
-
-/**
- * Pareto point for multi-objective optimization
- */
-export interface ParetoPoint {
-  readonly waste: number;
-  readonly cost: number;
-  readonly time: number;
-  readonly efficiency: number;
 }
 
 /**
@@ -186,7 +170,6 @@ export interface StockSummary {
  */
 export interface AdvancedOptimizationResult
   extends Omit<OptimizationResult, "recommendations"> {
-  readonly paretoFrontier: ParetoPoint[];
   readonly costBreakdown: CostBreakdown;
   readonly performanceMetrics: PerformanceMetrics;
   readonly recommendations: AdvancedOptimizationRecommendation[];
@@ -208,7 +191,6 @@ export interface AdvancedOptimizationResult
   readonly resourceUtilization?: {
     readonly cpuUsage: number;
     readonly memoryUsage: number;
-    readonly gpuUsage: number;
     readonly networkUsage: number;
   };
   readonly errorAnalysis?: {

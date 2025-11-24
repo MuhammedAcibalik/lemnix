@@ -13,7 +13,6 @@ import type {
   SystemHealth,
   QueryPerformanceMetrics,
   CachePerformanceMetrics,
-  GPUStatus,
 } from "../model/types";
 
 /**
@@ -25,7 +24,6 @@ const ENDPOINTS = {
   SYSTEM: "/health/system",
   QUERIES: "/health/queries",
   CACHE: "/health/cache",
-  GPU: "/health/gpu",
 } as const;
 
 /**
@@ -155,32 +153,6 @@ export async function getCachePerformanceMetrics(): Promise<CachePerformanceMetr
         evictions: 0,
       },
       recommendation: "Cache metrics unavailable",
-    };
-  }
-}
-
-/**
- * Get GPU status
- */
-export async function getGPUStatus(): Promise<GPUStatus> {
-  try {
-    const response = await api.get<{ success: boolean; data: GPUStatus }>(
-      ENDPOINTS.GPU,
-    );
-    return response.data.data;
-  } catch (error) {
-    console.warn("GPU status check failed:", error);
-    return {
-      available: false,
-      webGPUSupported: false,
-      environment: "nodejs",
-      gpu: {
-        message: "GPU detection is handled by frontend browser environment",
-        backendSupport: false,
-      },
-      recommendation:
-        "GPU acceleration is handled by frontend WebGPU API. Backend provides CPU fallback for optimization algorithms.",
-      timestamp: new Date().toISOString(),
     };
   }
 }

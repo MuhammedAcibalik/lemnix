@@ -7,8 +7,8 @@
 import { Request, Response } from "express";
 import { productionPlanService } from "../services/productionPlanService";
 import { productionPlanToCuttingListService } from "../services/productionPlanToCuttingListService";
-import { statisticsService } from "../services/statisticsService";
-import { logger } from "../utils/logger";
+import { productionPlanStatisticsService } from "../services/productionPlanStatisticsService";
+import { logger } from "../services/logger";
 import { databaseManager } from "../config/database";
 
 export class ProductionPlanController {
@@ -677,7 +677,8 @@ export class ProductionPlanController {
     };
 
     try {
-      const statistics = await statisticsService.getStatistics(filters);
+      const statistics =
+        await productionPlanStatisticsService.getStatistics(filters);
 
       res.json({
         success: true,

@@ -91,8 +91,8 @@ export const ModernNavigation: React.FC<ModernNavigationProps> = ({
       <AppBar
         isMobile={isMobile}
         currentPageItem={currentPageItem}
-        activePage={activePage}
-        onToggleSidebar={onToggleSidebar}
+        {...(activePage ? { activePage } : {})}
+        {...(onToggleSidebar ? { onToggleSidebar } : {})}
         onCommandPaletteOpen={openCommandPalette}
         onUserMenuOpen={openUserMenu}
         userMenuAnchor={userMenuAnchor}
@@ -102,7 +102,7 @@ export const ModernNavigation: React.FC<ModernNavigationProps> = ({
       <CommandPalette
         open={commandPaletteOpen}
         onClose={closeCommandPalette}
-        onPageChange={onPageChange}
+        {...(onPageChange ? { onPageChange } : {})}
         onCommandSelect={(command) => {
           command.action(); // Execute command action
           closeCommandPalette();

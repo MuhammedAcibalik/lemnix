@@ -27,11 +27,9 @@ export class MetricsCalculator {
       AlgorithmLabel,
       PerformanceMetrics["algorithmComplexity"]
     > = {
-      ffd: "O(n²)",
+      // ffd, pooling, pattern-exact removed
       bfd: "O(n²)",
       genetic: "O(n²)",
-      pooling: "O(n²)",
-      "pattern-exact": "O(2^n)",
     };
     return complexities[algorithm];
   }
@@ -44,11 +42,9 @@ export class MetricsCalculator {
    */
   public static getScalabilityScore(algorithm: AlgorithmLabel): number {
     const scores: Record<AlgorithmLabel, number> = {
-      ffd: 8,
+      // ffd, pooling, pattern-exact removed
       bfd: 8,
       genetic: 7,
-      pooling: 8,
-      "pattern-exact": 7,
     };
     return scores[algorithm];
   }
@@ -196,11 +192,9 @@ export class MetricsCalculator {
     algorithm: AlgorithmLabel,
   ): OptimizationAlgorithm {
     const mapping: Record<AlgorithmLabel, OptimizationAlgorithm> = {
-      ffd: OptimizationAlgorithm.FIRST_FIT_DECREASING,
+      // ffd, pooling, pattern-exact removed
       bfd: OptimizationAlgorithm.BEST_FIT_DECREASING,
       genetic: OptimizationAlgorithm.GENETIC_ALGORITHM,
-      pooling: OptimizationAlgorithm.PROFILE_POOLING,
-      "pattern-exact": OptimizationAlgorithm.PATTERN_EXACT,
     };
     return mapping[algorithm];
   }

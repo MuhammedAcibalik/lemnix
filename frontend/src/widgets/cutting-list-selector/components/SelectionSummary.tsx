@@ -195,7 +195,7 @@ export const SelectionSummary: React.FC<SelectionSummaryProps> = ({
             textTransform: "none",
             transition: ds.transitions.base,
             "&:hover": {
-              background: ds.gradients.primaryHover,
+              background: ds.gradients.primary.default,
               boxShadow: ds.shadows.soft.lg,
               transform: "translateY(-2px)",
             },

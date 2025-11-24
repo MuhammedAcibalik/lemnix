@@ -127,7 +127,7 @@ export const EnterpriseOptimizationForm: React.FC<
   const handleAlgorithmChange = useCallback(
     (algorithm: string) => {
       updateParams({
-        algorithm: algorithm as "ffd" | "bfd" | "genetic" | "pooling",
+        algorithm: algorithm as "bfd" | "genetic",
       });
     },
     [updateParams],
@@ -564,7 +564,7 @@ export const EnterpriseOptimizationForm: React.FC<
                   borderRadius: `${ds.borderRadius.lg}px`,
                   transition: ds.transitions.base,
                   "&:hover": {
-                    background: ds.gradients.primaryHover,
+                    background: ds.gradients.primary.soft,
                     boxShadow: ds.shadows.soft.lg,
                     transform: "translateY(-2px)",
                   },

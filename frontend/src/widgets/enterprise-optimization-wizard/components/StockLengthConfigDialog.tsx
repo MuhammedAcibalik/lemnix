@@ -276,7 +276,7 @@ export const StockLengthConfigDialog: React.FC<
                   <Button
                     variant={isPresetAdded[index] ? "outlined" : "contained"}
                     onClick={() => handleAddPreset(length)}
-                    disabled={isPresetAdded[index]}
+                    {...(isPresetAdded[index] ? { disabled: true } : {})}
                     fullWidth
                     sx={{
                       py: tokens.spacing.sm,

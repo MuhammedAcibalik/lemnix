@@ -63,10 +63,11 @@ export const ModernCuttingPlan: React.FC<ModernCuttingPlanProps> = ({
 
   // Stok boylarına göre grupla
   const stockGroups = cuts.reduce((acc: Record<number, Cut[]>, cut) => {
-    if (!acc[cut.stockLength]) {
-      acc[cut.stockLength] = [];
+    const stockLength = cut.stockLength;
+    if (!acc[stockLength]) {
+      acc[stockLength] = [];
     }
-    acc[cut.stockLength].push(cut);
+    acc[stockLength]!.push(cut);
     return acc;
   }, {});
 

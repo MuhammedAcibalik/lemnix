@@ -13,6 +13,11 @@ import {
   ValidationResult,
   CuttingListData,
 } from "../types";
+import {
+  CuttingListProduct,
+  CuttingListSection,
+  CuttingListItem,
+} from "@/shared/lib/services/cuttingListOptimizationService";
 import { validationConstants, performanceConstants } from "../constants";
 
 /**
@@ -30,13 +35,13 @@ export const useSelectionState = (cuttingList: CuttingListData) => {
   const initializeSelectionState = useCallback(() => {
     const products: { [productId: string]: ProductSelectionState } = {};
 
-    cuttingList.products.forEach((product) => {
+    (cuttingList.products || []).forEach((product: CuttingListProduct) => {
       const workOrders: { [workOrderId: string]: WorkOrderSelectionState } = {};
 
-      product.sections.forEach((section) => {
+      product.sections.forEach((section: CuttingListSection) => {
         const profiles: { [profileId: string]: boolean } = {};
 
-        section.items.forEach((item) => {
+        section.items.forEach((item: CuttingListItem) => {
           profiles[item.id] = false;
         });
 
@@ -81,8 +86,8 @@ export const useSelectionState = (cuttingList: CuttingListData) => {
     let estimatedLength = 0;
     let selectedLength = 0;
 
-    cuttingList.products.forEach((product) => {
-      product.sections.forEach((section) => {
+    (cuttingList.products || []).forEach((product: CuttingListProduct) => {
+      product.sections.forEach((section: CuttingListSection) => {
         totalProfiles++;
         if (
           selectionState.products[product.id]?.workOrders[section.id]?.selected
@@ -90,16 +95,24 @@ export const useSelectionState = (cuttingList: CuttingListData) => {
           selectedProfiles++;
         }
 
-        section.items.forEach((item) => {
+        section.items.forEach((item: CuttingListItem) => {
           totalItems++;
-          estimatedLength += item.length * item.quantity;
+          const itemLength = item.profiles.reduce(
+            (sum, p) => sum + (parseFloat(p.measurement) || 0),
+            0,
+          );
+          const itemQuantity = item.profiles.reduce(
+            (sum, p) => sum + p.quantity,
+            0,
+          );
+          estimatedLength += itemLength * itemQuantity;
 
           const isSelected =
             selectionState.products[product.id]?.workOrders[section.id]
               ?.profiles[item.id];
           if (isSelected) {
             selectedItems++;
-            selectedLength += item.length * item.quantity;
+            selectedLength += itemLength * itemQuantity;
           }
         });
       });

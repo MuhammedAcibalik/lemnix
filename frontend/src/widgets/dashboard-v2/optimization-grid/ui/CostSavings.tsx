@@ -91,7 +91,8 @@ export const CostSavings: React.FC<CostSavingsProps> = ({
           padding: 8,
           borderRadius: 6,
           callbacks: {
-            label: (context) => `${context.parsed.y.toLocaleString("tr-TR")} ₺`,
+            label: (context) =>
+              `${(context.parsed.y ?? 0).toLocaleString("tr-TR")} ₺`,
           },
         },
       },

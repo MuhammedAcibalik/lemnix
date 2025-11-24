@@ -21,12 +21,8 @@ export enum WorkOrderStatus {
 export type ProfileType = string;
 
 export enum OptimizationAlgorithm {
-  FIRST_FIT_DECREASING = "ffd",
   BEST_FIT_DECREASING = "bfd",
   GENETIC_ALGORITHM = "genetic",
-  NSGA_II = "nsga-ii",
-  PROFILE_POOLING = "pooling",
-  PATTERN_EXACT = "pattern-exact",
 }
 
 // Alias for backward compatibility

@@ -113,7 +113,7 @@ export class ProfileOptimizationService {
       const poolingResult = await this.advancedOptimizationService.optimize(
         items,
         {
-          algorithm: "pooling",
+          algorithm: "bfd",
           objectives: [
             { type: "maximize-efficiency", weight: 0.5, priority: "high" },
             { type: "minimize-waste", weight: 0.3, priority: "medium" },

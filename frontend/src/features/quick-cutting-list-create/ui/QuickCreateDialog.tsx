@@ -19,7 +19,10 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useDesignSystem } from "@/shared/hooks";
-import { useQuickCreate } from "../model/useQuickCreate";
+import {
+  useQuickCreate,
+  type QuickCreateParams,
+} from "../model/useQuickCreate";
 
 export interface QuickCreateDialogProps {
   readonly open: boolean;
@@ -42,10 +45,11 @@ export const QuickCreateDialog: React.FC<QuickCreateDialogProps> = ({
     if (!title.trim()) return;
 
     try {
-      const result = await createList({
+      const params: QuickCreateParams = {
         title: title.trim(),
-        description: description.trim() || undefined,
-      });
+        ...(description.trim() ? { description: description.trim() } : {}),
+      };
+      const result = await createList(params);
 
       if (result) {
         onSuccess?.(result.id);

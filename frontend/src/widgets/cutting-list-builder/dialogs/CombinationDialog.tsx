@@ -416,9 +416,9 @@ export const CombinationDialog: React.FC<CombinationDialogProps> = ({
           Kapat
         </Button>
 
-        {combinations.length > 0 && (
+        {combinations.length > 0 && combinations[0] && (
           <Button
-            onClick={() => handleSelectCombination(combinations[0])}
+            onClick={() => handleSelectCombination(combinations[0]!)}
             startIcon={<CheckCircleIcon />}
             variant="contained"
             disabled={isLoading}

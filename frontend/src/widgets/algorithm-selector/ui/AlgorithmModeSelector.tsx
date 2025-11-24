@@ -108,7 +108,7 @@ export const AlgorithmModeSelector: React.FC<AlgorithmModeSelectorProps> = ({
           },
         }}
       >
-        {(["standard", "advanced", "auto"] as const).map((mode) => {
+        {(["standard", "auto"] as const).map((mode) => {
           const config = ALGORITHM_CONFIGS[mode];
           const isRecommended = recommendedMode === mode;
           const isSelected = value === mode;

@@ -1,17 +1,22 @@
 /**
- * Product Category Repository
- * Data access layer for ProductCategory and ProductMapping operations
+ * Product Category Repository (Legacy Adapter)
+ *
+ * Wraps the new PrismaProductCategoryRepository to maintain backward compatibility
+ * Returns Prisma models instead of domain entities
  *
  * @module repositories/ProductCategoryRepository
- * @version 1.0.0
+ * @version 2.0.0 - Adapter pattern for backward compatibility
+ * @deprecated Use PrismaProductCategoryRepository directly for new code
  */
 
 import { prisma } from "../config/database";
 import { ProductCategory, ProductMapping, Prisma } from "@prisma/client";
 import { logger } from "../services/logger";
+import { PrismaProductCategoryRepository } from "../infrastructure/repositories/PrismaProductCategoryRepository";
+import { handlePrismaError } from "../utils/prismaErrorHandler";
 
 // ============================================================================
-// TYPE DEFINITIONS
+// TYPE DEFINITIONS (for backward compatibility)
 // ============================================================================
 
 export interface CreateCategoryInput {
@@ -34,8 +39,11 @@ export interface ProductCategoryWithProducts extends ProductCategory {
 
 export class ProductCategoryRepository {
   private static instance: ProductCategoryRepository;
+  private readonly prismaRepository: PrismaProductCategoryRepository;
 
-  private constructor() {}
+  private constructor() {
+    this.prismaRepository = new PrismaProductCategoryRepository();
+  }
 
   public static getInstance(): ProductCategoryRepository {
     if (!ProductCategoryRepository.instance) {
@@ -52,66 +60,47 @@ export class ProductCategoryRepository {
    * Get all categories
    */
   public async findAll(): Promise<ProductCategory[]> {
-    try {
-      return await prisma.productCategory.findMany({
-        orderBy: { name: "asc" },
-      });
-    } catch (error) {
-      logger.error("Failed to get all product categories", { error });
-      throw error;
-    }
+    const domainCategories = await this.prismaRepository.findAll();
+    // Convert domain entities back to Prisma models
+    return await prisma.productCategory.findMany({
+      orderBy: { name: "asc" },
+    });
   }
 
   /**
    * Get category by ID
    */
   public async findById(id: string): Promise<ProductCategory | null> {
-    try {
-      return await prisma.productCategory.findUnique({
-        where: { id },
-      });
-    } catch (error) {
-      logger.error("Failed to get product category by ID", { error, id });
-      throw error;
+    const domainCategory = await this.prismaRepository.findById(id);
+    if (!domainCategory) {
+      return null;
     }
+    return await prisma.productCategory.findUnique({
+      where: { id },
+    });
   }
 
   /**
    * Get category by name
    */
   public async findByName(name: string): Promise<ProductCategory | null> {
-    try {
-      return await prisma.productCategory.findUnique({
-        where: { name },
-      });
-    } catch (error) {
-      logger.error("Failed to get product category by name", { error, name });
-      throw error;
+    const domainCategory = await this.prismaRepository.findByName(name);
+    if (!domainCategory) {
+      return null;
     }
+    return await prisma.productCategory.findUnique({
+      where: { name },
+    });
   }
 
   /**
    * Create a new category
    */
   public async create(data: CreateCategoryInput): Promise<ProductCategory> {
-    try {
-      const result = await prisma.productCategory.create({
-        data: {
-          name: data.name,
-          description: data.description,
-        },
-      });
-
-      logger.info("Product category created", {
-        id: result.id,
-        name: result.name,
-      });
-
-      return result;
-    } catch (error) {
-      logger.error("Failed to create product category", { error, data });
-      throw error;
-    }
+    const domainCategory = await this.prismaRepository.create(data);
+    return await prisma.productCategory.findUniqueOrThrow({
+      where: { id: domainCategory.id },
+    });
   }
 
   /**
@@ -121,48 +110,18 @@ export class ProductCategoryRepository {
     id: string,
     data: UpdateCategoryInput,
   ): Promise<ProductCategory> {
-    try {
-      const result = await prisma.productCategory.update({
-        where: { id },
-        data: {
-          ...(data.name && { name: data.name }),
-          ...(data.description !== undefined && {
-            description: data.description,
-          }),
-        },
-      });
-
-      logger.info("Product category updated", {
-        id: result.id,
-        name: result.name,
-      });
-
-      return result;
-    } catch (error) {
-      logger.error("Failed to update product category", { error, id, data });
-      throw error;
-    }
+    const domainCategory = await this.prismaRepository.update(id, data);
+    return await prisma.productCategory.findUniqueOrThrow({
+      where: { id: domainCategory.id },
+    });
   }
 
   /**
    * Delete category
    */
   public async delete(id: string): Promise<void> {
-    try {
-      await prisma.productCategory.delete({
-        where: { id },
-      });
-
-      logger.info("Product category deleted", { id });
-    } catch (error) {
-      logger.error("Failed to delete product category", { error, id });
-      throw error;
-    }
+    await this.prismaRepository.delete(id);
   }
-
-  // ==========================================================================
-  // PRODUCT MAPPING OPERATIONS
-  // ==========================================================================
 
   /**
    * Get category by product name
@@ -170,39 +129,14 @@ export class ProductCategoryRepository {
   public async getCategoryByProductName(
     productName: string,
   ): Promise<ProductCategory | null> {
-    try {
-      const normalizedProductName = productName.toUpperCase().trim();
-
-      logger.debug("Looking up category for product", {
-        original: productName,
-        normalized: normalizedProductName,
-      });
-
-      const mapping = await prisma.productMapping.findUnique({
-        where: { productName: normalizedProductName },
-        include: { category: true },
-      });
-
-      if (!mapping) {
-        logger.debug("No category mapping found for product", {
-          normalizedProductName,
-        });
-        return null;
-      }
-
-      logger.debug("Category mapping found", {
-        normalizedProductName,
-        categoryName: mapping.category.name,
-      });
-
-      return mapping.category;
-    } catch (error) {
-      logger.error("Failed to get category by product name", {
-        error,
-        productName,
-      });
-      throw error;
+    const domainCategory =
+      await this.prismaRepository.getCategoryByProductName(productName);
+    if (!domainCategory) {
+      return null;
     }
+    return await prisma.productCategory.findUnique({
+      where: { id: domainCategory.id },
+    });
   }
 
   /**
@@ -212,47 +146,13 @@ export class ProductCategoryRepository {
     productName: string,
     categoryId: string,
   ): Promise<ProductMapping> {
-    try {
-      const normalizedProductName = productName.toUpperCase().trim();
-
-      // Verify category exists
-      const category = await prisma.productCategory.findUnique({
-        where: { id: categoryId },
-      });
-
-      if (!category) {
-        throw new Error(`Category with ID ${categoryId} not found`);
-      }
-
-      // Upsert mapping (create or update)
-      const result = await prisma.productMapping.upsert({
-        where: { productName: normalizedProductName },
-        create: {
-          productName: normalizedProductName,
-          categoryId,
-        },
-        update: {
-          categoryId,
-          updatedAt: new Date(),
-        },
-        include: { category: true },
-      });
-
-      logger.info("Product mapped to category", {
-        productName: normalizedProductName,
-        categoryId,
-        categoryName: result.category.name,
-      });
-
-      return result;
-    } catch (error) {
-      logger.error("Failed to map product to category", {
-        error,
-        productName,
-        categoryId,
-      });
-      throw error;
-    }
+    const domainMapping = await this.prismaRepository.mapProductToCategory(
+      productName,
+      categoryId,
+    );
+    return await prisma.productMapping.findUniqueOrThrow({
+      where: { id: domainMapping.id },
+    });
   }
 
   /**
@@ -261,81 +161,15 @@ export class ProductCategoryRepository {
   public async getProductsByCategory(
     categoryId: string,
   ): Promise<ProductMapping[]> {
-    try {
-      return await prisma.productMapping.findMany({
-        where: { categoryId },
-        include: { category: true },
-        orderBy: { productName: "asc" },
-      });
-    } catch (error) {
-      logger.error("Failed to get products by category", {
-        error,
-        categoryId,
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Get category with products
-   */
-  public async getCategoryWithProducts(
-    id: string,
-  ): Promise<ProductCategoryWithProducts | null> {
-    try {
-      return await prisma.productCategory.findUnique({
-        where: { id },
-        include: {
-          products: {
-            orderBy: { productName: "asc" },
-          },
-        },
-      });
-    } catch (error) {
-      logger.error("Failed to get category with products", { error, id });
-      throw error;
-    }
-  }
-
-  /**
-   * Delete product mapping
-   */
-  public async deleteProductMapping(productName: string): Promise<void> {
-    try {
-      const normalizedProductName = productName.toUpperCase().trim();
-
-      await prisma.productMapping.delete({
-        where: { productName: normalizedProductName },
-      });
-
-      logger.info("Product mapping deleted", {
-        productName: normalizedProductName,
-      });
-    } catch (error) {
-      logger.error("Failed to delete product mapping", {
-        error,
-        productName,
-      });
-      throw error;
-    }
-  }
-
-  /**
-   * Get all product mappings
-   */
-  public async getAllMappings(): Promise<ProductMapping[]> {
-    try {
-      return await prisma.productMapping.findMany({
-        include: { category: true },
-        orderBy: { productName: "asc" },
-      });
-    } catch (error) {
-      logger.error("Failed to get all product mappings", { error });
-      throw error;
-    }
+    const domainMappings =
+      await this.prismaRepository.getProductsByCategory(categoryId);
+    const ids = domainMappings.map((m) => m.id);
+    return await prisma.productMapping.findMany({
+      where: { id: { in: ids } },
+      orderBy: { productName: "asc" },
+    });
   }
 }
 
-// Export singleton instance
 export const productCategoryRepository =
   ProductCategoryRepository.getInstance();

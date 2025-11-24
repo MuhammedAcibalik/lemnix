@@ -91,7 +91,7 @@ export function useResponsiveValue<T>(
  * ```
  */
 export function useResponsiveValues<
-  T extends Record<string, ResponsiveValueMap<any>>,
+  T extends Record<string, ResponsiveValueMap<unknown>>,
 >(valuesMap: T): { [K in keyof T]: ReturnType<typeof useResponsiveValue> } {
   const [width, setWidth] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth : 0,
@@ -119,10 +119,15 @@ export function useResponsiveValues<
     };
   }, []);
 
-  const result = {} as { [K in keyof T]: any };
+  const result = {} as {
+    [K in keyof T]: ReturnType<typeof getResponsiveValue>;
+  };
 
   for (const key in valuesMap) {
-    result[key] = getResponsiveValue(valuesMap[key], width);
+    const valueMap = valuesMap[key];
+    if (valueMap !== undefined) {
+      result[key] = getResponsiveValue(valueMap, width);
+    }
   }
 
   return result;

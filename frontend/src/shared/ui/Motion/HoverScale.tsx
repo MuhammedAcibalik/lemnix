@@ -26,9 +26,12 @@ export const HoverScale: React.FC<HoverScaleProps> = ({
     <motion.div
       whileHover={{
         scale,
-        boxShadow: glow
-          ? "0 10px 40px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.2)"
-          : undefined,
+        ...(glow
+          ? {
+              boxShadow:
+                "0 10px 40px rgba(59, 130, 246, 0.3), 0 0 20px rgba(59, 130, 246, 0.2)",
+            }
+          : {}),
       }}
       transition={{
         type: "spring",

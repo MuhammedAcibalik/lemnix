@@ -132,3 +132,8 @@ cutting-lists.json
 
 # Git installer (temporary)
 git-installer.exe
+
+# Docker secrets (NEVER commit)
+backend/secrets/
+secrets/
+*.secret

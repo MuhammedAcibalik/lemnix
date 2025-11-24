@@ -36,7 +36,7 @@ export const useCuttingLists = () => {
       const sampleItems = SAMPLE_CUTTING_ITEMS.map((item) => ({
         ...item,
         id: generateUniqueId(),
-        date: new Date().toISOString().split("T")[0],
+        date: new Date().toISOString().split("T")[0] as string | undefined,
         orderQuantity: item.quantity,
         profiles: [
           {

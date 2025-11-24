@@ -19,6 +19,7 @@ import {
   getOptimizationMetrics,
   checkOptimizationHealth,
   exportOptimizationResult,
+  getOptimizationResult,
 } from "./optimizationApi";
 import type {
   OptimizationRequest,
@@ -235,10 +236,7 @@ export function usePrefetchOptimizationResult() {
 
     queryClient.prefetchQuery({
       queryKey: optimizationKeys.result(id),
-      queryFn: async () => {
-        const { getOptimizationResult } = await import("./optimizationApi");
-        return getOptimizationResult(id);
-      },
+      queryFn: () => getOptimizationResult(id),
       staleTime: 5 * 60 * 1000,
     });
   };

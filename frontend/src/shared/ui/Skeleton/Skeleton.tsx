@@ -113,8 +113,8 @@ export const SkeletonV3 = forwardRef<HTMLDivElement, SkeletonV3Props>(
         ref={ref}
         variant={variant}
         animation={animation}
-        width={width}
-        height={height}
+        {...(width !== undefined ? { width } : {})}
+        {...(height !== undefined ? { height } : {})}
         sx={{
           ...baseStyles,
           ...(color && { color }),

@@ -20,7 +20,7 @@ import { OptimizationHandler } from "../services/enterprise-handlers/Optimizatio
 import { MetricsHandler } from "../services/enterprise-handlers/MetricsHandler";
 import { HealthHandler } from "../services/enterprise-handlers/HealthHandler";
 import { ExportHandler } from "../services/enterprise-handlers/ExportHandler";
-import { EnterpriseValidationService } from "../services/enterprise-validation/ValidationService";
+import { OptimizationRequestValidationService } from "../services/enterprise-validation";
 import { prisma } from "../config/database";
 
 /**
@@ -32,7 +32,7 @@ export class EnterpriseOptimizationController {
   private readonly metricsHandler: MetricsHandler;
   private readonly healthHandler: HealthHandler;
   private readonly exportHandler: ExportHandler;
-  private readonly validationService: EnterpriseValidationService;
+  private readonly validationService: OptimizationRequestValidationService;
   private readonly monitoringService: EnterpriseMonitoringService;
 
   constructor() {
@@ -43,7 +43,7 @@ export class EnterpriseOptimizationController {
     const profileService = new ProfileOptimizationService();
 
     // Initialize validation
-    this.validationService = new EnterpriseValidationService();
+    this.validationService = new OptimizationRequestValidationService();
 
     // Initialize handlers with DI
     this.optimizationHandler = new OptimizationHandler(

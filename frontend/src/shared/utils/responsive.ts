@@ -6,6 +6,7 @@
  */
 
 import { breakpoints } from "../config/breakpoints";
+import type { NavigatorWithMsMaxTouchPoints } from "../types/browser";
 
 /**
  * Get responsive value based on current breakpoint
@@ -41,8 +42,11 @@ export function getResponsiveValue<T>(
   }
 
   // Return the smallest breakpoint value as fallback
-  const smallestBreakpoint = sortedBreakpoints[sortedBreakpoints.length - 1][0];
-  return values[smallestBreakpoint as keyof typeof breakpoints];
+  const lastBreakpoint = sortedBreakpoints[sortedBreakpoints.length - 1];
+  const smallestBreakpoint = lastBreakpoint?.[0];
+  return smallestBreakpoint
+    ? values[smallestBreakpoint as keyof typeof breakpoints]
+    : undefined;
 }
 
 /**
@@ -149,9 +153,9 @@ export function isBreakpoint(
   }
 
   const nextBreakpoint = breakpointKeys[currentIndex + 1];
-  const nextMin = breakpoints[nextBreakpoint];
+  const nextMin = nextBreakpoint ? breakpoints[nextBreakpoint] : undefined;
 
-  return width >= currentMin && width < nextMin;
+  return width >= currentMin && (nextMin === undefined || width < nextMin);
 }
 
 /**
@@ -232,8 +236,7 @@ export function isTouchDevice(): boolean {
   return (
     "ontouchstart" in window ||
     navigator.maxTouchPoints > 0 ||
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (navigator as any).msMaxTouchPoints > 0
+    ((navigator as NavigatorWithMsMaxTouchPoints).msMaxTouchPoints ?? 0) > 0
   );
 }
 

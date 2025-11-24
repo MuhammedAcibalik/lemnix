@@ -79,15 +79,18 @@ export const useSmartSuggestions = ({
         );
 
         // Transform to ProfileCombination format
-        const transformed: ProfileCombination[] = combinations.map((combo) => ({
-          profiles: combo.profiles.map((p) => ({
-            profile: p.profile,
-            measurement: p.measurement,
-            ratio: p.ratio,
-          })),
-          confidence: combo.totalConfidence,
-          reasoning: combo.reasoning,
-        }));
+        const transformed: ProfileCombination[] = combinations.map(
+          (combo, index) => ({
+            id: `suggestion-${Date.now()}-${index}`,
+            profiles: combo.profiles.map((p) => ({
+              profile: p.profile,
+              measurement: p.measurement,
+              ratio: p.ratio,
+            })),
+            usageCount: 0,
+            lastUsed: new Date().toISOString(),
+          }),
+        );
 
         setProfileCombinations(transformed);
       } catch (error) {

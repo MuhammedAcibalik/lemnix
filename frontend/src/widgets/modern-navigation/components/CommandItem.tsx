@@ -30,7 +30,7 @@ export const CommandItem: React.FC<CommandItemProps> = ({
       case "raporlar":
         return ds.colors.accent.main;
       case "ayarlar":
-        return ds.colors.support.main;
+        return ds.colors.neutral[600];
       default:
         return ds.colors.neutral[600];
     }

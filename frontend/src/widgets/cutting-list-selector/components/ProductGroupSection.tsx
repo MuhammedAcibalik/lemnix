@@ -144,7 +144,7 @@ export const ProductGroupSection: React.FC<ProductGroupSectionProps> = ({
           {product.sections.map((section) => (
             <Box key={section.id} sx={{ pl: 4 }}>
               <Typography variant="subtitle1" fontWeight={500} gutterBottom>
-                {section.name} ({section.items.length} parça)
+                {section.productName} ({section.items.length} parça)
               </Typography>
 
               {/* TODO: Implement WorkOrderSection component */}

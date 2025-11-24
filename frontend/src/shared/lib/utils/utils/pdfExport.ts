@@ -231,7 +231,8 @@ export const exportToPDF = async (
     // Dosya adı
     const now = new Date();
     const dateStr = now.toISOString().split("T")[0];
-    const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-");
+    const timeStr =
+      now.toTimeString()?.split(" ")[0]?.replace(/:/g, "-") ?? "00-00-00";
     const finalFilename = filename || `Lemnix-Raporu-${dateStr}-${timeStr}.pdf`;
 
     doc.save(finalFilename);
@@ -284,7 +285,7 @@ const addTable = (
   pageWidth: number,
   margin: number,
 ): number => {
-  const colWidth = (pageWidth - 2 * margin) / data[0].length;
+  const colWidth = data[0] ? (pageWidth - 2 * margin) / data[0].length : 0;
   const rowHeight = 8;
 
   data.forEach((row, rowIndex) => {

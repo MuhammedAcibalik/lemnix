@@ -17,13 +17,6 @@ import { AlgorithmInfo, ObjectiveInfo, OptimizationParams } from "../types";
 // Kept for backward compatibility
 export const ALGORITHMS: AlgorithmInfo[] = [
   {
-    value: "ffd",
-    label: "First Fit Decreasing (FFD)",
-    description: "Hızlı ve etkili, büyük parçalardan başlar",
-    speed: 5,
-    accuracy: 4,
-  },
-  {
     value: "bfd",
     label: "Best Fit Decreasing (BFD)",
     description: "En iyi uyumu bulur, düşük atık",
@@ -36,13 +29,6 @@ export const ALGORITHMS: AlgorithmInfo[] = [
     description: "En iyi kalite, çoklu hedef optimizasyonu (100/100 Score)",
     speed: 2,
     accuracy: 5,
-  },
-  {
-    value: "pooling", // Changed from 'branch-and-bound' to match backend
-    label: "Profile Pooling",
-    description: "Profil bazlı gruplama ve optimizasyon",
-    speed: 3,
-    accuracy: 4,
   },
 ];
 
@@ -91,8 +77,6 @@ export const DEFAULT_PARAMS: OptimizationParams = {
   unit: "mm",
   // ✅ P1-7: GA Advanced Settings (Adaptive defaults)
   performanceSettings: {
-    populationSize: undefined, // Backend auto-tune
-    generations: undefined, // Backend auto-tune
     mutationRate: 0.15,
     crossoverRate: 0.8,
   },

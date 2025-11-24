@@ -588,7 +588,7 @@ export const typography = {
 /**
  * Fluid typography scales smoothly between breakpoints using CSS clamp()
  * Formula: clamp(minSize, preferredSize, maxSize)
- * 
+ *
  * Benefits:
  * - Smooth scaling between breakpoints
  * - No sudden jumps in font size
@@ -604,7 +604,7 @@ export const fluidTypography = {
     md: "clamp(1.75rem, 1rem + 3vw, 3.75rem)", // 28px → 60px
     sm: "clamp(1.5rem, 1rem + 2.5vw, 3rem)", // 24px → 48px
   },
-  
+
   // Headings - Page sections
   heading: {
     h1: "clamp(1.875rem, 1.5rem + 1.5vw, 2.25rem)", // 30px → 36px
@@ -614,7 +614,7 @@ export const fluidTypography = {
     h5: "clamp(1rem, 0.875rem + 0.5vw, 1.125rem)", // 16px → 18px
     h6: "clamp(0.875rem, 0.875rem + 0.25vw, 1rem)", // 14px → 16px
   },
-  
+
   // Body - Content text
   body: {
     xl: "clamp(1.125rem, 1rem + 0.5vw, 1.25rem)", // 18px → 20px
@@ -879,7 +879,7 @@ export const zIndex = {
 /**
  * Enhanced breakpoint system for comprehensive responsive design
  * Covers all screen sizes from mobile (320px) to ultra-wide displays (2560px+)
- * 
+ *
  * @breakpoints
  * - xs: 320px   - Mobile small (iPhone SE)
  * - sm: 480px   - Mobile large

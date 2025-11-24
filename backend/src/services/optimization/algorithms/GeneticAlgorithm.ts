@@ -1,15 +1,10 @@
 /**
- * LEMNİX Genetic Algorithm with GPU Acceleration
- * Advanced evolutionary optimization with WebGPU support
+ * LEMNİX Genetic Algorithm
+ * Advanced evolutionary optimization
  *
  * @module optimization/algorithms
  * @version 1.1.0 - CRITICAL FIXES APPLIED (2025-10-07)
- * @architecture GPU-first with CPU fallback (GPU TEMPORARILY DISABLED - see below)
- *
- * ⚠️ KNOWN ISSUES (as of 2025-10-07):
- * - GPU acceleration path DISABLED due to critical bug in evolution integration
- * - GPU does not return evolved population, only initial population fitness
- * - See docs/GENETIC_ALGORITHM_IMPROVEMENTS.md for full roadmap
+ * @architecture CPU-based optimization
  *
  * ✅ RECENT FIXES:
  * - RNG seed now resets for reproducibility
@@ -46,21 +41,19 @@ import type {
   AdvancedOptimizationResult,
   OptimizationObjective,
   StockSummary,
+  EnhancedConstraints,
 } from "../types";
 import { StockCalculator } from "../helpers/StockCalculator";
 import { WasteAnalyzer } from "../helpers/WasteAnalyzer";
 import { CostCalculator } from "../helpers/CostCalculator";
 import { MetricsCalculator } from "../helpers/MetricsCalculator";
-import { GPUAccelerator } from "../helpers/GPUAccelerator";
-import type { WebGPUOptimizationParams } from "../webgpuOptimizationService";
-import { GPUEvolutionService } from "../GPUEvolutionService";
 import { TheoreticalMinimumCalculator } from "../utils/TheoreticalMinimumCalculator";
 import {
   PrioritySearchSolver,
   SearchPattern,
   SearchState,
 } from "./PrioritySearchSolver";
-import { ParetoFilter } from "../utils/ParetoFilter";
+import { ParetoFilter } from "../helpers/ParetoFilter";
 import type { ILogger } from "../../logger";
 
 /**
@@ -153,8 +146,6 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   public readonly complexity = "O(n²)" as const; // Actually O(P×n²×g) but constrained to base type
   public readonly scalability = 7;
 
-  private gpuAccelerator: GPUAccelerator | null = null;
-  protected gpuEvolutionService: GPUEvolutionService | null = null;
   private rngState = 12345; // Deterministic RNG seed
   private fitnessStats: FitnessStats | null = null; // Dynamic normalization stats
   private itemKeyCache = new WeakMap<OptimizationItem, string>(); // Stable key cache
@@ -219,127 +210,8 @@ export class GeneticAlgorithm extends BaseAlgorithm {
     // Pre-generate stable keys for all items (deterministic, no RNG)
     this.initializeItemKeys(expanded);
 
-    // Try GPU optimization first (NEW!)
-    const gpuResult = await this.tryGPUOptimization(expanded, context);
-    if (gpuResult) {
-      return gpuResult;
-    }
-
-    // Fallback to CPU
-    this.logger.info("Using CPU for genetic algorithm");
+    // Use CPU optimization
     return this.optimizeWithCPU(expanded, context);
-  }
-
-  /**
-   * Initialize GPU accelerator
-   */
-  private async initializeGPU(): Promise<void> {
-    try {
-      this.gpuAccelerator = new GPUAccelerator(this.logger);
-      await this.gpuAccelerator.initialize();
-    } catch (error) {
-      this.logger.warn("GPU initialization failed, will use CPU fallback", {
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-      this.gpuAccelerator = null;
-    }
-  }
-
-  /**
-   * Determine if GPU should be used
-   */
-  private shouldUseGPU(itemCount: number): boolean {
-    if (!this.gpuAccelerator || !this.gpuAccelerator.isAvailable()) {
-      return false;
-    }
-
-    // Use GPU for problems with 20+ items
-    return itemCount >= 20;
-  }
-
-  /**
-   * Try GPU optimization with new GPUEvolutionService
-   * Returns result if successful, null if should fallback to CPU
-   */
-  private async tryGPUOptimization(
-    expanded: OptimizationItem[],
-    context: OptimizationContext,
-  ): Promise<AdvancedOptimizationResult | null> {
-    try {
-      // Check if problem is large enough for GPU (20+ items)
-      if (expanded.length < 20) {
-        this.logger.debug("Problem too small for GPU, using CPU", {
-          items: expanded.length,
-          threshold: 20,
-        });
-        return null;
-      }
-
-      // Initialize GPU Evolution Service
-      this.gpuEvolutionService = new GPUEvolutionService(this.logger);
-      const initialized = await this.gpuEvolutionService.initialize();
-
-      if (!initialized) {
-        this.logger.info("GPU not available, will use CPU");
-        return null;
-      }
-
-      const adaptiveParams = this.getAdaptiveParameters(expanded.length);
-      const populationSize =
-        context.performance.populationSize ?? adaptiveParams.populationSize;
-      const generations =
-        context.performance.generations ?? adaptiveParams.generations;
-
-      this.logger.info(
-        "GPU acceleration enabled - running full evolution on GPU",
-        {
-          items: expanded.length,
-          populationSize,
-          generations,
-        },
-      );
-
-      // Get primary stock length
-      const primaryStockLength = context.stockLengths[0] ?? 6000;
-
-      // Run full evolution on GPU (all operators: fitness, selection, crossover, mutation)
-      const gpuResult = await this.gpuEvolutionService.runEvolution({
-        items: expanded,
-        stockLength: primaryStockLength,
-        populationSize,
-        generations,
-        mutationRate: 0.15,
-        crossoverRate: 0.8,
-        objectives: context.objectives.map((obj) => obj.type),
-        seed: this.rngState,
-      });
-
-      this.logger.info("GPU optimization completed successfully", {
-        generations: gpuResult.metrics.totalGenerations,
-        fitness: gpuResult.metrics.finalFitness.toFixed(4),
-        gpuTime: `${gpuResult.metrics.performanceMetrics.totalTime.toFixed(2)}ms`,
-        speedupEstimate: `~${(5000 / gpuResult.metrics.performanceMetrics.totalTime).toFixed(1)}x vs CPU`,
-      });
-
-      // Evaluate GPU sequence on CPU to get full result with cuts
-      const sequenceItems = gpuResult.bestSequence.map(
-        (index) => expanded[index],
-      );
-      const cuts = this.evaluateSequence(sequenceItems, context);
-      const finalizedCuts = this.finalizeCuts(cuts, context);
-
-      // Convert to AdvancedOptimizationResult
-      return this.createResult(finalizedCuts, context);
-    } catch (error) {
-      this.logger.warn("GPU optimization failed, will use CPU fallback", {
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-      return null;
-    } finally {
-      // Cleanup GPU resources
-      this.gpuEvolutionService?.dispose();
-      this.gpuEvolutionService = null;
-    }
   }
 
   /**
@@ -1255,7 +1127,7 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   }
 
   /**
-   * Get fitness weights for WebGPU
+   * Get fitness weights
    * Returns actual weights from objectives, not just presence flags
    */
   private getFitnessWeights(
@@ -1781,12 +1653,6 @@ export class GeneticAlgorithm extends BaseAlgorithm {
         WasteAnalyzer.calculateWastePercentage(totalWaste, totalStockLength),
         MetricsCalculator.calculateQualityScore(efficiency, totalWaste),
       ),
-      paretoFrontier: CostCalculator.calculateParetoFrontier(
-        totalWaste,
-        costBreakdown.totalCost,
-        totalTime,
-        efficiency,
-      ),
       costBreakdown,
       performanceMetrics,
       confidence: MetricsCalculator.calculateConfidence(
@@ -1813,7 +1679,6 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       resourceUtilization: {
         cpuUsage: 0,
         memoryUsage: 0,
-        gpuUsage: 0,
         networkUsage: 0,
       },
       errorAnalysis: {
@@ -2017,10 +1882,14 @@ export class GeneticAlgorithm extends BaseAlgorithm {
     const sortedStockLengths = [...stockLengths].sort((a, b) => b - a);
 
     for (const stockLength of sortedStockLengths) {
-      // ✅ CRITICAL FIX: Only subtract safetyMargin for pattern generation
-      // endSafety is only applied when actual cutting position reaches near stock end
-      // This is handled in convertSolutionToCuts when creating final segments
-      const usableLength = stockLength - (constraints.safetyMargin || 0);
+      // ✅ CRITICAL FIX: Subtract BOTH startSafety and endSafety for pattern generation
+      // The optimization must respect both safety margins as hard constraints
+      // Cast to EnhancedConstraints to access safety properties
+      const enhancedConstraints = constraints as unknown as EnhancedConstraints;
+      const totalSafety =
+        (enhancedConstraints.startSafety || 0) +
+        (enhancedConstraints.endSafety || 0);
+      const usableLength = stockLength - totalSafety;
 
       // Generate all possible combinations of items that fit in this stock
       this.generatePatternsForStock(

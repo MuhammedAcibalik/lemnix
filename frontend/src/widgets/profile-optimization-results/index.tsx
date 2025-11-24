@@ -64,8 +64,8 @@ export const ProfileOptimizationResults: React.FC<
     getRecommendationIcon,
   } = useProfileOptimizationState({
     result,
-    onNewOptimization,
-    onExport,
+    ...(onNewOptimization !== undefined ? { onNewOptimization } : {}),
+    ...(onExport !== undefined ? { onExport } : {}),
   });
 
   if (!result) return null;
@@ -76,7 +76,7 @@ export const ProfileOptimizationResults: React.FC<
       <HeaderSection
         result={result}
         performanceMetrics={performanceMetrics}
-        onExport={onExport}
+        {...(onExport ? { onExport } : {})}
       />
 
       {/* KPI Cards */}

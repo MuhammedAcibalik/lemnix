@@ -224,7 +224,7 @@ export const DetailedSelectionDialog: React.FC<
             const workOrderItem: WorkOrderItem = {
               id: item.id || `item-${Date.now()}`,
               workOrderId: item.workOrderId || "Bilinmeyen İş Emri",
-              date: new Date().toISOString().split("T")[0],
+              date: new Date().toISOString().split("T")[0] || "",
               version: item.version || "V1.0",
               color: item.color || "Bilinmeyen Renk",
               orderQuantity: item.orderQuantity || 0,
@@ -407,16 +407,22 @@ export const DetailedSelectionDialog: React.FC<
   }, []);
 
   const handleProductExpand = useCallback((productId: string) => {
-    setSelectionState((prev) => ({
-      ...prev,
-      products: {
-        ...prev.products,
-        [productId]: {
-          ...prev.products[productId],
-          expanded: !prev.products[productId].expanded,
+    setSelectionState((prev) => {
+      const product = prev.products[productId];
+      if (!product) {
+        return prev;
+      }
+      return {
+        ...prev,
+        products: {
+          ...prev.products,
+          [productId]: {
+            ...product,
+            expanded: !product.expanded,
+          },
         },
-      },
-    }));
+      };
+    });
   }, []);
 
   const handleWorkOrderToggle = useCallback(
@@ -435,6 +441,9 @@ export const DetailedSelectionDialog: React.FC<
         }
 
         const workOrder = product.workOrders[workOrderIndex];
+        if (!workOrder) {
+          return prev;
+        }
         const newSelected = !workOrder.selected;
 
         // ✅ FIX: Create completely new profile array with new objects
@@ -446,10 +455,13 @@ export const DetailedSelectionDialog: React.FC<
           : [];
 
         // ✅ FIX: Create completely new workOrder object
-        const updatedWorkOrder = {
+        const updatedWorkOrder: WorkOrderSelection = {
           ...workOrder,
           selected: newSelected,
           profiles: updatedProfiles, // New profiles array
+          workOrderId: workOrder.workOrderId,
+          workOrderItem: workOrder.workOrderItem,
+          expanded: workOrder.expanded ?? false,
         };
 
         // ✅ FIX: Create new workOrders array
@@ -495,7 +507,7 @@ export const DetailedSelectionDialog: React.FC<
         }
 
         const workOrder = product.workOrders[workOrderIndex];
-        if (!Array.isArray(workOrder.profiles)) {
+        if (!workOrder || !Array.isArray(workOrder.profiles)) {
           return prev;
         }
 
@@ -507,11 +519,17 @@ export const DetailedSelectionDialog: React.FC<
         }
 
         const profile = workOrder.profiles[profileIndex];
+        if (!profile) {
+          return prev;
+        }
         const newSelected = !profile.selected;
 
         // ✅ FIX: Create completely new nested objects for immutability
-        const updatedProfile = {
-          ...profile,
+        const updatedProfile: ProfileSelection = {
+          profileId: profile.profileId,
+          profile: profile.profile,
+          measurement: profile.measurement,
+          quantity: profile.quantity,
           selected: newSelected,
         };
 
@@ -521,10 +539,12 @@ export const DetailedSelectionDialog: React.FC<
         // Check if all profiles in work order are selected
         const allProfilesSelected = updatedProfiles.every((p) => p.selected);
 
-        const updatedWorkOrder = {
-          ...workOrder,
+        const updatedWorkOrder: WorkOrderSelection = {
+          workOrderId: workOrder.workOrderId,
+          workOrderItem: workOrder.workOrderItem,
           selected: allProfilesSelected,
           profiles: updatedProfiles,
+          expanded: workOrder.expanded ?? false,
         };
 
         const updatedWorkOrders = [...product.workOrders];

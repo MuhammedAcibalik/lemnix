@@ -123,14 +123,16 @@ export const createExportOptions = (
   format: "excel" | "pdf",
   customOptions?: Partial<ExportOptions>,
 ): ExportOptions => {
-  return {
+  const options: ExportOptions = {
     format,
     includeCharts: true,
     includeRawData: true,
     language: "tr",
-    filename: undefined,
-    ...customOptions,
   };
+  if (customOptions?.filename) {
+    options.filename = customOptions.filename;
+  }
+  return options;
 };
 
 /**
@@ -142,7 +144,8 @@ export const generateFilename = (
 ): string => {
   const now = new Date();
   const dateStr = now.toISOString().split("T")[0];
-  const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-");
+  const timeStr =
+    now.toTimeString()?.split(" ")[0]?.replace(/:/g, "-") ?? "00-00-00";
   const filePrefix = prefix || "Lemnix-İstatistikleri";
   const extension = format === "excel" ? "xlsx" : "pdf";
 
@@ -160,7 +163,7 @@ export const exportHelpers = {
     data: StatisticsData,
     filename?: string,
   ): Promise<ExportResult> => {
-    const options = createExportOptions("excel", { filename });
+    const options = createExportOptions("excel", filename ? { filename } : {});
     return exportStatistics(data, options);
   },
 
@@ -171,7 +174,7 @@ export const exportHelpers = {
     data: StatisticsData,
     filename?: string,
   ): Promise<ExportResult> => {
-    const options = createExportOptions("pdf", { filename });
+    const options = createExportOptions("pdf", filename ? { filename } : {});
     return exportStatistics(data, options);
   },
 
@@ -184,7 +187,7 @@ export const exportHelpers = {
     filename?: string,
   ): Promise<ExportResult> => {
     const formattedData = formatStatisticsData(rawData);
-    const options = createExportOptions(format, { filename });
+    const options = createExportOptions(format, filename ? { filename } : {});
     return exportStatistics(formattedData, options);
   },
 };

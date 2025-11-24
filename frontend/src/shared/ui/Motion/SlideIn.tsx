@@ -42,9 +42,12 @@ export const SlideIn: React.FC<SlideInProps> = ({
   return (
     <motion.div
       initial="hidden"
-      whileInView={viewport ? "visible" : undefined}
-      animate={viewport ? undefined : "visible"}
-      viewport={viewport ? { once, margin: "-100px" } : undefined}
+      {...(viewport
+        ? {
+            whileInView: "visible" as const,
+            viewport: { once, margin: "-100px" },
+          }
+        : { animate: "visible" as const })}
       transition={{ duration, delay, ease: [0, 0, 0.2, 1] }}
       variants={variants}
     >

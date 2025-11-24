@@ -46,10 +46,8 @@ export function AlgorithmSelector({
 }: AlgorithmSelectorProps) {
   // Smart recommendation based on item count
   const recommendation = useMemo((): AlgorithmType => {
-    if (itemCount < 10) return "ffd";
     if (itemCount < 50) return "bfd";
-    if (itemCount < 200) return "genetic";
-    return "pooling";
+    return "genetic";
   }, [itemCount]);
 
   const algorithms = useMemo(() => Object.values(ALGORITHM_CATALOG), []);

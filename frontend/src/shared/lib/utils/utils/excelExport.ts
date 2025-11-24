@@ -108,7 +108,8 @@ export const exportToExcel = async (
     // Dosya adını oluştur
     const now = new Date();
     const dateStr = now.toISOString().split("T")[0];
-    const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-");
+    const timeStr =
+      now.toTimeString()?.split(" ")[0]?.replace(/:/g, "-") ?? "00-00-00";
     const finalFilename =
       filename || `Lemnix-İstatistikleri-${dateStr}-${timeStr}.xlsx`;
 

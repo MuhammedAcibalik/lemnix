@@ -145,7 +145,7 @@ export const useCuttingListStore = create<
           const newList: CuttingList = {
             id,
             name,
-            description,
+            ...(description ? { description } : {}),
             items: [],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
@@ -397,7 +397,9 @@ export const useCuttingListStore = create<
           const items = [...currentList.items];
           if (fromIndex >= 0 && fromIndex < items.length) {
             const [item] = items.splice(fromIndex, 1);
-            items.splice(toIndex, 0, item);
+            if (item) {
+              items.splice(toIndex, 0, item);
+            }
 
             set({
               currentList: {

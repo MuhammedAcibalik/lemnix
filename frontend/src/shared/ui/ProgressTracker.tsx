@@ -175,7 +175,9 @@ export const ProgressTracker: React.FC<ProgressTrackerProps> = ({
                   | "warning"
               }
               size="small"
-              icon={stageInfo.icon}
+              {...(React.isValidElement(stageInfo.icon)
+                ? { icon: stageInfo.icon }
+                : {})}
             />
           </Box>
 
@@ -358,7 +360,9 @@ export const CompactProgressTracker: React.FC<{
             | "warning"
         }
         size="small"
-        icon={stageInfo.icon}
+        {...(React.isValidElement(stageInfo.icon)
+          ? { icon: stageInfo.icon }
+          : {})}
       />
     </Box>
   );

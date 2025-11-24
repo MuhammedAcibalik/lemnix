@@ -11,7 +11,10 @@ import {
   CuttingListItem,
   ConversionResult as ServiceConversionResult,
 } from "@/shared/lib/services/cuttingListOptimizationService";
-import { OptimizationItem } from "@/types";
+import { OptimizationItem } from "@/shared/types/legacy";
+
+// Re-export CuttingListData for use in hooks
+export type { CuttingListData };
 
 // ============================================================================
 // MAIN COMPONENT PROPS

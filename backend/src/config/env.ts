@@ -9,9 +9,35 @@
 
 // Load environment variables first (before validation)
 import dotenv from "dotenv";
+import * as fs from "fs";
+import * as path from "path";
 dotenv.config();
 
 import { z } from "zod";
+
+/**
+ * Read secret from Docker secrets file or environment variable
+ * Docker secrets are mounted at /run/secrets/<secret_name>
+ */
+function readSecret(envVar: string, secretFile?: string): string | undefined {
+  // Try Docker secret file first (production)
+  if (secretFile) {
+    const secretPath = `/run/secrets/${secretFile}`;
+    try {
+      if (fs.existsSync(secretPath)) {
+        const secret = fs.readFileSync(secretPath, "utf-8").trim();
+        if (secret) {
+          return secret;
+        }
+      }
+    } catch (error) {
+      // Ignore errors, fall back to environment variable
+    }
+  }
+
+  // Fall back to environment variable
+  return process.env[envVar];
+}
 
 /**
  * Environment schema definition
@@ -33,6 +59,17 @@ const envSchema = z.object({
   // Frontend URL for CORS
   FRONTEND_URL: z.string().url().default("http://localhost:3000"),
 
+  // CORS Origins (comma-separated list)
+  CORS_ORIGINS: z
+    .string()
+    .optional()
+    .transform((val) => {
+      if (val) {
+        return val.split(",").map((origin) => origin.trim());
+      }
+      return undefined;
+    }),
+
   // Database
   DATABASE_URL: z
     .string()
@@ -47,12 +84,14 @@ const envSchema = z.object({
     .min(32)
     .optional()
     .transform((val) => {
+      // Try reading from Docker secret file first
+      const secretValue = readSecret("JWT_SECRET", "jwt_secret") || val;
       // In production, JWT_SECRET is required
-      if (process.env.NODE_ENV === "production" && !val) {
+      if (process.env.NODE_ENV === "production" && !secretValue) {
         throw new Error("JWT_SECRET is required in production environment");
       }
       // In development, provide a default
-      return val || "dev-secret-key-DO-NOT-USE-IN-PRODUCTION-12345678";
+      return secretValue || "dev-secret-key-DO-NOT-USE-IN-PRODUCTION-12345678";
     }),
   JWT_EXPIRES_IN: z.string().default("7d"),
 
@@ -76,13 +115,6 @@ const envSchema = z.object({
     .enum(["error", "warn", "info", "debug", "verbose"])
     .default("info"),
 
-  // GPU optimization settings
-  ENABLE_GPU: z
-    .string()
-    .transform((val) => val === "true")
-    .pipe(z.boolean())
-    .default("false"),
-
   // Security
   ENABLE_HELMET: z
     .string()
@@ -95,6 +127,27 @@ const envSchema = z.object({
     .transform((val) => val === "true")
     .pipe(z.boolean())
     .default("true"),
+
+  // Redis (optional, for caching and rate limiting)
+  REDIS_URL: z.string().url().optional(),
+
+  // Encryption Master Key (REQUIRED in production)
+  ENCRYPTION_MASTER_KEY: z
+    .string()
+    .min(32)
+    .optional()
+    .transform((val) => {
+      // Try reading from Docker secret file first
+      const secretValue =
+        readSecret("ENCRYPTION_MASTER_KEY", "encryption_master_key") || val;
+      // In production, ENCRYPTION_MASTER_KEY is required
+      if (process.env.NODE_ENV === "production" && !secretValue) {
+        throw new Error(
+          "ENCRYPTION_MASTER_KEY is required in production environment",
+        );
+      }
+      return secretValue;
+    }),
 });
 
 /**

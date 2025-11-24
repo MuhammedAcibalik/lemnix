@@ -551,7 +551,9 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
             <Grid item xs={12} md={8}>
               <StockVisualization2D
                 stocks={stockBreakdown}
-                selectedStockIndex={selectedStock}
+                {...(selectedStock !== undefined
+                  ? { selectedStockIndex: selectedStock }
+                  : {})}
                 onStockClick={setSelectedStock}
                 maxVisibleStocks={15}
               />
@@ -656,17 +658,20 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
                 executionTime={
                   (result as WizardOptimizationResult).executionTime || 0
                 }
-                metadata={
-                  (
-                    result as {
-                      algorithmMetadata?: {
-                        iterations?: number;
-                        convergenceRate?: number;
-                        populationSize?: number;
-                      };
+                {...(result.algorithmMetadata
+                  ? {
+                      metadata: result.algorithmMetadata as {
+                        readonly effectiveComplexity?: string;
+                        readonly actualGenerations?: number;
+                        readonly convergenceReason?: string;
+                        readonly bestFitness?: number;
+                        readonly executionTimeMs?: number;
+                        readonly deterministicSeed?: number;
+                        readonly populationSize?: number;
+                        readonly finalGeneration?: number;
+                      },
                     }
-                  ).algorithmMetadata
-                }
+                  : {})}
               />
             </Grid>
           </Grid>
@@ -983,7 +988,13 @@ export const ResultsStep: React.FC<ResultsStepProps> = ({
             {/* Quality Analysis Details */}
             <Grid item xs={12}>
               <QualityMetricsTab
-                qualityScore={(result as WizardOptimizationResult).qualityScore}
+                {...((result as WizardOptimizationResult).qualityScore !==
+                undefined
+                  ? {
+                      qualityScore: (result as WizardOptimizationResult)
+                        .qualityScore,
+                    }
+                  : {})}
                 materialUtilization={
                   (result as WizardOptimizationResult).efficiency || 0
                 }

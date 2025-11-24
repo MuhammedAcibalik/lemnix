@@ -59,10 +59,6 @@ export type {
 
 export { useDebounce, useLocalStorage, usePrevious } from "./lib/hooks";
 
-// WebGPU (P0-7)
-export { useWebGPU, useWebGPUStatus } from "./lib/webgpu";
-export type { WebGPUStatus } from "./lib/webgpu";
-
 // Validation (P0-6)
 export { useValidation, ValidationAlert } from "./lib/validation";
 export type {
@@ -149,10 +145,6 @@ export type {
   LoadingContainerProps,
 } from "./ui";
 
-// GPU Status Badge (P0-7)
-export { GPUStatusBadge } from "./ui/GPUStatusBadge";
-export type { GPUStatusBadgeProps } from "./ui/GPUStatusBadge";
-
 // Motion Components v3.0 (Animations System)
 export {
   FadeIn,
@@ -205,6 +197,8 @@ export {
 export { useReducedMotion } from "./hooks";
 
 // Modern Components v2.0 (FAZ 3) - Backwards-compatible aliases to current design system
+import type { ButtonProps } from "./ui/Button";
+import type { CardProps } from "./ui/Card";
 export type ButtonV2Props = ButtonProps;
 export {
   Button as ButtonV2,

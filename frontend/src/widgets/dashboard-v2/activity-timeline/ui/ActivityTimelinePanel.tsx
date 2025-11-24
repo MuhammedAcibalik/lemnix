@@ -62,7 +62,7 @@ export const ActivityTimelinePanel: React.FC<ActivityTimelinePanelProps> = ({
   };
 
   const handleFilterChange = (type?: ActivityEventType) => {
-    setFilter({ ...filter, type });
+    setFilter({ ...filter, ...(type !== undefined && { type }) });
     handleFilterClose();
   };
 
@@ -197,7 +197,17 @@ export const ActivityTimelinePanel: React.FC<ActivityTimelinePanelProps> = ({
                     zIndex: 1,
                   }}
                 >
-                  <Icon sx={{ fontSize: 16, color: eventColor }} />
+                  <Box
+                    sx={{
+                      fontSize: 16,
+                      color: eventColor,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Icon />
+                  </Box>
                 </Box>
 
                 {/* Content */}

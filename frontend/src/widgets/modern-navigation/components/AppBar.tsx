@@ -39,10 +39,6 @@ import { useDesignSystem, useResponsive } from "@/shared/hooks";
 import { breakpoints } from "@/shared/config/breakpoints";
 import { fluidHeight, pxToRem } from "@/shared/lib/zoom-aware";
 
-// P0-7: WebGPU Status Badge
-import { GPUStatusBadge } from "@/shared";
-import { useWebGPU } from "@/shared";
-
 /**
  * AppBar Component
  */
@@ -76,9 +72,6 @@ export const AppBar: React.FC<AppBarProps> = ({
     "/profile-management": "Profil Yönetimi",
     "/settings": "Ayarlar",
   };
-
-  // P0-7: WebGPU status
-  const { isSupported, isInitialized, isLoading } = useWebGPU();
 
   // Scroll direction detection for auto-hide header
   const [isVisible, setIsVisible] = useState(true);
@@ -465,151 +458,6 @@ export const AppBar: React.FC<AppBarProps> = ({
               overflow: "hidden",
             }}
           >
-            {/* Enhanced GPU Status Badge - Hidden on mobile */}
-            <Tooltip title="GPU Acceleration Status" arrow>
-              <Box
-                sx={{
-                  // ✅ GPU Badge daha geç göster - geniş ekranlarda göster (breadcrumb ile çakışmasın)
-                  display: { xs: "none", sm: "none", md: "none", lg: "flex" }, // Hide on mobile/tablet/medium desktop, show on wide+
-                  alignItems: "center",
-                  gap: ds.spacing["1"],
-                  px: { sm: ds.spacing["1"], md: ds.spacing["2"] },
-                  py: ds.spacing["1"],
-                  background:
-                    isSupported && isInitialized
-                      ? alpha(ds.colors.success.main, 0.1)
-                      : alpha(ds.colors.neutral[400], 0.1),
-                  borderRadius: `${ds.borderRadius.md}px`,
-                  border: `1px solid ${
-                    isSupported && isInitialized
-                      ? alpha(ds.colors.success.main, 0.2)
-                      : alpha(ds.colors.neutral[400], 0.2)
-                  }`,
-                  transition: ds.transitions.fast,
-                  "&:hover": {
-                    transform: "translateY(-1px)",
-                    boxShadow: ds.shadows.soft.sm,
-                  },
-                }}
-              >
-                <ZapIcon
-                  sx={{
-                    fontSize: { xs: 14, sm: 16, md: 18 },
-                    color:
-                      isSupported && isInitialized
-                        ? ds.colors.success.main
-                        : ds.colors.neutral[600],
-                  }}
-                />
-                <Typography
-                  sx={{
-                    fontSize: {
-                      xs: "0.75rem",
-                      sm: "0.8125rem",
-                      md: "0.875rem",
-                    },
-                    fontWeight: ds.typography.fontWeight.medium,
-                    color:
-                      isSupported && isInitialized
-                        ? ds.colors.success.main
-                        : ds.colors.neutral[600],
-                    display: {
-                      xs: "none",
-                      sm: "none",
-                      md: "none",
-                      lg: "block",
-                    }, // Hide text on mobile/tablet/medium desktop, show on wide+
-                  }}
-                >
-                  {isLoading
-                    ? "Kontrol ediliyor..."
-                    : isSupported && isInitialized
-                      ? "GPU Aktif"
-                      : "GPU Pasif"}
-                </Typography>
-              </Box>
-            </Tooltip>
-
-            {/* Enhanced Command Palette Trigger */}
-            <Tooltip title={messages.navigation.commandPaletteTooltip} arrow>
-              <IconButton
-                onClick={onCommandPaletteOpen}
-                sx={{
-                  color: ds.colors.primary.main,
-                  backgroundColor: alpha(ds.colors.primary.main, 0.1),
-                  border: `1px solid ${alpha(ds.colors.primary.main, 0.2)}`,
-                  borderRadius: `${ds.borderRadius.button}px`,
-                  width: { xs: 32, sm: 36, md: 40 },
-                  height: { xs: 32, sm: 36, md: 40 },
-                  padding: { xs: "6px", sm: "8px" },
-                  transition: ds.transitions.fast,
-                  "&:hover": {
-                    backgroundColor: alpha(ds.colors.primary.main, 0.15),
-                    borderColor: alpha(ds.colors.primary.main, 0.3),
-                    transform: "translateY(-2px)",
-                    boxShadow: `0 4px 12px ${alpha(ds.colors.primary.main, 0.2)}`,
-                  },
-                  "&:focus-visible": {
-                    outline: `2px solid ${ds.colors.primary.main}`,
-                    outlineOffset: "2px",
-                  },
-                }}
-              >
-                <ZapIcon
-                  sx={{
-                    fontSize: { xs: 16, sm: 18, md: ds.componentSizes.icon.sm },
-                  }}
-                />
-              </IconButton>
-            </Tooltip>
-
-            {/* Enhanced Notifications - Hidden on mobile */}
-            <Tooltip title={messages.navigation.notificationsTooltip} arrow>
-              <IconButton
-                sx={{
-                  display: { xs: "none", sm: "flex" }, // Hide on mobile
-                  color: ds.colors.text.secondary,
-                  backgroundColor: alpha(ds.colors.neutral[500], 0.08),
-                  border: `1px solid ${alpha(ds.colors.neutral[500], 0.15)}`,
-                  borderRadius: `${ds.borderRadius.button}px`,
-                  width: { sm: 36, md: 40 },
-                  height: { sm: 36, md: 40 },
-                  transition: ds.transitions.fast,
-                  "&:hover": {
-                    backgroundColor: alpha(ds.colors.primary.main, 0.1),
-                    borderColor: alpha(ds.colors.primary.main, 0.2),
-                    color: ds.colors.primary.main,
-                    transform: "translateY(-2px)",
-                    boxShadow: `0 4px 12px ${alpha(ds.colors.primary.main, 0.15)}`,
-                  },
-                  "&:focus-visible": {
-                    outline: `2px solid ${ds.colors.primary.main}`,
-                    outlineOffset: "2px",
-                  },
-                }}
-              >
-                <Badge
-                  badgeContent={2}
-                  sx={{
-                    "& .MuiBadge-badge": {
-                      backgroundColor: ds.colors.error.main,
-                      color: "white",
-                      fontSize: { sm: "0.5625rem", md: "0.625rem" },
-                      minWidth: { sm: 16, md: 18 },
-                      height: { sm: 16, md: 18 },
-                      fontWeight: ds.typography.fontWeight.semibold,
-                      borderRadius: `${ds.borderRadius.sm}px`,
-                      boxShadow: `0 2px 4px ${alpha(ds.colors.error.main, 0.3)}`,
-                    },
-                  }}
-                >
-                  <NotificationsIcon
-                    sx={{ fontSize: { sm: 18, md: ds.componentSizes.icon.sm } }}
-                  />
-                </Badge>
-              </IconButton>
-            </Tooltip>
-
             {/* Enhanced Command Palette Trigger */}
             <Tooltip title={messages.navigation.commandPaletteTooltip} arrow>
               <IconButton

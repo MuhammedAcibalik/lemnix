@@ -129,7 +129,7 @@ export const ActiveOperationsPanel: React.FC<ActiveOperationsPanelProps> = ({
             <OperationCard
               key={op.id}
               operation={op}
-              onClick={onOperationClick}
+              {...(onOperationClick && { onClick: onOperationClick })}
             />
           ))}
         </Stack>
@@ -168,7 +168,7 @@ export const ActiveOperationsPanel: React.FC<ActiveOperationsPanelProps> = ({
                   backgroundColor: alpha(ds.colors.success.main, 0.05),
                 }}
               >
-                <CheckCircleIcon
+                <CompletedIcon
                   sx={{ fontSize: 16, color: ds.colors.success.main }}
                 />
                 <Box sx={{ flex: 1 }}>

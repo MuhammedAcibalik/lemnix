@@ -5,7 +5,7 @@
  */
 
 import { Request, Response, NextFunction } from "express";
-import { statisticsService } from "../services/monitoring/statisticsService";
+import { cuttingListStatisticsService } from "../services/monitoring/cuttingListStatisticsService";
 import { ProfileAnalysisService } from "../services/analysis/profileAnalysisService";
 import { productCategoriesService } from "../services/analysis/productCategoriesService";
 import { ColorSizeAnalysisService } from "../services/analysis/colorSizeAnalysisService";
@@ -105,23 +105,25 @@ export class StatisticsController {
         // ✅ P2-8: Parallel fetch all requested statistics
         const results = await Promise.allSettled([
           requestedTypes.includes("overview")
-            ? statisticsService.getStatisticsOverview(cuttingListId as string)
+            ? cuttingListStatisticsService.getStatisticsOverview(
+                cuttingListId as string,
+              )
             : Promise.resolve(null),
 
           requestedTypes.includes("performance")
-            ? statisticsService.getPerformanceMetrics()
+            ? cuttingListStatisticsService.getPerformanceMetrics()
             : Promise.resolve(null),
 
           requestedTypes.includes("usage")
-            ? statisticsService.getUsageAnalytics(30)
+            ? cuttingListStatisticsService.getUsageAnalytics(30)
             : Promise.resolve(null),
 
           requestedTypes.includes("optimization")
-            ? statisticsService.getOptimizationAnalytics()
+            ? cuttingListStatisticsService.getOptimizationAnalytics()
             : Promise.resolve(null),
 
           requestedTypes.includes("health")
-            ? statisticsService.getSystemHealthMetrics()
+            ? cuttingListStatisticsService.getSystemHealthMetrics()
             : Promise.resolve(null),
         ]);
 
@@ -188,9 +190,10 @@ export class StatisticsController {
         logger.info(`[${requestId}] Getting statistics overview`);
 
         const { cuttingListId } = req.query;
-        const overview = await statisticsService.getStatisticsOverview(
-          cuttingListId as string,
-        );
+        const overview =
+          await cuttingListStatisticsService.getStatisticsOverview(
+            cuttingListId as string,
+          );
 
         res.json(
           this.createResponse(
@@ -236,7 +239,8 @@ export class StatisticsController {
       try {
         logger.info(`[${requestId}] Getting performance metrics`);
 
-        const metrics = await statisticsService.getPerformanceMetrics();
+        const metrics =
+          await cuttingListStatisticsService.getPerformanceMetrics();
 
         res.json(
           this.createResponse(
@@ -287,7 +291,8 @@ export class StatisticsController {
       try {
         logger.info(`[${requestId}] Getting usage analytics for ${days} days`);
 
-        const analytics = await statisticsService.getUsageAnalytics(days);
+        const analytics =
+          await cuttingListStatisticsService.getUsageAnalytics(days);
 
         res.json(
           this.createResponse(
@@ -329,7 +334,8 @@ export class StatisticsController {
       try {
         logger.info(`[${requestId}] Getting profile usage statistics`);
 
-        const analytics = await statisticsService.getUsageAnalytics(30);
+        const analytics =
+          await cuttingListStatisticsService.getUsageAnalytics(30);
         const profileStats = analytics.profileUsageCounts.slice(0, limit);
 
         res.json(
@@ -379,7 +385,8 @@ export class StatisticsController {
           `[${requestId}] Getting cutting list trends for ${days} days`,
         );
 
-        const analytics = await statisticsService.getUsageAnalytics(days);
+        const analytics =
+          await cuttingListStatisticsService.getUsageAnalytics(days);
 
         res.json(
           this.createResponse(
@@ -429,7 +436,8 @@ export class StatisticsController {
       try {
         logger.info(`[${requestId}] Getting optimization analytics`);
 
-        const analytics = await statisticsService.getOptimizationAnalytics();
+        const analytics =
+          await cuttingListStatisticsService.getOptimizationAnalytics();
 
         res.json(
           this.createResponse(
@@ -475,7 +483,8 @@ export class StatisticsController {
       try {
         logger.info(`[${requestId}] Getting algorithm performance`);
 
-        const analytics = await statisticsService.getOptimizationAnalytics();
+        const analytics =
+          await cuttingListStatisticsService.getOptimizationAnalytics();
 
         res.json(
           this.createResponse(
@@ -521,7 +530,8 @@ export class StatisticsController {
       try {
         logger.info(`[${requestId}] Getting waste reduction trends`);
 
-        const analytics = await statisticsService.getOptimizationAnalytics();
+        const analytics =
+          await cuttingListStatisticsService.getOptimizationAnalytics();
 
         res.json(
           this.createResponse(
@@ -571,7 +581,8 @@ export class StatisticsController {
       try {
         logger.info(`[${requestId}] Getting system health metrics`);
 
-        const health = await statisticsService.getSystemHealthMetrics();
+        const health =
+          await cuttingListStatisticsService.getSystemHealthMetrics();
 
         res.json(
           this.createResponse(
@@ -639,7 +650,9 @@ export class StatisticsController {
           `[${requestId}] Updating cutting list statistics for ${cuttingListId}`,
         );
 
-        await statisticsService.updateCuttingListStatistics(cuttingListId);
+        await cuttingListStatisticsService.updateCuttingListStatistics(
+          cuttingListId,
+        );
 
         res.json(
           this.createResponse(
@@ -703,7 +716,7 @@ export class StatisticsController {
           `[${requestId}] Recording user activity: ${activityType} for user ${userId}`,
         );
 
-        await statisticsService.recordUserActivity(
+        await cuttingListStatisticsService.recordUserActivity(
           userId,
           activityType,
           activityData,
@@ -770,7 +783,7 @@ export class StatisticsController {
           `[${requestId}] Recording system metric: ${metricType}.${metricName} = ${metricValue}`,
         );
 
-        await statisticsService.recordSystemMetric(
+        await cuttingListStatisticsService.recordSystemMetric(
           metricType,
           metricName,
           metricValue,

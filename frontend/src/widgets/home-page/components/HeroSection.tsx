@@ -21,8 +21,8 @@ import { FadeIn, Badge, PrimaryButton, SecondaryButton } from "@/shared";
 // Constants
 const SENTENCES = [
   "Yapay zeka destekli optimizasyon algoritmaları ile %92'nin üzerinde verimlilik sağlayın.",
-  "WebGPU hızlandırma teknolojisi ile üretim süreçlerinizi optimize edin.",
-  "4 gelişmiş algoritma ve gerçek zamanlı analiz ile endüstri devrimi yaşayın.",
+  "Gelişmiş optimizasyon teknolojisi ile üretim süreçlerinizi optimize edin.",
+  "2 gelişmiş algoritma ve gerçek zamanlı analiz ile endüstri devrimi yaşayın.",
 ] as const;
 
 const FEATURES = [
@@ -68,7 +68,10 @@ const SequentialSentences: React.FC<{
 
     // Memoize animation styles
     const animationStyles = useMemo(() => {
-      const styles: Record<string, any> = {};
+      const styles: Record<
+        string,
+        React.CSSProperties | Record<string, React.CSSProperties>
+      > = {};
 
       // Individual sentence animations
       sentences.forEach((_sentence, index) => {
@@ -121,6 +124,7 @@ const SequentialSentences: React.FC<{
 
       // Final combined text animation
       const finalFadeInEnd = finalStart + fadeInOut;
+      const keyframePercentage = `${(finalFadeInEnd / totalDuration) * 100}%`;
       styles["& .combined"] = {
         animation: `combinedShow ${totalDuration}ms ${finalStart}ms both`,
         willChange: "opacity, transform",
@@ -129,7 +133,7 @@ const SequentialSentences: React.FC<{
             opacity: 0,
             transform: "translateY(8px)",
           },
-          [`${(finalFadeInEnd / totalDuration) * 100}%`]: {
+          [keyframePercentage]: {
             opacity: 1,
             transform: "translateY(0)",
           },
@@ -137,7 +141,7 @@ const SequentialSentences: React.FC<{
             opacity: 1,
             transform: "translateY(0)",
           },
-        },
+        } as Record<string, React.CSSProperties>,
         "@media (prefers-reduced-motion: reduce)": {
           animation: "none",
           opacity: 1,

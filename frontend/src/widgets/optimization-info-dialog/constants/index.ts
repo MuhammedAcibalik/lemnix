@@ -62,10 +62,10 @@ export const algorithms: Algorithm[] = [
   },
   {
     id: "genetic",
-    name: "Genetic Algorithm v1.7.1 (GPU)",
+    name: "Genetic Algorithm v1.7.1",
     turkishName: "Genetik Algoritma",
     description:
-      "GPU destekli evrimsel optimizasyon. Popülasyon tabanlı, çaprazlama ve mutasyon kullanır.",
+      "Evrimsel optimizasyon. Popülasyon tabanlı, çaprazlama ve mutasyon kullanır.",
     complexity: "O(P×n²×g)",
     efficiency: "90-95%",
     speed: "Orta",
@@ -73,11 +73,10 @@ export const algorithms: Algorithm[] = [
       "En yüksek kalite",
       "Global optimum",
       "Çoklu hedef",
-      "GPU desteği",
       "Adaptif parametreler",
     ],
-    cons: ["GPU gerektirmeyen", "Stokastik", "Yavaş (GPU yoksa)"],
-    bestFor: "Kalite kritik, GPU mevcut, çoklu hedef optimizasyon",
+    cons: ["Stokastik", "Yavaş"],
+    bestFor: "Kalite kritik, çoklu hedef optimizasyon",
     icon: React.createElement(PsychologyIcon),
   },
   {

@@ -8,6 +8,7 @@
 import * as XLSX from "xlsx";
 import * as path from "path";
 import * as fs from "fs";
+import { logger } from "../services/logger";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -446,9 +447,7 @@ export class PatternDetector {
     // ULTRA AGGRESSIVE: Start from row 0 to catch ALL products
     const dataStartIndex = 0; // Always start from beginning
 
-    console.log(
-      "🔍 Starting AGGRESSIVE product section detection from row 0...",
-    );
+    logger.debug("Starting AGGRESSIVE product section detection from row 0");
 
     // First pass: Scan entire document for products
     let nextStartIndex = dataStartIndex;
@@ -470,9 +469,10 @@ export class PatternDetector {
         if (!productNamesUsed.has(normalizedName)) {
           sections.push(nextSection);
           productNamesUsed.add(normalizedName);
-          console.log(
-            `➕ Added unique product: ${nextSection.productName} at row ${nextSection.startRow}`,
-          );
+          logger.debug("Added unique product", {
+            productName: nextSection.productName,
+            startRow: nextSection.startRow,
+          });
         } else {
           // Merge with existing section
           const existingIndex = sections.findIndex(
@@ -495,9 +495,9 @@ export class PatternDetector {
                 ].sort((a, b) => a - b),
               };
               sections[existingIndex] = mergedSection;
-              console.log(
-                `🔗 Merged duplicate product: ${nextSection.productName}`,
-              );
+              logger.debug("Merged duplicate product", {
+                productName: nextSection.productName,
+              });
             }
           }
         }
@@ -520,7 +520,7 @@ export class PatternDetector {
       }
     }
 
-    console.log(`📊 Found ${sections.length} unique product sections`);
+    logger.info("Found unique product sections", { count: sections.length });
     return sections;
   }
 
@@ -534,9 +534,7 @@ export class PatternDetector {
     const headerRow = headerPattern?.rowIndex ?? -1;
     const dataRows: number[] = [];
 
-    console.log(
-      `🔍 Searching for product section starting from row ${startIndex}`,
-    );
+    logger.debug("Searching for product section", { startIndex });
 
     // PHASE 1: Comprehensive product name search
     const productCandidates: Array<{
@@ -564,9 +562,12 @@ export class PatternDetector {
             row: i,
             confidence,
           });
-          console.log(
-            `📋 Product candidate: "${cellValue}" at row ${i}, col ${j}, confidence: ${confidence}`,
-          );
+          logger.debug("Product candidate found", {
+            cellValue,
+            row: i,
+            col: j,
+            confidence,
+          });
         }
       }
     }
@@ -580,15 +581,16 @@ export class PatternDetector {
         // Lower threshold for more products
         productName = bestCandidate.name;
         sectionStartRow = bestCandidate.row;
-        console.log(
-          `✅ Selected product: "${productName}" with confidence ${bestCandidate.confidence}`,
-        );
+        logger.debug("Selected product", {
+          productName,
+          confidence: bestCandidate.confidence,
+        });
       }
     }
 
     // PHASE 2: If no good product name found, try data-driven approach
     if (!productName) {
-      console.log("⚠️ No clear product name found, analyzing data patterns...");
+      logger.debug("No clear product name found, analyzing data patterns");
 
       // Find first data row and use it to infer product context
       for (
@@ -610,7 +612,7 @@ export class PatternDetector {
           if (inferredProduct) {
             productName = inferredProduct;
             sectionStartRow = i;
-            console.log(`🔧 Inferred product from data: "${productName}"`);
+            logger.debug("Inferred product from data", { productName });
             break;
           }
         }
@@ -619,9 +621,7 @@ export class PatternDetector {
 
     // PHASE 3: Final fallback - but don't use generic names
     if (!productName) {
-      console.log(
-        "❌ Could not determine product name, section will be skipped",
-      );
+      logger.warn("Could not determine product name, section will be skipped");
       return null; // Don't create sections with generic names
     }
 
@@ -649,23 +649,27 @@ export class PatternDetector {
           this.calculateProductNameConfidence(nextProductCandidate, i, 0) > 0.7
         ) {
           // Lower threshold for better separation
-          console.log(
-            `🛑 Found next product "${nextProductCandidate}" at row ${i}, stopping current section`,
-          );
+          logger.debug("Found next product, stopping current section", {
+            nextProduct: nextProductCandidate,
+            row: i,
+          });
           break;
         }
       }
     }
 
     if (dataRows.length === 0) {
-      console.log(`❌ No data rows found for product "${productName}"`);
+      logger.warn("No data rows found for product", { productName });
       return null;
     }
 
     const endRow = Math.max(...dataRows);
-    console.log(
-      `✅ Created product section "${productName}": rows ${sectionStartRow}-${endRow} with ${dataRows.length} data rows`,
-    );
+    logger.debug("Created product section", {
+      productName,
+      startRow: sectionStartRow,
+      endRow,
+      dataRowsCount: dataRows.length,
+    });
 
     return {
       productName,
@@ -1237,7 +1241,7 @@ export class DataExtractor {
     } else if (workOrderIds.length > 1) {
       // Multiple work orders in same row - combine them (örn: 2351151+2351599)
       const combinedId = workOrderIds.join("+");
-      console.log(`🔗 Combined work orders from row: ${combinedId}`);
+      logger.debug("Combined work orders from row", { combinedId });
       return combinedId;
     }
 
@@ -1304,9 +1308,12 @@ export class DataExtractor {
         ),
       });
 
-      console.log(
-        `📋 Extracted profile from row ${rowIndex}: ${standardProfile} | ${standardMeasurement} | ${standardQuantity} (standard cols 7-8-9)`,
-      );
+      logger.debug("Extracted profile from row (standard cols)", {
+        rowIndex,
+        profile: standardProfile,
+        measurement: standardMeasurement,
+        quantity: standardQuantity,
+      });
       return items; // Return immediately if found in standard columns
     }
 
@@ -1342,9 +1349,13 @@ export class DataExtractor {
           ),
         });
 
-        console.log(
-          `📋 Extracted profile from row ${rowIndex}: ${testProfile} | ${testMeasurement} | ${testQuantity} (cols ${extraction.profile}-${extraction.measure}-${extraction.qty})`,
-        );
+        logger.debug("Extracted profile from row (custom cols)", {
+          rowIndex,
+          profile: testProfile,
+          measurement: testMeasurement,
+          quantity: testQuantity,
+          cols: `${extraction.profile}-${extraction.measure}-${extraction.qty}`,
+        });
       }
     }
 
@@ -1371,9 +1382,13 @@ export class DataExtractor {
               ),
             });
 
-            console.log(
-              `🔍 Found profile via search at row ${rowIndex}: ${cellValue} | ${nextMeasurement} | ${nextQuantity} (col ${i})`,
-            );
+            logger.debug("Found profile via search", {
+              rowIndex,
+              profile: cellValue,
+              measurement: nextMeasurement,
+              quantity: nextQuantity,
+              col: i,
+            });
             break; // Found one, stop searching
           }
         }

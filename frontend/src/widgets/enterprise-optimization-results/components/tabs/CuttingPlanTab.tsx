@@ -16,13 +16,6 @@ import {
   GroupData,
 } from "../../types";
 
-interface StockSummaryItem {
-  length: number;
-  count: number;
-  used: number;
-  waste: number;
-}
-
 interface CuttingPlanTabProps {
   result: OptimizationResult;
   hasResults: boolean;
@@ -31,7 +24,7 @@ interface CuttingPlanTabProps {
   aggregatedPools: Pool[];
   expandedWorkOrder: string | null;
   onWorkOrderClick: (workOrderId: string) => void;
-  onCuttingPlanDetails: (stock: StockSummaryItem) => void;
+  onCuttingPlanDetails: (stock: Cut) => void;
   textExplanationOpen: { [key: string]: boolean };
   handleTextExplanation: (
     cardId: string,

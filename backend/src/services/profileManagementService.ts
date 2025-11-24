@@ -14,7 +14,7 @@ import {
   ProfileManagementParseResult,
   ProfileMapping,
 } from "../types";
-import { logger } from "../utils/logger";
+import { logger } from "./logger";
 import {
   ProfileManagementRepository,
   profileManagementRepository,

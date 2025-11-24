@@ -40,13 +40,13 @@ export interface CuttingPiece {
   length: number;
   quantity: number;
   profileType: string;
-  color?: string;
-  workOrderId?: string;
+  color?: string | undefined;
+  workOrderId?: string | undefined;
   productName?: string;
   priority?: "high" | "medium" | "low";
   totalLength: number; // Toplam uzunluk (length × quantity)
-  size?: string;
-  note?: string;
+  size?: string | undefined;
+  note?: string | undefined;
   stockIds?: Set<number>;
   workOrderIds?: Set<string>;
   colors?: Set<string>;
@@ -209,11 +209,11 @@ export interface ProcessedSegmentData {
   profileType: string;
   length: number;
   quantity: number;
-  workOrderId?: string;
-  workOrderItemId?: string;
-  color?: string;
-  size?: string;
-  note?: string;
+  workOrderId?: string | undefined;
+  workOrderItemId?: string | undefined;
+  color?: string | undefined;
+  size?: string | undefined;
+  note?: string | undefined;
 }
 
 export interface GroupedSegmentData {

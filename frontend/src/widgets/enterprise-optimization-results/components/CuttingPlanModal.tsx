@@ -26,7 +26,7 @@ import {
 
 interface CuttingPlanModalProps {
   open: boolean;
-  stock: Cut;
+  stock: Cut | null;
   onClose: () => void;
 }
 

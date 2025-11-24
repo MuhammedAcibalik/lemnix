@@ -10,7 +10,7 @@
  */
 
 import { Request, Response, NextFunction } from "express";
-import { logger } from "../utils/logger";
+import { logger } from "../services/logger";
 import { UserRole, Permission } from "./authorization";
 
 export interface AuthenticatedRequest extends Request {

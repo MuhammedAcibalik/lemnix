@@ -108,7 +108,6 @@ export const EnterpriseOptimizationResults: React.FC<
         {!result && (
           <ResultsHeader
             variant="no-results"
-            result={undefined}
             onExport={handleExport}
             isExporting={isExporting}
           />
@@ -120,7 +119,7 @@ export const EnterpriseOptimizationResults: React.FC<
             <ResultsHeader
               variant="with-results"
               result={result}
-              performanceMetrics={performanceMetrics ?? undefined}
+              {...(performanceMetrics && { performanceMetrics })}
               onExport={handleExport}
               isExporting={isExporting}
             />
@@ -182,7 +181,7 @@ export const EnterpriseOptimizationResults: React.FC<
               fetchProfileOptimization={() => {
                 /* Placeholder for actual fetch */
               }}
-              onNewOptimization={onNewOptimization}
+              {...(onNewOptimization ? { onNewOptimization } : {})}
               getAlgorithmProfile={getAlgorithmProfile}
               getProfileTypeIcon={getProfileTypeIcon}
               getRecommendationIcon={getRecommendationIcon}

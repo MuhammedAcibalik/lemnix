@@ -662,7 +662,7 @@ export const ProductSection: React.FC<ProductSectionProps> = ({
             }}
           >
             <Button
-              variant="outlined"
+              variant="secondary"
               onClick={() => setDeleteDialogOpen(false)}
               sx={{
                 px: ds.spacing["4"],

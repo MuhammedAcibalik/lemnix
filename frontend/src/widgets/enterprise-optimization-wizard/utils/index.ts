@@ -105,8 +105,8 @@ export const buildOptimizationRequest = (
       type: string;
       weight: number;
       priority: string;
-      target?: number;
-      tolerance?: number;
+      target?: number | undefined;
+      tolerance?: number | undefined;
     }>;
     constraints: {
       kerfWidth: number;
@@ -122,19 +122,37 @@ export const buildOptimizationRequest = (
 ): OptimizationRequest => {
   return {
     items,
-    algorithm: params.algorithm as "ffd" | "bfd" | "genetic" | "pooling",
-    objectives: params.objectives.map((obj) => ({
-      type: obj.type as
-        | "minimize-waste"
-        | "maximize-efficiency"
-        | "minimize-cost"
-        | "minimize-time"
-        | "maximize-quality",
-      weight: obj.weight,
-      priority: obj.priority as "low" | "medium" | "high",
-      target: obj.target,
-      tolerance: obj.tolerance,
-    })),
+    algorithm: params.algorithm as "bfd" | "genetic",
+    objectives: params.objectives.map((obj) => {
+      const objective: {
+        type:
+          | "minimize-waste"
+          | "maximize-efficiency"
+          | "minimize-cost"
+          | "minimize-time"
+          | "maximize-quality";
+        weight: number;
+        priority: "low" | "medium" | "high";
+        target?: number;
+        tolerance?: number;
+      } = {
+        type: obj.type as
+          | "minimize-waste"
+          | "maximize-efficiency"
+          | "minimize-cost"
+          | "minimize-time"
+          | "maximize-quality",
+        weight: obj.weight,
+        priority: obj.priority as "low" | "medium" | "high",
+      };
+      if (obj.target !== undefined) {
+        objective.target = obj.target;
+      }
+      if (obj.tolerance !== undefined) {
+        objective.tolerance = obj.tolerance;
+      }
+      return objective;
+    }),
     constraints: {
       ...params.constraints,
       kerfWidth: convertUnit(params.constraints.kerfWidth, params.unit, "mm"),

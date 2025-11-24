@@ -39,7 +39,12 @@ import { useSelectionState } from "./hooks/useSelectionState";
 
 // Import types
 import { CuttingListSelectorProps, FilterState, ExpandedState } from "./types";
-import { OptimizationItem } from "@/types";
+import { OptimizationItem } from "@/shared/types/legacy";
+import {
+  CuttingListProduct,
+  CuttingListSection,
+  CuttingListItem,
+} from "@/shared/lib/services/cuttingListOptimizationService";
 
 // Import constants
 import { textContent, stylingConstants } from "./constants";
@@ -119,7 +124,25 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
       onConversionComplete({
         success: true,
         items: selectedItems,
-        stats: selectionStats,
+        errors: [],
+        warnings: [],
+        statistics: {
+          totalSections: cuttingList.sections?.length || 0,
+          totalItems: selectionStats.totalItems,
+          totalProfiles: selectionStats.selectedProfiles,
+          convertedItems: selectedItems.length,
+          failedConversions: 0,
+          totalLength: selectionStats.selectedLength,
+          totalQuantity: selectedItems.reduce(
+            (sum, item) => sum + item.quantity,
+            0,
+          ),
+          averageLength:
+            selectedItems.length > 0
+              ? selectionStats.selectedLength / selectedItems.length
+              : 0,
+          processingTime: 0,
+        },
       });
     }
   };
@@ -128,20 +151,28 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
   const convertSelectionToOptimizationItems = () => {
     const items: OptimizationItem[] = [];
 
-    cuttingList.products.forEach((product) => {
-      product.sections.forEach((section) => {
-        section.items.forEach((item) => {
+    (cuttingList.products || []).forEach((product: CuttingListProduct) => {
+      product.sections.forEach((section: CuttingListSection) => {
+        section.items.forEach((item: CuttingListItem) => {
           const isSelected =
             selectionState.products[product.id]?.workOrders[section.id]
               ?.profiles[item.id];
           if (isSelected) {
+            const profileType = item.profiles[0]?.profile || "";
+            const length = item.profiles.reduce(
+              (sum, p) => sum + (parseFloat(p.measurement) || 0),
+              0,
+            );
+            const quantity = item.profiles.reduce(
+              (sum, p) => sum + p.quantity,
+              0,
+            );
             items.push({
               id: item.id,
-              product: product.name,
-              workOrder: section.name,
-              profile: item.profile,
-              length: item.length,
-              quantity: item.quantity,
+              productName: product.name,
+              profileType,
+              length,
+              quantity,
             });
           }
         });
@@ -363,10 +394,14 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
 
       {/* Product Groups */}
       <Stack spacing={ds.spacing["3"]}>
-        {cuttingList.products.map((product) => (
+        {(cuttingList.products || []).map((product: CuttingListProduct) => (
           <ProductGroupSection
             key={product.id}
-            product={product}
+            product={{
+              id: product.id,
+              name: product.name,
+              sections: product.sections,
+            }}
             selectionState={selectionState}
             searchTerm={searchTerm}
             isExpanded={expandedState.products[product.id] || false}

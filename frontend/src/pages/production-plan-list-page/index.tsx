@@ -41,12 +41,17 @@ export const ProductionPlanListPage: React.FC = () => {
     isLoading: plansLoading,
     error: plansError,
   } = useProductionPlans(filters);
+  const metricsFilters: Partial<
+    Pick<ProductionPlanFiltersType, "weekNumber" | "year" | "status">
+  > = {
+    ...(filters.weekNumber !== undefined
+      ? { weekNumber: filters.weekNumber }
+      : {}),
+    ...(filters.year !== undefined ? { year: filters.year } : {}),
+    ...(filters.status ? { status: filters.status } : {}),
+  };
   const { data: metricsResponse, isLoading: metricsLoading } =
-    useProductionPlanMetrics({
-      weekNumber: filters.weekNumber,
-      year: filters.year,
-      status: filters.status,
-    });
+    useProductionPlanMetrics(metricsFilters);
 
   const plans: ProductionPlan[] = useMemo(() => {
     if (plansResponse?.success && Array.isArray(plansResponse.data)) {

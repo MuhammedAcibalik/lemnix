@@ -13,7 +13,6 @@ import {
   OptimizationObjective,
   PerformanceSettings,
   CostModel,
-  NSGAParams,
   TimeModel,
 } from "../types";
 import { ILogger } from "../../logger";
@@ -69,11 +68,6 @@ export class OptimizationContext {
   public readonly requestId: string;
 
   /**
-   * NSGA-II specific parameters (optional)
-   */
-  public readonly nsgaParams?: NSGAParams;
-
-  /**
    * Time estimation model (optional)
    */
   public readonly timeModel?: TimeModel;
@@ -88,7 +82,6 @@ export class OptimizationContext {
     readonly logger: ILogger;
     readonly startTime?: number;
     readonly requestId?: string;
-    readonly nsgaParams?: NSGAParams;
     readonly timeModel?: TimeModel;
   }) {
     // Validate items
@@ -129,9 +122,6 @@ export class OptimizationContext {
     this.logger = params.logger;
     this.startTime = params.startTime ?? Date.now();
     this.requestId = params.requestId ?? `opt-${Date.now()}`;
-    this.nsgaParams = params.nsgaParams
-      ? Object.freeze({ ...params.nsgaParams })
-      : undefined;
     this.timeModel = params.timeModel
       ? Object.freeze({ ...params.timeModel })
       : undefined;

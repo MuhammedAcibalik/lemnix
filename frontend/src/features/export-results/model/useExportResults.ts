@@ -48,11 +48,12 @@ export function useExportResults(params: UseExportResultsParams) {
 
   const startExport = useCallback(
     (format: ExportFormat, options?: ExportOptimizationRequest["options"]) => {
-      exportResult({
+      const request: ExportOptimizationRequest = {
         resultId: params.resultId,
         format,
-        options,
-      });
+        ...(options ? { options } : {}),
+      };
+      exportResult(request);
     },
     [exportResult, params.resultId],
   );

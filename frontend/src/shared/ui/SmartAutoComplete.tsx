@@ -128,18 +128,19 @@ class SuggestionProcessor {
         return typeof confidence === "number" && confidence >= minConfidence;
       })
       .slice(0, maxSuggestions)
-      .map((suggestion) => ({
-        value: String(suggestion.value || ""),
-        confidence: Number(suggestion.confidence || 0),
-        preview:
-          typeof suggestion.preview === "string"
-            ? suggestion.preview
-            : undefined,
-        frequency:
-          typeof suggestion.frequency === "number"
-            ? suggestion.frequency
-            : undefined,
-      }));
+      .map((suggestion) => {
+        const result: LocalAutoCompleteSuggestion = {
+          value: String(suggestion.value || ""),
+          confidence: Number(suggestion.confidence || 0),
+        };
+        if (typeof suggestion.preview === "string") {
+          result.preview = suggestion.preview;
+        }
+        if (typeof suggestion.frequency === "number") {
+          result.frequency = suggestion.frequency;
+        }
+        return result;
+      });
   }
 
   /**
@@ -148,11 +149,12 @@ class SuggestionProcessor {
   static findMostPopular(
     suggestions: LocalAutoCompleteSuggestion[],
   ): LocalAutoCompleteSuggestion | null {
+    if (suggestions.length === 0) return null;
     return suggestions.reduce((max, current) => {
       const currentFreq = current.frequency ?? 0;
-      const maxFreq = max.frequency ?? 0;
-      return currentFreq > maxFreq ? current : max;
-    }, suggestions[0] || null);
+      const maxFreq = max?.frequency ?? 0;
+      return currentFreq > maxFreq ? current : (max ?? current);
+    }, suggestions[0]!);
   }
 
   /**
@@ -351,9 +353,9 @@ export const SmartAutoComplete: React.FC<SmartAutoCompleteProps> = ({
   useEffect(() => {
     if (inputValue.trim().length >= 1) {
       const getSuggestions = getSuggestionMethod();
-      getSuggestions(inputValue, maxSuggestions);
+      getSuggestions(inputValue);
     }
-  }, [inputValue, maxSuggestions, getSuggestionMethod]);
+  }, [inputValue, getSuggestionMethod]);
 
   const handleInputChange = useCallback(
     (event: React.SyntheticEvent, newInputValue: string) => {
@@ -378,7 +380,7 @@ export const SmartAutoComplete: React.FC<SmartAutoCompleteProps> = ({
   const handleRefresh = useCallback(() => {
     if (inputValue.trim()) {
       const getSuggestions = getSuggestionMethod();
-      getSuggestions(inputValue, maxSuggestions);
+      getSuggestions(inputValue);
     }
   }, [inputValue, maxSuggestions, getSuggestionMethod]);
 
@@ -443,23 +445,34 @@ export const SmartAutoComplete: React.FC<SmartAutoCompleteProps> = ({
   );
 
   const renderInput = useCallback(
-    (params: AutocompleteRenderInputParams) => (
-      <Box ref={anchorRef} sx={{ position: "relative" }}>
-        <TextField
-          {...params}
-          label={
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <SmartIcon sx={{ fontSize: 16, color: "primary.main" }} />
-              {label}
-              {required && <span style={{ color: "red" }}>*</span>}
-            </Box>
-          }
-          placeholder={placeholder}
-          error={error}
-          helperText={helperText}
-          fullWidth={fullWidth}
-          size={size}
-          InputProps={{
+    (params: AutocompleteRenderInputParams) => {
+      // Extract InputLabelProps and handle it conditionally to avoid exactOptionalPropertyTypes issues
+      // Build InputLabelProps only with defined properties
+      const inputLabelProps = params.InputLabelProps
+        ? (() => {
+            const props: Record<string, unknown> = {};
+            // Only include properties that are actually defined
+            if (params.InputLabelProps.className !== undefined) {
+              props.className = params.InputLabelProps.className;
+            }
+            // Copy other common properties if they exist
+            Object.keys(params.InputLabelProps).forEach((key) => {
+              if (key !== "className") {
+                const value = (
+                  params.InputLabelProps as Record<string, unknown>
+                )[key];
+                if (value !== undefined) {
+                  props[key] = value;
+                }
+              }
+            });
+            return Object.keys(props).length > 0 ? props : undefined;
+          })()
+        : undefined;
+
+      // Build InputProps with proper type handling
+      const inputPropsValue = params.InputProps
+        ? {
             ...params.InputProps,
             endAdornment: (
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -485,20 +498,67 @@ export const SmartAutoComplete: React.FC<SmartAutoCompleteProps> = ({
                   </IconButton>
                 </Tooltip>
 
-                {params.InputProps?.endAdornment}
+                {params.InputProps.endAdornment}
               </Box>
             ),
-          }}
-        />
+          }
+        : {
+            endAdornment: (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                {loading && <CircularProgress size={16} />}
 
-        <SuggestionStats
-          suggestions={filteredSuggestions}
-          anchorEl={anchorRef.current}
-          open={showStats}
-          onClose={() => setShowStats(false)}
-        />
-      </Box>
-    ),
+                <Tooltip title="Yenile">
+                  <IconButton
+                    size="small"
+                    onClick={handleRefresh}
+                    disabled={disabled || loading}
+                  >
+                    <RefreshIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title="Öneri İstatistikleri">
+                  <IconButton
+                    size="small"
+                    onClick={() => setShowStats(!showStats)}
+                    disabled={disabled}
+                  >
+                    <InfoIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            ),
+          };
+
+      return (
+        <Box ref={anchorRef} sx={{ position: "relative" }}>
+          <TextField
+            {...(params.inputProps ? { inputProps: params.inputProps } : {})}
+            {...(inputLabelProps ? { InputLabelProps: inputLabelProps } : {})}
+            label={
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <SmartIcon sx={{ fontSize: 16, color: "primary.main" }} />
+                {label}
+                {required && <span style={{ color: "red" }}>*</span>}
+              </Box>
+            }
+            {...(placeholder ? { placeholder } : {})}
+            error={error}
+            {...(helperText ? { helperText } : {})}
+            fullWidth={fullWidth}
+            size={size}
+            InputProps={inputPropsValue}
+          />
+
+          <SuggestionStats
+            suggestions={filteredSuggestions}
+            anchorEl={anchorRef.current}
+            open={showStats}
+            onClose={() => setShowStats(false)}
+          />
+        </Box>
+      );
+    },
     [
       loading,
       handleRefresh,
@@ -543,9 +603,11 @@ export const SmartAutoComplete: React.FC<SmartAutoCompleteProps> = ({
             : "Öneri bulunamadı"
       }
       filterOptions={(x) => x}
-      PaperComponent={({ children, ...other }) => (
+      PaperComponent={({ children, className, style, ...other }) => (
         <Paper
           {...other}
+          {...(className ? { className } : {})}
+          {...(style ? { style } : {})}
           sx={{ border: "1px solid", borderColor: "primary.light" }}
         >
           {suggestionError ? (

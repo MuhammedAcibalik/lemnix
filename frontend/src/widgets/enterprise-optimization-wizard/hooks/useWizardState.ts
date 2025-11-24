@@ -110,7 +110,7 @@ export const useWizardState = () => {
       ...prev,
       {
         ...newItem,
-        date: new Date().toISOString().split("T")[0],
+        date: new Date().toISOString().split("T")[0] as string | undefined,
         orderQuantity: newItem.quantity,
         profiles: [
           {

@@ -5,14 +5,14 @@ services:
     environment:
       POSTGRES_DB: lemnix_db
       POSTGRES_USER: lemnix_user
-      POSTGRES_PASSWORD: LemnixSecure2024
-      POSTGRES_HOST_AUTH_METHOD: trust
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-LemnixSecure2024}
+      POSTGRES_HOST_AUTH_METHOD: ${POSTGRES_HOST_AUTH_METHOD:-scram-sha-256}
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"  # Only bind to localhost for security
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./docs/postgres-setup/init:/docker-entrypoint-initdb.d
+      - ./docs/postgres-setup/init:/docker-entrypoint-initdb.d:ro
     command: >
       postgres
       -c shared_buffers=256MB
@@ -27,6 +27,15 @@ services:
       -c min_wal_size=1GB
       -c max_wal_size=4GB
       -c max_connections=200
+      -c log_statement=all
+      -c log_min_duration_statement=1000
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lemnix_user -d lemnix_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
     
   pgbouncer:
     image: pgbouncer/pgbouncer:latest
@@ -35,7 +44,7 @@ services:
       DATABASES_HOST: postgres
       DATABASES_PORT: 5432
       DATABASES_USER: lemnix_user
-      DATABASES_PASSWORD: LemnixSecure2024
+      DATABASES_PASSWORD: ${POSTGRES_PASSWORD:-LemnixSecure2024}
       DATABASES_DBNAME: lemnix_db
       PGBOUNCER_POOL_MODE: transaction
       PGBOUNCER_MAX_CLIENT_CONN: 1000
@@ -46,15 +55,23 @@ services:
       PGBOUNCER_QUERY_TIMEOUT: 30  # 30 seconds max per query
       PGBOUNCER_STATS_PERIOD: 60  # Stats update interval
     ports:
-      - "6432:6432"
+      - "127.0.0.1:6432:6432"  # Only bind to localhost for security
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "psql", "-U", "lemnix_user", "-d", "pgbouncer", "-c", "SHOW POOLS"]
+      test: ["CMD", "psql", "-h", "localhost", "-p", "6432", "-U", "lemnix_user", "-d", "pgbouncer", "-c", "SHOW POOLS"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+
+networks:
+  default:
+    name: lemnix-network
+    driver: bridge
 

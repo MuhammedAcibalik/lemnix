@@ -110,7 +110,7 @@ export interface TabPanelProps {
 export interface HeaderSectionProps {
   result: ProfileOptimizationResult;
   performanceMetrics: CalculatedPerformanceMetrics | null;
-  onExport?: () => void;
+  onExport?: (() => void) | undefined;
 }
 
 export interface KPICardsProps {
@@ -122,7 +122,7 @@ export interface ProfileGroupsTabProps {
   result: ProfileOptimizationResult;
   expandedProfile: string | null;
   onProfileClick: (profileType: string) => void;
-  onCuttingPlanDetails: (stock: Record<string, unknown>) => void;
+  onCuttingPlanDetails: (stock: Record<string, unknown> | Cut) => void;
 }
 
 export interface CostAnalysisTabProps {
@@ -146,7 +146,7 @@ export interface ProfileGroupRowProps {
   group: ProfileGroup;
   isExpanded: boolean;
   onProfileClick: (profileType: string) => void;
-  onCuttingPlanDetails: (stock: Record<string, unknown>) => void;
+  onCuttingPlanDetails: (stock: Record<string, unknown> | Cut) => void;
   optimizationResult: OptimizationResult;
 }
 
@@ -179,14 +179,14 @@ export interface ProfileOptimizationState {
   expandedProfile: string | null;
   cuttingPlanModal: {
     open: boolean;
-    stock: Record<string, unknown> | null;
+    stock: Cut | null;
   };
 }
 
 export interface ProfileOptimizationHandlers {
   onTabChange: (event: React.SyntheticEvent, newValue: number) => void;
   onProfileClick: (profileType: string) => void;
-  onCuttingPlanDetails: (stock: Record<string, unknown>) => void;
+  onCuttingPlanDetails: (stock: Record<string, unknown> | Cut) => void;
   onCuttingPlanModalClose: () => void;
   onNewOptimization?: () => void;
   onExport?: () => void;

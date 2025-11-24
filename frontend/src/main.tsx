@@ -5,6 +5,10 @@ import {
   initWebVitals,
   observeLongTasks,
 } from "./shared/lib/monitoring/webVitals";
+import { initializeSentry } from "./shared/lib/monitoring/sentry";
+
+// Initialize Sentry error tracking (must be first)
+initializeSentry();
 
 // Initialize Web Vitals monitoring
 initWebVitals();

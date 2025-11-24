@@ -8,9 +8,7 @@
 export type {
   AlgorithmMode,
   AlgorithmConfig,
-  ParetoOptimizationResult,
   OptimizationResult,
-  AlgorithmComparisonResult,
 } from "./model/types";
 
 export {

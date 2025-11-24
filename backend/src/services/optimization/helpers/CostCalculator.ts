@@ -11,7 +11,7 @@ import { Cut } from "../../../types";
 import {
   CostModel,
   CostBreakdown,
-  ParetoPoint,
+  // ParetoPoint removed - NSGA-II algorithm removed
   EnhancedConstraints,
 } from "../types";
 
@@ -80,68 +80,6 @@ export class CostCalculator {
   ): number {
     if (totalLength <= 0) return 0;
     return totalCost / (totalLength / 1000);
-  }
-
-  /**
-   * Calculate Pareto frontier points
-   *
-   * Simplified version - generates sample points for multi-objective optimization
-   *
-   * @param baseWaste - Base waste value
-   * @param baseCost - Base cost value
-   * @param baseTime - Base time value
-   * @param baseEfficiency - Base efficiency value
-   * @param points - Number of points to generate (default: 5)
-   * @returns Array of Pareto points
-   */
-  public static calculateParetoFrontier(
-    baseWaste: number,
-    baseCost: number,
-    baseTime: number,
-    baseEfficiency: number,
-    points: number = 5,
-  ): ParetoPoint[] {
-    const paretoPoints: ParetoPoint[] = [];
-
-    for (let i = 0; i < points; i++) {
-      const factor = i / (points - 1);
-      paretoPoints.push({
-        waste: baseWaste + factor * (baseWaste * 0.5),
-        cost: baseCost + factor * (baseCost * 0.4),
-        time: baseTime + factor * (baseTime * 0.5),
-        efficiency: baseEfficiency - factor * (baseEfficiency * 0.2),
-      });
-    }
-
-    return this.removeDominatedSolutions(paretoPoints);
-  }
-
-  /**
-   * Remove dominated solutions from Pareto frontier
-   *
-   * A solution is dominated if another solution is better in all objectives
-   *
-   * @param points - Array of Pareto points
-   * @returns Non-dominated solutions
-   */
-  private static removeDominatedSolutions(
-    points: ParetoPoint[],
-  ): ParetoPoint[] {
-    return points.filter((point, index) => {
-      return !points.some((other, otherIndex) => {
-        if (index === otherIndex) return false;
-        return (
-          other.waste <= point.waste &&
-          other.cost <= point.cost &&
-          other.time <= point.time &&
-          other.efficiency >= point.efficiency &&
-          (other.waste < point.waste ||
-            other.cost < point.cost ||
-            other.time < point.time ||
-            other.efficiency > point.efficiency)
-        );
-      });
-    });
   }
 
   /**

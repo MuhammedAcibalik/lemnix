@@ -57,7 +57,7 @@ export const OptimizationHistoryList: React.FC<
   } = useOptimizationHistory({
     page: page + 1,
     pageSize: rowsPerPage,
-    algorithm: algorithmFilter === "all" ? undefined : algorithmFilter,
+    ...(algorithmFilter !== "all" ? { algorithm: algorithmFilter } : {}),
   });
 
   const handleChangePage = (_event: unknown, newPage: number) => {

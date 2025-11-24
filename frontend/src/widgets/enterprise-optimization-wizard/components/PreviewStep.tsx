@@ -305,13 +305,11 @@ export const PreviewStep: React.FC<PreviewStepProps> = ({
                     </Typography>
                     <Chip
                       label={
-                        params.algorithm === "ffd"
-                          ? "⚡ First Fit Decreasing"
-                          : params.algorithm === "bfd"
-                            ? "🎯 Best Fit Decreasing"
-                            : params.algorithm === "genetic"
-                              ? "🧬 Genetic Algorithm v1.7.1"
-                              : "📊 Profile Pooling"
+                        params.algorithm === "bfd"
+                          ? "🎯 Best Fit Decreasing"
+                          : params.algorithm === "genetic"
+                            ? "🧬 Genetic Algorithm v1.7.1"
+                            : "🎯 Best Fit Decreasing"
                       }
                       sx={{
                         height: 28,

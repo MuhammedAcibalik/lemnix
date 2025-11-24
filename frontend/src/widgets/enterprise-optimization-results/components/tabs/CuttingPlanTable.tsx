@@ -60,7 +60,7 @@ export const CuttingPlanTable: React.FC<CuttingPlanTableProps> = ({
 
     // Get first work order's stock length (assuming all have same stock length)
     const firstWorkOrder = aggregatedWorkOrders[0];
-    const stockLength = firstWorkOrder.cuts?.[0]?.stockLength || 0;
+    const stockLength = firstWorkOrder?.cuts?.[0]?.stockLength || 0;
     const totalStock = aggregatedWorkOrders.reduce(
       (sum, wo) => sum + wo.stockCount,
       0,

@@ -13,7 +13,7 @@ import { NavigationState, NavigationHandlers } from "../types/index";
  */
 interface UseNavigationStateProps {
   readonly onPageChange: (page: string) => void;
-  readonly onToggleSidebar?: () => void;
+  readonly onToggleSidebar?: (() => void) | undefined;
 }
 
 /**
@@ -47,7 +47,7 @@ export const useNavigationState = ({
   // Navigation handlers
   const handlers: NavigationHandlers = {
     onPageChange,
-    onToggleSidebar,
+    ...(onToggleSidebar ? { onToggleSidebar } : {}),
     onCommandPaletteToggle: handleCommandPaletteToggle,
     onUserMenuToggle: handleUserMenuToggle,
   };

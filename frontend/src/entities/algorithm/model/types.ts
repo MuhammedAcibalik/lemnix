@@ -10,10 +10,9 @@
 /**
  * Algorithm selection modes
  * - standard: Fast GeneticAlgorithm (default, 3-5s)
- * - advanced: NSGA-II with Pareto front (10-15s)
- * - auto: Smart selection based on problem size
+ * - auto: Smart selection based on problem size (same as standard)
  */
-export type AlgorithmMode = "standard" | "advanced" | "auto";
+export type AlgorithmMode = "standard" | "auto";
 
 /**
  * Algorithm configuration for UI display
@@ -40,7 +39,7 @@ export const ALGORITHM_CONFIGS: Record<AlgorithmMode, AlgorithmConfig> = {
       "Genetic Algorithm v1.7.1 ile hızlı optimizasyon. Tek en iyi çözüm.",
     estimatedTime: "3-5 saniye",
     features: [
-      "WebGPU ile GPU hızlandırma",
+      "Adaptive parametre ayarlama",
       "Adaptive parametre ayarlama",
       "Deterministik evrim stratejisi",
       "Dinamik fitness normalizasyonu",
@@ -48,49 +47,20 @@ export const ALGORITHM_CONFIGS: Record<AlgorithmMode, AlgorithmConfig> = {
     icon: "flash",
     badge: "Hızlı",
   },
-  advanced: {
-    mode: "advanced",
-    name: "Gelişmiş Mod (NSGA-II)",
-    description:
-      "Çok hedefli optimizasyon. Pareto front ve alternatif çözümler.",
-    estimatedTime: "10-20 saniye",
-    features: [
-      "Fast non-dominated sorting O(MN²)",
-      "Crowding distance ile çeşitlilik",
-      "10-30 alternatif çözüm (Pareto front)",
-      "Hypervolume kalite göstergesi",
-      "Trade-off analizi ve görselleştirme",
-    ],
-    icon: "analytics",
-  },
   auto: {
     mode: "auto",
     name: "Otomatik Seçim",
     description: "Akıllı mod seçimi. Problem boyutuna göre en uygun algoritma.",
     estimatedTime: "Değişken",
     features: [
-      "< 30 öğe: NSGA-II (Pareto front)",
-      "≥ 30 öğe: Standart (hızlı)",
-      "Otomatik eşik optimizasyonu",
-      "Performans/kalite dengesi",
+      "Standart algoritma kullanımı",
+      "Otomatik optimizasyon",
+      "Performans odaklı",
     ],
     icon: "auto_awesome",
     badge: "Önerilen",
   },
 } as const;
-
-/**
- * Pareto optimization result from NSGA-II
- */
-export interface ParetoOptimizationResult {
-  readonly algorithm: string;
-  readonly paretoFront: ReadonlyArray<OptimizationResult>;
-  readonly recommendedSolution: OptimizationResult;
-  readonly hypervolume: number;
-  readonly spacing: number;
-  readonly spread: number;
-  readonly frontSize: number;
-}
 
 /**
  * Standard optimization result (for type compatibility)
@@ -105,42 +75,13 @@ export interface OptimizationResult {
 }
 
 /**
- * Comparison result (standard vs advanced)
- */
-export interface AlgorithmComparisonResult {
-  readonly standard: {
-    readonly result: OptimizationResult;
-    readonly algorithm: string;
-    readonly mode: "standard";
-  };
-  readonly advanced: {
-    readonly result: OptimizationResult;
-    readonly paretoFront: ReadonlyArray<OptimizationResult>;
-    readonly frontSize: number;
-    readonly hypervolume: number;
-    readonly spread: number;
-    readonly algorithm: string;
-    readonly mode: "advanced";
-  };
-  readonly comparison: {
-    readonly efficiencyDiff: number;
-    readonly wasteDiff: number;
-    readonly costDiff: number;
-  };
-}
-
-/**
  * Get recommended mode for given item count
  *
  * @param itemCount - Number of items to optimize
  * @returns Recommended algorithm mode
  */
 export function getRecommendedMode(itemCount: number): AlgorithmMode {
-  if (itemCount < 30) {
-    // Small problems: NSGA-II is fast enough
-    return "advanced";
-  }
-  // Large problems: Use fast standard algorithm
+  // Always use standard mode
   return "standard";
 }
 

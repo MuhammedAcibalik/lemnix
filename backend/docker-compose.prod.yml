@@ -1,0 +1,362 @@
+# ============================================================================
+# LEMNIX Production Docker Compose Configuration
+# ============================================================================
+# Production-ready Docker Compose setup with:
+# - Docker Secrets integration
+# - Network isolation
+# - Resource limits
+# - Health checks
+# - Logging configuration
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ==========================================================================
+  # PostgreSQL Database
+  # ==========================================================================
+  postgres:
+    image: postgres:18.0-alpine
+    container_name: lemnix-postgres-prod
+    environment:
+      POSTGRES_DB: lemnix_db
+      POSTGRES_USER: lemnix_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    secrets:
+      - postgres_password
+    ports:
+      - "127.0.0.1:5432:5432"  # Only bind to localhost
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docs/postgres-setup/init:/docker-entrypoint-initdb.d:ro
+    command: >
+      postgres
+      -c shared_buffers=512MB
+      -c effective_cache_size=2GB
+      -c maintenance_work_mem=256MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=8MB
+      -c min_wal_size=2GB
+      -c max_wal_size=8GB
+      -c max_connections=200
+      -c statement_timeout=30s
+      -c lock_timeout=10s
+      -c idle_in_transaction_session_timeout=5min
+      -c log_min_duration_statement=1000
+      -c log_connections=on
+      -c log_disconnections=on
+      -c log_lock_waits=on
+      -c ssl=on
+      -c ssl_cert_file=/var/lib/postgresql/server.crt
+      -c ssl_key_file=/var/lib/postgresql/server.key
+    networks:
+      - lemnix-internal
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lemnix_user -d lemnix_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # ==========================================================================
+  # PgBouncer Connection Pooler
+  # ==========================================================================
+  pgbouncer:
+    image: pgbouncer/pgbouncer:latest
+    container_name: lemnix-pgbouncer-prod
+    environment:
+      DATABASES_HOST: postgres
+      DATABASES_PORT: 5432
+      DATABASES_USER: lemnix_user
+      DATABASES_PASSWORD_FILE: /run/secrets/postgres_password
+      DATABASES_DBNAME: lemnix_db
+      PGBOUNCER_POOL_MODE: transaction
+      PGBOUNCER_MAX_CLIENT_CONN: 1000
+      PGBOUNCER_DEFAULT_POOL_SIZE: 50
+      PGBOUNCER_RESERVE_POOL_SIZE: 10
+      PGBOUNCER_MAX_DB_CONNECTIONS: 100
+      PGBOUNCER_SERVER_IDLE_TIMEOUT: 600
+      PGBOUNCER_QUERY_TIMEOUT: 30
+      PGBOUNCER_STATS_PERIOD: 60
+      PGBOUNCER_LOG_CONNECTIONS: 1
+      PGBOUNCER_LOG_DISCONNECTIONS: 1
+      PGBOUNCER_LOG_POOLER_ERRORS: 1
+    secrets:
+      - postgres_password
+    ports:
+      - "127.0.0.1:6432:6432"  # Only bind to localhost
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - lemnix-internal
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "psql", "-h", "localhost", "-p", "6432", "-U", "lemnix_user", "-d", "pgbouncer", "-c", "SHOW POOLS"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # ==========================================================================
+  # Redis Cache & Rate Limiting
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: lemnix-redis-prod
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --requirepass ${REDIS_PASSWORD:-}
+    environment:
+      REDIS_PASSWORD_FILE: /run/secrets/redis_password
+    secrets:
+      - redis_password
+    ports:
+      - "127.0.0.1:6379:6379"  # Only bind to localhost
+    volumes:
+      - redis_data:/data
+    networks:
+      - lemnix-internal
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # ==========================================================================
+  # Backend API
+  # ==========================================================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lemnix-backend-prod
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      # DATABASE_URL will be constructed from secrets in entrypoint script
+      # DATABASE_URL and REDIS_URL will be set by entrypoint script from secrets
+      DATABASE_URL: postgresql://lemnix_user@pgbouncer:6432/lemnix_db?schema=public&connection_limit=20&pool_timeout=30&sslmode=require
+      REDIS_URL: redis://redis:6379
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      LOG_LEVEL: info
+      ENABLE_HELMET: "true"
+      ENABLE_CORS: "true"
+    secrets:
+      - postgres_password
+      - jwt_secret
+      - encryption_master_key
+      - redis_password
+    ports:
+      - "127.0.0.1:3001:3001"  # Only bind to localhost
+    depends_on:
+      postgres:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - lemnix-internal
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '1.0'
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================================
+  # Frontend (Nginx)
+  # ==========================================================================
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: lemnix-frontend-prod
+    ports:
+      - "80:80"
+      - "443:443"  # For future HTTPS
+    depends_on:
+      - backend
+    networks:
+      - lemnix-internal
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+        reservations:
+          cpus: '0.5'
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================================
+  # Prometheus Monitoring
+  # ==========================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: lemnix-prometheus-prod
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"  # Only bind to localhost
+    networks:
+      - lemnix-internal
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # ==========================================================================
+  # Grafana Dashboard
+  # ==========================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: lemnix-grafana-prod
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD_FILE: /run/secrets/grafana_admin_password
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL:-http://localhost:3001}
+      GF_INSTALL_PLUGINS: ""
+    secrets:
+      - grafana_admin_password
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "127.0.0.1:3000:3000"  # Only bind to localhost
+    depends_on:
+      - prometheus
+    networks:
+      - lemnix-internal
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  lemnix-internal:
+    driver: bridge
+    internal: false  # Allow external access for monitoring
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# ============================================================================
+# Volumes
+# ============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# ============================================================================
+# Secrets (must be created before deployment)
+# ============================================================================
+secrets:
+  postgres_password:
+    external: true
+  jwt_secret:
+    external: true
+  encryption_master_key:
+    external: true
+  redis_password:
+    external: true
+  grafana_admin_password:
+    external: true
+

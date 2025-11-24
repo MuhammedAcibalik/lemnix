@@ -29,7 +29,10 @@ export const CommandResults: React.FC<CommandResultsProps> = ({
       if (!acc[item.category]) {
         acc[item.category] = [];
       }
-      acc[item.category].push(item);
+      const categoryArray = acc[item.category];
+      if (categoryArray) {
+        categoryArray.push(item);
+      }
       return acc;
     },
     {} as Record<string, CommandItemType[]>,

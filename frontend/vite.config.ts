@@ -187,8 +187,8 @@ export default defineConfig(({ command, mode }) => {
       // Source maps
       sourcemap: isDevelopment,
       
-      // Chunk size warnings
-      chunkSizeWarningLimit: 500,
+      // Chunk size warnings - Increased limit for enterprise app
+      chunkSizeWarningLimit: 1000,
       
       // Rollup options
       rollupOptions: {
@@ -223,9 +223,9 @@ export default defineConfig(({ command, mode }) => {
             return `assets/[name]-[hash].[ext]`;
           },
           
-          // Manual chunk splitting
+          // Manual chunk splitting - Optimized for better code splitting
           manualChunks: (id) => {
-            // Vendor chunks
+            // Vendor chunks - Split large libraries
             if (id.includes('node_modules')) {
               if (id.includes('react') || id.includes('react-dom')) {
                 return 'react-vendor';
@@ -247,6 +247,45 @@ export default defineConfig(({ command, mode }) => {
               }
               // Other vendor libraries
               return 'vendor';
+            }
+            
+            // Widget chunks - Split large widgets
+            if (id.includes('/widgets/')) {
+              if (id.includes('enterprise-optimization')) {
+                return 'widget-enterprise';
+              }
+              if (id.includes('cutting-list') || id.includes('cutting-plan')) {
+                return 'widget-cutting';
+              }
+              if (id.includes('modern-')) {
+                return 'widget-modern';
+              }
+              if (id.includes('profile-optimization') || id.includes('profile-management')) {
+                return 'widget-profile';
+              }
+              if (id.includes('statistics') || id.includes('dashboard')) {
+                return 'widget-stats';
+              }
+              return 'widgets';
+            }
+            
+            // Entity chunks - Split large entities
+            if (id.includes('/entities/')) {
+              if (id.includes('optimization')) {
+                return 'entity-optimization';
+              }
+              if (id.includes('cutting-list') || id.includes('production-plan')) {
+                return 'entity-production';
+              }
+              return 'entities';
+            }
+            
+            // Feature chunks
+            if (id.includes('/features/')) {
+              if (id.includes('enterprise-optimization')) {
+                return 'feature-enterprise';
+              }
+              return 'features';
             }
             
             // Component chunks
@@ -331,7 +370,7 @@ export default defineConfig(({ command, mode }) => {
         '/api': {
           target: env.VITE_API_URL || 'http://localhost:3001',
           changeOrigin: true,
-          secure: false,
+          secure: isProduction, // Use secure connections in production
           // ✅ KEEP /api prefix - backend expects it at /api/cutting-list
           // rewrite: (path) => path.replace(/^\/api/, ''), // DON'T rewrite
           configure: (proxy, options) => {
@@ -339,10 +378,14 @@ export default defineConfig(({ command, mode }) => {
               console.log('proxy error', err);
             });
             proxy.on('proxyReq', (proxyReq, req, res) => {
-              console.log('🔄 [Vite Proxy] Sending Request to the Target:', req.method, req.url, '->', proxyReq.path);
+              if (isDevelopment) {
+                console.log('🔄 [Vite Proxy] Sending Request to the Target:', req.method, req.url, '->', proxyReq.path);
+              }
             });
             proxy.on('proxyRes', (proxyRes, req, res) => {
-              console.log('✅ [Vite Proxy] Received Response from the Target:', proxyRes.statusCode, req.url);
+              if (isDevelopment) {
+                console.log('✅ [Vite Proxy] Received Response from the Target:', proxyRes.statusCode, req.url);
+              }
             });
             proxy.on('error', (err, req, res) => {
               console.error('❌ [Vite Proxy] Error:', err.message, 'for', req.url);

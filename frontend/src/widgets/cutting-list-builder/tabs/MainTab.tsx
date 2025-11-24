@@ -78,7 +78,7 @@ export const MainTab: React.FC<MainTabProps> = ({
           cuttingLists={cuttingLists}
           currentWeekNumber={currentWeekNumber}
           onSelectList={onSelectList}
-          onDeleteList={onDeleteList}
+          {...(onDeleteList && { onDeleteList })}
         />
       </>
     );

@@ -89,7 +89,9 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipProps>(
         placement={placement}
         arrow={arrow}
         enterDelay={delay}
-        TransitionComponent={Fade}
+        TransitionComponent={
+          Fade as React.ComponentType<{ children: React.ReactElement }>
+        }
         TransitionProps={{ timeout: 200 }}
         componentsProps={{
           tooltip: {

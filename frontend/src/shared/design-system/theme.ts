@@ -380,6 +380,8 @@ export const theme = createTheme({
       md: tokens.breakpoints.md,
       lg: tokens.breakpoints.lg,
       xl: tokens.breakpoints.xl,
+      xxl: tokens.breakpoints["2xl"],
+      xxxl: tokens.breakpoints["3xl"],
     },
   },
 

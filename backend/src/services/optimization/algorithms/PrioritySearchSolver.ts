@@ -100,26 +100,70 @@ export class PrioritySearchSolver {
     let iterations = 0;
     let bestSolution: SearchState | null = null;
     let bestPriority = Infinity;
+    const startTime = Date.now();
+    const maxExecutionTime = 30000; // 30 seconds timeout
 
     while (open.length > 0 && iterations < adjustedConfig.maxStates) {
       iterations++;
 
-      // Sort by priority (ascending: lower is better)
-      open.sort((a, b) => {
-        const priorityA = this.priorityOf(
-          a,
+      // CRITICAL FIX: Add timeout protection to prevent infinite loops
+      if (Date.now() - startTime > maxExecutionTime) {
+        this.logger.warn(
+          `[PrioritySearch] Timeout after ${maxExecutionTime}ms (${iterations} iterations)`,
+          {
+            openSize: open.length,
+            bestSolutionFound: bestSolution !== null,
+          },
+        );
+        // Return best solution found so far or null
+        return bestSolution;
+      }
+
+      // CRITICAL FIX: Optimize sorting - only sort every N iterations or when queue is large
+      // Sorting on every iteration is O(n log n) and very expensive for large queues
+      if (iterations % 10 === 0 || open.length > 1000) {
+        // Sort by priority (ascending: lower is better)
+        open.sort((a, b) => {
+          const priorityA = this.priorityOf(
+            a,
+            demand,
+            bestPatternDensity,
+            adjustedConfig,
+          );
+          const priorityB = this.priorityOf(
+            b,
+            demand,
+            bestPatternDensity,
+            adjustedConfig,
+          );
+          return priorityA - priorityB;
+        });
+      } else {
+        // For small queues, find min without full sort
+        let minIndex = 0;
+        let minPriority = this.priorityOf(
+          open[0]!,
           demand,
           bestPatternDensity,
           adjustedConfig,
         );
-        const priorityB = this.priorityOf(
-          b,
-          demand,
-          bestPatternDensity,
-          adjustedConfig,
-        );
-        return priorityA - priorityB;
-      });
+        for (let i = 1; i < open.length; i++) {
+          const priority = this.priorityOf(
+            open[i]!,
+            demand,
+            bestPatternDensity,
+            adjustedConfig,
+          );
+          if (priority < minPriority) {
+            minPriority = priority;
+            minIndex = i;
+          }
+        }
+        // Move min to front
+        if (minIndex > 0) {
+          [open[0], open[minIndex]] = [open[minIndex], open[0]];
+        }
+      }
 
       // Pop best state
       const current = open.shift()!;
@@ -195,6 +239,28 @@ export class PrioritySearchSolver {
 
       // Note: Beam search pruning at top of loop handles memory
       // No need for additional pruning here
+    }
+
+    // CRITICAL FIX: If tolerance is 0, only return solution if it exactly matches demand
+    // Otherwise, return null to force retry with different patterns or fallback
+    if (bestSolution && adjustedConfig.overProductionTolerance === 0) {
+      // Check if best solution exactly matches demand
+      const isExact = this.isDemandSatisfied(
+        bestSolution.produced,
+        demand,
+        0, // Check with tolerance 0
+      );
+
+      if (!isExact) {
+        this.logger.warn(
+          "[PrioritySearch] Best solution found but does not exactly match demand (tolerance=0). Returning null.",
+          {
+            produced: Object.fromEntries(bestSolution.produced),
+            demand: Object.fromEntries(demand),
+          },
+        );
+        return null; // Force retry or fallback
+      }
     }
 
     // Calculate shortage for best solution
@@ -320,6 +386,7 @@ export class PrioritySearchSolver {
 
   /**
    * Check if demand is satisfied (within tolerance)
+   * CRITICAL FIX: When tolerance is 0, require exact match (no over-production)
    */
   private isDemandSatisfied(
     produced: Map<number, number>,
@@ -334,9 +401,18 @@ export class PrioritySearchSolver {
         return false;
       }
 
-      // Over-production beyond tolerance: fail
-      if (producedCount > targetCount + tolerance) {
-        return false;
+      // CRITICAL FIX: When tolerance is 0, require exact match
+      // When tolerance > 0, allow up to tolerance extra pieces
+      if (tolerance === 0) {
+        // Exact match required
+        if (producedCount !== targetCount) {
+          return false;
+        }
+      } else {
+        // Over-production beyond tolerance: fail
+        if (producedCount > targetCount + tolerance) {
+          return false;
+        }
       }
     }
 

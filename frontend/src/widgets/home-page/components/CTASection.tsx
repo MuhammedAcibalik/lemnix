@@ -157,7 +157,7 @@ const CTASection: React.FC<CTASectionProps> = ({ onFreeTrial, onViewDemo }) => {
                 letterSpacing: "0.02em",
               }}
             >
-              WebGPU Hızlandırma · Gerçek Zamanlı Analiz · 4 Gelişmiş Algoritma
+              Gerçek Zamanlı Analiz · 2 Gelişmiş Algoritma
             </Typography>
           </Stack>
         </FadeIn>

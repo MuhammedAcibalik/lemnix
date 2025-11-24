@@ -15,6 +15,7 @@ import type {
   ExportOptimizationRequest,
   ExportOptimizationResponse,
 } from "../model/types";
+import { ALGORITHM_CATALOG } from "../model/types";
 import { validateOptimizationRequest as validateOptimizationRequestSchema } from "../model/schemas";
 import {
   normalizeOptimizationResult,
@@ -127,7 +128,6 @@ export async function getAvailableAlgorithms(): Promise<
   } catch (error) {
     // Fallback to frontend-defined catalog
     console.warn("Algorithms endpoint not available, using frontend catalog");
-    const { ALGORITHM_CATALOG } = await import("../model/types");
     return Object.values(ALGORITHM_CATALOG);
   }
 }

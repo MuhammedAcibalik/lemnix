@@ -108,6 +108,7 @@ export interface OperatorProfile {
     safety: number;
     efficiency: number;
   };
+  workshopState?: WorkshopState | undefined;
 }
 
 export interface WorkshopState {

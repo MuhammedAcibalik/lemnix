@@ -12,15 +12,8 @@ import {
 } from "@mui/icons-material";
 import { AlgorithmInfo, ObjectiveInfo, OptimizationParams } from "../types";
 
-// Algorithm configurations - ALIGNED WITH BACKEND (5 algorithms available)
+// Algorithm configurations - ALIGNED WITH BACKEND (2 algorithms available)
 export const ALGORITHMS: AlgorithmInfo[] = [
-  {
-    value: "ffd",
-    label: "First Fit Decreasing (FFD)",
-    description: "Hızlı ve dengeli, genel amaçlı optimizasyon",
-    speed: 5,
-    accuracy: 4,
-  },
   {
     value: "bfd",
     label: "Best Fit Decreasing (BFD)",
@@ -31,22 +24,8 @@ export const ALGORITHMS: AlgorithmInfo[] = [
   {
     value: "genetic",
     label: "Genetic Algorithm v1.7.1",
-    description: "GPU destekli evrimsel optimizasyon, en iyi kalite",
+    description: "Evrimsel optimizasyon, en iyi kalite",
     speed: 2,
-    accuracy: 5,
-  },
-  {
-    value: "pooling",
-    label: "Profile Pooling",
-    description: "Profil bazlı gruplama, çoklu iş emri optimizasyonu",
-    speed: 3,
-    accuracy: 4,
-  },
-  {
-    value: "pattern-exact",
-    label: "Pattern Exact Search",
-    description: "Kesin pattern bazlı, garantili minimum fire",
-    speed: 1,
     accuracy: 5,
   },
 ];
@@ -65,7 +44,7 @@ export const OBJECTIVES: ObjectiveInfo[] = [
 
 // Default optimization parameters
 export const DEFAULT_PARAMS: OptimizationParams = {
-  algorithm: "pattern-exact", // ✅ TEMPORARY: Testing new Pattern Exact algorithm
+  algorithm: "bfd", // Default algorithm
   objectives: [
     { type: "minimize-waste", weight: 0.4, priority: "high" },
     { type: "maximize-efficiency", weight: 0.3, priority: "high" },
@@ -74,8 +53,8 @@ export const DEFAULT_PARAMS: OptimizationParams = {
   ],
   constraints: {
     kerfWidth: 0, // ✅ FIX: Kesim listelerindeki ölçüler zaten kerf payı eklenmiş
-    startSafety: 100.0, // ✅ CRITICAL: 100mm fire from start of each stock
-    endSafety: 0, // ✅ No end safety - all fire is cut from start
+    startSafety: 50.0, // ✅ Askı payı: Baştan 50mm garanti fire
+    endSafety: 50.0, // ✅ Askı payı: Sondan 50mm garanti fire (toplam 100mm garanti fire)
     minScrapLength: 75,
     maxWastePercentage: 10,
     maxCutsPerStock: 50,

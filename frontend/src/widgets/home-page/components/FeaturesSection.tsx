@@ -27,7 +27,7 @@ const features = [
     icon: Cpu,
     title: "4 Gelişmiş Optimizasyon Algoritması",
     description:
-      "FFD, BFD, Genetic Algorithm v1.7.1 ve Profile Pooling algoritmaları ile %92'nin üzerinde verimlilik elde edin. WebGPU hızlandırma teknolojisi sayesinde optimizasyon sonuçlarını 2 saniyenin altında görün.",
+      "BFD ve Genetic Algorithm v1.7.1 algoritmaları ile %92'nin üzerinde verimlilik elde edin. Optimizasyon sonuçlarını 2 saniyenin altında görün.",
     badge: "AI Algoritma",
   },
   {

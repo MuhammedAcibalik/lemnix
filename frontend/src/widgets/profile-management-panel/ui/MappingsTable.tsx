@@ -54,7 +54,7 @@ export const MappingsTable: React.FC = () => {
           type="number"
           value={weekNumber}
           onChange={(e) => setWeekNumber(Number(e.target.value))}
-          size="small"
+          size="sm"
           inputProps={{ min: 1, max: 53 }}
           sx={{ width: { xs: "100%", sm: 140 } }}
         />
@@ -63,7 +63,7 @@ export const MappingsTable: React.FC = () => {
           type="number"
           value={year}
           onChange={(e) => setYear(Number(e.target.value))}
-          size="small"
+          size="sm"
           inputProps={{ min: 2020, max: 2030 }}
           sx={{ width: { xs: "100%", sm: 140 } }}
         />

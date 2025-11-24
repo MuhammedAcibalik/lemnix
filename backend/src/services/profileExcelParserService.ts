@@ -14,7 +14,7 @@ import {
   WorkOrderProfileMappingInput,
   ProfileManagementExcelRow,
 } from "../types";
-import { logger } from "../utils/logger";
+import { logger } from "./logger";
 
 export class ProfileExcelParserService {
   private readonly REQUIRED_COLUMNS = [

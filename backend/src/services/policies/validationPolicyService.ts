@@ -1,6 +1,7 @@
 /**
- * LEMNİX Validation Policy v1 Service
+ * Data Validation Policy Service
  * Comprehensive validation engine with quarantine management
+ * Validates data records and manages quarantine for invalid data
  */
 
 import {
@@ -21,7 +22,7 @@ import {
 import { ILogger } from "../logger";
 import { v4 as uuidv4 } from "uuid";
 
-export class ValidationPolicyService {
+export class DataValidationPolicyService {
   private logger: ILogger;
   private validationRules: Map<string, ValidationRule> = new Map();
   private quarantineRecords: Map<string, QuarantineRecord> = new Map();
@@ -700,13 +701,17 @@ export class ValidationPolicyService {
 }
 
 // Singleton instance
-let validationPolicyService: ValidationPolicyService | null = null;
+let dataValidationPolicyService: DataValidationPolicyService | null = null;
 
-export function getValidationPolicyService(
+export function getDataValidationPolicyService(
   logger: ILogger,
-): ValidationPolicyService {
-  if (!validationPolicyService) {
-    validationPolicyService = new ValidationPolicyService(logger);
+): DataValidationPolicyService {
+  if (!dataValidationPolicyService) {
+    dataValidationPolicyService = new DataValidationPolicyService(logger);
   }
-  return validationPolicyService;
+  return dataValidationPolicyService;
 }
+
+// Legacy export for backward compatibility
+export const ValidationPolicyService = DataValidationPolicyService;
+export const getValidationPolicyService = getDataValidationPolicyService;

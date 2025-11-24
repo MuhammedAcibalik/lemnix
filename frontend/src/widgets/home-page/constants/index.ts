@@ -125,7 +125,7 @@ export const algorithmCards: AlgorithmCard[] = [
     name: "Genetic Algorithm v1.7.1",
     efficiency: 95,
     speed: "2-5s",
-    description: "GPU destekli evrimsel optimizasyon, en yüksek kalite",
+    description: "Evrimsel optimizasyon, en yüksek kalite",
     icon: AutoAwesomeIcon,
     color: "#667eea",
   },

@@ -1,0 +1,36 @@
+{
+  "limits": {
+    "vendor": {
+      "maxSize": 500000,
+      "warningSize": 400000,
+      "description": "Vendor chunk (third-party libraries)"
+    },
+    "app": {
+      "maxSize": 300000,
+      "warningSize": 250000,
+      "description": "Main application bundle"
+    },
+    "routes": {
+      "maxSize": 200000,
+      "warningSize": 150000,
+      "description": "Route-based code split chunks"
+    },
+    "widgets": {
+      "maxSize": 150000,
+      "warningSize": 100000,
+      "description": "Widget chunks"
+    },
+    "features": {
+      "maxSize": 100000,
+      "warningSize": 80000,
+      "description": "Feature chunks"
+    }
+  },
+  "totalMaxSize": 2000000,
+  "totalWarningSize": 1500000,
+  "ci": {
+    "failOnExceed": true,
+    "reportFormat": "markdown"
+  }
+}
+

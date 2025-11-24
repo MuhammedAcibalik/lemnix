@@ -73,7 +73,7 @@ export const BatchStatisticsSchema = z.object({
   overview: StatisticsOverviewSchema.optional(),
   performance: z.array(AlgorithmPerformanceSchema).optional(),
   usage: z.array(UsageAnalyticsSchema).optional(),
-  optimization: z.any().optional(), // TODO: Define proper schema
+  optimization: z.unknown().optional(), // TODO: Define proper schema
   systemHealth: SystemHealthSchema.optional(),
 });
 

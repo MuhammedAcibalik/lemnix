@@ -80,17 +80,29 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   private logErrorToService = (error: Error, errorInfo: ErrorInfo) => {
-    // TODO: Implement external error logging service
-    // Example: Sentry, LogRocket, etc.
-    console.error("Production error logged:", {
-      error: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack,
-      errorId: this.state.errorId,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      url: window.location.href,
-    });
+    // Import Sentry capture function
+    import("@/shared/lib/monitoring/sentry")
+      .then(({ captureException }) => {
+        captureException(error, {
+          componentStack: errorInfo.componentStack,
+          errorId: this.state.errorId,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          url: window.location.href,
+        });
+      })
+      .catch(() => {
+        // Fallback to console if Sentry is not available
+        console.error("Production error logged:", {
+          error: error.message,
+          stack: error.stack,
+          componentStack: errorInfo.componentStack,
+          errorId: this.state.errorId,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          url: window.location.href,
+        });
+      });
   };
 
   private handleReload = () => {
@@ -269,11 +281,17 @@ export const useErrorHandler = () => {
     (error: Error, errorInfo?: Record<string, unknown>) => {
       console.error("Error caught by useErrorHandler:", error, errorInfo);
 
-      // Log to external service
-      if (process.env.NODE_ENV === "production") {
-        // TODO: Implement external error logging
-        console.error("Production error logged:", error);
-      }
+      // Log to Sentry
+      import("@/shared/lib/monitoring/sentry")
+        .then(({ captureException }) => {
+          captureException(error, errorInfo);
+        })
+        .catch(() => {
+          // Fallback to console if Sentry is not available
+          if (process.env.NODE_ENV === "production") {
+            console.error("Production error logged:", error);
+          }
+        });
     },
     [],
   );

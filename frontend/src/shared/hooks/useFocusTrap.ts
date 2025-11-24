@@ -133,8 +133,9 @@ export function useFocusTrap(
     // Auto-focus first element
     if (autoFocus) {
       const focusableElements = getFocusableElements(container);
-      if (focusableElements.length > 0) {
-        focusableElements[0].focus();
+      const firstElement = focusableElements[0];
+      if (firstElement) {
+        firstElement.focus();
       }
     }
 
@@ -156,12 +157,22 @@ export function useFocusTrap(
       const lastElement = focusableElements[focusableElements.length - 1];
 
       // Shift+Tab on first element -> focus last element
-      if (event.shiftKey && document.activeElement === firstElement) {
+      if (
+        firstElement &&
+        lastElement &&
+        event.shiftKey &&
+        document.activeElement === firstElement
+      ) {
         event.preventDefault();
         lastElement.focus();
       }
       // Tab on last element -> focus first element
-      else if (!event.shiftKey && document.activeElement === lastElement) {
+      else if (
+        firstElement &&
+        lastElement &&
+        !event.shiftKey &&
+        document.activeElement === lastElement
+      ) {
         event.preventDefault();
         firstElement.focus();
       }
@@ -177,8 +188,9 @@ export function useFocusTrap(
 
         // Return focus to first focusable element
         const focusableElements = getFocusableElements(container);
-        if (focusableElements.length > 0) {
-          focusableElements[0].focus();
+        const firstElement = focusableElements[0];
+        if (firstElement) {
+          firstElement.focus();
         }
       }
     };
@@ -256,8 +268,9 @@ export function useFocusManagement() {
    */
   const focusFirst = useCallback((container: HTMLElement) => {
     const focusableElements = getFocusableElements(container);
-    if (focusableElements.length > 0) {
-      focusableElements[0].focus();
+    const firstElement = focusableElements[0];
+    if (firstElement) {
+      firstElement.focus();
     }
   }, []);
 
@@ -266,8 +279,9 @@ export function useFocusManagement() {
    */
   const focusLast = useCallback((container: HTMLElement) => {
     const focusableElements = getFocusableElements(container);
-    if (focusableElements.length > 0) {
-      focusableElements[focusableElements.length - 1].focus();
+    const lastElement = focusableElements[focusableElements.length - 1];
+    if (lastElement) {
+      lastElement.focus();
     }
   }, []);
 

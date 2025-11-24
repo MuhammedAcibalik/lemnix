@@ -152,12 +152,17 @@ export const mediaQuery = {
       DS.breakpoints[end] - 1
     }px)`,
   only: (breakpoint: keyof typeof DS.breakpoints) => {
-    const breakpointKeys = Object.keys(DS.breakpoints) as Array<keyof typeof DS.breakpoints>;
+    const breakpointKeys = Object.keys(DS.breakpoints) as Array<
+      keyof typeof DS.breakpoints
+    >;
     const currentIndex = breakpointKeys.indexOf(breakpoint);
     if (currentIndex === breakpointKeys.length - 1) {
       return `@media (min-width: ${DS.breakpoints[breakpoint]}px)`;
     }
     const nextBreakpoint = breakpointKeys[currentIndex + 1];
+    if (!nextBreakpoint) {
+      return `@media (min-width: ${DS.breakpoints[breakpoint]}px)`;
+    }
     return `@media (min-width: ${DS.breakpoints[breakpoint]}px) and (max-width: ${DS.breakpoints[nextBreakpoint] - 1}px)`;
   },
 };

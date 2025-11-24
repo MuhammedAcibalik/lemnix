@@ -79,7 +79,7 @@ export const ProductionPlanLayout: React.FC = () => {
           borderBottom: `1px solid ${theme.palette.divider}`,
           px: ds.spacing["4"],
           py: ds.spacing["2"],
-          boxShadow: ds.shadows.sm,
+          boxShadow: ds.shadows.soft.sm,
         }}
       >
         <Tabs

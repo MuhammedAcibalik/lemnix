@@ -55,6 +55,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
       headerDivider = true,
       footerDivider = true,
       sx = {},
+      style,
       ...props
     },
     ref,
@@ -182,6 +183,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
             },
           },
         }}
+        {...(style ? { style } : {})}
         {...props}
       >
         <Fade in={open}>

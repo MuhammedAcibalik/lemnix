@@ -11,6 +11,7 @@ import {
   ProfileOptimizationResultsProps,
   CalculatedPerformanceMetrics,
   SeverityThresholds,
+  Cut,
 } from "../types";
 
 /**
@@ -26,7 +27,7 @@ export const useProfileOptimizationState = ({
   const [expandedProfile, setExpandedProfile] = useState<string | null>(null);
   const [cuttingPlanModal, setCuttingPlanModal] = useState<{
     open: boolean;
-    stock: Record<string, unknown> | null;
+    stock: Cut | null;
   }>({ open: false, stock: null });
 
   // Handlers
@@ -45,8 +46,9 @@ export const useProfileOptimizationState = ({
   );
 
   const handleCuttingPlanDetails = useCallback(
-    (stock: Record<string, unknown>) => {
-      setCuttingPlanModal({ open: true, stock });
+    (stock: Record<string, unknown> | Cut) => {
+      // Type guard to ensure stock is Cut
+      setCuttingPlanModal({ open: true, stock: stock as Cut });
     },
     [],
   );
@@ -116,15 +118,21 @@ export const useProfileOptimizationState = ({
     cuttingPlanModal,
   };
 
-  // Handlers object
+  // Handlers object - explicitly handle optional properties
   const handlers: ProfileOptimizationHandlers = {
     onTabChange: handleTabChange,
     onProfileClick: handleProfileClick,
     onCuttingPlanDetails: handleCuttingPlanDetails,
     onCuttingPlanModalClose: handleCuttingPlanModalClose,
-    onNewOptimization,
-    onExport,
   };
+
+  // Add optional handlers only if defined
+  if (onNewOptimization) {
+    handlers.onNewOptimization = onNewOptimization;
+  }
+  if (onExport) {
+    handlers.onExport = onExport;
+  }
 
   return {
     // State

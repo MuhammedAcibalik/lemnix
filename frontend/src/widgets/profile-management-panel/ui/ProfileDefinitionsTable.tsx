@@ -141,7 +141,7 @@ export const ProfileDefinitionsTable: React.FC = () => {
               <TableCell>
                 {editingId === profile.id ? (
                   <TextField
-                    size="small"
+                    size="sm"
                     value={editForm.profileCode}
                     onChange={(e) =>
                       setEditForm({ ...editForm, profileCode: e.target.value })
@@ -162,7 +162,7 @@ export const ProfileDefinitionsTable: React.FC = () => {
               <TableCell>
                 {editingId === profile.id ? (
                   <TextField
-                    size="small"
+                    size="sm"
                     value={editForm.profileName}
                     onChange={(e) =>
                       setEditForm({ ...editForm, profileName: e.target.value })

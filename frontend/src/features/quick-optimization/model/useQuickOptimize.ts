@@ -13,7 +13,7 @@ export interface OptimizationItem {
 }
 
 export interface QuickOptimizeParams {
-  readonly algorithm: "ffd" | "bfd" | "genetic" | "pooling";
+  readonly algorithm: "bfd" | "genetic";
   readonly items: ReadonlyArray<OptimizationItem>;
 }
 

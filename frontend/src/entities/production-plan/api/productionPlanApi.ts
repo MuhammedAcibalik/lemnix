@@ -51,7 +51,11 @@ export class ProductionPlanApi {
       formData,
     );
 
-    return response;
+    if (!response.success || !response.data) {
+      throw new Error("Failed to upload production plan");
+    }
+
+    return response.data;
   }
 
   /**
@@ -83,16 +87,18 @@ export class ProductionPlanApi {
       },
     );
 
-    const { success, data, pagination } = response;
+    if (!response.success || !response.data) {
+      throw new Error("Failed to fetch production plans");
+    }
 
     console.log("📊 [API] Data fetched from database:", {
-      success,
-      dataLength: data?.length || 0,
-      pagination,
+      success: response.success,
+      dataLength: response.data.data?.length || 0,
+      pagination: response.data.pagination,
       source: "database-only",
     });
 
-    return response;
+    return response.data;
   }
 
   /**
@@ -107,7 +113,7 @@ export class ProductionPlanApi {
       throw new Error("Production plan not found");
     }
 
-    return response.data;
+    return response.data as unknown as ProductionPlan;
   }
 
   /**
@@ -125,7 +131,7 @@ export class ProductionPlanApi {
       throw new Error("Production plan not found");
     }
 
-    return response.data;
+    return response.data as unknown as ProductionPlan;
   }
 
   /**
@@ -139,7 +145,14 @@ export class ProductionPlanApi {
       message: string;
     }>(`${this.baseUrl}/${id}`);
 
-    return response;
+    if (!response.success) {
+      throw new Error("Failed to delete production plan");
+    }
+
+    return {
+      success: response.data.success,
+      message: response.data.message,
+    };
   }
 
   async deleteAllProductionPlans(): Promise<{
@@ -153,7 +166,15 @@ export class ProductionPlanApi {
       count: number;
     }>(this.baseUrl);
 
-    return response;
+    if (!response.success || !response.data) {
+      throw new Error("Failed to delete all production plans");
+    }
+
+    return {
+      success: response.data.success,
+      message: response.data.message,
+      count: response.data.count,
+    };
   }
 
   /**
@@ -177,7 +198,7 @@ export class ProductionPlanApi {
       throw new Error("Failed to fetch metrics");
     }
 
-    return response.data;
+    return (response.data as unknown as ProductionPlanMetricsResponse).data;
   }
 
   /**
@@ -194,7 +215,7 @@ export class ProductionPlanApi {
       throw new Error("Production plan items not found");
     }
 
-    return response.data;
+    return response.data.data ?? [];
   }
 
   /**
@@ -232,7 +253,11 @@ export class ProductionPlanApi {
       error?: string;
     }>(`${this.baseUrl}/create-cutting-list`, request);
 
-    return response;
+    if (!response.success || !response.data) {
+      throw new Error(response.data?.error || "Failed to create cutting list");
+    }
+
+    return response.data;
   }
 
   /**
@@ -248,10 +273,11 @@ export class ProductionPlanApi {
     }>(`${this.baseUrl}/cutting-list/${cuttingListId}/plan-items`);
 
     if (!response.success || !response.data) {
-      throw new Error(response.error || "Linked plan items not found");
+      const errorMessage = (response.data as { error?: string })?.error;
+      throw new Error(errorMessage || "Linked plan items not found");
     }
 
-    return response.data;
+    return response.data.data;
   }
 
   /**
@@ -265,7 +291,8 @@ export class ProductionPlanApi {
     }>(`${this.baseUrl}/plan-item/${planItemId}/unlink`);
 
     if (!response.success) {
-      throw new Error(response.error || "Failed to unlink plan item");
+      const errorMessage = (response.data as { error?: string })?.error;
+      throw new Error(errorMessage || "Failed to unlink plan item");
     }
   }
 
@@ -289,7 +316,7 @@ export class ProductionPlanApi {
       throw new Error("Failed to fetch backorder items");
     }
 
-    return response.data;
+    return response.data.data;
   }
 
   /**
@@ -312,7 +339,7 @@ export class ProductionPlanApi {
       throw new Error("Failed to fetch statistics");
     }
 
-    return response.data;
+    return response.data.data;
   }
 }
 

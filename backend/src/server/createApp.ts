@@ -23,13 +23,12 @@ import { createErrorHandler } from "../middleware/errorHandler";
 import { logger } from "../services/logger";
 import enterpriseOptimizationRoutes from "../routes/enterpriseOptimizationRoutes";
 import cuttingListRoutes from "../routes/cuttingListRoutes";
-import webgpuRoutes from "../routes/webgpuRoutes";
 import errorMetricsRoutes from "../routes/errorMetricsRoutes";
 import statisticsRoutes from "../routes/statisticsRoutes";
 import metricsRoutes from "../routes/metricsRoutes";
 import healthRoutes from "../routes/healthRoutes";
 import suggestionRoutes from "../routes/suggestionRoutes";
-import dashboardRoutes from "../routes/dashboardRoutesV2";
+import dashboardRoutes from "../routes/dashboardRoutes";
 import productionPlanRoutes from "../routes/productionPlanRoutes";
 import { materialProfileMappingRoutes } from "../routes/materialProfileMappingRoutes";
 import { createProgressiveRoutes } from "../routes/progressiveRoutes";
@@ -37,6 +36,24 @@ import profileManagementRoutes from "../routes/profileManagementRoutes";
 import productCategoryRoutes from "../routes/productCategoryRoutes";
 import { env, isDevelopment } from "../config/env";
 import { loggerMiddleware } from "./requestLogger";
+import {
+  prometheusMiddleware,
+  prometheusMetricsHandler,
+} from "../monitoring/prometheus";
+
+/**
+ * Get request size limit based on endpoint type
+ */
+function getRequestSizeLimit(endpointType: string): string {
+  const limits: Record<string, string> = {
+    default: "10mb",
+    optimization: "50mb", // Large optimization requests
+    export: "100mb", // Large export requests
+    upload: "50mb", // File uploads
+  };
+
+  return limits[endpointType] || limits.default;
+}
 
 interface CreateAppOptions {
   io: SocketIOServer;
@@ -97,14 +114,29 @@ const helmetConfig = {
   xssFilter: true,
 };
 
-const allowedOrigins = [
-  env.FRONTEND_URL,
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "http://localhost:3001",
-  "https://www.lemnix.com",
-  "https://lemnix.com",
-];
+// Get allowed origins from environment or use defaults
+const getAllowedOrigins = (): string[] => {
+  if (env.CORS_ORIGINS && env.CORS_ORIGINS.length > 0) {
+    return env.CORS_ORIGINS;
+  }
+
+  // Default origins (development + production)
+  const defaults = [
+    env.FRONTEND_URL,
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:3001",
+  ];
+
+  // Add production URLs if in production
+  if (env.NODE_ENV === "production") {
+    defaults.push("https://www.lemnix.com", "https://lemnix.com");
+  }
+
+  return defaults;
+};
+
+const allowedOrigins = getAllowedOrigins();
 
 const corsConfig = {
   origin: (
@@ -151,7 +183,19 @@ export function createApp({ io }: CreateAppOptions): Express {
     app.use(cors(corsConfig));
   }
 
-  app.use(compression());
+  // Compression with brotli support (if available)
+  app.use(
+    compression({
+      filter: (req, res) => {
+        if (req.headers["x-no-compression"]) {
+          return false;
+        }
+        return compression.filter(req, res);
+      },
+      level: 6, // Compression level (0-9)
+      threshold: 1024, // Only compress responses > 1KB
+    }),
+  );
   app.use(correlationIdMiddleware);
   app.use(requestTimingMiddleware);
   app.use(auditMiddleware);
@@ -166,10 +210,23 @@ export function createApp({ io }: CreateAppOptions): Express {
     }),
   );
 
-  app.use(express.json({ limit: "10mb" }));
-  app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+  // Dynamic request size limits based on endpoint
+  // Default: 10MB, but can be overridden per route
+  app.use(express.json({ limit: getRequestSizeLimit("default") }));
+  app.use(
+    express.urlencoded({
+      extended: true,
+      limit: getRequestSizeLimit("default"),
+    }),
+  );
 
   app.use(loggerMiddleware);
+
+  // Prometheus metrics middleware
+  app.use(prometheusMiddleware);
+
+  // Prometheus metrics endpoint
+  app.get("/metrics", prometheusMetricsHandler);
 
   registerHealthEndpoints(app);
   registerRoutes(app, io);
@@ -181,6 +238,7 @@ export function createApp({ io }: CreateAppOptions): Express {
 }
 
 function registerHealthEndpoints(app: Express): void {
+  // Liveness probe - simple health check
   app.get("/health", (_req: Request, res: Response<HealthResponse>) => {
     res.status(200).json({
       status: "OK",
@@ -192,15 +250,34 @@ function registerHealthEndpoints(app: Express): void {
     });
   });
 
-  app.get("/readyz", (_req: Request, res: Response) => {
+  // Readiness probe - checks if service is ready to accept traffic
+  app.get("/readyz", async (_req: Request, res: Response) => {
     try {
-      const uploadsDir = path.join(process.cwd(), "..", "uploads");
-      if (!fs.existsSync(uploadsDir)) {
+      // Check database connection
+      const { databaseManager } = await import("../config/database.js");
+      const dbHealthy = await databaseManager.healthCheck();
+
+      if (!dbHealthy) {
         res.status(503).json({
           status: "NOT_READY",
-          reason: "Uploads directory not accessible",
+          reason: "Database connection failed",
         });
         return;
+      }
+
+      // Check uploads directory (if needed)
+      const uploadsDir = path.join(process.cwd(), "..", "uploads");
+      if (!fs.existsSync(uploadsDir)) {
+        // Try to create it
+        try {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        } catch (error) {
+          res.status(503).json({
+            status: "NOT_READY",
+            reason: "Uploads directory not accessible",
+          });
+          return;
+        }
       }
 
       res.status(200).json({ status: "READY" });
@@ -216,7 +293,6 @@ function registerHealthEndpoints(app: Express): void {
 function registerRoutes(app: Express, io: SocketIOServer): void {
   app.use("/api/cutting-list", cuttingListRoutes);
   app.use("/api/enterprise", enterpriseOptimizationRoutes);
-  app.use("/api/webgpu", webgpuRoutes);
   app.use("/api/error-metrics", errorMetricsRoutes);
   app.use("/api/dashboard", dashboardRoutes);
   app.use("/api/statistics", statisticsRoutes);

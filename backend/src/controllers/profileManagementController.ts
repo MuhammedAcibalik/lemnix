@@ -6,7 +6,7 @@
 
 import { Request, Response } from "express";
 import { profileManagementService } from "../services/profileManagementService";
-import { logger } from "../utils/logger";
+import { logger } from "../services/logger";
 import { databaseManager } from "../config/database";
 
 export class ProfileManagementController {

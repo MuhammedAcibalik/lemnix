@@ -21,6 +21,8 @@
  */
 
 import { OptimizationItem, OptimizationResult } from "../../types";
+import { cacheService } from "../cache/RedisCache";
+import { logger } from "../logger";
 
 // ============================================================================
 // ENTERPRISE TYPE DEFINITIONS
@@ -104,10 +106,6 @@ interface AdaptiveOptimizationParams {
 // ============================================================================
 
 export class PerformanceOptimizationService {
-  private readonly cache = new Map<
-    string,
-    { result: OptimizationResult; timestamp: number; hits: number }
-  >();
   private readonly performanceHistory: PerformanceMetrics[] = [];
   private readonly adaptiveParams: AdaptiveOptimizationParams;
   private readonly cacheConfig: CacheConfig;
@@ -123,8 +121,8 @@ export class PerformanceOptimizationService {
     };
 
     this.cacheConfig = {
-      enabled: false, // ✅ DISABLED: Cache key doesn't include algorithm, causing cross-algorithm contamination
-      maxSize: 100, // MB
+      enabled: true, // ✅ ENABLED: Using RedisCache with proper cache key generation
+      maxSize: 100, // MB (not used with RedisCache, kept for compatibility)
       ttl: 3600, // 1 hour
       strategy: "adaptive",
       compression: true,
@@ -152,90 +150,126 @@ export class PerformanceOptimizationService {
     items: OptimizationItem[],
     ...args: unknown[]
   ): Promise<{ result: T; performance: PerformanceOptimizationResult }> {
-    // const startTime = performance.now();
     const requestId = this.generateRequestId();
+    const startTime = performance.now();
+    const startMemory = this.getMemoryUsage();
 
-    console.log(`[PerfOpt:${requestId}] Starting performance optimization`);
+    logger.info("[PerfOpt] Starting performance optimization", { requestId });
 
     try {
-      // 1. Pre-optimization analysis
-      const originalMetrics = await this.analyzePerformance(
-        optimizationFunction,
-        items,
-        ...args,
-      );
+      // CRITICAL FIX: Skip pre/post analysis to avoid running optimization 3 times
+      // Pre-analysis was causing the algorithm to run twice before actual execution,
+      // which is inefficient especially for DP-based algorithms that can take minutes.
+      // Instead, we execute once and measure performance during execution.
 
-      // 2. Apply optimizations
+      // Apply optimizations (caching, parallel processing, etc.)
       const optimizedFunction = await this.applyOptimizations(
         optimizationFunction,
         items,
         ...args,
       );
 
-      // 3. Execute optimized function
+      // Execute optimized function and measure performance
       const result = await optimizedFunction(items, ...args);
 
-      // 4. Post-optimization analysis
-      const optimizedMetrics = await this.analyzePerformance(
-        optimizedFunction,
-        items,
-        ...args,
-      );
+      const endTime = performance.now();
+      const endMemory = this.getMemoryUsage();
+      const executionTime = endTime - startTime;
+      const memoryUsage = endMemory - startMemory;
 
-      // 5. Calculate improvements
-      const performanceResult = this.calculateImprovements(
-        originalMetrics,
+      // Create performance metrics from single execution
+      const optimizedMetrics: PerformanceMetrics = {
+        executionTime,
+        memoryUsage,
+        cpuUsage: this.getCPUUsage(),
+        throughput: items.length / (executionTime / 1000),
+        efficiency: Math.max(0, 100 - executionTime / 1000),
+        scalability: this.calculateScalability(items.length),
+        reliability: this.calculateReliability(),
+      };
+
+      const performanceResult: PerformanceOptimizationResult = {
+        originalMetrics: {
+          // Use same metrics as baseline (no pre-analysis needed)
+          executionTime: 0,
+          memoryUsage: 0,
+          cpuUsage: 0,
+          throughput: 0,
+          efficiency: 0,
+          scalability: 0,
+          reliability: 0,
+        },
         optimizedMetrics,
-      );
+        improvement: {
+          executionTime: 0, // No baseline to compare
+          memoryUsage: 0,
+          cpuUsage: 0,
+          throughput: 0,
+        },
+        recommendations: [],
+        appliedOptimizations: [
+          "caching",
+          "parallel-processing",
+          "memory-optimization",
+        ],
+      };
 
-      // 6. Update adaptive parameters
-      this.updateAdaptiveParameters(performanceResult);
-
-      console.log(`[PerfOpt:${requestId}] Performance optimization completed`);
+      logger.info("[PerfOpt] Performance optimization completed", {
+        requestId,
+        executionTime: `${executionTime.toFixed(2)}ms`,
+        memoryUsage: `${(memoryUsage / 1024 / 1024).toFixed(2)}MB`,
+      });
 
       return { result, performance: performanceResult };
     } catch (error) {
-      console.error(
-        `[PerfOpt:${requestId}] Performance optimization failed:`,
-        error,
+      logger.error(
+        "[PerfOpt] Performance optimization failed",
+        error instanceof Error ? error : new Error(String(error)),
+        { requestId },
       );
       throw error;
     }
   }
 
   /**
-   * Intelligent caching system
+   * Intelligent caching system using RedisCache
    */
-  public getCachedResult(cacheKey: string): OptimizationResult | null {
+  public async getCachedResult(
+    cacheKey: string,
+  ): Promise<OptimizationResult | null> {
     if (!this.cacheConfig.enabled) return null;
 
-    const cached = this.cache.get(cacheKey);
-    if (!cached) return null;
-
-    // Check TTL
-    if (Date.now() - cached.timestamp > this.cacheConfig.ttl * 1000) {
-      this.cache.delete(cacheKey);
+    try {
+      const cached = await cacheService.get<OptimizationResult>(cacheKey);
+      return cached;
+    } catch (error) {
+      logger.error(
+        "[PerfOpt] Cache get error",
+        error instanceof Error ? error : new Error(String(error)),
+        { cacheKey },
+      );
       return null;
     }
-
-    // Update hit count
-    cached.hits++;
-    return cached.result;
   }
 
-  public setCachedResult(cacheKey: string, result: OptimizationResult): void {
+  public async setCachedResult(
+    cacheKey: string,
+    result: OptimizationResult,
+  ): Promise<void> {
     if (!this.cacheConfig.enabled) return;
 
-    // Check cache size
-    if (this.getCacheSize() > this.cacheConfig.maxSize) {
-      this.evictCache();
+    try {
+      await cacheService.set(cacheKey, result, {
+        ttl: this.cacheConfig.ttl,
+        tags: ["optimization", "performance"],
+      });
+    } catch (error) {
+      logger.error(
+        "[PerfOpt] Cache set error",
+        error instanceof Error ? error : new Error(String(error)),
+        { cacheKey },
+      );
     }
-
-    this.cache.set(cacheKey, {
-      result,
-      timestamp: Date.now(),
-      hits: 0,
-    });
   }
 
   /**
@@ -259,9 +293,10 @@ export class PerformanceOptimizationService {
     const chunks = this.chunkArray(items, this.parallelConfig.chunkSize);
     const workers = Math.min(chunks.length, this.parallelConfig.maxWorkers);
 
-    console.log(
-      `[PerfOpt] Processing ${chunks.length} chunks with ${workers} workers`,
-    );
+    logger.debug("[PerfOpt] Processing chunks", {
+      chunksCount: chunks.length,
+      workers,
+    });
 
     const promises = chunks.map((chunk) =>
       this.executeWithTimeout(
@@ -438,9 +473,30 @@ export class PerformanceOptimizationService {
       items: OptimizationItem[],
       ...args: unknown[]
     ): Promise<T> => {
-      // ✅ Cache disabled globally (cacheConfig.enabled = false)
-      // This prevents cross-algorithm cache contamination
+      // Extract algorithm from args if available
+      const algorithm = args.find(
+        (arg) => typeof arg === "object" && arg !== null && "algorithm" in arg,
+      ) as { algorithm?: string } | undefined;
+
+      const cacheKey = this.generateCacheKey(items, algorithm?.algorithm, args);
+
+      // Try to get from cache
+      const cached = await this.getCachedResult(cacheKey);
+      if (cached) {
+        return cached as T;
+      }
+
+      // Execute optimization
       const result = await optimizationFunction(items, ...args);
+
+      // Store in cache
+      if (result && typeof result === "object" && "efficiency" in result) {
+        await this.setCachedResult(
+          cacheKey,
+          result as unknown as OptimizationResult,
+        );
+      }
+
       return result;
     };
   }
@@ -615,40 +671,22 @@ export class PerformanceOptimizationService {
     );
   }
 
-  private generateCacheKey(items: OptimizationItem[], args: unknown[]): string {
+  /**
+   * Generate cache key for optimization result
+   * Includes algorithm and items to prevent cross-algorithm contamination
+   */
+  private generateCacheKey(
+    items: OptimizationItem[],
+    algorithm?: string,
+    args: unknown[] = [],
+  ): string {
     const itemsHash = items
       .map((item) => `${item.profileType}-${item.length}-${item.quantity}`)
       .join("|");
     const argsHash = args.map((arg) => JSON.stringify(arg)).join("|");
+    const algorithmPart = algorithm ? `-alg:${algorithm}` : "";
     // ✅ CRITICAL: Include algorithm in cache key to prevent cross-algorithm cache hits
-    return `${itemsHash}-${argsHash}`;
-  }
-
-  private getCacheSize(): number {
-    let size = 0;
-    for (const [key, value] of this.cache) {
-      size += key.length + JSON.stringify(value).length;
-    }
-    return size / (1024 * 1024); // Convert to MB
-  }
-
-  private evictCache(): void {
-    if (this.cacheConfig.strategy === "lru") {
-      // Remove least recently used
-      const oldestKey = this.cache.keys().next().value;
-      this.cache.delete(oldestKey || "");
-    } else if (this.cacheConfig.strategy === "lfu") {
-      // Remove least frequently used
-      let minHits = Infinity;
-      let minKey = "";
-      for (const [key, value] of this.cache) {
-        if (value.hits < minHits) {
-          minHits = value.hits;
-          minKey = key;
-        }
-      }
-      this.cache.delete(minKey);
-    }
+    return `perf-opt:${itemsHash}${algorithmPart}-${argsHash}`;
   }
 
   private chunkArray<T>(array: T[], chunkSize: number): T[][] {
@@ -716,7 +754,10 @@ export class PerformanceOptimizationService {
       recent.reduce((sum, m) => sum + m.memoryUsage, 0) / recent.length;
 
     if (avgExecutionTime > 1000 || avgMemoryUsage > 100) {
-      console.warn("[PerfOpt] Performance degradation detected");
+      logger.warn("[PerfOpt] Performance degradation detected", {
+        avgExecutionTime,
+        avgMemoryUsage,
+      });
     }
   }
 

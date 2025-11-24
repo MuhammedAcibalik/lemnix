@@ -151,7 +151,7 @@ export const LoadingBar: React.FC<LoadingBarProps> = ({
     <Box sx={{ width: "100%" }}>
       <LinearProgress
         variant={value !== undefined ? "determinate" : "indeterminate"}
-        value={value}
+        {...(value !== undefined ? { value } : {})}
         sx={{
           height: 4,
           borderRadius: 2,
@@ -242,8 +242,8 @@ export const LoadingSkeleton: React.FC<LoadingSkeletonProps> = ({
   return (
     <Skeleton
       variant={variant}
-      width={width}
-      height={height}
+      {...(width !== undefined ? { width } : {})}
+      {...(height !== undefined ? { height } : {})}
       sx={{
         borderRadius:
           variant === "circular"
@@ -303,14 +303,16 @@ export const LoadingContainer: React.FC<LoadingContainerProps> = ({
   React.useEffect(() => {
     if (loading) {
       setShowLoading(true);
-    } else if (minLoadingTime > 0) {
+      return undefined;
+    }
+    if (minLoadingTime > 0) {
       const timer = setTimeout(() => {
         setShowLoading(false);
       }, minLoadingTime);
       return () => clearTimeout(timer);
-    } else {
-      setShowLoading(false);
     }
+    setShowLoading(false);
+    return undefined;
   }, [loading, minLoadingTime]);
 
   if (showLoading) {

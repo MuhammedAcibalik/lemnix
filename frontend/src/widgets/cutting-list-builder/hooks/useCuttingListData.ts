@@ -202,7 +202,25 @@ export const useCuttingListData = ({
         newCuttingList,
       );
 
-      setCuttingList(newCuttingList as CuttingList);
+      // Map entity CuttingList to widget CuttingList
+      const mappedCuttingList: CuttingList = {
+        ...newCuttingList,
+        sections: newCuttingList.sections.map((section) => ({
+          ...section,
+          items: section.items.map((item) => ({
+            ...item,
+            profiles: [...item.profiles],
+            // Map priority from entity format to widget format
+            priority:
+              item.priority === "high" || item.priority === "urgent"
+                ? ("1" as const)
+                : item.priority === "low" || item.priority === "medium"
+                  ? ("2" as const)
+                  : undefined,
+          })) as unknown as WorkOrderItem[],
+        })) as ProductSection[],
+      };
+      setCuttingList(mappedCuttingList);
       await loadCuttingListsFromBackend();
       setSuccess(`${selectedWeekNumber}. hafta kesim listesi oluşturuldu`);
       setLoadingState(LoadingState.SUCCESS);
@@ -245,7 +263,9 @@ export const useCuttingListData = ({
       const optimisticSection: ProductSection = {
         id: `temp-${Date.now()}`,
         productName: effectiveProductName.trim(),
-        productCategory: effectiveProductCategory,
+        ...(effectiveProductCategory
+          ? { productCategory: effectiveProductCategory }
+          : {}),
         items: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -261,7 +281,9 @@ export const useCuttingListData = ({
 
         const realSection = await addProductSection(cuttingList.id, {
           productName: effectiveProductName.trim(),
-          productCategory: effectiveProductCategory,
+          ...(effectiveProductCategory
+            ? { productCategory: effectiveProductCategory }
+            : {}),
         });
 
         // ✅ DIRECT UPDATE: No optimistic update, direct real data
@@ -318,7 +340,7 @@ export const useCuttingListData = ({
         date: newItemForm.date,
         version: newItemForm.version,
         color: newItemForm.color,
-        note: newItemForm.note,
+        ...(newItemForm.note ? { note: newItemForm.note } : {}),
         orderQuantity: parseInt(newItemForm.orderQuantity),
         size: newItemForm.size,
         priority: priorityMapped,

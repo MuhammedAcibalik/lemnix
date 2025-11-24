@@ -25,14 +25,14 @@ enum ItemPriority {
 
 model User {
   id            String         @id @default(cuid())
-  email         String         @unique
-  name          String?
+  email         String         @unique @db.VarChar(255)
+  name          String?        @db.VarChar(200)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   isActive      Boolean        @default(true)
   lastLogin     DateTime?
-  password      String?
-  role          String         @default("planner")
+  password      String?        @db.VarChar(255)
+  role          String         @default("planner") @db.VarChar(50)
   cuttingLists  CuttingList[]
   optimizations Optimization[]
   activities    UserActivity[]
@@ -44,8 +44,8 @@ model User {
 
 model CuttingList {
   id                  String                  @id @default(cuid())
-  name                String
-  description         String?
+  name                String                  @db.VarChar(200)
+  description         String?                 @db.VarChar(1000)
   status              CuttingListStatus       @default(DRAFT)
   createdAt           DateTime                @default(now())
   updatedAt           DateTime                @updatedAt
@@ -55,7 +55,7 @@ model CuttingList {
   sections            Json?
   items               CuttingListItem[]
   statistics          CuttingListStatistics[]
-  user                User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                User                    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   productionPlanItems ProductionPlanItem[]
 
   @@unique([userId, weekNumber])
@@ -72,26 +72,26 @@ model CuttingList {
 
 model CuttingListItem {
   id                   String            @id @default(cuid())
-  workOrderId          String
-  date                 String?
-  color                String
-  version              String
-  size                 String
-  profileType          String
-  length               Float
+  workOrderId          String            @db.VarChar(100)
+  date                 String?           @db.VarChar(50)
+  color                String            @db.VarChar(50)
+  version              String            @db.VarChar(50)
+  size                 String            @db.VarChar(50)
+  profileType          String            @db.VarChar(100)
+  length               Decimal           @db.Decimal(10, 2)
   quantity             Int
   orderQuantity        Int?
-  cuttingPattern       String?
-  notes                String?
+  cuttingPattern       String?           @db.VarChar(500)
+  notes                String?           @db.VarChar(1000)
   priority             ItemPriority      @default(MEDIUM)
   status               CuttingListStatus @default(DRAFT)
   createdAt            DateTime          @default(now())
   updatedAt            DateTime          @updatedAt
   cuttingListId        String
-  materialDescription  String?
-  materialNumber       String?
+  materialDescription  String?           @db.VarChar(500)
+  materialNumber       String?           @db.VarChar(100)
   productionPlanItemId String?
-  cuttingList          CuttingList       @relation(fields: [cuttingListId], references: [id], onDelete: Cascade)
+  cuttingList          CuttingList       @relation(fields: [cuttingListId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@index([cuttingListId])
   @@index([workOrderId])
@@ -99,13 +99,14 @@ model CuttingListItem {
   @@index([status, priority])
   @@index([materialNumber])
   @@index([productionPlanItemId])
+  @@index([workOrderId, profileType, color])
   @@map("cutting_list_items")
 }
 
 model Optimization {
   id            String   @id @default(cuid())
-  algorithm     String
-  status        String   @default("pending")
+  algorithm     String   @db.VarChar(50)
+  status        String   @default("pending") @db.VarChar(50)
   executionTime Int?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -113,7 +114,7 @@ model Optimization {
   metadata      Json?
   parameters    Json
   result        Json?
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@index([userId, status])
   @@index([algorithm, status])
@@ -129,7 +130,7 @@ model Optimization {
 
 model StockLength {
   id        String   @id @default(cuid())
-  length    Float
+  length    Decimal  @unique @db.Decimal(10, 2)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -139,8 +140,8 @@ model StockLength {
 
 model ProfileType {
   id          String   @id @default(cuid())
-  name        String   @unique
-  description String?
+  name        String   @unique @db.VarChar(100)
+  description String?  @db.VarChar(500)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -154,28 +155,28 @@ model CuttingListStatistics {
   totalItems          Int         @default(0)
   totalProfiles       Int         @default(0)
   totalQuantity       Int         @default(0)
-  averageWastePercent Float       @default(0)
+  averageWastePercent Decimal     @default(0) @db.Decimal(5, 2)
   optimizationCount   Int         @default(0)
-  completionRate      Float       @default(0)
-  efficiencyScore     Float       @default(0)
+  completionRate      Decimal     @default(0) @db.Decimal(5, 2)
+  efficiencyScore     Decimal     @default(0) @db.Decimal(5, 2)
   createdAt           DateTime    @default(now())
   updatedAt           DateTime    @updatedAt
-  cuttingList         CuttingList @relation(fields: [cuttingListId], references: [id], onDelete: Cascade)
+  cuttingList         CuttingList @relation(fields: [cuttingListId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@map("cutting_list_statistics")
 }
 
 model ProfileUsageStatistics {
   id              String    @id @default(cuid())
-  profileType     String
-  profileName     String
-  measurement     Float
+  profileType     String    @db.VarChar(100)
+  profileName     String    @db.VarChar(200)
+  measurement     Decimal   @db.Decimal(10, 2)
   totalUsageCount Int       @default(0)
   totalQuantity   Int       @default(0)
-  averageQuantity Float     @default(0)
+  averageQuantity Decimal   @default(0) @db.Decimal(10, 2)
   lastUsed        DateTime?
   frequencyRank   Int       @default(0)
-  popularityScore Float     @default(0)
+  popularityScore Decimal   @default(0) @db.Decimal(5, 2)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -185,13 +186,13 @@ model ProfileUsageStatistics {
 
 model OptimizationStatistics {
   id                    String   @id @default(cuid())
-  algorithm             String
+  algorithm             String   @db.VarChar(50)
   inputItemCount        Int      @default(0)
   outputItemCount       Int      @default(0)
-  wasteReductionPercent Float    @default(0)
+  wasteReductionPercent Decimal  @default(0) @db.Decimal(5, 2)
   executionTimeMs       Int      @default(0)
-  successRate           Float    @default(0)
-  averageEfficiency     Float    @default(0)
+  successRate           Decimal  @default(0) @db.Decimal(5, 2)
+  averageEfficiency     Decimal  @default(0) @db.Decimal(5, 2)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
   parameters            Json?
@@ -202,10 +203,10 @@ model OptimizationStatistics {
 
 model SystemMetrics {
   id          String   @id @default(cuid())
-  metricType  String
-  metricName  String
-  metricValue Float
-  metricUnit  String?
+  metricType  String   @db.VarChar(100)
+  metricName  String   @db.VarChar(200)
+  metricValue Decimal  @db.Decimal(15, 4)
+  metricUnit  String?  @db.VarChar(50)
   timestamp   DateTime @default(now())
   metadata    Json?
 
@@ -217,13 +218,13 @@ model SystemMetrics {
 model UserActivity {
   id           String   @id @default(cuid())
   userId       String
-  activityType String
-  ipAddress    String?
-  userAgent    String?
-  sessionId    String?
+  activityType String   @db.VarChar(100)
+  ipAddress    String?  @db.VarChar(45)
+  userAgent    String?  @db.VarChar(500)
+  sessionId    String?  @db.VarChar(100)
   createdAt    DateTime @default(now())
   activityData Json?
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@index([userId, createdAt(sort: Desc)])
   @@index([activityType, createdAt])
@@ -233,14 +234,14 @@ model UserActivity {
 
 model AuditLog {
   id        String   @id @default(cuid())
-  userId    String
-  tableName String
-  operation String
-  recordId  String
+  userId    String   @db.VarChar(100)
+  tableName String   @db.VarChar(100)
+  operation String   @db.VarChar(50)
+  recordId  String   @db.VarChar(100)
   oldData   Json?
   newData   Json?
-  ipAddress String?
-  userAgent String?
+  ipAddress String?  @db.VarChar(45)
+  userAgent String?  @db.VarChar(500)
   timestamp DateTime @default(now())
 
   @@index([userId, timestamp(sort: Desc)])
@@ -252,25 +253,25 @@ model AuditLog {
 
 model SuggestionPattern {
   id              String   @id @default(cuid())
-  contextKey      String
-  patternKey      String   @unique
-  productName     String
-  size            String
-  profile         String
-  measurement     String
+  contextKey      String   @db.VarChar(200)
+  patternKey      String   @unique @db.VarChar(500)
+  productName     String   @db.VarChar(200)
+  size            String   @db.VarChar(50)
+  profile         String   @db.VarChar(100)
+  measurement     String   @db.VarChar(100)
   quantity        Int
   frequency       Int      @default(1)
-  confidence      Float    @default(0)
+  confidence      Decimal  @default(0) @db.Decimal(5, 2)
   lastUsed        DateTime @default(now())
-  averageQuantity Float
+  averageQuantity Decimal  @db.Decimal(10, 2)
   contexts        Json
   variations      Json
   metadata        Json?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  averageRatio    Float    @default(1)
+  averageRatio    Decimal  @default(1) @db.Decimal(10, 4)
   orderQuantity   Int      @default(1)
-  ratio           Float    @default(1)
+  ratio           Decimal  @default(1) @db.Decimal(10, 4)
   ratioHistory    Json?
 
   @@index([contextKey, confidence(sort: Desc)])
@@ -285,8 +286,8 @@ model SuggestionPattern {
 
 model SuggestionCache {
   id        String   @id @default(cuid())
-  cacheKey  String   @unique
-  cacheType String
+  cacheKey  String   @unique @db.VarChar(500)
+  cacheType String   @db.VarChar(100)
   data      Json
   hitCount  Int      @default(0)
   lastHit   DateTime @default(now())
@@ -301,12 +302,12 @@ model SuggestionCache {
 
 model SuggestionMetrics {
   id                String   @id @default(cuid())
-  metricType        String
-  productName       String?
-  size              String?
+  metricType        String   @db.VarChar(100)
+  productName       String?  @db.VarChar(200)
+  size              String?  @db.VarChar(50)
   suggestionCount   Int      @default(0)
-  acceptanceRate    Float    @default(0)
-  averageConfidence Float    @default(0)
+  acceptanceRate    Decimal  @default(0) @db.Decimal(5, 2)
+  averageConfidence Decimal  @default(0) @db.Decimal(5, 2)
   responseTimeMs    Int?
   metadata          Json?
   timestamp         DateTime @default(now())
@@ -320,9 +321,9 @@ model ProductionPlan {
   id         String               @id @default(cuid())
   weekNumber Int
   year       Int
-  status     String               @default("active")
+  status     String               @default("active") @db.VarChar(50)
   uploadedAt DateTime             @default(now())
-  uploadedBy String?
+  uploadedBy String?              @db.VarChar(100)
   metadata   Json?
   items      ProductionPlanItem[]
 
@@ -335,27 +336,27 @@ model ProductionPlan {
 model ProductionPlanItem {
   id                        String         @id @default(cuid())
   planId                    String
-  ad                        String
-  siparisVeren              String
-  musteriNo                 String
-  musteriKalemi             String
-  siparis                   String
-  malzemeNo                 String
-  malzemeKisaMetni          String
-  miktar                    Float
+  ad                        String         @db.VarChar(200)
+  siparisVeren              String         @db.VarChar(200)
+  musteriNo                 String         @db.VarChar(100)
+  musteriKalemi             String         @db.VarChar(200)
+  siparis                   String         @db.VarChar(100)
+  malzemeNo                 String         @db.VarChar(100)
+  malzemeKisaMetni          String         @db.VarChar(500)
+  miktar                    Decimal        @db.Decimal(10, 2)
   planlananBitisTarihi      DateTime
-  bolum                     String
-  oncelik                   String
+  bolum                     String         @db.VarChar(100)
+  oncelik                   String         @db.VarChar(50)
   linkedCuttingListId       String?
-  encryptedAd               String?
-  encryptedMalzemeKisaMetni String?
-  encryptedMalzemeNo        String?
-  encryptedMusteriKalemi    String?
-  encryptedMusteriNo        String?
-  encryptedSiparis          String?
-  encryptedSiparisVeren     String?
-  linkedCuttingList         CuttingList?   @relation(fields: [linkedCuttingListId], references: [id])
-  plan                      ProductionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  encryptedAd               String?        @db.VarChar(500)
+  encryptedMalzemeKisaMetni String?        @db.VarChar(1000)
+  encryptedMalzemeNo        String?        @db.VarChar(200)
+  encryptedMusteriKalemi    String?        @db.VarChar(500)
+  encryptedMusteriNo        String?        @db.VarChar(200)
+  encryptedSiparis          String?        @db.VarChar(200)
+  encryptedSiparisVeren     String?        @db.VarChar(500)
+  linkedCuttingList         CuttingList?   @relation(fields: [linkedCuttingListId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  plan                      ProductionPlan @relation(fields: [planId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@index([planId])
   @@index([siparis])
@@ -367,13 +368,13 @@ model ProductionPlanItem {
 
 model MaterialProfileMapping {
   id               String   @id @default(cuid())
-  malzemeNo        String
-  malzemeKisaMetni String
-  profileType      String
-  length           Float
+  malzemeNo        String   @db.VarChar(100)
+  malzemeKisaMetni String   @db.VarChar(500)
+  profileType      String   @db.VarChar(100)
+  length           Decimal  @db.Decimal(10, 2)
   usageCount       Int      @default(1)
   lastUsed         DateTime @default(now())
-  createdBy        String?
+  createdBy        String?  @db.VarChar(100)
   createdAt        DateTime @default(now())
 
   @@unique([malzemeNo, profileType, length])
@@ -384,8 +385,8 @@ model MaterialProfileMapping {
 
 model ProfileDefinition {
   id           String                    @id @default(cuid())
-  profileCode  String
-  profileName  String
+  profileCode  String                    @db.VarChar(100)
+  profileName  String                    @db.VarChar(200)
   isActive     Boolean                   @default(true)
   createdAt    DateTime                  @default(now())
   updatedAt    DateTime                  @updatedAt
@@ -401,12 +402,13 @@ model ProfileDefinition {
 model ProfileStockLength {
   id          String            @id @default(cuid())
   profileId   String
-  stockLength Float
+  stockLength Decimal           @db.Decimal(10, 2)
   isDefault   Boolean           @default(false)
   priority    Int               @default(0)
   createdAt   DateTime          @default(now())
-  profile     ProfileDefinition @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile     ProfileDefinition @relation(fields: [profileId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
+  @@unique([profileId, stockLength])
   @@index([profileId, isDefault])
   @@index([profileId, priority])
   @@index([stockLength])
@@ -415,14 +417,14 @@ model ProfileStockLength {
 
 model WorkOrderProfileMapping {
   id          String            @id @default(cuid())
-  workOrderId String
-  profileType String
+  workOrderId String            @db.VarChar(100)
+  profileType String            @db.VarChar(100)
   profileId   String
   weekNumber  Int
   year        Int
-  uploadedBy  String?
+  uploadedBy  String?           @db.VarChar(100)
   createdAt   DateTime          @default(now())
-  profile     ProfileDefinition @relation(fields: [profileId], references: [id])
+  profile     ProfileDefinition @relation(fields: [profileId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   @@unique([workOrderId, profileType, weekNumber, year])
   @@index([weekNumber, year])
@@ -435,8 +437,8 @@ model WorkOrderProfileMapping {
 
 model ProductCategory {
   id          String           @id @default(cuid())
-  name        String           @unique
-  description String?
+  name        String           @unique @db.VarChar(200)
+  description String?          @db.VarChar(1000)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
   products    ProductMapping[]
@@ -447,11 +449,11 @@ model ProductCategory {
 
 model ProductMapping {
   id          String          @id @default(cuid())
-  productName String          @unique
+  productName String          @unique @db.VarChar(200)
   categoryId  String
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
-  category    ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category    ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@index([productName])
   @@index([categoryId])

@@ -50,7 +50,7 @@ export interface OptimizationConstraints {
 }
 
 // Union types for better type safety (Use @/entities/optimization/AlgorithmType for new code)
-export type AlgorithmType = "ffd" | "bfd" | "genetic" | "pooling"; // Updated to match backend
+export type AlgorithmType = "bfd" | "genetic"; // Updated to match backend
 export type LengthUnit = "mm" | "cm" | "m";
 export type ObjectiveType =
   | "minimize-waste"

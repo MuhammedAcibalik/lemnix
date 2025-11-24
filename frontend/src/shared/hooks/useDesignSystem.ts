@@ -50,7 +50,13 @@ export const useDesignSystem = () => {
 
     for (const key of keys) {
       if (typeof value === "object" && value !== null && key in value) {
-        value = value[key];
+        const nextValue: NestedObject | string | number | undefined =
+          value[key];
+        if (nextValue === undefined) {
+          console.warn(`Color path "${path}" not found in design system`);
+          return "#000000";
+        }
+        value = nextValue;
       } else {
         console.warn(`Color path "${path}" not found in design system`);
         return "#000000";
@@ -95,7 +101,13 @@ export const useDesignSystem = () => {
 
     for (const key of keys) {
       if (typeof value === "object" && value !== null && key in value) {
-        value = value[key];
+        const nextValue: NestedObject | string | number | undefined =
+          value[key];
+        if (nextValue === undefined) {
+          console.warn(`Shadow path "${path}" not found`);
+          return "none";
+        }
+        value = nextValue;
       } else {
         console.warn(`Shadow path "${path}" not found`);
         return "none";
@@ -125,7 +137,11 @@ export const useDesignSystem = () => {
 
     for (const k of keys) {
       if (typeof value === "object" && value !== null && k in value) {
-        value = value[k];
+        const nextValue: NestedObject | string | number | undefined = value[k];
+        if (nextValue === undefined) {
+          return tokens.gradients.primary.default;
+        }
+        value = nextValue;
       } else {
         return tokens.gradients.primary.default;
       }
@@ -156,7 +172,12 @@ export const useDesignSystem = () => {
 
     for (const key of keys) {
       if (typeof value === "object" && value !== null && key in value) {
-        value = value[key];
+        const nextValue: NestedObject | string | number | undefined =
+          value[key];
+        if (nextValue === undefined) {
+          return tokens.typography.body.base;
+        }
+        value = nextValue;
       } else {
         return tokens.typography.body.base;
       }

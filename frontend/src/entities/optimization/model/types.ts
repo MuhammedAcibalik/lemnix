@@ -12,7 +12,7 @@ import type { ID, Timestamp } from "@/shared";
 /**
  * Algorithm types (aligned with backend)
  */
-export type AlgorithmType = "ffd" | "bfd" | "genetic" | "pooling";
+export type AlgorithmType = "bfd" | "genetic";
 
 /**
  * Optimization objective types
@@ -310,18 +310,6 @@ export interface AlgorithmInfo {
  * Algorithm catalog - Aligned with backend capabilities
  */
 export const ALGORITHM_CATALOG: Record<AlgorithmType, AlgorithmInfo> = {
-  ffd: {
-    id: "ffd",
-    name: "First-Fit Decreasing",
-    description: "Hızlı ve basit, küçük optimizasyonlar için ideal",
-    complexity: "O(n log n)",
-    scalability: 5,
-    bestFor: ["Hız öncelikli", "< 50 parça", "Basit optimizasyon"],
-    supportsObjectives: false,
-    supportsPerformanceTuning: false,
-    recommendedItemRange: { min: 1, max: 50 },
-    icon: "⚡",
-  },
   bfd: {
     id: "bfd",
     name: "Best-Fit Decreasing",
@@ -345,18 +333,6 @@ export const ALGORITHM_CATALOG: Record<AlgorithmType, AlgorithmInfo> = {
     supportsPerformanceTuning: true,
     recommendedItemRange: { min: 10, max: 200 },
     icon: "🧬",
-  },
-  pooling: {
-    id: "pooling",
-    name: "Profile Pooling",
-    description: "Profil bazlı gruplama ve optimizasyon",
-    complexity: "O(n×m)",
-    scalability: 8,
-    bestFor: ["Çok profil", "Batch işlem", "Stok yönetimi"],
-    supportsObjectives: false,
-    supportsPerformanceTuning: false,
-    recommendedItemRange: { min: 1, max: 500 },
-    icon: "📊",
   },
 } as const;
 

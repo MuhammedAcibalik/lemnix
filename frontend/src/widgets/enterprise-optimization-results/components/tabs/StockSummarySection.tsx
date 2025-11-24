@@ -26,7 +26,7 @@ interface StockSummaryItem {
 
 interface StockSummarySectionProps {
   result: OptimizationResult;
-  onCuttingPlanDetails: (stock: StockSummaryItem) => void;
+  onCuttingPlanDetails: (stock: Cut) => void;
 }
 
 export const StockSummarySection: React.FC<StockSummarySectionProps> = ({
@@ -118,13 +118,25 @@ export const StockSummarySection: React.FC<StockSummarySectionProps> = ({
         <Grid container spacing={3}>
           {stockItems
             .sort((a, b) => b.length - a.length)
-            .map((stock) => (
-              <StockCard
-                key={stock.length}
-                stock={stock}
-                onCuttingPlanDetails={onCuttingPlanDetails}
-              />
-            ))}
+            .map((stock) => {
+              // Convert StockSummaryItem to Cut for onCuttingPlanDetails
+              const cut: Cut = {
+                stockLength: stock.length,
+                usedLength: stock.used,
+                remainingLength: stock.waste,
+                length: stock.length,
+                count: stock.count,
+                used: stock.used,
+                waste: stock.waste,
+              };
+              return (
+                <StockCard
+                  key={stock.length}
+                  stock={stock}
+                  onCuttingPlanDetails={() => onCuttingPlanDetails(cut)}
+                />
+              );
+            })}
         </Grid>
       </CardContent>
     </Card>

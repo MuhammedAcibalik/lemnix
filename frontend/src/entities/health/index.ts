@@ -11,7 +11,6 @@ export {
   getSystemHealth,
   getQueryPerformanceMetrics,
   getCachePerformanceMetrics,
-  getGPUStatus,
 } from "./api/healthApi";
 
 export {
@@ -20,7 +19,6 @@ export {
   useSystemHealth,
   useQueryPerformanceMetrics,
   useCachePerformanceMetrics,
-  useGPUStatus,
   healthKeys,
 } from "./api/healthQueries";
 
@@ -30,5 +28,4 @@ export type {
   SystemHealth,
   QueryPerformanceMetrics,
   CachePerformanceMetrics,
-  GPUStatus,
 } from "./model/types";

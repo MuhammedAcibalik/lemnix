@@ -5,16 +5,17 @@
  */
 
 import { useCallback, useEffect, useRef } from "react";
+import type { WindowWithIdleCallback } from "../types/browser";
 
 /**
  * Debounce function - delays execution until after wait milliseconds
  * have elapsed since the last invocation
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   fn: T,
   delay: number,
 ): (...args: Parameters<T>) => void {
+  // Type-safe wrapper that preserves function signature
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
   return function debounced(...args: Parameters<T>) {
@@ -30,8 +31,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttle function - ensures function is called at most once per limit milliseconds
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   fn: T,
   limit: number,
 ): (...args: Parameters<T>) => void {
@@ -88,16 +88,14 @@ export function scheduleIdleTask(
     return 0; // Server-side rendering fallback
   }
 
-  // Use type assertion to work around TypeScript control flow narrowing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const globalWindow = window as any;
+  const globalWindow = window as Window & WindowWithIdleCallback;
 
-  if ("requestIdleCallback" in globalWindow) {
+  if (globalWindow.requestIdleCallback) {
     return globalWindow.requestIdleCallback(callback, options);
   }
 
   // Fallback for browsers that don't support requestIdleCallback
-  return globalWindow.setTimeout(callback, 1);
+  return window.setTimeout(callback, 1);
 }
 
 /**
@@ -106,14 +104,12 @@ export function scheduleIdleTask(
 export function cancelIdleTask(id: number): void {
   if (typeof window === "undefined") return;
 
-  // Use type assertion to work around TypeScript control flow narrowing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const globalWindow = window as any;
+  const globalWindow = window as Window & WindowWithIdleCallback;
 
-  if ("cancelIdleCallback" in globalWindow) {
+  if (globalWindow.cancelIdleCallback) {
     globalWindow.cancelIdleCallback(id);
   } else {
-    globalWindow.clearTimeout(id);
+    window.clearTimeout(id);
   }
 }
 
@@ -142,8 +138,7 @@ export function useDebounce<T>(value: T, delay: number): T {
  * Hook for debounced callbacks
  * Returns a memoized debounced version of the callback
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useDebouncedCallback<T extends (...args: any[]) => any>(
+export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number,
 ): (...args: Parameters<T>) => void {
@@ -154,20 +149,23 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
   }, [callback]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useCallback(
-    debounce((...args: Parameters<T>) => {
-      callbackRef.current(...args);
-    }, delay),
+  const debouncedFn = useCallback(
+    debounce(
+      ((...args: Parameters<T>) => {
+        callbackRef.current(...args);
+      }) as (...args: unknown[]) => unknown,
+      delay,
+    ),
     [delay],
   );
+  return debouncedFn as (...args: Parameters<T>) => void;
 }
 
 /**
  * Hook for throttled callbacks
  * Returns a memoized throttled version of the callback
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useThrottledCallback<T extends (...args: any[]) => any>(
+export function useThrottledCallback<T extends (...args: unknown[]) => unknown>(
   callback: T,
   limit: number,
 ): (...args: Parameters<T>) => void {
@@ -178,12 +176,16 @@ export function useThrottledCallback<T extends (...args: any[]) => any>(
   }, [callback]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useCallback(
-    throttle((...args: Parameters<T>) => {
-      callbackRef.current(...args);
-    }, limit),
+  const throttledFn = useCallback(
+    throttle(
+      ((...args: Parameters<T>) => {
+        callbackRef.current(...args);
+      }) as (...args: unknown[]) => unknown,
+      limit,
+    ),
     [limit],
   );
+  return throttledFn as (...args: Parameters<T>) => void;
 }
 
 /**

@@ -74,10 +74,45 @@ export const GAAdvancedSettings: React.FC<GAAdvancedSettingsProps> = ({
   };
 
   const resetToDefaults = () => {
-    onChange({
+    const newSettings: PerformanceSettings = {
       ...settings,
-      ...DEFAULT_GA_SETTINGS,
-    });
+      mutationRate: DEFAULT_GA_SETTINGS.mutationRate,
+      crossoverRate: DEFAULT_GA_SETTINGS.crossoverRate,
+    };
+    // Only include undefined properties if they were explicitly set
+    const finalSettings: PerformanceSettings = {
+      ...newSettings,
+      ...(DEFAULT_GA_SETTINGS.populationSize === undefined
+        ? {}
+        : { populationSize: newSettings.populationSize }),
+      ...(DEFAULT_GA_SETTINGS.generations === undefined
+        ? {}
+        : { generations: newSettings.generations }),
+    };
+    const cleanedSettings: PerformanceSettings = {
+      ...(finalSettings.mutationRate !== undefined
+        ? { mutationRate: finalSettings.mutationRate }
+        : {}),
+      ...(finalSettings.crossoverRate !== undefined
+        ? { crossoverRate: finalSettings.crossoverRate }
+        : {}),
+      ...(finalSettings.maxExecutionTime !== undefined
+        ? { maxExecutionTime: finalSettings.maxExecutionTime }
+        : {}),
+      ...(finalSettings.parallelProcessing !== undefined
+        ? { parallelProcessing: finalSettings.parallelProcessing }
+        : {}),
+      ...(finalSettings.cacheResults !== undefined
+        ? { cacheResults: finalSettings.cacheResults }
+        : {}),
+      ...(finalSettings.convergenceThreshold !== undefined
+        ? { convergenceThreshold: finalSettings.convergenceThreshold }
+        : {}),
+      ...(finalSettings.stagnationThreshold !== undefined
+        ? { stagnationThreshold: finalSettings.stagnationThreshold }
+        : {}),
+    };
+    onChange(cleanedSettings);
     setShowWarning(false);
   };
 

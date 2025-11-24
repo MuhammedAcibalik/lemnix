@@ -24,6 +24,7 @@ import {
 } from "@/shared/hooks";
 import { CardV2 } from "@/shared";
 import { apiClient } from "@/shared/api/client";
+import { getCurrentISOWeek } from "@/shared/lib/dateUtils";
 
 // Import step components (WizardHeader and WizardTabs no longer used - sidebar pattern)
 import { CuttingListStep } from "./components/CuttingListStep";
@@ -34,11 +35,7 @@ import { StockLengthConfigDialog } from "./components/StockLengthConfigDialog";
 
 // Import algorithm selector
 import { AlgorithmModeSelector } from "@/widgets/algorithm-selector";
-import type {
-  AlgorithmMode,
-  ParetoOptimizationResult,
-} from "@/entities/algorithm";
-import type { GPUStatus } from "@/widgets/gpu-status";
+import type { AlgorithmMode } from "@/entities/algorithm";
 import type { Cut, CutSegment } from "./types";
 
 // Import types
@@ -85,17 +82,8 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
     useState<OptimizationResult | null>(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
 
-  // Algorithm mode state (Hybrid Approach)
+  // Algorithm mode state
   const [algorithmMode, setAlgorithmMode] = useState<AlgorithmMode>("standard");
-  const [paretoResult, setParetoResult] =
-    useState<ParetoOptimizationResult | null>(null);
-  const [showParetoFront, setShowParetoFront] = useState(false);
-
-  // GPU status state
-  const gpuStatus: GPUStatus = {
-    available: false,
-    lastChecked: new Date(),
-  };
 
   // Dialog state
   const [showInfoDialog, setShowInfoDialog] = useState(false);
@@ -312,7 +300,6 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
 
     try {
       // Get current ISO week for profile resolution
-      const { getCurrentISOWeek } = await import("../../shared/lib/dateUtils");
       const { week, year } = getCurrentISOWeek();
 
       // Extract unique work order ID and profile type for profile params
@@ -334,11 +321,8 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
         conditionMet: !!(workOrderId && profileType),
       });
 
-      // ✅ Hybrid Approach: Select endpoint based on algorithm mode
-      const endpoint =
-        algorithmMode === "advanced"
-          ? "/api/enterprise/optimize/pareto"
-          : "/api/enterprise/optimize";
+      // ✅ Select endpoint based on algorithm mode
+      const endpoint = "/api/enterprise/optimize";
 
       const requestBody = {
         items: items,
@@ -462,71 +446,45 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
       });
 
       if (result.success && result.data) {
-        // Handle Pareto front result (advanced mode)
-        if (result.data.paretoFront) {
-          console.log(
-            "[EnterpriseWizard] Pareto optimization completed:",
-            result.data.frontSize,
-            "solutions",
-          );
-          setParetoResult(result.data);
-          setShowParetoFront(true);
+        // Standard result (single solution)
+        console.log(
+          "[EnterpriseWizard] 🎯 Setting algorithm from result.data.algorithm:",
+          result.data.algorithm,
+        );
+        console.log(
+          "[EnterpriseWizard] 🎯 Type:",
+          typeof result.data.algorithm,
+        );
+        console.log(
+          "[EnterpriseWizard] 🎯 Full data object keys:",
+          Object.keys(result.data),
+        );
+        console.log(
+          "[EnterpriseWizard] 🎯 FULL DATA:",
+          JSON.stringify(result.data, null, 2).substring(0, 500),
+        );
 
-          // Set recommended solution (knee point) as primary result
-          const recommended = result.data.recommendedSolution;
-          setOptimizationResult({
-            success: true,
-            message: `Pareto optimization completed - ${result.data.frontSize} solutions found (showing knee point)`,
-            algorithm: result.data.algorithm,
-            efficiency: recommended.efficiency,
-            wastePercentage: recommended.wastePercentage || 0,
-            stockCount: recommended.stockCount || recommended.cuts?.length || 0,
-            totalCost: recommended.totalCost,
-            executionTime: recommended.executionTime,
-            cuts: recommended.cuts || [], // Add cuts data
-            metadata: result.data.metadata, // ✅ Profile badge için metadata
-          });
-        } else {
-          // Standard result (single solution)
-          console.log(
-            "[EnterpriseWizard] 🎯 Setting algorithm from result.data.algorithm:",
-            result.data.algorithm,
-          );
-          console.log(
-            "[EnterpriseWizard] 🎯 Type:",
-            typeof result.data.algorithm,
-          );
-          console.log(
-            "[EnterpriseWizard] 🎯 Full data object keys:",
-            Object.keys(result.data),
-          );
-          console.log(
-            "[EnterpriseWizard] 🎯 FULL DATA:",
-            JSON.stringify(result.data, null, 2).substring(0, 500),
-          );
+        console.log("[EnterpriseWizard] 🔍 Setting optimization result:", {
+          hasMetadata: !!result.data.metadata,
+          metadata: result.data.metadata,
+          metadataKeys: result.data.metadata
+            ? Object.keys(result.data.metadata)
+            : [],
+        });
 
-          console.log("[EnterpriseWizard] 🔍 Setting optimization result:", {
-            hasMetadata: !!result.data.metadata,
-            metadata: result.data.metadata,
-            metadataKeys: result.data.metadata
-              ? Object.keys(result.data.metadata)
-              : [],
-          });
-
-          setOptimizationResult({
-            success: true,
-            message: "Optimization completed successfully",
-            algorithm: result.data.algorithm, // ✅ FIX: Backend now sends display name directly
-            efficiency: result.data.efficiency,
-            wastePercentage: result.data.wastePercentage,
-            stockCount: result.data.stockCount,
-            totalCost: result.data.totalCost,
-            totalWaste: result.data.totalWaste, // ✅ EKLE
-            executionTime: result.data.executionTime,
-            cuts: result.data.cuts || [], // Add cuts data from response
-            metadata: result.data.metadata, // ✅ Profile badge için metadata
-          });
-        }
+        setOptimizationResult({
+          success: true,
+          message: "Optimization completed successfully",
+          algorithm: result.data.algorithm, // ✅ FIX: Backend now sends display name directly
+          efficiency: result.data.efficiency,
+          wastePercentage: result.data.wastePercentage,
+          stockCount: result.data.stockCount,
+          totalCost: result.data.totalCost,
+          totalWaste: result.data.totalWaste, // ✅ EKLE
+          executionTime: result.data.executionTime,
+          cuts: result.data.cuts || [], // Add cuts data from response
+          metadata: result.data.metadata, // ✅ Profile badge için metadata
+        });
 
         if (!completedSteps.includes(2)) {
           setCompletedSteps((prev) => [...prev, 2]);
@@ -665,7 +623,7 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
                     variant={
                       isActive ? "filled" : isCompleted ? "filled" : "outlined"
                     }
-                    icon={isCompleted ? <CheckCircleIcon /> : undefined}
+                    {...(isCompleted ? { icon: <CheckCircleIcon /> } : {})}
                     sx={{
                       cursor: isClickable ? "pointer" : "default",
                       fontWeight: isActive

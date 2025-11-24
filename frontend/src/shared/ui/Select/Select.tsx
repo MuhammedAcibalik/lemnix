@@ -130,10 +130,10 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
       <FormControl
         ref={ref}
         fullWidth
-        error={error}
-        disabled={disabled}
-        required={required}
-        sx={sx}
+        {...(error !== undefined ? { error } : {})}
+        {...(disabled !== undefined ? { disabled } : {})}
+        {...(required !== undefined ? { required } : {})}
+        {...(sx ? { sx } : {})}
       >
         {label && (
           <InputLabel id={labelId} sx={{ fontSize: sizeConfig.fontSize }}>
@@ -204,7 +204,9 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
             <MenuItem
               key={option.value}
               value={option.value}
-              disabled={option.disabled}
+              {...(option.disabled !== undefined
+                ? { disabled: option.disabled }
+                : {})}
               sx={{
                 display: "flex",
                 alignItems: "center",

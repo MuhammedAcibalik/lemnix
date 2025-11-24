@@ -285,54 +285,9 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                 </Typography>
               </Box>
 
-              {/* Advanced Mode Info Alert */}
-              {algorithmMode === "advanced" && (
-                <Alert
-                  severity="info"
-                  icon={<InfoIcon />}
-                  sx={{
-                    mb: tokens.spacing.md,
-                    borderRadius: `${tokens.borderRadius.xl}px`,
-                    backgroundColor: alpha(ds.colors.primary.main, 0.05),
-                    border: `1px solid ${alpha(ds.colors.primary.main, 0.2)}`,
-                    "& .MuiAlert-icon": {
-                      color: ds.colors.primary.main,
-                    },
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: `${tokens.typography.sm}px`,
-                      fontWeight: 600,
-                      mb: tokens.spacing.xs,
-                    }}
-                  >
-                    Gelişmiş Mod Aktif
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: `${tokens.typography.xs}px`,
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    Çok hedefli optimizasyon için{" "}
-                    <strong>NSGA-II algoritması</strong> kullanılacaktır. Bu mod
-                    Pareto front analizi ve alternatif çözümler sağlar.
-                  </Typography>
-                </Alert>
-              )}
-
               {/* Algorithm Cards Grid - SQUARE CARDS */}
               <Grid container spacing={tokens.layout.gridGap}>
                 {[
-                  {
-                    id: "ffd",
-                    name: "FFD",
-                    shortName: "First Fit",
-                    description: "Hızlı • Basit",
-                    icon: "⚡",
-                    color: ds.colors.warning.main,
-                  },
                   {
                     id: "bfd",
                     name: "BFD",
@@ -349,25 +304,9 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                     icon: "🧬",
                     color: ds.colors.secondary.main,
                   },
-                  {
-                    id: "pooling",
-                    name: "Pool",
-                    shortName: "Pooling",
-                    description: "Grup • Havuz",
-                    icon: "📊",
-                    color: ds.colors.success.main,
-                  },
-                  {
-                    id: "pattern-exact",
-                    name: "Pattern",
-                    shortName: "Exact",
-                    description: "Kesin • Optimal",
-                    icon: "🎖️",
-                    color: ds.colors.info.main || ds.colors.primary.main,
-                  },
                 ].map((algorithm) => {
                   const isSelected = params.algorithm === algorithm.id;
-                  const isDisabled = algorithmMode === "advanced"; // Disable in advanced mode
+                  const isDisabled = false;
 
                   return (
                     <Grid
@@ -570,7 +509,7 @@ export const ParametersStep: React.FC<ParametersStepProps> = ({
                 <AlgorithmModeSelector
                   value={algorithmMode}
                   onChange={onAlgorithmModeChange}
-                  itemCount={itemCount}
+                  {...(itemCount !== undefined ? { itemCount } : {})}
                 />
               </CardContent>
             </Card>

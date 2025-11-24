@@ -510,14 +510,15 @@ class CuttingListRouterFactory {
     const cache = new BoundMethodCache(this.controller);
     const registry = new RouteRegistry(router, cache);
 
-    console.log(
-      "🔧 [CuttingListRoutes] Registering routes:",
-      this.routes.length,
-    );
+    logger.info("[CuttingListRoutes] Registering routes", {
+      count: this.routes.length,
+    });
     this.routes.forEach((route) => {
-      console.log(
-        `  - ${route.method.toUpperCase()} ${route.path} -> ${route.handler}`,
-      );
+      logger.debug("[CuttingListRoutes] Route registered", {
+        method: route.method.toUpperCase(),
+        path: route.path,
+        handler: typeof route.handler === "string" ? route.handler : "function",
+      });
     });
 
     registry.registerBatch(this.routes);

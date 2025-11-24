@@ -72,7 +72,10 @@ export function useAuditLogs(
  * ```
  */
 export function useAuditStatistics(
-  options?: UseQueryOptions<AuditStatistics, Error>,
+  options?: Omit<
+    UseQueryOptions<AuditStatistics, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: auditKeys.statistics(),

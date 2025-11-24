@@ -33,7 +33,7 @@ export interface OptimizationItem {
 export interface CuttingListItem {
   id: string;
   workOrderId: string; // İş Emri
-  date: string; // Tarih
+  date?: string | undefined; // Tarih
   version: string; // Versiyon
   color: string; // Renk
   orderQuantity: number; // Sipariş Miktarı
@@ -151,8 +151,8 @@ export interface OptimizationObjective {
     | "maximize-quality";
   weight: number; // 0-1 arası ağırlık
   priority: "low" | "medium" | "high";
-  target?: number; // Hedef değer
-  tolerance?: number; // Tolerans
+  target?: number | undefined; // Hedef değer
+  tolerance?: number | undefined; // Tolerans
 }
 
 export interface OptimizationConstraints {
@@ -243,6 +243,14 @@ export interface OptimizationResult {
       source: "mapping" | "fallback";
       stockLengths: number[];
     };
+    [key: string]: unknown;
+  };
+  // Algorithm metadata from backend
+  algorithmMetadata?: {
+    readonly algorithm: string;
+    readonly version: string;
+    readonly parameters?: Record<string, unknown>;
+    readonly performance?: Record<string, unknown>;
     [key: string]: unknown;
   };
 }
@@ -625,12 +633,7 @@ export type DialogConfirmHandler = (data?: unknown) => void;
 
 export type LengthUnit = "mm" | "cm" | "m";
 // ALIGNED WITH BACKEND: 5 algorithms available
-export type AlgorithmType =
-  | "ffd"
-  | "bfd"
-  | "genetic"
-  | "pooling"
-  | "pattern-exact";
+export type AlgorithmType = "bfd" | "genetic";
 export type ObjectiveType =
   | "minimize-waste"
   | "maximize-efficiency"

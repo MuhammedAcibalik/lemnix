@@ -89,8 +89,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                   <MoneyIcon color="warning" />
                 </ListItemIcon>
                 <ListItemText
-                  primary={messages.overview.advantages.items[0].primary}
-                  secondary={messages.overview.advantages.items[0].secondary}
+                  primary={messages.overview.advantages.items[0]?.primary ?? ""}
+                  secondary={
+                    messages.overview.advantages.items[0]?.secondary ?? ""
+                  }
                 />
               </ListItem>
               <ListItem>
@@ -98,8 +100,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                   <EcoIcon color="success" />
                 </ListItemIcon>
                 <ListItemText
-                  primary={messages.overview.advantages.items[1].primary}
-                  secondary={messages.overview.advantages.items[1].secondary}
+                  primary={messages.overview.advantages.items[1]?.primary ?? ""}
+                  secondary={
+                    messages.overview.advantages.items[1]?.secondary ?? ""
+                  }
                 />
               </ListItem>
               <ListItem>
@@ -107,8 +111,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                   <SpeedIcon color="info" />
                 </ListItemIcon>
                 <ListItemText
-                  primary={messages.overview.advantages.items[2].primary}
-                  secondary={messages.overview.advantages.items[2].secondary}
+                  primary={messages.overview.advantages.items[2]?.primary ?? ""}
+                  secondary={
+                    messages.overview.advantages.items[2]?.secondary ?? ""
+                  }
                 />
               </ListItem>
               <ListItem>
@@ -116,8 +122,10 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
                   <TrendingUpIcon color="primary" />
                 </ListItemIcon>
                 <ListItemText
-                  primary={messages.overview.advantages.items[3].primary}
-                  secondary={messages.overview.advantages.items[3].secondary}
+                  primary={messages.overview.advantages.items[3]?.primary ?? ""}
+                  secondary={
+                    messages.overview.advantages.items[3]?.secondary ?? ""
+                  }
                 />
               </ListItem>
             </List>

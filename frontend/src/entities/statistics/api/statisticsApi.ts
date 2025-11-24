@@ -196,50 +196,62 @@ export async function getBatchStatistics(
     }
 
     // Return empty structure
-    return {
-      overview: types.includes("overview")
+    const result: BatchStatisticsResponse = {
+      ...(types.includes("overview")
         ? {
-            totalCuttingLists: 0,
-            totalWorkOrders: 0,
-            totalProfiles: 0,
-            totalProductSections: 0,
-            completedWorkOrders: 0,
-            pendingWorkOrders: 0,
-            mostUsedColor: "-",
-            mostUsedSize: "-",
-            averageEfficiency: 0,
-            totalWasteReduction: 0,
-            optimizationSuccessRate: 0,
-            activeUsers: 0,
-            systemUptime: 0,
+            overview: {
+              totalCuttingLists: 0,
+              totalWorkOrders: 0,
+              totalProfiles: 0,
+              totalProductSections: 0,
+              completedWorkOrders: 0,
+              pendingWorkOrders: 0,
+              mostUsedColor: "-",
+              mostUsedSize: "-",
+              averageEfficiency: 0,
+              totalWasteReduction: 0,
+              optimizationSuccessRate: 0,
+              activeUsers: 0,
+              systemUptime: 0,
+            },
           }
-        : undefined,
-      performance: types.includes("performance")
+        : {}),
+      ...(types.includes("performance")
         ? {
-            averageOptimizationTime: 0,
-            throughput: 0,
-            errorRate: 0,
+            performance: {
+              averageOptimizationTime: 0,
+              throughput: 0,
+              errorRate: 0,
+            },
           }
-        : undefined,
-      usage: types.includes("usage")
+        : {}),
+      ...(types.includes("usage")
         ? {
-            totalRequests: 0,
-            activeUsers: 0,
+            usage: {
+              totalRequests: 0,
+              activeUsers: 0,
+            },
           }
-        : undefined,
-      optimization: types.includes("optimization")
+        : {}),
+      ...(types.includes("optimization")
         ? {
-            totalOptimizations: 0,
-            averageEfficiency: 0,
+            optimization: {
+              totalOptimizations: 0,
+              averageEfficiency: 0,
+            },
           }
-        : undefined,
-      health: types.includes("health")
+        : {}),
+      ...(types.includes("health")
         ? {
-            status: "healthy",
-            uptime: 0,
+            health: {
+              status: "healthy",
+              uptime: 0,
+            },
           }
-        : undefined,
+        : {}),
     };
+
+    return result;
   }
 }
 

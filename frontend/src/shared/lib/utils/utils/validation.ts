@@ -168,7 +168,11 @@ class ValidationRuleBuilder<T> {
     errorMessage: string,
     sanitizer?: (value: T) => T,
   ): this {
-    this.rules.push({ validator, errorMessage, sanitizer });
+    const rule: ValidationRule<T> = { validator, errorMessage };
+    if (sanitizer) {
+      rule.sanitizer = sanitizer;
+    }
+    this.rules.push(rule);
     return this;
   }
 

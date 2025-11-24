@@ -35,6 +35,10 @@ export function useHeroMetrics(options?: DashboardMetricsOptions) {
   const formattedMetrics = useMemo<ReadonlyArray<FormattedHeroMetric>>(() => {
     if (!data) return [];
 
+    const weeklyTrend = calculateWeeklyTrend(data.cuttingListsThisWeek);
+    const efficiencyTrend = calculateTrend(data.efficiencyTrend);
+    const wasteTrendValue = calculateTrend(data.wasteTrend);
+
     return [
       {
         id: "active-optimizations",
@@ -42,7 +46,6 @@ export function useHeroMetrics(options?: DashboardMetricsOptions) {
         value: data.activeOptimizations,
         unit: "adet",
         color: "primary" as const,
-        trend: undefined, // No trend for real-time count
       },
       {
         id: "cutting-lists",
@@ -50,7 +53,7 @@ export function useHeroMetrics(options?: DashboardMetricsOptions) {
         value: data.cuttingListsThisWeek,
         unit: "liste",
         color: "success" as const,
-        trend: calculateWeeklyTrend(data.cuttingListsThisWeek),
+        ...(weeklyTrend !== undefined ? { trend: weeklyTrend } : {}),
       },
       {
         id: "avg-efficiency",
@@ -64,7 +67,7 @@ export function useHeroMetrics(options?: DashboardMetricsOptions) {
               ? "warning"
               : "error",
         sparklineData: data.efficiencyTrend,
-        trend: calculateTrend(data.efficiencyTrend),
+        ...(efficiencyTrend !== undefined ? { trend: efficiencyTrend } : {}),
       },
       {
         id: "waste-saved",
@@ -73,7 +76,7 @@ export function useHeroMetrics(options?: DashboardMetricsOptions) {
         unit: "m",
         color: "success" as const,
         sparklineData: data.wasteTrend,
-        trend: calculateTrend(data.wasteTrend),
+        ...(wasteTrendValue !== undefined ? { trend: wasteTrendValue } : {}),
       },
     ];
   }, [data]);
@@ -96,7 +99,7 @@ function calculateTrend(data?: ReadonlyArray<number>): number | undefined {
   const first = data[0];
   const last = data[data.length - 1];
 
-  if (first === 0) return undefined;
+  if (!first || first === 0 || !last) return undefined;
 
   return ((last - first) / first) * 100;
 }

@@ -5,10 +5,10 @@
  */
 
 export {
-  EmptyState,
+  EmptyStateV3 as EmptyState,
   NoDataEmptyState,
   SearchEmptyState,
   ErrorEmptyState,
   OfflineEmptyState,
 } from "./EmptyState";
-export type { EmptyStateProps } from "./EmptyState";
+export type { EmptyStateV3Props as EmptyStateProps } from "./EmptyState";

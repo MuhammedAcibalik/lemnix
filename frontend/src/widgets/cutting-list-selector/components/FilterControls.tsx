@@ -39,14 +39,14 @@ export const FilterControls: React.FC<FilterControlsProps> = ({
     field: keyof FilterControlsProps["filters"],
     value: boolean,
   ) => {
-    onFilterChange({ [field]: value });
+    onFilterChange({ ...filters, [field]: value });
   };
 
   const handleSelectChange = (
     field: keyof FilterControlsProps["filters"],
     value: string,
   ) => {
-    onFilterChange({ [field]: value });
+    onFilterChange({ ...filters, [field]: value });
   };
 
   return (

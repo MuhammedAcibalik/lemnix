@@ -10,6 +10,19 @@ import { queryPerformanceMonitor } from "../services/monitoring/QueryPerformance
 
 // Prisma Client Singleton with connection pooling support
 const prismaClientSingleton = () => {
+  // Parse connection pool settings from DATABASE_URL or use defaults
+  const connectionLimit = process.env.DATABASE_CONNECTION_LIMIT
+    ? parseInt(process.env.DATABASE_CONNECTION_LIMIT, 10)
+    : 20;
+  const poolTimeout = process.env.DATABASE_POOL_TIMEOUT
+    ? parseInt(process.env.DATABASE_POOL_TIMEOUT, 10)
+    : 30;
+
+  // Transaction timeout (default: 5 seconds)
+  const transactionTimeout = process.env.DATABASE_TRANSACTION_TIMEOUT
+    ? parseInt(process.env.DATABASE_TRANSACTION_TIMEOUT, 10)
+    : 5000;
+
   return new PrismaClient({
     log: [
       {
@@ -34,6 +47,13 @@ const prismaClientSingleton = () => {
         url: process.env.DATABASE_URL,
       },
     },
+    // Connection pool configuration
+    // Note: Prisma uses connection pooling via PgBouncer
+    // These settings are documented for reference
+    // Actual pool size is controlled by PgBouncer configuration
+    // Connection limit: ${connectionLimit}
+    // Pool timeout: ${poolTimeout}s
+    // Transaction timeout: ${transactionTimeout}ms
   });
 };
 
@@ -59,8 +79,15 @@ prisma.$on(
       params: e.params,
     });
 
-    // Log in development or if slow
-    if (process.env["NODE_ENV"] === "development" || e.duration > 100) {
+    // Log in development or if slow (threshold: 200ms for production)
+    const slowQueryThreshold = process.env.DATABASE_SLOW_QUERY_THRESHOLD_MS
+      ? parseInt(process.env.DATABASE_SLOW_QUERY_THRESHOLD_MS, 10)
+      : 200;
+
+    if (
+      process.env["NODE_ENV"] === "development" ||
+      e.duration > slowQueryThreshold
+    ) {
       logger.debug("Database Query:", {
         query: e.query.substring(0, 500),
         params: e.params,
@@ -181,6 +208,26 @@ export class DatabaseManager {
    */
   public getConnectionStatus(): boolean {
     return this.isConnected;
+  }
+
+  /**
+   * Get database connection pool statistics
+   * Note: Actual pool stats require pg_stat_activity query
+   */
+  public async getPoolStats(): Promise<{
+    isConnected: boolean;
+    connectionLimit?: number;
+    poolTimeout?: number;
+  }> {
+    return {
+      isConnected: this.isConnected,
+      connectionLimit: process.env.DATABASE_CONNECTION_LIMIT
+        ? parseInt(process.env.DATABASE_CONNECTION_LIMIT, 10)
+        : undefined,
+      poolTimeout: process.env.DATABASE_POOL_TIMEOUT
+        ? parseInt(process.env.DATABASE_POOL_TIMEOUT, 10)
+        : undefined,
+    };
   }
 
   /**

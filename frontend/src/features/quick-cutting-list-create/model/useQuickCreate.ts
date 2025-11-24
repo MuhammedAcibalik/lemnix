@@ -11,7 +11,7 @@ import type { CreateCuttingListRequest } from "@/entities/cutting-list";
 
 export interface QuickCreateParams {
   readonly title: string;
-  readonly description?: string;
+  readonly description?: string | undefined;
 }
 
 // Helper to get current week number
@@ -27,10 +27,7 @@ export function useQuickCreate() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { data: cuttingLists } = useCuttingLists({
-    staleTime: 0,
-    gcTime: 0,
-  });
+  const { data: cuttingLists } = useCuttingLists();
 
   const createMutation = useCreateCuttingList({
     onSuccess: () => {

@@ -3,10 +3,8 @@
  * Tests mathematical correctness, accounting accuracy, and performance improvements
  */
 
-import { FFDAlgorithm } from "../algorithms/FFDAlgorithm";
 import { BFDAlgorithm } from "../algorithms/BFDAlgorithm";
 import { GeneticAlgorithm } from "../algorithms/GeneticAlgorithm";
-import { PoolingAlgorithm } from "../algorithms/PoolingAlgorithm";
 import { StockCalculator } from "../helpers/StockCalculator";
 import type { OptimizationItem, OptimizationResult } from "../../../types";
 import { OptimizationContext } from "../core/OptimizationContext";
@@ -191,10 +189,8 @@ export class AlgorithmValidationTests {
     };
 
     const algorithms = [
-      new FFDAlgorithm(mockLogger),
       new BFDAlgorithm(mockLogger),
       new GeneticAlgorithm(mockLogger),
-      new PoolingAlgorithm(mockLogger),
     ];
 
     for (const algorithm of algorithms) {
@@ -363,10 +359,8 @@ export class AlgorithmValidationTests {
       };
 
       const algorithms = [
-        new FFDAlgorithm(mockLogger),
         new BFDAlgorithm(mockLogger),
         new GeneticAlgorithm(mockLogger),
-        new PoolingAlgorithm(mockLogger),
       ];
 
       const results: { [key: string]: OptimizationResult } = {};
@@ -496,10 +490,8 @@ export class AlgorithmValidationTests {
       };
 
       const algorithms = [
-        new FFDAlgorithm(mockLogger),
         new BFDAlgorithm(mockLogger),
         new GeneticAlgorithm(mockLogger),
-        new PoolingAlgorithm(mockLogger),
       ];
 
       for (const algorithm of algorithms) {
@@ -546,17 +538,11 @@ export class AlgorithmValidationTests {
 
       console.log("\n🎉 All validation tests completed successfully!");
       console.log("\n📊 Summary of Fixes Applied:");
-      console.log(
-        "✅ P0: Remaining length calculation fixed (FFD, BFD, Genetic)",
-      );
+      console.log("✅ P0: Remaining length calculation fixed (BFD, Genetic)");
       console.log("✅ P0: Finalize cuts validation added (all algorithms)");
-      console.log(
-        "✅ P1: Pooling greedy score improved (waste ratio normalization)",
-      );
       console.log(
         "✅ P1: Genetic fitness normalization fixed (converged populations)",
       );
-      console.log("✅ P2: Mixed bar ratio by material volume (Pooling)");
       console.log(
         "✅ P2: Stock selection with quantity awareness (all algorithms)",
       );

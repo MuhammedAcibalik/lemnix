@@ -8,7 +8,7 @@ import React from "react";
 import { Box, Typography, Tabs, Tab } from "@mui/material";
 import { Animation as AnimationIcon } from "@mui/icons-material";
 import { useTheme } from "@mui/material";
-import { messages } from "../constants";
+import { messages, tabConfig } from "../constants";
 import { SimulationTabProps } from "../types";
 import { TrainingOverview } from "./TrainingOverview";
 import { SafetyTab } from "./SafetyTab";
@@ -77,9 +77,11 @@ export const SimulationTab: React.FC<SimulationTabProps> = ({
             },
           }}
         >
-          {messages.tabConfig.trainingTabs.map((tab) => (
-            <Tab key={tab.value} label={tab.label} value={tab.value} />
-          ))}
+          {tabConfig.trainingTabs?.map(
+            (tab: { value: string; label: string }) => (
+              <Tab key={tab.value} label={tab.label} value={tab.value} />
+            ),
+          ) ?? []}
         </Tabs>
       </Box>
 
@@ -102,21 +104,63 @@ export const SimulationTab: React.FC<SimulationTabProps> = ({
 
         {activeTab === "safety" && (
           <SafetyTab
-            workshopState={operatorProfile.workshopState || {}}
+            workshopState={
+              operatorProfile.workshopState ?? {
+                machineOn: false,
+                safetyGearOn: false,
+                materialLoaded: false,
+                cuttingInProgress: false,
+                currentMaterial: null,
+                machineSettings: {
+                  bladeSpeed: 0,
+                  cuttingDepth: 0,
+                  feedRate: 0,
+                  coolantFlow: 0,
+                },
+              }
+            }
             onWorkshopStateChange={() => {}}
           />
         )}
 
         {activeTab === "machine" && (
           <MachineTab
-            workshopState={operatorProfile.workshopState || {}}
+            workshopState={
+              operatorProfile.workshopState ?? {
+                machineOn: false,
+                safetyGearOn: false,
+                materialLoaded: false,
+                cuttingInProgress: false,
+                currentMaterial: null,
+                machineSettings: {
+                  bladeSpeed: 0,
+                  cuttingDepth: 0,
+                  feedRate: 0,
+                  coolantFlow: 0,
+                },
+              }
+            }
             onWorkshopStateChange={() => {}}
           />
         )}
 
         {activeTab === "cutting" && (
           <CuttingTab
-            workshopState={operatorProfile.workshopState || {}}
+            workshopState={
+              operatorProfile.workshopState ?? {
+                machineOn: false,
+                safetyGearOn: false,
+                materialLoaded: false,
+                cuttingInProgress: false,
+                currentMaterial: null,
+                machineSettings: {
+                  bladeSpeed: 0,
+                  cuttingDepth: 0,
+                  feedRate: 0,
+                  coolantFlow: 0,
+                },
+              }
+            }
             onWorkshopStateChange={() => {}}
           />
         )}

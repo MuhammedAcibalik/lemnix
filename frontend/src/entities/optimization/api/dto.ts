@@ -150,7 +150,7 @@ export function normalizeOptimizationResult(
   // Normalize algorithm metadata
   const algorithmMetadata = backendResult.algorithmMetadata
     ? normalizeAlgorithmMetadata(
-        backendResult.algorithmMetadata as BackendAlgorithmMetadata,
+        backendResult.algorithmMetadata as unknown as BackendAlgorithmMetadata,
       )
     : undefined;
 
@@ -159,7 +159,7 @@ export function normalizeOptimizationResult(
     ? normalizeCostBreakdown(backendResult.costBreakdown)
     : undefined;
 
-  return {
+  const result: OptimizationResult = {
     cuts,
     totalStocks,
     totalWaste: backendResult.totalWaste,
@@ -179,31 +179,36 @@ export function normalizeOptimizationResult(
       totalPieces: 0,
     },
     recommendations,
-    algorithmMetadata,
-    costBreakdown,
-    qualityScore: backendResult.qualityScore,
-    confidence: backendResult.confidence,
-    optimizationScore: backendResult.optimizationScore,
-    materialUtilization: backendResult.materialUtilization,
-    reclaimableWastePercentage: backendResult.reclaimableWastePercentage,
+    ...(backendResult.qualityScore !== undefined
+      ? { qualityScore: backendResult.qualityScore }
+      : {}),
+    ...(backendResult.confidence !== undefined
+      ? { confidence: backendResult.confidence }
+      : {}),
+    ...(backendResult.optimizationScore !== undefined
+      ? { optimizationScore: backendResult.optimizationScore }
+      : {}),
+    ...(backendResult.materialUtilization !== undefined
+      ? { materialUtilization: backendResult.materialUtilization }
+      : {}),
+    ...(backendResult.reclaimableWastePercentage !== undefined
+      ? { reclaimableWastePercentage: backendResult.reclaimableWastePercentage }
+      : {}),
+    ...(algorithmMetadata ? { algorithmMetadata } : {}),
+    ...(costBreakdown ? { costBreakdown } : {}),
   };
+
+  return result;
 }
 
 /**
  * Normalize algorithm type string to AlgorithmType
  */
-function normalizeAlgorithmType(
-  algorithm: string,
-): "ffd" | "bfd" | "genetic" | "pooling" {
+function normalizeAlgorithmType(algorithm: string): "bfd" | "genetic" {
   const normalized = algorithm.toLowerCase();
 
   // Handle various backend naming variations
   switch (normalized) {
-    case "ffd":
-    case "first-fit-decreasing":
-    case "first_fit_decreasing":
-      return "ffd";
-
     case "bfd":
     case "best-fit-decreasing":
     case "best_fit_decreasing":
@@ -214,11 +219,6 @@ function normalizeAlgorithmType(
     case "genetic_algorithm":
     case "ga":
       return "genetic";
-
-    case "pooling":
-    case "profile-pooling":
-    case "profile_pooling":
-      return "pooling";
 
     default:
       console.warn(
@@ -239,7 +239,7 @@ function normalizeCut(backendCut: BackendCut): Cut {
     (backendCut as { profileType?: string; materialType?: string })
       .materialType;
 
-  return {
+  const cut: Cut = {
     id: (backendCut.id ??
       `cut-${Math.random().toString(36).substr(2, 9)}`) as unknown as ID,
     stockLength: backendCut.stockLength,
@@ -251,9 +251,16 @@ function normalizeCut(backendCut: BackendCut): Cut {
     ),
     isReclaimable:
       (backendCut as { isReclaimable?: boolean }).isReclaimable ?? false,
-    workOrderId: (backendCut as { workOrderId?: string }).workOrderId,
-    profileType,
-    quantity: (backendCut as { quantity?: number }).quantity,
+  };
+
+  const workOrderId = (backendCut as { workOrderId?: string }).workOrderId;
+  const quantity = (backendCut as { quantity?: number }).quantity;
+
+  return {
+    ...cut,
+    ...(workOrderId ? { workOrderId } : {}),
+    ...(profileType ? { profileType } : {}),
+    ...(quantity !== undefined ? { quantity } : {}),
   };
 }
 
@@ -284,7 +291,9 @@ function normalizeSegment(backendSegment: BackendSegment): CuttingSegment {
     profileType: backendSegment.profileType,
     color: (backendSegment as { color?: string }).color ?? "#000000",
     version: (backendSegment as { version?: string }).version ?? "1.0",
-    note: (backendSegment as { note?: string }).note,
+    ...((backendSegment as { note?: string }).note
+      ? { note: (backendSegment as { note?: string }).note }
+      : {}),
   };
 }
 
@@ -328,14 +337,18 @@ function normalizeWasteDistribution(
 function normalizeRecommendation(
   rec: BackendRecommendation,
 ): OptimizationRecommendation {
-  return {
+  const recommendation: OptimizationRecommendation = {
     type:
       (rec.type as "performance" | "cost" | "quality" | "waste") ??
       "performance",
     priority: (rec.priority as "low" | "medium" | "high") ?? "medium",
     message: rec.message ?? "",
-    impact: rec.impact,
-    actionable: rec.actionable,
+  };
+
+  return {
+    ...recommendation,
+    ...(rec.impact !== undefined ? { impact: rec.impact } : {}),
+    ...(rec.actionable !== undefined ? { actionable: rec.actionable } : {}),
   };
 }
 
@@ -345,7 +358,7 @@ function normalizeRecommendation(
 function normalizeAlgorithmMetadata(
   metadata: BackendAlgorithmMetadata,
 ): AlgorithmMetadata {
-  return {
+  const result: AlgorithmMetadata = {
     effectiveComplexity: metadata.effectiveComplexity ?? "N/A",
     actualGenerations: metadata.actualGenerations ?? 0,
     convergenceReason:
@@ -355,12 +368,22 @@ function normalizeAlgorithmMetadata(
         | "stagnation") ?? "max_generations",
     bestFitness: metadata.bestFitness ?? 0,
     executionTimeMs: metadata.executionTimeMs ?? 0,
-    deterministicSeed:
-      typeof metadata.deterministicSeed === "number"
-        ? metadata.deterministicSeed
-        : undefined,
-    populationSize: (metadata as { populationSize?: number }).populationSize,
-    finalGeneration: (metadata as { finalGeneration?: number }).finalGeneration,
+  };
+
+  const deterministicSeed =
+    typeof metadata.deterministicSeed === "number"
+      ? metadata.deterministicSeed
+      : undefined;
+  const populationSize = (metadata as { populationSize?: number })
+    .populationSize;
+  const finalGeneration = (metadata as { finalGeneration?: number })
+    .finalGeneration;
+
+  return {
+    ...result,
+    ...(deterministicSeed !== undefined ? { deterministicSeed } : {}),
+    ...(populationSize !== undefined ? { populationSize } : {}),
+    ...(finalGeneration !== undefined ? { finalGeneration } : {}),
   };
 }
 
@@ -370,14 +393,21 @@ function normalizeAlgorithmMetadata(
 function normalizeCostBreakdown(
   breakdown: BackendCostBreakdown,
 ): CostBreakdown {
-  return {
+  const result: CostBreakdown = {
     materialCost: breakdown.materialCost ?? 0,
     laborCost: breakdown.laborCost ?? 0,
     wasteCost: breakdown.wasteCost ?? 0,
     setupCost: breakdown.setupCost ?? 0,
     totalCost: breakdown.totalCost ?? 0,
-    cuttingCost: breakdown.cuttingCost,
-    timeCost: (breakdown as { timeCost?: number }).timeCost,
+  };
+
+  const cuttingCost = breakdown.cuttingCost;
+  const timeCost = (breakdown as { timeCost?: number }).timeCost;
+
+  return {
+    ...result,
+    ...(cuttingCost !== undefined ? { cuttingCost } : {}),
+    ...(timeCost !== undefined ? { timeCost } : {}),
   };
 }
 

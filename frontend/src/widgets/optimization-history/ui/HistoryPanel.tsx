@@ -36,7 +36,10 @@ import {
   Speed as TimeIcon,
 } from "@mui/icons-material";
 import { useDesignSystem } from "@/shared/hooks";
-import { useOptimizationHistory } from "@/entities/optimization/api/optimizationQueries";
+import {
+  useOptimizationHistory,
+  optimizationKeys,
+} from "@/entities/optimization/api/optimizationQueries";
 import type { AlgorithmType } from "@/entities/optimization/model/types";
 import { FadeIn, ScaleIn } from "@/shared";
 import { formatDistanceToNow } from "date-fns";
@@ -58,20 +61,18 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({
   );
   const pageSize = 10;
 
+  const queryParams = {
+    page,
+    pageSize,
+    ...(algorithmFilter !== "all" ? { algorithm: algorithmFilter } : {}),
+  };
   const {
     data: history,
     isLoading,
     refetch,
-  } = useOptimizationHistory(
-    {
-      page,
-      pageSize,
-      algorithm: algorithmFilter === "all" ? undefined : algorithmFilter,
-    },
-    {
-      staleTime: 1 * 60 * 1000, // 1 minute
-    },
-  );
+  } = useOptimizationHistory(queryParams, {
+    staleTime: 1 * 60 * 1000, // 1 minute
+  } as Parameters<typeof useOptimizationHistory>[1]);
 
   const handleFilterChange = (algorithm: AlgorithmType | "all") => {
     setAlgorithmFilter(algorithm);

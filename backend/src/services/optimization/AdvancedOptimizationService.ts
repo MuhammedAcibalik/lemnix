@@ -44,20 +44,15 @@ import { ProfileResolverService } from "../ProfileResolverService";
 import { PrismaClient } from "@prisma/client";
 
 // Import algorithm implementations
-import { FFDAlgorithm } from "./algorithms/FFDAlgorithm";
 import { BFDAlgorithm } from "./algorithms/BFDAlgorithm";
 import { GeneticAlgorithm } from "./algorithms/GeneticAlgorithm";
-import { PoolingAlgorithm } from "./algorithms/PoolingAlgorithm";
-import { PatternExactAlgorithm } from "./algorithms/PatternExactAlgorithm";
 import type { AlgorithmMetadata } from "./core/IOptimizationAlgorithm";
 import type { BaseAlgorithm } from "./core/BaseAlgorithm";
 
-// Import NSGA-II and smart selector
 import {
-  NSGAIIAlgorithm,
-  type ParetoOptimizationResult,
-} from "./algorithms/advanced/NSGAII";
-import { SmartAlgorithmSelector, type AlgorithmMode } from "./AlgorithmFactory";
+  SmartAlgorithmSelector,
+  type AlgorithmMode,
+} from "./AlgorithmModeSelector";
 
 /**
  * Real data access interfaces (optional)
@@ -113,24 +108,6 @@ export class AdvancedOptimizationService {
    * Register all available algorithms
    */
   private registerAlgorithms(): void {
-    // Register FFD
-    this.algorithmFactory.register(FFDAlgorithm, {
-      name: OptimizationAlgorithm.FIRST_FIT_DECREASING,
-      displayName: "First Fit Decreasing (FFD)",
-      description: "Industry-standard bin packing, balanced quality/speed",
-      complexity: "O(n²)",
-      scalability: 8,
-      recommendedFor: [
-        "General-purpose",
-        "Balanced optimization",
-        "Medium-large datasets",
-      ],
-      notRecommendedFor: [
-        "Very large datasets (>5000 items)",
-        "Real-time requirements",
-      ],
-    } satisfies AlgorithmMetadata);
-
     // Register BFD
     this.algorithmFactory.register(BFDAlgorithm, {
       name: OptimizationAlgorithm.BEST_FIT_DECREASING,
@@ -149,61 +126,20 @@ export class AdvancedOptimizationService {
     // Register Genetic
     this.algorithmFactory.register(GeneticAlgorithm, {
       name: OptimizationAlgorithm.GENETIC_ALGORITHM,
-      displayName: "Genetic Algorithm (GPU-Accelerated)",
-      description: "Evolutionary optimization with WebGPU support",
+      displayName: "Genetic Algorithm",
+      description: "Evolutionary optimization",
       complexity: "O(n²)",
       scalability: 7,
       recommendedFor: [
         "Complex problems",
-        "GPU available",
+        "Quality-focused",
         "Quality-focused",
         "Multi-objective",
       ],
       notRecommendedFor: [
         "Small datasets (<20 items)",
-        "No GPU available",
         "Real-time requirements",
-      ],
-    } satisfies AlgorithmMetadata);
-
-    // Register Pooling
-    this.algorithmFactory.register(PoolingAlgorithm, {
-      name: OptimizationAlgorithm.PROFILE_POOLING,
-      displayName: "Profile Pooling",
-      description:
-        "Same-profile consolidation for multi-work-order optimization",
-      complexity: "O(n²)",
-      scalability: 8,
-      recommendedFor: [
-        "Multi-work-order",
-        "Same-profile items",
-        "Batch optimization",
-      ],
-      notRecommendedFor: [
-        "Single work order",
-        "Diverse profiles",
-        "Real-time optimization",
-      ],
-    } satisfies AlgorithmMetadata);
-
-    // Register Pattern Exact
-    this.algorithmFactory.register(PatternExactAlgorithm, {
-      name: OptimizationAlgorithm.PATTERN_EXACT,
-      displayName: "Pattern Exact Search",
-      description:
-        "Exact pattern-based optimization with guaranteed minimum stocks and waste",
-      complexity: "O(2^n)",
-      scalability: 7,
-      recommendedFor: [
-        "Exact solutions",
-        "Guaranteed optimality",
-        "Small-medium problems (<100 items)",
-        "Critical waste minimization",
-      ],
-      notRecommendedFor: [
-        "Very large problems (>200 items)",
-        "Real-time optimization",
-        "Single stock length only",
+        "Real-time requirements",
       ],
     } satisfies AlgorithmMetadata);
 
@@ -663,7 +599,8 @@ export class AdvancedOptimizationService {
         this.logger.info("Using FFD algorithm (user selected)", {
           itemCount: items.length,
         });
-        algorithm = new FFDAlgorithm(this.logger);
+        // FFDAlgorithm removed - using BFD instead
+        algorithm = new BFDAlgorithm(this.logger);
       } else if (selectedAlgo === "genetic") {
         this.logger.info("Using Genetic algorithm (user selected)", {
           itemCount: items.length,
@@ -673,17 +610,14 @@ export class AdvancedOptimizationService {
         this.logger.info("Using Pooling algorithm (user selected)", {
           itemCount: items.length,
         });
-        algorithm = new PoolingAlgorithm(this.logger);
+        // PoolingAlgorithm removed - using BFD instead
+        algorithm = new BFDAlgorithm(this.logger);
       } else if (selectedAlgo === "pattern-exact") {
         this.logger.info("Using Pattern Exact algorithm (user selected)", {
           itemCount: items.length,
         });
-        algorithm = new PatternExactAlgorithm(this.logger);
-      } else if (mode === "advanced") {
-        this.logger.info("Using NSGA-II (advanced mode)", {
-          itemCount: items.length,
-        });
-        algorithm = new NSGAIIAlgorithm(this.logger);
+        // PatternExactAlgorithm removed - using BFD instead
+        algorithm = new BFDAlgorithm(this.logger);
       } else {
         // Fallback to smart selector
         this.logger.info("Using SmartAlgorithmSelector (fallback)", {
@@ -694,7 +628,7 @@ export class AdvancedOptimizationService {
         algorithm = this.smartSelector.selectAlgorithm(context, mode);
       }
 
-      // Run optimization (returns knee point for NSGA-II)
+      // Run optimization
       const result = await algorithm.optimize(context);
 
       // Add profile information to metadata if available
@@ -743,88 +677,6 @@ export class AdvancedOptimizationService {
       });
       throw new Error(
         `Optimization with mode failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-        { cause: error },
-      );
-    }
-  }
-
-  /**
-   * Advanced multi-objective optimization
-   * Returns full Pareto front (NSGA-II only)
-   *
-   * @param items - Items to optimize
-   * @param params - Optimization parameters
-   * @param materialStockLengths - Available stock lengths
-   * @returns Pareto optimization result with full front
-   */
-  public async optimizeMultiObjective(
-    items: OptimizationItem[],
-    params: AdvancedOptimizationParams,
-    materialStockLengths?: MaterialStockLength[],
-  ): Promise<ParetoOptimizationResult> {
-    const startTime = performance.now();
-    const requestId = this.generateRequestId();
-
-    this.logger.info("Starting multi-objective optimization (NSGA-II)", {
-      requestId,
-      items: items.length,
-      objectives: params.objectives.length,
-    });
-
-    try {
-      const constraints = this.mergeConstraints(params.constraints);
-
-      const context = new OptimizationContext({
-        items,
-        materialStockLengths: materialStockLengths ?? undefined,
-        constraints,
-        objectives: params.objectives,
-        performance: params.performance,
-        costModel: params.costModel || this.defaultCostModel,
-        logger: this.logger,
-        startTime,
-        requestId,
-      });
-
-      // Create NSGA-II instance
-      const nsgaII = new NSGAIIAlgorithm(this.logger);
-
-      // Run multi-objective optimization
-      const result = await nsgaII.optimizeMultiObjective(context);
-
-      const executionTime = performance.now() - startTime;
-      // Anlık teşhis log'u (geçici)
-      this.logger.error("[MO-FAIL preflight]", {
-        hypervolume_raw: result.hypervolume,
-        spread_raw: result.spread,
-        spacing_raw: result.spacing,
-        paretoFrontSize: result.frontSize ?? null,
-        requestId: requestId ?? null,
-        resultKeys: Object.keys(result),
-      });
-
-      // Güvenli biçimlendirme - tüm .toFixed çağrıları kaldırıldı
-      const hv = fmtNum(result.hypervolume, 4);
-      const spread = fmtNum(result.spread, 4);
-      const spacing = fmtNum(result.spacing, 4);
-
-      this.logger.info("Multi-objective optimization completed", {
-        requestId,
-        frontSize: result.frontSize || 0,
-        hypervolume: hv,
-        spread: spread,
-        spacing: spacing,
-        executionTime: fmtStr(executionTime, 2) ?? "0.00",
-      });
-
-      return result;
-    } catch (error) {
-      this.logger.error("Multi-objective optimization failed", {
-        requestId,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-      throw new Error(
-        `Multi-objective optimization failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         { cause: error },
       );
     }
@@ -890,11 +742,8 @@ export class AdvancedOptimizationService {
    */
   private mapLabelToEnum(label: AlgorithmLabel): OptimizationAlgorithm {
     const mapping: Record<AlgorithmLabel, OptimizationAlgorithm> = {
-      ffd: OptimizationAlgorithm.FIRST_FIT_DECREASING,
       bfd: OptimizationAlgorithm.BEST_FIT_DECREASING,
       genetic: OptimizationAlgorithm.GENETIC_ALGORITHM,
-      pooling: OptimizationAlgorithm.PROFILE_POOLING,
-      "pattern-exact": OptimizationAlgorithm.PATTERN_EXACT,
     };
     return mapping[label];
   }
@@ -929,7 +778,8 @@ export class AdvancedOptimizationService {
     if (algo === "genetic") return "Genetic Algorithm";
     if (algo === "pooling") return "Profile Pooling";
     if (algo === "pattern-exact") return "Pattern Exact Search";
-    if (mode === "advanced") return "NSGA-II";
+    // Advanced mode removed - NSGA-II algorithm removed
+    // if (mode === "advanced") return "NSGA-II";
 
     return "Smart Algorithm";
   }

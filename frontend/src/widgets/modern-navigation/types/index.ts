@@ -103,7 +103,7 @@ export interface NavigationState {
 
 export interface NavigationHandlers {
   onPageChange: (page: string) => void;
-  onToggleSidebar?: () => void;
+  onToggleSidebar?: (() => void) | undefined;
   onCommandPaletteToggle: (open: boolean) => void;
   onUserMenuToggle: (anchor: HTMLElement | null) => void;
 }
@@ -116,8 +116,8 @@ export interface AppBarProps {
   isMobile: boolean;
   currentPageItem: NavigationItem | undefined;
   /** Active page id (e.g. 'home', 'cutting-list') for fallback resolution */
-  activePage?: string;
-  onToggleSidebar?: () => void;
+  activePage?: string | undefined;
+  onToggleSidebar?: (() => void) | undefined;
   onCommandPaletteOpen: () => void;
   onUserMenuOpen: (event: React.MouseEvent<HTMLElement>) => void;
   userMenuAnchor: HTMLElement | null;
@@ -126,7 +126,8 @@ export interface AppBarProps {
 export interface CommandPaletteProps {
   open: boolean;
   onClose: () => void;
-  onCommandSelect?: (command: CommandItem) => void;
+  onCommandSelect?: ((command: CommandItem) => void) | undefined;
+  onPageChange?: ((page: string) => void) | undefined;
 }
 
 export interface UserMenuProps {

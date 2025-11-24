@@ -47,8 +47,10 @@ export const CategoryHeader: React.FC<CategoryHeaderProps> = ({
         },
       }}
     >
-      <Box sx={{ color: theme === "dark" ? "#ffffff" : "#000000" }}>
-        {React.createElement(icon, { sx: { fontSize: 16 } })}
+      <Box
+        sx={{ color: theme === "dark" ? "#ffffff" : "#000000", fontSize: 16 }}
+      >
+        {icon}
       </Box>
       <Typography
         variant="subtitle2"

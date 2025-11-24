@@ -253,7 +253,7 @@ export const StatisticsPage: React.FC = () => {
                 sx={{
                   fontSize: { xs: "1.75rem", md: "2.25rem" },
                   fontWeight: 800,
-                  background: ds.gradients.premium,
+                  background: ds.gradients.primary.default,
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   mb: ds.spacing["1"],
@@ -285,7 +285,7 @@ export const StatisticsPage: React.FC = () => {
                       boxShadow: ds.shadows.soft.sm,
                       transition: ds.transitions.base,
                       "&:hover": {
-                        background: ds.gradients.primaryHover,
+                        background: ds.gradients.primary.soft,
                         transform: "translateY(-2px)",
                         boxShadow: ds.shadows.soft.md,
                       },
@@ -311,7 +311,7 @@ export const StatisticsPage: React.FC = () => {
                     boxShadow: ds.shadows.soft.sm,
                     transition: ds.transitions.base,
                     "&:hover": {
-                      background: ds.gradients.secondaryReverse,
+                      background: ds.gradients.secondary.reverse,
                       transform: "translateY(-2px)",
                       boxShadow: ds.shadows.soft.md,
                     },

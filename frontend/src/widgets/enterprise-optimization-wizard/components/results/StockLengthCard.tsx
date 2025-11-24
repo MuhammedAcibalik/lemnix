@@ -52,7 +52,7 @@ export const StockLengthCard: React.FC<StockLengthCardProps> = ({ group }) => {
             width: 36,
             height: 36,
             borderRadius: `${ds.borderRadius.md}px`,
-            background: ds.gradients.primarySoft,
+            background: ds.gradients.primary.soft,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

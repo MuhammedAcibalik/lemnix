@@ -10,7 +10,7 @@
  */
 
 import { Request, Response, NextFunction } from "express";
-import { logger } from "../utils/logger";
+import { logger } from "../services/logger";
 
 export interface LoggedRequest extends Request {
   startTime?: number;

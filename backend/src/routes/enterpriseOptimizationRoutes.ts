@@ -37,14 +37,7 @@ type FnKeys<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
 
 const VERSION = "5.0.0" as const;
 
-const OPTIMIZATION_ALGORITHMS = [
-  "ffd",
-  "bfd",
-  "genetic",
-  "pooling",
-  "nsga-ii",
-  "pattern-exact",
-] as const;
+const OPTIMIZATION_ALGORITHMS = ["bfd", "genetic"] as const;
 
 type OptimizationAlgorithm = (typeof OPTIMIZATION_ALGORITHMS)[number];
 
@@ -231,14 +224,6 @@ class EnterpriseOptimizationRouterFactory {
         path: "/optimize-by-profile",
         method: "post",
         handler: "optimizeByProfileType",
-        requiresAuth: true,
-        permission: Permission.START_OPTIMIZATION,
-        rateLimit: "optimization",
-      },
-      {
-        path: "/optimize/pareto",
-        method: "post",
-        handler: "optimizePareto",
         requiresAuth: true,
         permission: Permission.START_OPTIMIZATION,
         rateLimit: "optimization",

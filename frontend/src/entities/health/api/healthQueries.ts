@@ -13,7 +13,6 @@ import {
   getSystemHealth,
   getQueryPerformanceMetrics,
   getCachePerformanceMetrics,
-  getGPUStatus,
 } from "./healthApi";
 
 /**
@@ -26,7 +25,6 @@ export const healthKeys = {
   system: () => [...healthKeys.all, "system"] as const,
   queries: () => [...healthKeys.all, "queries"] as const,
   cache: () => [...healthKeys.all, "cache"] as const,
-  gpu: () => [...healthKeys.all, "gpu"] as const,
 } as const;
 
 /**
@@ -90,19 +88,6 @@ export function useCachePerformanceMetrics() {
     queryFn: getCachePerformanceMetrics,
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
-    retry: 1,
-  });
-}
-
-/**
- * Get GPU status
- */
-export function useGPUStatus() {
-  return useQuery({
-    queryKey: healthKeys.gpu(),
-    queryFn: getGPUStatus,
-    staleTime: 60 * 1000, // 1 minute (GPU status doesn't change often)
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
     retry: 1,
   });
 }

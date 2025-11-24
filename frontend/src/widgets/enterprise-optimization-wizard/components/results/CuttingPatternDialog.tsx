@@ -165,7 +165,10 @@ export const CuttingPatternDialog: React.FC<CuttingPatternDialogProps> = ({
                   color: ds.colors.success.main,
                 }}
               >
-                {plan.efficiency}%
+                %
+                {(Math.round(plan.efficiency * 10) / 10)
+                  .toFixed(1)
+                  .replace(".", ",")}
               </Typography>
             </Box>
           </Stack>
@@ -466,7 +469,10 @@ export const CuttingPatternDialog: React.FC<CuttingPatternDialogProps> = ({
                           fontWeight: ds.typography.fontWeight.semibold,
                         }}
                       >
-                        Verimlilik: {group.efficiency}%
+                        Verimlilik: %
+                        {(Math.round(group.efficiency * 10) / 10)
+                          .toFixed(1)
+                          .replace(".", ",")}
                       </Typography>
                     </Stack>
                   </Box>

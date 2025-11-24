@@ -12,7 +12,7 @@ import { z } from "zod";
 /**
  * Algorithm type schema
  */
-export const algorithmTypeSchema = z.enum(["ffd", "bfd", "genetic", "pooling"]);
+export const algorithmTypeSchema = z.enum(["bfd", "genetic"]);
 
 /**
  * Objective type schema
@@ -214,8 +214,10 @@ export const optimizationRequestSchema = z
         0,
       );
 
-      if (data.params.algorithm === "ffd" && itemCount > 50) {
-        return false; // Warning: FFD not recommended for > 50 items
+      // FFD algorithm removed - validation always passes
+      // eslint-disable-next-line no-constant-condition
+      if (false) {
+        return false;
       }
       if (data.params.algorithm === "genetic" && itemCount < 10) {
         return false; // Warning: Genetic overkill for < 10 items
