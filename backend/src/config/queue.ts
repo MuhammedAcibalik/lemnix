@@ -75,6 +75,7 @@ const queueOptions: QueueOptions = {
 
 /**
  * Worker options
+ * Configured for sandboxed processor execution
  */
 const workerOptions: WorkerOptions = {
   ...getRedisConnection(),
@@ -83,6 +84,15 @@ const workerOptions: WorkerOptions = {
     max: 10, // Max 10 jobs per interval
     duration: 1000, // Per second
   },
+  // Use worker threads for CPU-intensive tasks
+  // This prevents event loop blocking
+  useWorkerThreads: true,
+  // Stalled job detection
+  maxStalledCount: 1,
+  stalledInterval: 30000, // 30 seconds
+  // Job timeout
+  lockDuration: 300000, // 5 minutes
+  lockRenewTime: 15000, // Renew lock every 15 seconds
 };
 
 /**

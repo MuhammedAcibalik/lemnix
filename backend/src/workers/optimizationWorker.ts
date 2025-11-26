@@ -1,111 +1,44 @@
 /**
  * Optimization Worker
- * Worker Threads-based optimization job processor
+ * BullMQ worker with sandboxed processor to prevent event loop blocking
  *
  * @module workers/optimizationWorker
- * @version 1.0.0
+ * @version 2.0.0 - Sandboxed Processor
  */
 
-import { Worker, Job } from "bullmq";
+import { Worker } from "bullmq";
 import { getWorkerOptions } from "../config/queue";
 import { logger } from "../services/logger";
-import { AdvancedOptimizationService } from "../services/optimization/AdvancedOptimizationService";
 import type {
-  AdvancedOptimizationParams,
-  AdvancedOptimizationResult,
-} from "../services/optimization/types";
-import type { OptimizationItem, MaterialStockLength } from "../../types";
-import type { AlgorithmMode } from "../services/optimization/AlgorithmModeSelector";
+  OptimizationJobData,
+  OptimizationJobResult,
+} from "./processors/optimizationProcessor";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 
 /**
- * Optimization job data
- */
-export interface OptimizationJobData {
-  items: OptimizationItem[];
-  params: AdvancedOptimizationParams;
-  mode?: AlgorithmMode;
-  materialStockLengths?: MaterialStockLength[];
-  profileParams?: {
-    workOrderId?: string;
-    profileType?: string;
-    weekNumber?: number;
-    year?: number;
-  };
-  userId: string;
-  requestId: string;
-}
-
-/**
- * Optimization job result
- */
-export interface OptimizationJobResult {
-  result: AdvancedOptimizationResult;
-  requestId: string;
-}
-
-/**
- * Create optimization worker
+ * Create optimization worker with sandboxed processor
+ * 
+ * Uses BullMQ's sandboxed processor feature to run CPU-intensive
+ * optimization tasks in a separate process, preventing event loop blocking.
  */
 export function createOptimizationWorker(): Worker<
   OptimizationJobData,
   OptimizationJobResult
 > {
+  // Get processor file path for sandboxed execution
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const processorPath = join(__dirname, "processors", "optimizationProcessor.js");
+
+  const workerOptions = getWorkerOptions();
+
+  // Create worker with sandboxed processor
+  // BullMQ will execute the processor file in a separate process
   const worker = new Worker<OptimizationJobData, OptimizationJobResult>(
     "optimization",
-    async (job: Job<OptimizationJobData>) => {
-      const {
-        items,
-        params,
-        mode = "standard",
-        materialStockLengths,
-        profileParams,
-        userId,
-        requestId,
-      } = job.data;
-
-      logger.info("Processing optimization job", {
-        jobId: job.id,
-        requestId,
-        userId,
-        itemsCount: items.length,
-        mode,
-      });
-
-      try {
-        // Create optimization service instance
-        const optimizationService = new AdvancedOptimizationService(logger);
-
-        // Run optimization with mode
-        const result = await optimizationService.optimizeWithMode(
-          items,
-          params,
-          mode,
-          materialStockLengths,
-          profileParams,
-        );
-
-        logger.info("Optimization job completed", {
-          jobId: job.id,
-          requestId,
-          userId,
-          executionTime: result.performance?.executionTime,
-        });
-
-        return {
-          result,
-          requestId,
-        };
-      } catch (error) {
-        logger.error("Optimization job failed", {
-          jobId: job.id,
-          requestId,
-          userId,
-          error: (error as Error).message,
-        });
-        throw error;
-      }
-    },
-    getWorkerOptions(),
+    processorPath, // File path instead of inline function
+    workerOptions,
   );
 
   worker.on("completed", (job) => {
@@ -127,6 +60,10 @@ export function createOptimizationWorker(): Worker<
     logger.error("Worker error", {
       error: (error as Error).message,
     });
+  });
+
+  worker.on("stalled", (jobId) => {
+    logger.warn("Job stalled", { jobId });
   });
 
   return worker;

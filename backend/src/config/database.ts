@@ -64,7 +64,7 @@ function parseAndValidateDatabaseUrl(): string {
   }
 }
 
-// Prisma Client Singleton with connection pooling support
+// Prisma Client Singleton with connection pooling support and soft delete extension
 const prismaClientSingleton = () => {
   // Parse connection pool settings from DATABASE_URL or use defaults
   const connectionLimit = process.env.DATABASE_CONNECTION_LIMIT
@@ -89,7 +89,7 @@ const prismaClientSingleton = () => {
     sslMode: new URL(validatedDatabaseUrl).searchParams.get('sslmode') || 'not set',
   });
 
-  return new PrismaClient({
+  const client = new PrismaClient({
     log: [
       {
         emit: "event",
@@ -114,6 +114,60 @@ const prismaClientSingleton = () => {
       },
     },
   });
+
+  // Apply soft delete middleware
+  // Models that support soft delete
+  const softDeleteModels: string[] = [
+    'user',
+    'cuttingList',
+    'cuttingListItem',
+    'optimization',
+    'userActivity',
+    'productionPlan',
+    'productionPlanItem',
+    'cuttingListStatistics',
+    'profileStockLength',
+    'productMapping',
+  ];
+
+  client.$use(async (params, next) => {
+    // Auto-filter deleted records in find operations
+    if (params.model && softDeleteModels.includes(params.model)) {
+      if (params.action === 'findMany' || params.action === 'findFirst') {
+        params.args.where = {
+          ...params.args.where,
+          deletedAt: null,
+        };
+      } else if (params.action === 'findUnique') {
+        // For findUnique, we can't modify where clause easily, so we filter after
+        const result = await next(params);
+        if (result && (result as { deletedAt: Date | null }).deletedAt !== null) {
+          return null;
+        }
+        return result;
+      } else if (params.action === 'delete') {
+        // Convert delete to update with deletedAt
+        params.action = 'update';
+        const modelName = params.model as string;
+        params.args.data = {
+          deletedAt: new Date(),
+          ...(modelName === 'user' ? { isActive: false } : {}),
+        };
+      } else if (params.action === 'deleteMany') {
+        // Convert deleteMany to updateMany with deletedAt
+        params.action = 'updateMany';
+        const modelName = params.model as string;
+        params.args.data = {
+          deletedAt: new Date(),
+          ...(modelName === 'user' ? { isActive: false } : {}),
+        };
+      }
+    }
+
+    return next(params);
+  });
+
+  return client;
 };
 
 declare global {

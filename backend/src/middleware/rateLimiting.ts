@@ -148,8 +148,25 @@ function createRateLimitStore(): IRateLimitStore {
 
   if (useRedis) {
     try {
+      // Check Redis connection before creating store
+      const redisStore = new RedisRateLimitStore();
       logger.info("Using Redis rate limit store");
-      return new RedisRateLimitStore();
+      
+      // In production, Redis is mandatory - fail fast if connection fails
+      if (isProduction) {
+        // Test connection by getting stats
+        redisStore.getStats().catch((error) => {
+          logger.error(
+            "Redis is required for production rate limiting. Application cannot start without Redis.",
+            error as Error,
+          );
+          throw new Error(
+            "Redis connection failed. Production requires Redis for rate limiting.",
+          );
+        });
+      }
+      
+      return redisStore;
     } catch (error) {
       if (isProduction) {
         logger.error(
@@ -168,6 +185,7 @@ function createRateLimitStore(): IRateLimitStore {
     }
   }
 
+  // Development: allow in-memory fallback
   logger.info("Using in-memory rate limit store");
   return new InMemoryRateLimitStore();
 }

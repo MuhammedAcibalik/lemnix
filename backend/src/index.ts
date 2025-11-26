@@ -17,6 +17,10 @@ async function bootstrap(): Promise<void> {
   // Initialize Sentry error tracking
   initializeSentry();
 
+  // Initialize Prisma security middleware
+  const { initializePrismaSecurityMiddleware } = await import("./middleware/prismaSecurity.js");
+  initializePrismaSecurityMiddleware();
+
   httpServer = createServer();
   const io = createSocketServer(httpServer);
   const app = createApp({ io });

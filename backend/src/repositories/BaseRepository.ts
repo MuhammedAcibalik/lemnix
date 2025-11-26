@@ -77,6 +77,35 @@ export abstract class BaseRepository {
   protected getHttpStatusForError(error: unknown): number {
     return getHttpStatusForError(error);
   }
+
+  /**
+   * Hard delete a record (bypasses soft delete)
+   * Use with caution - this permanently deletes data
+   */
+  protected async hardDelete<T extends { delete: (args: any) => Promise<any> }>(
+    model: T,
+    args: Parameters<T['delete']>[0],
+  ): Promise<ReturnType<T['delete']>> {
+    // Use raw Prisma client to bypass middleware
+    return (this.client as any)[(model as any).constructor.name.toLowerCase()].delete(args);
+  }
+
+  /**
+   * Restore a soft-deleted record
+   */
+  protected async restore<T extends { update: (args: any) => Promise<any> }>(
+    model: T,
+    args: Parameters<T['update']>[0],
+  ): Promise<ReturnType<T['update']>> {
+    return model.update({
+      ...args,
+      data: {
+        ...args.data,
+        deletedAt: null,
+        ...(args.data && 'isActive' in args.data ? { isActive: true } : {}),
+      },
+    });
+  }
 }
 
 /**

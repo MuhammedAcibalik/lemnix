@@ -388,6 +388,14 @@ export const authenticateToken = (
       tokenId: decoded.jti,
     };
 
+    // Set user context for Prisma security middleware
+    const { setUserContext } = await import("./prismaSecurity");
+    setUserContext({
+      userId: decoded.userId,
+      role: decoded.role,
+      permissions: [],
+    });
+
     next();
   } catch (error) {
     logger.error("Token authentication error", {

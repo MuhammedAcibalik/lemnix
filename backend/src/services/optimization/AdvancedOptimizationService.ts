@@ -577,10 +577,20 @@ export class AdvancedOptimizationService {
       });
 
       // ✅ FIX: Use user's selected algorithm instead of smart selector
+      // Use AlgorithmFactory to create algorithm instance (SOLID compliance)
       let algorithm: BaseAlgorithm;
 
-      // Convert string algorithm to lowercase for comparison
+      // Map string algorithm names to OptimizationAlgorithm enum
+      const algorithmMap: Record<string, OptimizationAlgorithm> = {
+        bfd: OptimizationAlgorithm.BEST_FIT_DECREASING,
+        ffd: OptimizationAlgorithm.BEST_FIT_DECREASING, // FFD removed, use BFD
+        genetic: OptimizationAlgorithm.GENETIC_ALGORITHM,
+        pooling: OptimizationAlgorithm.BEST_FIT_DECREASING, // Pooling removed, use BFD
+        "pattern-exact": OptimizationAlgorithm.BEST_FIT_DECREASING, // PatternExact removed, use BFD
+      };
+
       const selectedAlgo = (params.algorithm as string).toLowerCase();
+      const algorithmEnum = algorithmMap[selectedAlgo];
 
       this.logger.info("[AdvancedOptimizationService] Algorithm selection", {
         originalAlgorithm: params.algorithm,
@@ -588,42 +598,22 @@ export class AdvancedOptimizationService {
         mode,
       });
 
-      if (selectedAlgo === "bfd") {
-        this.logger.info("Using BFD algorithm (user selected)", {
-          itemCount: items.length,
-          selectedAlgo,
-          originalAlgorithm: params.algorithm,
-        });
-        algorithm = new BFDAlgorithm(this.logger);
-      } else if (selectedAlgo === "ffd") {
-        this.logger.info("Using FFD algorithm (user selected)", {
+      if (algorithmEnum && this.algorithmFactory.isRegistered(algorithmEnum)) {
+        // Use factory to create algorithm instance
+        this.logger.info("Using factory-created algorithm", {
+          algorithm: algorithmEnum,
           itemCount: items.length,
         });
-        // FFDAlgorithm removed - using BFD instead
-        algorithm = new BFDAlgorithm(this.logger);
-      } else if (selectedAlgo === "genetic") {
-        this.logger.info("Using Genetic algorithm (user selected)", {
-          itemCount: items.length,
-        });
-        algorithm = new GeneticAlgorithm(this.logger);
-      } else if (selectedAlgo === "pooling") {
-        this.logger.info("Using Pooling algorithm (user selected)", {
-          itemCount: items.length,
-        });
-        // PoolingAlgorithm removed - using BFD instead
-        algorithm = new BFDAlgorithm(this.logger);
-      } else if (selectedAlgo === "pattern-exact") {
-        this.logger.info("Using Pattern Exact algorithm (user selected)", {
-          itemCount: items.length,
-        });
-        // PatternExactAlgorithm removed - using BFD instead
-        algorithm = new BFDAlgorithm(this.logger);
+        algorithm = this.algorithmFactory.create(algorithmEnum) as BaseAlgorithm;
       } else {
-        // Fallback to smart selector
+        // Fallback to smart selector if algorithm not found or not registered
         this.logger.info("Using SmartAlgorithmSelector (fallback)", {
           itemCount: items.length,
           mode,
           selectedAlgo,
+          reason: algorithmEnum
+            ? "Algorithm not registered"
+            : "Algorithm not found in map",
         });
         algorithm = this.smartSelector.selectAlgorithm(context, mode);
       }
