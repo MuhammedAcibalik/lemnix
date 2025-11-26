@@ -374,21 +374,77 @@ export default defineConfig(({ command, mode }) => {
           // ✅ KEEP /api prefix - backend expects it at /api/cutting-list
           // rewrite: (path) => path.replace(/^\/api/, ''), // DON'T rewrite
           configure: (proxy, options) => {
+            // Backend health check on startup (development only)
+            if (isDevelopment) {
+              const backendUrl = env.VITE_API_URL || 'http://localhost:3001';
+              const checkBackendHealth = async () => {
+                try {
+                  const response = await fetch(`${backendUrl}/health`, {
+                    method: 'GET',
+                    signal: AbortSignal.timeout(2000), // 2 second timeout
+                  });
+                  if (response.ok) {
+                    console.log('✅ [Backend] Backend server is running on', backendUrl);
+                  } else {
+                    console.warn('⚠️  [Backend] Backend server responded with status', response.status);
+                  }
+                } catch (error) {
+                  console.error('\n❌ [Backend] Backend server is not running!');
+                  console.error('   Please start the backend server:');
+                  console.error('   - Run: cd backend && npm run dev');
+                  console.error('   - Or from root: npm run dev:backend');
+                  console.error('   - Or use: npm run dev (starts both frontend and backend)\n');
+                }
+              };
+              
+              // Check backend health after a short delay
+              setTimeout(checkBackendHealth, 1000);
+            }
+
+            // Throttle connection error warnings (max once per 10 seconds)
+            let lastErrorWarning = 0;
+            const ERROR_WARNING_INTERVAL = 10000; // 10 seconds
+            let successfulConnections = 0;
+            
             proxy.on('error', (err, req, res) => {
-              console.log('proxy error', err);
+              // Only show connection error warnings with throttling
+              const nodeError = err as NodeJS.ErrnoException;
+              if (nodeError.code === 'ECONNREFUSED') {
+                const now = Date.now();
+                if (now - lastErrorWarning > ERROR_WARNING_INTERVAL) {
+                  lastErrorWarning = now;
+                  console.error('\n❌ [Vite Proxy] Cannot connect to backend server!');
+                  console.error('   Backend is not running on', env.VITE_API_URL || 'http://localhost:3001');
+                  console.error('   Please start the backend server:');
+                  console.error('   - Run: cd backend && npm run dev');
+                  console.error('   - Or from root: npm run dev:backend');
+                  console.error('   - Or use: npm run dev (starts both frontend and backend)');
+                  console.error('   (This warning will be shown at most once every 10 seconds)\n');
+                }
+              }
             });
+            
             proxy.on('proxyReq', (proxyReq, req, res) => {
               if (isDevelopment) {
-                console.log('🔄 [Vite Proxy] Sending Request to the Target:', req.method, req.url, '->', proxyReq.path);
+                // Only log non-health-check requests to reduce noise
+                if (!req.url?.includes('/health') && !req.url?.includes('/metrics/web-vitals')) {
+                  console.log('🔄 [Vite Proxy]', req.method, req.url);
+                }
               }
             });
+            
             proxy.on('proxyRes', (proxyRes, req, res) => {
-              if (isDevelopment) {
-                console.log('✅ [Vite Proxy] Received Response from the Target:', proxyRes.statusCode, req.url);
+              // Track successful connections
+              successfulConnections++;
+              
+              // Reset error warning timer on successful connection
+              if (successfulConnections === 1) {
+                console.log('✅ [Vite Proxy] Backend connection established successfully');
               }
-            });
-            proxy.on('error', (err, req, res) => {
-              console.error('❌ [Vite Proxy] Error:', err.message, 'for', req.url);
+              
+              if (isDevelopment && !req.url?.includes('/health') && !req.url?.includes('/metrics/web-vitals')) {
+                console.log('✅ [Vite Proxy]', proxyRes.statusCode, req.url);
+              }
             });
           }
         }

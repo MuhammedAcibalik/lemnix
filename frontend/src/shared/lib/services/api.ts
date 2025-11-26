@@ -5,20 +5,13 @@
  */
 
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from "axios";
-import {
-  ApiResponse,
+import type {
   OptimizationItem,
   MaterialStockLength,
-} from "@/shared/types/legacy";
+} from "@/entities/optimization/model/types";
+import type { ApiResponse } from "@/shared/types/api";
 
-/**
- * Error types for better type safety
- */
-interface ApiError {
-  message: string;
-  code: string;
-  details?: unknown;
-}
+import type { ApiError } from "@/shared/types/api";
 
 /**
  * Modern API Service with improved error handling
@@ -146,6 +139,7 @@ class ApiService {
       error: {
         message: error.message,
         code: "GENERIC_ERROR",
+        details: {},
       },
     };
   }
@@ -159,6 +153,7 @@ class ApiService {
       error: {
         message: "Beklenmeyen hata türü",
         code: "UNKNOWN_ERROR_TYPE",
+        details: {},
       },
     };
   }
@@ -166,11 +161,15 @@ class ApiService {
   /**
    * Create server error response
    */
-  private createServerErrorResponse(error?: ApiError): ApiError {
+  private createServerErrorResponse(error?: ApiError | { message?: string; code?: string; details?: unknown }): ApiError {
+    const details = error?.details && typeof error.details === "object" && !Array.isArray(error.details)
+      ? (error.details as Record<string, unknown>)
+      : {};
+    
     return {
       message: error?.message || "Sunucu hatası",
       code: error?.code || "SERVER_ERROR",
-      details: error?.details,
+      ...(Object.keys(details).length > 0 ? { details } : {}),
     };
   }
 
@@ -189,8 +188,9 @@ class ApiService {
    */
   private createRequestErrorResponse(message?: string): ApiError {
     return {
-      message: message || "Bilinmeyen hata",
-      code: "UNKNOWN_ERROR",
+      message: message || "İstek hatası",
+      code: "REQUEST_ERROR",
+      details: {},
     };
   }
 

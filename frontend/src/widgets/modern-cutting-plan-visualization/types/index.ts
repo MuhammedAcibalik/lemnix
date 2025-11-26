@@ -4,7 +4,7 @@
  * @version 1.0.0
  */
 
-import { OptimizationResult } from "@/shared/types/legacy";
+import type { OptimizationResult } from "@/entities/optimization/model/types";
 
 // ============================================================================
 // MAIN COMPONENT PROPS

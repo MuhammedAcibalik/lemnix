@@ -6,14 +6,14 @@
 
 import { useMemo } from "react";
 import {
-  CuttingListItem,
+  FormCuttingListItem,
   OptimizationParams,
   ValidationErrors,
 } from "../types";
 import { validateCuttingListItem, validateConstraints } from "../utils";
 
 export const useValidation = (
-  cuttingList: CuttingListItem[],
+  cuttingList: FormCuttingListItem[],
   params: OptimizationParams,
 ) => {
   const validationErrors = useMemo((): ValidationErrors => {

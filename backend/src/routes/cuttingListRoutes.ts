@@ -15,19 +15,6 @@ import {
   CuttingListController,
   cuttingListErrorHandler,
   getCuttingListController,
-  getSmartProductSuggestions,
-  getSmartSizeSuggestions,
-  getSmartProfileSuggestions,
-  getAutoCompleteSuggestions,
-  getSmartSuggestionStats,
-  reloadSmartSuggestionDatabase,
-  getSmartWorkOrderSuggestions,
-  getSmartWorkOrderInsights,
-  applySmartProfileSet,
-  getWorkOrderTemplates,
-  duplicateWorkOrder,
-  getAvailableSizes,
-  getProfileCombinations,
 } from "../controllers/cuttingListController";
 import { handleValidationErrors } from "../middleware/validation";
 import { createRateLimit } from "../middleware/rateLimiting";
@@ -411,96 +398,6 @@ class CuttingListRouterFactory {
       requiresAuth: true,
     },
 
-    {
-      path: "/smart/products",
-      method: "get",
-      handler: getSmartProductSuggestions,
-      requiresAuth: true,
-    },
-    {
-      path: "/smart/sizes",
-      method: "get",
-      handler: getSmartSizeSuggestions,
-      requiresAuth: true,
-    },
-    {
-      path: "/smart/profiles",
-      method: "get",
-      handler: getSmartProfileSuggestions,
-      requiresAuth: true,
-    },
-    {
-      path: "/smart/autocomplete",
-      method: "get",
-      handler: getAutoCompleteSuggestions,
-      requiresAuth: true,
-    },
-    {
-      path: "/smart/stats",
-      method: "get",
-      handler: getSmartSuggestionStats,
-      requiresAuth: true,
-    },
-    {
-      path: "/smart/reload",
-      method: "post",
-      handler: reloadSmartSuggestionDatabase,
-      requiresAuth: true,
-      permission: Permission.MANAGE_CONFIG,
-    },
-    {
-      path: "/smart/suggestions",
-      method: "get",
-      handler: getSmartWorkOrderSuggestions,
-      requiresAuth: true,
-    },
-    {
-      path: "/smart/insights",
-      method: "post",
-      handler: getSmartWorkOrderInsights,
-      requiresAuth: true,
-      rateLimit: "optimization",
-    },
-    {
-      path: "/smart/apply-profile-set",
-      method: "post",
-      handler: applySmartProfileSet,
-      requiresAuth: true,
-      permission: Permission.START_OPTIMIZATION,
-    },
-    {
-      path: "/smart/templates",
-      method: "get",
-      handler: getWorkOrderTemplates,
-      requiresAuth: true,
-    },
-    {
-      path: "/smart/duplicate",
-      method: "post",
-      handler: duplicateWorkOrder,
-      requiresAuth: true,
-      permission: Permission.START_OPTIMIZATION,
-    },
-
-    {
-      path: "/profiles/suggestions",
-      method: "get",
-      handler: getSmartProfileSuggestions,
-      requiresAuth: true,
-      middleware: [queryNormalizer],
-    },
-    {
-      path: "/smart-suggestions/sizes",
-      method: "get",
-      handler: getAvailableSizes,
-      requiresAuth: true,
-    },
-    {
-      path: "/smart-suggestions/combinations",
-      method: "get",
-      handler: getProfileCombinations,
-      requiresAuth: true,
-    },
   ];
 
   constructor(private readonly controller: CuttingListController) {}

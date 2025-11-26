@@ -6,7 +6,6 @@
 
 import {
   LengthUnit,
-  CuttingListItem,
   OptimizationConstraints,
   OptimizationParams,
 } from "../types";
@@ -49,9 +48,11 @@ export const validateNumber = (
   return Math.max(min, Math.min(max, num));
 };
 
+import type { FormCuttingListItem } from "../types";
+
 // Validation utilities
 export const validateCuttingListItem = (
-  item: CuttingListItem,
+  item: FormCuttingListItem,
   index: number,
 ): Record<string, string> => {
   const errors: Record<string, string> = {};
@@ -92,12 +93,12 @@ export const validateConstraints = (
 
 // Form data transformation
 export const transformToOptimizationItems = (
-  cuttingList: CuttingListItem[],
+  cuttingList: FormCuttingListItem[],
   sanitizeInput: (input: string) => string,
   validateNumber: (value: unknown, min?: number, max?: number) => number,
 ) => {
   return cuttingList.map((item) => ({
-    id: item.id,
+    id: item.id as any, // ID branded type conversion
     workOrderId: sanitizeInput(item.workOrderId),
     productName: `${sanitizeInput(item.profileType)} - ${sanitizeInput(item.color)}`,
     profileType: sanitizeInput(item.profileType),

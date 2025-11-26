@@ -5,18 +5,18 @@
  */
 
 import { useState, useCallback, useMemo } from "react";
-import { CuttingListItem, OptimizationParams } from "../types";
+import { FormCuttingListItem, OptimizationParams } from "../types";
 import { DEFAULT_PARAMS, SAMPLE_ITEMS } from "../constants";
 import { sanitizeInput, validateNumber } from "../utils";
 
 export const useOptimizationForm = () => {
   // Main form state
-  const [cuttingList, setCuttingList] = useState<CuttingListItem[]>([]);
+  const [cuttingList, setCuttingList] = useState<FormCuttingListItem[]>([]);
   const [params, setParams] = useState<OptimizationParams>(DEFAULT_PARAMS);
 
   // Item management
   const addCuttingItem = useCallback(() => {
-    const newItem: CuttingListItem = {
+    const newItem: FormCuttingListItem = {
       id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       workOrderId: "",
       color: "",
@@ -31,7 +31,7 @@ export const useOptimizationForm = () => {
   }, []);
 
   const updateCuttingItem = useCallback(
-    (id: string, field: keyof CuttingListItem, value: string | number) => {
+    (id: string, field: keyof FormCuttingListItem, value: string | number) => {
       setCuttingList((prev) =>
         prev.map((item) => {
           if (item.id === id) {
@@ -55,7 +55,7 @@ export const useOptimizationForm = () => {
   }, []);
 
   const addSampleItems = useCallback(() => {
-    const sampleItems: CuttingListItem[] = SAMPLE_ITEMS.map((item) => ({
+    const sampleItems: FormCuttingListItem[] = SAMPLE_ITEMS.map((item) => ({
       ...item,
       id: `sample-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       workOrderId: item.workOrderId || `WO-${Date.now()}`,

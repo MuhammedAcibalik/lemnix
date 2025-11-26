@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Typography, Chip } from "@mui/material";
-import { appConfig, getFullDomain } from "../config/legacy/appConfig";
+import { appConfig, getFullDomain } from "../config/constants";
 
 interface DomainIndicatorProps {
   variant?: "compact" | "full";

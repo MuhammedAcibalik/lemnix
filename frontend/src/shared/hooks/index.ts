@@ -46,7 +46,7 @@ export {
   layouts,
   componentVariants,
   animations,
-} from "@/App/theme";
+} from "@/app/theme";
 
 // Export permission hooks
 export {

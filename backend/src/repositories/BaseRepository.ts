@@ -25,13 +25,24 @@ export abstract class BaseRepository {
   }
 
   /**
-   * Execute a transaction using the shared client.
+   * Execute a transaction using the shared client with timeout.
    */
   public async transaction<T>(
     handler: (tx: Prisma.TransactionClient) => Promise<T>,
     options?: Parameters<PrismaClient["$transaction"]>[1],
   ): Promise<T> {
-    return this.client.$transaction(handler, options);
+    // Set default timeout if not provided
+    const transactionTimeout = process.env.DATABASE_TRANSACTION_TIMEOUT
+      ? parseInt(process.env.DATABASE_TRANSACTION_TIMEOUT, 10)
+      : process.env.NODE_ENV === 'production' ? 10000 : 5000;
+
+    const transactionOptions: Parameters<PrismaClient["$transaction"]>[1] = {
+      maxWait: options?.maxWait || transactionTimeout,
+      timeout: options?.timeout || transactionTimeout * 2,
+      isolationLevel: options?.isolationLevel,
+    };
+
+    return this.client.$transaction(handler, transactionOptions);
   }
 
   /**

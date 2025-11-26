@@ -188,11 +188,23 @@ export class CuttingListRepository {
     sectionId: string,
     item: Omit<Prisma.CuttingListItemCreateInput, "cuttingList">,
   ): Promise<PrismaCuttingListItem> {
+    // Extract productionPlanItem if present - Prisma XOR type requires either nested input OR unchecked input, not both
+    // Since we're using cuttingListId (unchecked input), we cannot use productionPlanItem nested input
+    // If productionPlanItem is a connect operation, extract the ID for unchecked input
+    const { productionPlanItem, ...itemWithoutProductionPlanItem } = item;
+    
+    let productionPlanItemId: string | undefined = undefined;
+    if (productionPlanItem && 'connect' in productionPlanItem && productionPlanItem.connect) {
+      productionPlanItemId = productionPlanItem.connect.id;
+    }
+    
+    // Use unchecked input since we're providing cuttingListId directly
     return await this.prismaRepository.prisma.cuttingListItem.create({
       data: {
-        ...item,
+        ...itemWithoutProductionPlanItem,
         cuttingListId,
-      },
+        ...(productionPlanItemId ? { productionPlanItemId } : {}),
+      } as Prisma.CuttingListItemUncheckedCreateInput,
     });
   }
 

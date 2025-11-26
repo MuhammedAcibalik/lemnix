@@ -483,22 +483,3 @@ export const cuttingListErrorHandler = (
   res.status(500).json(response);
 };
 
-/**
- * Legacy exports for backward compatibility
- * These will be deprecated in a future version
- */
-export {
-  getSmartProductSuggestions,
-  getSmartSizeSuggestions,
-  getSmartProfileSuggestions,
-  getAutoCompleteSuggestions,
-  getSmartSuggestionStats,
-  reloadSmartSuggestionDatabase,
-  getSmartWorkOrderSuggestions,
-  getSmartWorkOrderInsights,
-  applySmartProfileSet,
-  getWorkOrderTemplates,
-  duplicateWorkOrder,
-  getAvailableSizes,
-  getProfileCombinations,
-} from "./cuttingList/deprecated";

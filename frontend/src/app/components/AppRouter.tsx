@@ -10,7 +10,7 @@ import { useAppState } from "../hooks/useAppState";
 import { ModernNavigationWrapper } from "./ModernNavigationWrapper";
 import { PageContent } from "./PageContent";
 import { SnackbarWrapper } from "./SnackbarWrapper";
-import { AppRouterProps } from "../types";
+import type { AppRouterProps } from "../types";
 
 /**
  * App Router Component

@@ -5,7 +5,7 @@
  */
 
 import React from "react";
-import { App as ModularApp } from "./App/index";
+import { App as ModularApp } from "./app/index";
 
 /**
  * App Wrapper Component

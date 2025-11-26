@@ -10,6 +10,7 @@
 import {
   ProductionPlan as PrismaProductionPlan,
   ProductionPlanItem as PrismaProductionPlanItem,
+  ProductionPlanPriority,
   Prisma,
 } from "@prisma/client";
 import { ProductionPlan } from "../../domain/entities/ProductionPlan";
@@ -140,7 +141,7 @@ export class ProductionPlanMapper {
     miktar: number;
     planlananBitisTarihi: Date;
     bolum: string;
-    oncelik: string;
+    oncelik?: ProductionPlanPriority;
     linkedCuttingListId?: string | null;
     encryptedAd?: string | null;
     encryptedMalzemeKisaMetni?: string | null;
@@ -150,6 +151,15 @@ export class ProductionPlanMapper {
     encryptedSiparis?: string | null;
     encryptedSiparisVeren?: string | null;
   } {
+    // Convert string oncelik to enum
+    let oncelik: ProductionPlanPriority | undefined = undefined;
+    if (domain.oncelik) {
+      const upperOncelik = domain.oncelik.toUpperCase();
+      if (Object.values(ProductionPlanPriority).includes(upperOncelik as ProductionPlanPriority)) {
+        oncelik = upperOncelik as ProductionPlanPriority;
+      }
+    }
+    
     return {
       id: domain.id,
       planId: domain.planId,
@@ -163,7 +173,7 @@ export class ProductionPlanMapper {
       miktar: domain.miktar,
       planlananBitisTarihi: domain.planlananBitisTarihi,
       bolum: domain.bolum,
-      oncelik: domain.oncelik,
+      ...(oncelik !== undefined ? { oncelik } : {}),
       linkedCuttingListId: domain.linkedCuttingListId || null,
       encryptedAd: domain.encryptedAd || null,
       encryptedMalzemeKisaMetni: domain.encryptedMalzemeKisaMetni || null,

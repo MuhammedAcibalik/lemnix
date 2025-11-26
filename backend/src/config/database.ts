@@ -1,27 +1,93 @@
 /**
  * @fileoverview Database Configuration
  * @module DatabaseConfig
- * @version 1.0.0
+ * @version 2.0.0
+ * 
+ * Enhanced database configuration with:
+ * - Connection pool optimization
+ * - SSL/TLS validation
+ * - Connection retry logic
+ * - Health monitoring
  */
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import { logger } from "../services/logger";
 import { queryPerformanceMonitor } from "../services/monitoring/QueryPerformanceMonitor";
+import { createConnectionPoolMonitor } from "../services/database/ConnectionPoolMonitor";
+
+/**
+ * Parse and validate DATABASE_URL
+ */
+function parseAndValidateDatabaseUrl(): string {
+  const databaseUrl = process.env.DATABASE_URL;
+  
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL environment variable is required');
+  }
+  
+  // Validate URL format
+  try {
+    const url = new URL(databaseUrl);
+    const params = new URLSearchParams(url.search);
+    
+    // Ensure SSL in production
+    if (process.env.NODE_ENV === 'production') {
+      const sslMode = params.get('sslmode');
+      if (sslMode !== 'require' && sslMode !== 'prefer') {
+        logger.warn('DATABASE_URL should use sslmode=require in production');
+        params.set('sslmode', 'require');
+        url.search = params.toString();
+        return url.toString();
+      }
+    }
+    
+    // Set connection pool parameters if not present
+    if (!params.has('connection_limit')) {
+      const connectionLimit = process.env.DATABASE_CONNECTION_LIMIT
+        ? parseInt(process.env.DATABASE_CONNECTION_LIMIT, 10)
+        : process.env.NODE_ENV === 'production' ? 50 : 20;
+      params.set('connection_limit', connectionLimit.toString());
+    }
+    
+    if (!params.has('pool_timeout')) {
+      const poolTimeout = process.env.DATABASE_POOL_TIMEOUT
+        ? parseInt(process.env.DATABASE_POOL_TIMEOUT, 10)
+        : 30;
+      params.set('pool_timeout', poolTimeout.toString());
+    }
+    
+    url.search = params.toString();
+    return url.toString();
+  } catch (error) {
+    logger.error('Invalid DATABASE_URL format', { error });
+    throw new Error('DATABASE_URL must be a valid PostgreSQL connection string');
+  }
+}
 
 // Prisma Client Singleton with connection pooling support
 const prismaClientSingleton = () => {
   // Parse connection pool settings from DATABASE_URL or use defaults
   const connectionLimit = process.env.DATABASE_CONNECTION_LIMIT
     ? parseInt(process.env.DATABASE_CONNECTION_LIMIT, 10)
-    : 20;
+    : process.env.NODE_ENV === 'production' ? 50 : 20;
   const poolTimeout = process.env.DATABASE_POOL_TIMEOUT
     ? parseInt(process.env.DATABASE_POOL_TIMEOUT, 10)
     : 30;
 
-  // Transaction timeout (default: 5 seconds)
+  // Transaction timeout (default: 10 seconds for production, 5 for dev)
   const transactionTimeout = process.env.DATABASE_TRANSACTION_TIMEOUT
     ? parseInt(process.env.DATABASE_TRANSACTION_TIMEOUT, 10)
-    : 5000;
+    : process.env.NODE_ENV === 'production' ? 10000 : 5000;
+
+  // Parse and validate DATABASE_URL
+  const validatedDatabaseUrl = parseAndValidateDatabaseUrl();
+
+  logger.info('Initializing Prisma Client', {
+    connectionLimit,
+    poolTimeout,
+    transactionTimeout,
+    sslMode: new URL(validatedDatabaseUrl).searchParams.get('sslmode') || 'not set',
+  });
 
   return new PrismaClient({
     log: [
@@ -44,16 +110,9 @@ const prismaClientSingleton = () => {
     ],
     datasources: {
       db: {
-        url: process.env.DATABASE_URL,
+        url: validatedDatabaseUrl,
       },
     },
-    // Connection pool configuration
-    // Note: Prisma uses connection pooling via PgBouncer
-    // These settings are documented for reference
-    // Actual pool size is controlled by PgBouncer configuration
-    // Connection limit: ${connectionLimit}
-    // Pool timeout: ${poolTimeout}s
-    // Transaction timeout: ${transactionTimeout}ms
   });
 };
 
@@ -140,6 +199,7 @@ prisma.$on("warn", (e: { message: string; target: string }) => {
 export class DatabaseManager {
   private static instance: DatabaseManager;
   private isConnected = false;
+  private poolMonitor: ReturnType<typeof createConnectionPoolMonitor> | null = null;
 
   private constructor() {}
 
@@ -151,28 +211,67 @@ export class DatabaseManager {
   }
 
   /**
-   * Connect to database
+   * Connect to database with retry logic
    */
   public async connect(): Promise<void> {
-    try {
-      await prisma.$connect();
-      this.isConnected = true;
-      logger.info("Database connected successfully");
-    } catch (error) {
-      // In local development we don't want the entire server to crash if the
-      // database is not reachable (e.g. PostgreSQL service stopped). Log the
-      // error and continue in degraded mode so that non-DB features still work.
-      logger.error("Failed to connect to database:", error);
-      this.isConnected = false;
+    const maxRetries = process.env.DATABASE_RETRY_ATTEMPTS
+      ? parseInt(process.env.DATABASE_RETRY_ATTEMPTS, 10)
+      : 3;
+    const retryDelay = process.env.DATABASE_RETRY_DELAY
+      ? parseInt(process.env.DATABASE_RETRY_DELAY, 10)
+      : 1000;
 
-      if (process.env.NODE_ENV === "development") {
-        logger.warn(
-          "Database is not reachable. Starting API in degraded mode without PostgreSQL.",
-        );
-      } else {
-        // In non-development environments, rethrow to fail fast.
-        throw error;
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        await prisma.$connect();
+        this.isConnected = true;
+        logger.info("Database connected successfully", {
+          attempt: attempt + 1,
+          maxRetries,
+        });
+        
+        // Start connection pool monitoring
+        this.poolMonitor = createConnectionPoolMonitor(prisma);
+        const monitoringInterval = process.env.DATABASE_POOL_MONITORING_INTERVAL
+          ? parseInt(process.env.DATABASE_POOL_MONITORING_INTERVAL, 10)
+          : 60000; // 1 minute default
+        this.poolMonitor.startMonitoring(monitoringInterval);
+        
+        return;
+      } catch (error) {
+        lastError = error;
+        logger.warn("Database connection attempt failed", {
+          attempt: attempt + 1,
+          maxRetries,
+          error: error instanceof Error ? error.message : String(error),
+        });
+
+        if (attempt < maxRetries - 1) {
+          const delay = retryDelay * (attempt + 1); // Exponential backoff
+          logger.info(`Retrying connection in ${delay}ms...`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
       }
+    }
+
+    // All retry attempts failed
+    logger.error("Failed to connect to database after all retry attempts", {
+      attempts: maxRetries,
+      error: lastError,
+    });
+    this.isConnected = false;
+
+    if (process.env.NODE_ENV === "development") {
+      logger.warn(
+        "Database is not reachable. Starting API in degraded mode without PostgreSQL.",
+      );
+    } else {
+      // In non-development environments, rethrow to fail fast.
+      throw new Error(
+        `Database connection failed after ${maxRetries} attempts: ${lastError instanceof Error ? lastError.message : String(lastError)}`
+      );
     }
   }
 
@@ -181,6 +280,16 @@ export class DatabaseManager {
    */
   public async disconnect(): Promise<void> {
     try {
+      // Stop connection pool monitoring
+      try {
+        if (this.poolMonitor) {
+          this.poolMonitor.stopMonitoring();
+          this.poolMonitor = null;
+        }
+      } catch {
+        // Ignore errors when stopping monitoring
+      }
+      
       await prisma.$disconnect();
       this.isConnected = false;
       logger.info("Database disconnected successfully");
@@ -191,15 +300,60 @@ export class DatabaseManager {
   }
 
   /**
-   * Check database connection
+   * Enhanced health check with diagnostics
    */
-  public async healthCheck(): Promise<boolean> {
+  public async healthCheck(): Promise<{
+    healthy: boolean;
+    latency?: number;
+    details?: {
+      connectionCount?: number;
+      activeQueries?: number;
+    };
+  }> {
+    const startTime = Date.now();
+    
     try {
       await prisma.$queryRaw`SELECT 1`;
-      return true;
+      const latency = Date.now() - startTime;
+      
+      // Get additional diagnostics if healthy
+      let details: { connectionCount?: number; activeQueries?: number } = {};
+      try {
+        const [connectionResult, queryResult] = await Promise.all([
+          prisma.$queryRaw<Array<{ count: bigint }>>`
+            SELECT COUNT(*) as count
+            FROM pg_stat_activity
+            WHERE datname = current_database()
+          `,
+          prisma.$queryRaw<Array<{ count: bigint }>>`
+            SELECT COUNT(*) as count
+            FROM pg_stat_activity
+            WHERE datname = current_database()
+              AND state = 'active'
+          `,
+        ]);
+        
+        details = {
+          connectionCount: Number(connectionResult[0]?.count || 0),
+          activeQueries: Number(queryResult[0]?.count || 0),
+        };
+      } catch (diagError) {
+        // Diagnostics are optional, don't fail health check
+        logger.debug('Failed to get health check diagnostics', { error: diagError });
+      }
+      
+      return {
+        healthy: true,
+        latency,
+        details,
+      };
     } catch (error) {
-      logger.error("Database health check failed:", error);
-      return false;
+      const latency = Date.now() - startTime;
+      logger.error("Database health check failed:", { error, latency });
+      return {
+        healthy: false,
+        latency,
+      };
     }
   }
 
@@ -211,37 +365,70 @@ export class DatabaseManager {
   }
 
   /**
-   * Get database connection pool statistics
-   * Note: Actual pool stats require pg_stat_activity query
+   * Get enhanced database connection pool statistics
    */
   public async getPoolStats(): Promise<{
     isConnected: boolean;
-    connectionLimit?: number;
-    poolTimeout?: number;
+    connectionLimit: number;
+    poolTimeout: number;
+    transactionTimeout: number;
+    diagnostics?: {
+      connectionCount?: number;
+      activeQueries?: number;
+    };
   }> {
+    const connectionLimit = process.env.DATABASE_CONNECTION_LIMIT
+      ? parseInt(process.env.DATABASE_CONNECTION_LIMIT, 10)
+      : process.env.NODE_ENV === 'production' ? 50 : 20;
+    const poolTimeout = process.env.DATABASE_POOL_TIMEOUT
+      ? parseInt(process.env.DATABASE_POOL_TIMEOUT, 10)
+      : 30;
+    const transactionTimeout = process.env.DATABASE_TRANSACTION_TIMEOUT
+      ? parseInt(process.env.DATABASE_TRANSACTION_TIMEOUT, 10)
+      : process.env.NODE_ENV === 'production' ? 10000 : 5000;
+
+    // Get diagnostics if connected
+    let diagnostics: { connectionCount?: number; activeQueries?: number } | undefined;
+    if (this.isConnected) {
+      try {
+        const health = await this.healthCheck();
+        diagnostics = health.details;
+      } catch {
+        // Ignore errors in diagnostics
+      }
+    }
+
     return {
       isConnected: this.isConnected,
-      connectionLimit: process.env.DATABASE_CONNECTION_LIMIT
-        ? parseInt(process.env.DATABASE_CONNECTION_LIMIT, 10)
-        : undefined,
-      poolTimeout: process.env.DATABASE_POOL_TIMEOUT
-        ? parseInt(process.env.DATABASE_POOL_TIMEOUT, 10)
-        : undefined,
+      connectionLimit,
+      poolTimeout,
+      transactionTimeout,
+      diagnostics,
     };
   }
 
   /**
-   * Initialize database
+   * Execute transaction with timeout
    */
-  public async initialize(): Promise<void> {
-    try {
-      // Database initialization without mock data
-      logger.info("Database initialized successfully");
-    } catch (error) {
-      logger.error("Failed to initialize database:", error);
-      throw error;
-    }
+  public async executeTransaction<T>(
+    handler: (tx: Prisma.TransactionClient) => Promise<T>,
+    options?: {
+      maxWait?: number;
+      timeout?: number;
+      isolationLevel?: Prisma.TransactionIsolationLevel;
+    },
+  ): Promise<T> {
+    const transactionTimeout = process.env.DATABASE_TRANSACTION_TIMEOUT
+      ? parseInt(process.env.DATABASE_TRANSACTION_TIMEOUT, 10)
+      : process.env.NODE_ENV === 'production' ? 10000 : 5000;
+
+    return prisma.$transaction(handler, {
+      maxWait: options?.maxWait || transactionTimeout,
+      timeout: options?.timeout || transactionTimeout * 2,
+      isolationLevel: options?.isolationLevel,
+    });
   }
+
 }
 
 // Export singleton instance

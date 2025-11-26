@@ -389,13 +389,13 @@ export class CuttingListStatisticsService {
       return {
         wastePercentage: 0, // ✅ DEFAULT: No waste data available
         efficiencyScore:
-          Math.round((efficiencyStats._avg.efficiencyScore || 0) * 100) / 100,
+          Math.round((Number(efficiencyStats._avg.efficiencyScore) || 0) * 100) / 100,
         optimizationCount,
         averageProcessingTime: Math.round(
-          processingTimeStats._avg.executionTimeMs || 0,
+          Number(processingTimeStats._avg.executionTimeMs) || 0,
         ),
         successRate:
-          Math.round((successRateStats._avg.successRate || 0) * 100) / 100,
+          Math.round((Number(successRateStats._avg.successRate) || 0) * 100) / 100,
       };
     } catch (error) {
       logger.error("Failed to get performance metrics:", error);
@@ -455,7 +455,7 @@ export class CuttingListStatisticsService {
       return profileStats.map((profile) => ({
         profileType: profile.profileType,
         profileName: profile.profileName,
-        measurement: profile.measurement,
+        measurement: Number(profile.measurement),
         usageCount: profile.totalUsageCount,
         popularityScore: profile.totalUsageCount / maxUsage,
       }));
@@ -511,7 +511,7 @@ export class CuttingListStatisticsService {
           date: date.toISOString().split("T")[0],
           count,
           efficiency:
-            Math.round((efficiency._avg.efficiencyScore || 0) * 100) / 100,
+            Math.round((Number(efficiency._avg.efficiencyScore) || 0) * 100) / 100,
         });
       }
 
@@ -611,9 +611,9 @@ export class CuttingListStatisticsService {
       return algorithms.map((algorithm) => ({
         algorithm: algorithm.algorithm,
         averageEfficiency:
-          Math.round((algorithm._avg.averageEfficiency || 0) * 100) / 100,
-        successRate: Math.round((algorithm._avg.successRate || 0) * 100) / 100,
-        executionTime: Math.round(algorithm._avg.executionTimeMs || 0),
+          Math.round((Number(algorithm._avg.averageEfficiency) || 0) * 100) / 100,
+        successRate: Math.round((Number(algorithm._avg.successRate) || 0) * 100) / 100,
+        executionTime: Math.round(Number(algorithm._avg.executionTimeMs) || 0),
         usageCount: algorithm._count.id,
       }));
     } catch (error) {
@@ -665,7 +665,7 @@ export class CuttingListStatisticsService {
         trends.push({
           date: date.toISOString().split("T")[0],
           averageWasteReduction:
-            Math.round((wasteReduction._avg.wasteReductionPercent || 0) * 100) /
+            Math.round((Number(wasteReduction._avg.wasteReductionPercent) || 0) * 100) /
             100,
           optimizationCount: count,
         });

@@ -43,7 +43,7 @@ export class MaterialProfileMappingService {
 
       return mappings.map((mapping: MaterialProfileMapping) => ({
         profileType: mapping.profileType,
-        length: mapping.length,
+        length: Number(mapping.length),
         usageCount: mapping.usageCount,
         lastUsed: mapping.lastUsed.toISOString(),
         confidence: this.calculateConfidence(mapping.usageCount),
@@ -140,7 +140,7 @@ export class MaterialProfileMappingService {
 
       return {
         profileType: mapping.profileType,
-        length: mapping.length,
+        length: Number(mapping.length),
         usageCount: mapping.usageCount,
         lastUsed: mapping.lastUsed.toISOString(),
         confidence: this.calculateConfidence(mapping.usageCount),
@@ -172,7 +172,7 @@ export class MaterialProfileMappingService {
 
       return mappings.map((mapping: MaterialProfileMapping) => ({
         profileType: mapping.profileType,
-        length: mapping.length,
+        length: Number(mapping.length),
         usageCount: mapping.usageCount,
         lastUsed: mapping.lastUsed.toISOString(),
         confidence: this.calculateConfidence(mapping.usageCount),

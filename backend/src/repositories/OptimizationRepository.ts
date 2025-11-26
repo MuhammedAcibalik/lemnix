@@ -182,7 +182,7 @@ export class OptimizationRepository {
         algorithm: stat.algorithm,
         avgExecutionTime: stat._avg.executionTimeMs || 0,
         totalRuns: stat._count,
-        avgEfficiency: stat._avg.averageEfficiency || 0,
+        avgEfficiency: stat._avg.averageEfficiency ? Number(stat._avg.averageEfficiency) : 0,
       }));
     } catch (error) {
       logger.error("Failed to get algorithm performance", { error });

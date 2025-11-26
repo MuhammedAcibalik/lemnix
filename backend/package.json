@@ -31,7 +31,7 @@
     "migrate:sqlite-to-postgres": "ts-node scripts/migrate-to-postgres.ts",
     "migrate:json-to-postgres": "ts-node src/scripts/migrate-json-to-postgres.ts",
     "db:optimize": "psql -U lemnix_user -d lemnix_db -f scripts/optimize-postgres.sql",
-    "db:backup": "powershell -ExecutionPolicy Bypass -File scripts/backup-postgres.ps1",
+    "db:backup": "ts-node scripts/backup-enterprise.ts",
     "db:backup:full": "ts-node scripts/backup-scheduler.ts backup",
     "db:backup:test": "ts-node scripts/backup-scheduler.ts test",
     "db:backup:schedule": "ts-node scripts/backup-scheduler.ts schedule",
@@ -39,7 +39,10 @@
     "db:maintenance:monthly": "ts-node scripts/maintenance-tasks.ts monthly",
     "db:maintenance:vacuum": "ts-node scripts/maintenance-tasks.ts vacuum",
     "db:maintenance:metrics": "ts-node scripts/maintenance-tasks.ts metrics",
-    "db:rls:enable": "psql -U lemnix_user -d lemnix_db -f prisma/migrations/add_row_level_security.sql",
+    "db:rls:enable": "psql -U lemnix_user -d lemnix_db -f scripts/enable-rls.sql",
+    "db:partitions:create-future": "ts-node src/scripts/partition-maintenance.ts create-future",
+    "db:partitions:cleanup-old": "ts-node src/scripts/partition-maintenance.ts cleanup-old",
+    "db:partitions:stats": "ts-node src/scripts/partition-maintenance.ts stats",
     "prepare": "husky"
   },
   "prisma": {

@@ -166,7 +166,14 @@ export class ProductionPlanToCuttingListService {
 
       return {
         success: true,
-        data: items,
+        data: items.map((item) => ({
+          id: item.id,
+          siparis: item.siparis,
+          miktar: Number(item.miktar),
+          malzemeNo: item.malzemeNo,
+          malzemeKisaMetni: item.malzemeKisaMetni,
+          oncelik: item.oncelik,
+        })),
         warnings: priorityWarnings.length > 0 ? priorityWarnings : undefined,
       };
     } catch (error) {

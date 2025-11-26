@@ -230,7 +230,13 @@ export class ProfileManagementService {
       orderBy: { profileCode: "asc" },
     });
 
-    return profiles;
+    return profiles.map((profile) => ({
+      ...profile,
+      stockLengths: profile.stockLengths.map((sl) => ({
+        ...sl,
+        stockLength: Number(sl.stockLength),
+      })),
+    }));
   }
 
   /**
@@ -239,20 +245,36 @@ export class ProfileManagementService {
   async getProfileByCode(
     profileCode: string,
   ): Promise<ProfileDefinition | null> {
-    return await this.profileDefinition.findUnique({
+    const profile = await this.profileDefinition.findUnique({
       where: { profileCode },
       include: { stockLengths: true },
     });
+    if (!profile) return null;
+    return {
+      ...profile,
+      stockLengths: profile.stockLengths.map((sl) => ({
+        ...sl,
+        stockLength: Number(sl.stockLength),
+      })),
+    };
   }
 
   /**
    * Get profile definition by ID
    */
   async getProfileById(id: string): Promise<ProfileDefinition | null> {
-    return await this.profileDefinition.findUnique({
+    const profile = await this.profileDefinition.findUnique({
       where: { id },
       include: { stockLengths: true },
     });
+    if (!profile) return null;
+    return {
+      ...profile,
+      stockLengths: profile.stockLengths.map((sl) => ({
+        ...sl,
+        stockLength: Number(sl.stockLength),
+      })),
+    };
   }
 
   /**
@@ -339,12 +361,12 @@ export class ProfileManagementService {
             (a: { priority: number }, b: { priority: number }) =>
               a.priority - b.priority,
           )
-          .map((sl: { stockLength: number }) => sl.stockLength);
+          .map((sl) => Number(sl.stockLength));
 
         const defaultStockLength =
-          mapping.profile.stockLengths.find(
+          Number(mapping.profile.stockLengths.find(
             (sl: { isDefault: boolean }) => sl.isDefault,
-          )?.stockLength ||
+          )?.stockLength) ||
           sortedStockLengths[0] ||
           6100; // Fallback
 
@@ -455,7 +477,10 @@ export class ProfileManagementService {
       return [];
     }
 
-    return profile.stockLengths.sort(
+    return profile.stockLengths.map((sl) => ({
+      ...sl,
+      stockLength: Number(sl.stockLength),
+    })).sort(
       (a: { priority: number }, b: { priority: number }) =>
         a.priority - b.priority,
     );

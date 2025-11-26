@@ -39,7 +39,7 @@ import { useSelectionState } from "./hooks/useSelectionState";
 
 // Import types
 import { CuttingListSelectorProps, FilterState, ExpandedState } from "./types";
-import { OptimizationItem } from "@/shared/types/legacy";
+import type { OptimizationItem } from "@/entities/optimization/model/types";
 import {
   CuttingListProduct,
   CuttingListSection,
@@ -168,8 +168,8 @@ export const CuttingListSelector: React.FC<CuttingListSelectorProps> = ({
               0,
             );
             items.push({
-              id: item.id,
-              productName: product.name,
+              id: item.id as any, // ID branded type conversion
+              workOrderId: item.workOrderId,
               profileType,
               length,
               quantity,

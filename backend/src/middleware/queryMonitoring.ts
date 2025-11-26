@@ -18,10 +18,14 @@ interface SlowQuery {
 
 /**
  * Log slow queries from pg_stat_statements
- * Queries with mean execution time > 100ms are logged
+ * Queries with mean execution time > threshold are logged
  */
 export async function logSlowQueries(): Promise<void> {
   try {
+    const slowQueryThreshold = process.env.DATABASE_SLOW_QUERY_THRESHOLD_MS
+      ? parseInt(process.env.DATABASE_SLOW_QUERY_THRESHOLD_MS, 10)
+      : 200; // Default 200ms
+
     const slowQueries = await prisma.$queryRaw<SlowQuery[]>`
       SELECT 
         query,
@@ -30,9 +34,11 @@ export async function logSlowQueries(): Promise<void> {
         total_exec_time,
         stddev_exec_time
       FROM pg_stat_statements
-      WHERE mean_exec_time > 100
+      WHERE mean_exec_time > ${slowQueryThreshold}
+        AND query NOT LIKE '/* prisma:%'
+        AND query NOT LIKE 'SELECT pg_stat_statements%'
       ORDER BY mean_exec_time DESC
-      LIMIT 10;
+      LIMIT 20;
     `;
 
     if (Array.isArray(slowQueries) && slowQueries.length > 0) {

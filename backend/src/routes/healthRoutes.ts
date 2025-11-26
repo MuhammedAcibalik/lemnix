@@ -12,6 +12,7 @@ import { databaseManager, prisma } from "../config/database";
 import { getDatabaseStats } from "../middleware/queryMonitoring";
 import { cacheService } from "../services/cache/RedisCache";
 import { queryPerformanceMonitor } from "../services/monitoring/QueryPerformanceMonitor";
+import { createConnectionPoolMonitor, type ConnectionPoolStats } from "../services/database/ConnectionPoolMonitor";
 
 const router: ExpressRouter = Router();
 
@@ -21,18 +22,25 @@ const router: ExpressRouter = Router();
  */
 router.get("/database", async (_req: Request, res: Response) => {
   try {
-    const isHealthy = await databaseManager.healthCheck();
+    const health = await databaseManager.healthCheck();
     const stats = await getDatabaseStats();
+    const poolStats = await databaseManager.getPoolStats();
 
     res.json({
       success: true,
       data: {
-        healthy: isHealthy,
+        healthy: health.healthy,
         database: "postgresql",
         version: "18.0",
-        connections: stats.connections,
+        latency: health.latency,
+        connections: {
+          active: health.details?.connectionCount || stats.connections,
+          activeQueries: health.details?.activeQueries || 0,
+          limit: poolStats.connectionLimit,
+        },
         cacheHitRatio: `${stats.cacheHitRatio.toFixed(2)}%`,
-        status: isHealthy ? "connected" : "disconnected",
+        status: health.healthy ? "connected" : "disconnected",
+        diagnostics: health.details,
       },
     });
   } catch (error) {
@@ -60,7 +68,8 @@ router.get("/deep", async (_req: Request, res: Response) => {
 
   try {
     // 1. Connection check
-    checks.database = await databaseManager.healthCheck();
+    const health = await databaseManager.healthCheck();
+    checks.database = health.healthy;
 
     // 2. Write test (INSERT + DELETE)
     const testId = `health-check-${Date.now()}`;
@@ -117,23 +126,34 @@ router.get("/deep", async (_req: Request, res: Response) => {
  */
 router.get("/system", async (_req: Request, res: Response) => {
   try {
-    const dbHealthy = await databaseManager.healthCheck();
+    const health = await databaseManager.healthCheck();
     const stats = await getDatabaseStats();
+    const poolStats = await databaseManager.getPoolStats();
 
     res.json({
       success: true,
       data: {
-        status: "healthy",
+        status: health.healthy ? "healthy" : "degraded",
         uptime: process.uptime(),
         memory: {
-          used: process.memoryUsage().heapUsed / 1024 / 1024,
-          total: process.memoryUsage().heapTotal / 1024 / 1024,
+          used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024 * 100) / 100,
+          total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024 * 100) / 100,
           unit: "MB",
         },
         database: {
-          healthy: dbHealthy,
-          connections: stats.connections,
+          healthy: health.healthy,
+          latency: health.latency,
+          connections: {
+            active: health.details?.connectionCount || stats.connections,
+            activeQueries: health.details?.activeQueries || 0,
+            limit: poolStats.connectionLimit,
+          },
           cacheHitRatio: stats.cacheHitRatio,
+          poolStats: {
+            connectionLimit: poolStats.connectionLimit,
+            poolTimeout: poolStats.poolTimeout,
+            transactionTimeout: poolStats.transactionTimeout,
+          },
         },
         timestamp: new Date().toISOString(),
       },
@@ -218,5 +238,78 @@ router.get("/cache", (_req: Request, res: Response) => {
     });
   }
 });
+
+/**
+ * GET /health/pool
+ * Connection pool health and statistics
+ */
+router.get("/pool", async (_req: Request, res: Response) => {
+  try {
+    const poolMonitor = createConnectionPoolMonitor(prisma);
+    const poolStats = await poolMonitor.getPoolStats();
+    const health = await poolMonitor.checkPoolHealth();
+
+    res.json({
+      success: true,
+      data: {
+        pool: poolStats,
+        health: {
+          healthy: health.healthy,
+          warnings: health.warnings,
+          critical: health.critical,
+        },
+        recommendations: generatePoolRecommendations(poolStats, health),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        message: "Failed to get connection pool metrics",
+        code: "POOL_METRICS_FAILED",
+      },
+    });
+  }
+});
+
+/**
+ * Generate connection pool recommendations
+ */
+function generatePoolRecommendations(
+  stats: ConnectionPoolStats,
+  health: { healthy: boolean; warnings: string[]; critical: string[] },
+): string[] {
+  const recommendations: string[] = [];
+
+  if (stats.connectionUtilization > 80) {
+    recommendations.push(
+      `High connection utilization (${stats.connectionUtilization.toFixed(1)}%). Consider increasing connection limit or optimizing connection usage.`
+    );
+  }
+
+  if (stats.longRunningQueries > 0) {
+    recommendations.push(
+      `${stats.longRunningQueries} long-running query(ies) detected. Review and optimize slow queries.`
+    );
+  }
+
+  if (stats.idleInTransaction > 0) {
+    recommendations.push(
+      `${stats.idleInTransaction} idle transaction(s) detected. Ensure transactions are properly committed or rolled back.`
+    );
+  }
+
+  if (health.critical.length > 0) {
+    recommendations.push(
+      'Critical connection pool issues detected. Immediate attention required.'
+    );
+  }
+
+  if (recommendations.length === 0) {
+    recommendations.push('Connection pool is healthy. No recommendations.');
+  }
+
+  return recommendations;
+}
 
 export default router;

@@ -72,14 +72,20 @@ export class UnitOfWork implements IUnitOfWork {
 
     try {
       this.isActive = true;
+      
+      // Get transaction timeout from environment or use defaults
+      const transactionTimeout = process.env.DATABASE_TRANSACTION_TIMEOUT
+        ? parseInt(process.env.DATABASE_TRANSACTION_TIMEOUT, 10)
+        : process.env.NODE_ENV === 'production' ? 10000 : 5000;
+      
       const result = await prisma.$transaction(
         async (tx) => {
           this.transactionClient = tx;
           return await fn();
         },
         {
-          maxWait: 5000,
-          timeout: 10000,
+          maxWait: transactionTimeout,
+          timeout: transactionTimeout * 2,
         },
       );
       this.isActive = false;

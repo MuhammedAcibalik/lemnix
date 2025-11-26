@@ -76,7 +76,74 @@ const envSchema = z.object({
     .regex(
       /^postgres(?:ql)?:\/\/.+/,
       "DATABASE_URL must be a valid PostgreSQL connection string (e.g. postgres://user:pass@host:5432/db)",
+    )
+    .refine(
+      (url) => {
+        // In production, require SSL
+        if (process.env.NODE_ENV === 'production') {
+          try {
+            const urlObj = new URL(url);
+            const params = new URLSearchParams(urlObj.search);
+            const sslMode = params.get('sslmode');
+            return sslMode === 'require' || sslMode === 'prefer';
+          } catch {
+            return false;
+          }
+        }
+        return true;
+      },
+      {
+        message: "DATABASE_URL must use sslmode=require in production",
+      },
     ),
+  
+  // Database connection pool settings (optional)
+  DATABASE_CONNECTION_LIMIT: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .pipe(z.number().int().positive().max(200))
+    .optional(),
+  
+  DATABASE_POOL_TIMEOUT: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .pipe(z.number().int().positive().max(300))
+    .optional(),
+  
+  DATABASE_TRANSACTION_TIMEOUT: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .pipe(z.number().int().positive().max(60000))
+    .optional(),
+  
+  DATABASE_RETRY_ATTEMPTS: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .pipe(z.number().int().positive().max(10))
+    .optional(),
+  
+  DATABASE_RETRY_DELAY: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .pipe(z.number().int().positive().max(10000))
+    .optional(),
+  
+  DATABASE_SLOW_QUERY_THRESHOLD_MS: z
+    .string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .pipe(z.number().int().positive().max(10000))
+    .optional(),
+  
+  DATABASE_SSL_ENABLED: z
+    .string()
+    .transform((val) => val !== 'false')
+    .optional(),
 
   // JWT Authentication (REQUIRED in production, optional in development)
   JWT_SECRET: z

@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
-import { appConfig } from "../config/legacy/appConfig";
+import { appConfig } from "../config/constants";
 
 interface LogoProps {
   variant?: "full" | "compact";

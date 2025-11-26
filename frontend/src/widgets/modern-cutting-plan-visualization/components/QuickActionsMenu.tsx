@@ -12,7 +12,7 @@ import {
   Share as ShareIcon,
   ContentCopy as CopyIcon,
 } from "@mui/icons-material";
-import { OptimizationResult } from "@/shared/types/legacy";
+import type { OptimizationResult } from "@/entities/optimization/model/types";
 import { QuickActionsMenuProps } from "../types";
 
 /**

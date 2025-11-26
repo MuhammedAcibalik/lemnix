@@ -5,7 +5,7 @@
  */
 
 import { useMemo } from "react";
-import { OptimizationResult } from "@/shared/types/legacy";
+import type { OptimizationResult } from "@/entities/optimization/model/types";
 import { CuttingStock, OverallStatistics, PaginatedData } from "../types";
 import {
   processOptimizationSegments,

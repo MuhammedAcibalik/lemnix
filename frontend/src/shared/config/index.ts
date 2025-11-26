@@ -14,6 +14,12 @@ export {
   HTTP_STATUS,
   DATE_FORMATS,
   REGEX,
+  appConfig,
+  getFullDomain,
+  getApiUrl,
+  getAssetUrl,
+  getMetaTags,
+  type AppConfig,
 } from "./constants";
 
 // Export responsive breakpoints
@@ -25,4 +31,4 @@ export {
 } from "./breakpoints";
 
 // Export route constants (re-export from App/constants for convenience)
-export { routes } from "@/App/constants";
+export { routes } from "@/app/constants";

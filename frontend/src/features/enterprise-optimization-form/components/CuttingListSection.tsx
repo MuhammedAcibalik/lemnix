@@ -22,10 +22,10 @@ import {
   Avatar,
 } from "@mui/material";
 import { Add as AddIcon, ContentCut as CutIcon } from "@mui/icons-material";
-import { CuttingListItem, LengthUnit } from "../types";
+import { FormCuttingListItem, LengthUnit } from "../types";
 
 interface CuttingListSectionProps {
-  cuttingList: CuttingListItem[];
+  cuttingList: FormCuttingListItem[];
   unit: LengthUnit;
   onAddItem: () => void;
   onAddSampleItems: () => void;

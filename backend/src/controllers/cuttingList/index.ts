@@ -9,5 +9,4 @@ export { CuttingListItemController } from "./CuttingListItemController";
 export { CuttingListSuggestionController } from "./CuttingListSuggestionController";
 export { CuttingListQuantityController } from "./CuttingListQuantityController";
 export { CuttingListImportController } from "./CuttingListImportController";
-export * from "./deprecated";
 export * from "./shared";

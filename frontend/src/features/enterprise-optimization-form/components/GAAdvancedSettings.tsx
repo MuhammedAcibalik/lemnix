@@ -74,8 +74,8 @@ export const GAAdvancedSettings: React.FC<GAAdvancedSettingsProps> = ({
   const resetToDefaults = () => {
     const newSettings: PerformanceSettings = {
       ...settings,
-      mutationRate: DEFAULT_GA_SETTINGS.mutationRate,
-      crossoverRate: DEFAULT_GA_SETTINGS.crossoverRate,
+      mutationRate: DEFAULT_GA_SETTINGS.mutationRate ?? 0.15,
+      crossoverRate: DEFAULT_GA_SETTINGS.crossoverRate ?? 0.8,
     };
     // Only include undefined properties if they were explicitly set
     const finalSettings: PerformanceSettings = {
@@ -312,7 +312,7 @@ export const GAAdvancedSettings: React.FC<GAAdvancedSettingsProps> = ({
             <Stack spacing={ds.spacing["1"]}>
               <Slider
                 value={
-                  settings.mutationRate || DEFAULT_GA_SETTINGS.mutationRate
+                  settings.mutationRate ?? DEFAULT_GA_SETTINGS.mutationRate ?? 0.15
                 }
                 onChange={(_, val) =>
                   updateSetting("mutationRate", val as number)
@@ -337,7 +337,7 @@ export const GAAdvancedSettings: React.FC<GAAdvancedSettingsProps> = ({
               >
                 Mevcut:{" "}
                 {(
-                  settings.mutationRate || DEFAULT_GA_SETTINGS.mutationRate
+                  settings.mutationRate ?? DEFAULT_GA_SETTINGS.mutationRate ?? 0.15
                 ).toFixed(2)}{" "}
                 | Önerilen: 0.10-0.20
               </Typography>
@@ -358,7 +358,7 @@ export const GAAdvancedSettings: React.FC<GAAdvancedSettingsProps> = ({
             <Stack spacing={ds.spacing["1"]}>
               <Slider
                 value={
-                  settings.crossoverRate || DEFAULT_GA_SETTINGS.crossoverRate
+                  settings.crossoverRate ?? DEFAULT_GA_SETTINGS.crossoverRate ?? 0.8
                 }
                 onChange={(_, val) =>
                   updateSetting("crossoverRate", val as number)
@@ -383,7 +383,7 @@ export const GAAdvancedSettings: React.FC<GAAdvancedSettingsProps> = ({
               >
                 Mevcut:{" "}
                 {(
-                  settings.crossoverRate || DEFAULT_GA_SETTINGS.crossoverRate
+                  settings.crossoverRate ?? DEFAULT_GA_SETTINGS.crossoverRate ?? 0.8
                 ).toFixed(2)}{" "}
                 | Önerilen: 0.75-0.90
               </Typography>

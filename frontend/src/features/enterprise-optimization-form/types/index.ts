@@ -4,12 +4,33 @@
  * @version 1.0.0
  */
 
-import {
+import type {
   OptimizationItem,
-  OptimizationFormData,
-  CuttingListItem,
-} from "@/shared/types/legacy";
+  MaterialStockLength,
+} from "@/entities/optimization/model/types";
 import type { CostModel } from "@/entities/optimization/model/types";
+import type { ID } from "@/shared/types/common";
+
+// Form-specific CuttingListItem (different from entity CuttingListItem)
+export interface FormCuttingListItem {
+  readonly id: string;
+  readonly workOrderId: string;
+  readonly color: string;
+  readonly version: string;
+  readonly size: string;
+  readonly profileType: string;
+  readonly length: number;
+  readonly quantity: number;
+  readonly cuttingPattern: string;
+}
+
+// Form data type (compatibility)
+export interface OptimizationFormData {
+  items: OptimizationItem[];
+  algorithm: "bfd" | "genetic";
+  stockLength: number;
+  materialStockLengths?: MaterialStockLength[];
+}
 
 // Form specific types
 export interface OptimizationParams {
@@ -87,7 +108,7 @@ export interface EnterpriseOptimizationFormProps {
 
 // Form state
 export interface FormState {
-  cuttingList: CuttingListItem[];
+  cuttingList: FormCuttingListItem[];
   params: OptimizationParams;
   compareMode: boolean;
   selectedAlgorithms: AlgorithmType[];
@@ -111,5 +132,5 @@ export interface ValidationErrors {
   [key: string]: string | undefined;
 }
 
-// Re-export shared types for convenience
-export type { OptimizationItem, OptimizationFormData, CuttingListItem };
+// Re-export types for convenience
+export type { OptimizationItem };

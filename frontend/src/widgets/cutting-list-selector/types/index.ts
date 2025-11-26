@@ -11,7 +11,7 @@ import {
   CuttingListItem,
   ConversionResult as ServiceConversionResult,
 } from "@/shared/lib/services/cuttingListOptimizationService";
-import { OptimizationItem } from "@/shared/types/legacy";
+import type { OptimizationItem } from "@/entities/optimization/model/types";
 
 // Re-export CuttingListData for use in hooks
 export type { CuttingListData };

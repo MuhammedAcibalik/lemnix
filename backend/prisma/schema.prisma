@@ -23,6 +23,13 @@ enum ItemPriority {
   URGENT
 }
 
+enum ProductionPlanPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
 model User {
   id            String         @id @default(cuid())
   email         String         @unique @db.VarChar(255)
@@ -36,6 +43,7 @@ model User {
   cuttingLists  CuttingList[]
   optimizations Optimization[]
   activities    UserActivity[]
+  auditLogs     AuditLog[]
 
   @@index([email])
   @@index([role, isActive])
@@ -71,27 +79,28 @@ model CuttingList {
 }
 
 model CuttingListItem {
-  id                   String            @id @default(cuid())
-  workOrderId          String            @db.VarChar(100)
-  date                 String?           @db.VarChar(50)
-  color                String            @db.VarChar(50)
-  version              String            @db.VarChar(50)
-  size                 String            @db.VarChar(50)
-  profileType          String            @db.VarChar(100)
-  length               Decimal           @db.Decimal(10, 2)
+  id                   String              @id @default(cuid())
+  workOrderId          String              @db.VarChar(100)
+  date                 String?             @db.VarChar(50)
+  color                String              @db.VarChar(50)
+  version              String              @default("1.0") @db.VarChar(50)
+  size                 String              @db.VarChar(50)
+  profileType          String              @db.VarChar(100)
+  length               Decimal             @db.Decimal(10, 2)
   quantity             Int
   orderQuantity        Int?
-  cuttingPattern       String?           @db.VarChar(500)
-  notes                String?           @db.VarChar(1000)
-  priority             ItemPriority      @default(MEDIUM)
-  status               CuttingListStatus @default(DRAFT)
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
+  cuttingPattern       String?             @db.VarChar(500)
+  notes                String?             @db.VarChar(1000)
+  priority             ItemPriority        @default(MEDIUM)
+  status               CuttingListStatus   @default(DRAFT)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
   cuttingListId        String
-  materialDescription  String?           @db.VarChar(500)
-  materialNumber       String?           @db.VarChar(100)
+  materialDescription  String?             @db.VarChar(500)
+  materialNumber       String?             @db.VarChar(100)
   productionPlanItemId String?
-  cuttingList          CuttingList       @relation(fields: [cuttingListId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  cuttingList          CuttingList         @relation(fields: [cuttingListId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  productionPlanItem   ProductionPlanItem? @relation(fields: [productionPlanItemId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@index([cuttingListId])
   @@index([workOrderId])
@@ -151,7 +160,7 @@ model ProfileType {
 
 model CuttingListStatistics {
   id                  String      @id @default(cuid())
-  cuttingListId       String
+  cuttingListId       String      @unique
   totalItems          Int         @default(0)
   totalProfiles       Int         @default(0)
   totalQuantity       Int         @default(0)
@@ -234,7 +243,7 @@ model UserActivity {
 
 model AuditLog {
   id        String   @id @default(cuid())
-  userId    String   @db.VarChar(100)
+  userId    String?  @db.VarChar(100)
   tableName String   @db.VarChar(100)
   operation String   @db.VarChar(50)
   recordId  String   @db.VarChar(100)
@@ -243,6 +252,7 @@ model AuditLog {
   ipAddress String?  @db.VarChar(45)
   userAgent String?  @db.VarChar(500)
   timestamp DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@index([userId, timestamp(sort: Desc)])
   @@index([tableName, operation])
@@ -334,29 +344,30 @@ model ProductionPlan {
 }
 
 model ProductionPlanItem {
-  id                        String         @id @default(cuid())
+  id                        String                 @id @default(cuid())
   planId                    String
-  ad                        String         @db.VarChar(200)
-  siparisVeren              String         @db.VarChar(200)
-  musteriNo                 String         @db.VarChar(100)
-  musteriKalemi             String         @db.VarChar(200)
-  siparis                   String         @db.VarChar(100)
-  malzemeNo                 String         @db.VarChar(100)
-  malzemeKisaMetni          String         @db.VarChar(500)
-  miktar                    Decimal        @db.Decimal(10, 2)
+  ad                        String                 @db.VarChar(200)
+  siparisVeren              String                 @db.VarChar(200)
+  musteriNo                 String                 @db.VarChar(100)
+  musteriKalemi             String                 @db.VarChar(200)
+  siparis                   String                 @db.VarChar(100)
+  malzemeNo                 String                 @db.VarChar(100)
+  malzemeKisaMetni          String                 @db.VarChar(500)
+  miktar                    Decimal                @db.Decimal(10, 2)
   planlananBitisTarihi      DateTime
-  bolum                     String         @db.VarChar(100)
-  oncelik                   String         @db.VarChar(50)
+  bolum                     String                 @db.VarChar(100)
+  oncelik                   ProductionPlanPriority @default(MEDIUM)
   linkedCuttingListId       String?
-  encryptedAd               String?        @db.VarChar(500)
-  encryptedMalzemeKisaMetni String?        @db.VarChar(1000)
-  encryptedMalzemeNo        String?        @db.VarChar(200)
-  encryptedMusteriKalemi    String?        @db.VarChar(500)
-  encryptedMusteriNo        String?        @db.VarChar(200)
-  encryptedSiparis          String?        @db.VarChar(200)
-  encryptedSiparisVeren     String?        @db.VarChar(500)
-  linkedCuttingList         CuttingList?   @relation(fields: [linkedCuttingListId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  plan                      ProductionPlan @relation(fields: [planId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  encryptedAd               String?                @db.VarChar(500)
+  encryptedMalzemeKisaMetni String?                @db.VarChar(1000)
+  encryptedMalzemeNo        String?                @db.VarChar(200)
+  encryptedMusteriKalemi    String?                @db.VarChar(500)
+  encryptedMusteriNo        String?                @db.VarChar(200)
+  encryptedSiparis          String?                @db.VarChar(200)
+  encryptedSiparisVeren     String?                @db.VarChar(500)
+  linkedCuttingList         CuttingList?           @relation(fields: [linkedCuttingListId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  plan                      ProductionPlan         @relation(fields: [planId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  cuttingListItems          CuttingListItem[]
 
   @@index([planId])
   @@index([siparis])

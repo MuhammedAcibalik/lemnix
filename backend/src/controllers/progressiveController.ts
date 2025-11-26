@@ -12,7 +12,7 @@
 
 import { Request, Response } from "express";
 import { Server as SocketIOServer } from "socket.io";
-import { Prisma } from "@prisma/client";
+import { Prisma, ProductionPlanPriority } from "@prisma/client";
 import { progressiveLoadingService } from "../services/progressiveLoadingService";
 import { logger } from "../services/logger";
 import { UserRole, Permission } from "../middleware/authorization";
@@ -186,7 +186,10 @@ export class ProgressiveController {
         itemFilters.bolum = req.query.bolum as string;
       }
       if (req.query.oncelik) {
-        itemFilters.oncelik = req.query.oncelik as string;
+        const oncelikValue = req.query.oncelik as string;
+        if (Object.values(ProductionPlanPriority).includes(oncelikValue as ProductionPlanPriority)) {
+          itemFilters.oncelik = oncelikValue as ProductionPlanPriority;
+        }
       }
       if (Object.keys(itemFilters).length > 0) {
         filters.items = {

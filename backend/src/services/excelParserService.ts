@@ -5,7 +5,7 @@
  */
 
 import * as XLSX from "xlsx";
-import { ProductionPlanItem } from "@prisma/client";
+import { ProductionPlanItem, Prisma } from "@prisma/client";
 
 export interface ExcelParseResult {
   success: boolean;
@@ -362,7 +362,7 @@ export class ExcelParserService {
             "malzeme kısa metni",
           ]) || "",
         ).trim(),
-        miktar,
+        miktar: new Prisma.Decimal(miktar),
         planlananBitisTarihi,
         bolum: String(
           this.findColumnValue(rowData, ["Bölüm", "BÖLÜM", "bölüm"]) || "",
@@ -371,7 +371,14 @@ export class ExcelParserService {
           this.findColumnValue(rowData, ["Öncelik", "ÖNCELİK", "öncelik"]) ||
             "",
         ).trim(),
-        linkedCuttingListId: null, // Yeni alan eklendi
+        linkedCuttingListId: null,
+        encryptedAd: null,
+        encryptedMalzemeKisaMetni: null,
+        encryptedMalzemeNo: null,
+        encryptedMusteriKalemi: null,
+        encryptedMusteriNo: null,
+        encryptedSiparis: null,
+        encryptedSiparisVeren: null,
       } as ProductionPlanItem;
 
       return { success: true, data: item };

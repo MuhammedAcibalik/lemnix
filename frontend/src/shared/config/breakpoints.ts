@@ -7,7 +7,7 @@
  * This file is kept for backward compatibility and provides mapping to Design System v3 breakpoints.
  */
 
-import { breakpoints as DSBreakpoints } from "@/App/theme/designSystem.v3";
+import { breakpoints as DSBreakpoints } from "@/app/theme/designSystem.v3";
 
 /**
  * Responsive breakpoints aligned with Design System v3

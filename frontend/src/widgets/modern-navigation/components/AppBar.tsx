@@ -25,7 +25,7 @@ import {
   AutoAwesome as SparkleIcon,
 } from "@mui/icons-material";
 import { Logo } from "@/shared/ui/Logo";
-import { appConfig } from "@/shared/config/legacy/appConfig";
+import { appConfig } from "@/shared/config/constants";
 import {
   stylingConstants,
   messages,

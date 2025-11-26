@@ -4,7 +4,7 @@
  * @version 2.0.0 - Enterprise Grade
  */
 
-import { OptimizationItem } from "../../types/legacy";
+import type { OptimizationItem } from "@/entities/optimization/model/types";
 import { MeasurementConverter } from "../utils/measurementConverter";
 
 // ============================================================================
@@ -179,7 +179,7 @@ export class CuttingListOptimizationService {
               result.items.push(conversionResult.item);
               result.statistics.convertedItems++;
               result.statistics.totalLength +=
-                conversionResult.item.totalLength || 0;
+                conversionResult.item.length * conversionResult.item.quantity;
               result.statistics.totalQuantity += conversionResult.item.quantity;
             } else {
               result.statistics.failedConversions++;
@@ -279,29 +279,15 @@ export class CuttingListOptimizationService {
 
       // Create optimization item
       const optimizationItem: OptimizationItem = {
-        id: `${item.id}-${profile.id}`,
+        id: `${item.id}-${profile.id}` as any, // ID branded type conversion
         workOrderId: item.workOrderId,
-        productName: section.productName,
         profileType: profileType,
-        measurement: profile.measurement,
         length: lengthResult.value,
         quantity: profile.quantity,
-        totalLength: lengthResult.value * profile.quantity,
         size: item.size,
         color: item.color,
         note: item.note || "",
         version: item.version,
-        date: item.date,
-        // Enhanced metadata
-        metadata: {
-          color: item.color,
-          note: item.note || "",
-          size: item.size,
-          date: item.date,
-          version: item.version,
-          sipQuantity: item.orderQuantity,
-          workOrderId: item.workOrderId,
-        },
       };
 
       const result: SingleConversionResult = {

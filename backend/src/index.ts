@@ -22,7 +22,6 @@ async function bootstrap(): Promise<void> {
   httpServer.listen(env.PORT, async () => {
     try {
       await databaseManager.connect();
-      await databaseManager.initialize();
       startQueryMonitoring();
 
       logger.info("LEMNİX Backend API running", {
@@ -47,7 +46,6 @@ async function bootstrap(): Promise<void> {
           port: env.PORT,
         });
         process.exit(1);
-        break;
       case "EADDRINUSE":
         logger.warn("Port is already in use, attempting to free it", {
           port: env.PORT,
@@ -88,7 +86,6 @@ async function bootstrap(): Promise<void> {
           port: env.PORT,
         });
         process.exit(1);
-        break;
       default:
         throw error;
     }

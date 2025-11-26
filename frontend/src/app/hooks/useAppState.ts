@@ -6,7 +6,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { AppState, PageChangeHandler, SnackbarCloseHandler } from "../types";
+import type { AppState, PageChangeHandler, SnackbarCloseHandler } from "../types";
 import { defaultState, routes, pageIds } from "../constants";
 
 /**
