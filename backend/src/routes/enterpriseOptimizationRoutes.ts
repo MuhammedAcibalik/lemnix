@@ -237,6 +237,13 @@ class EnterpriseOptimizationRouterFactory {
         rateLimit: "optimization",
       },
       {
+        path: "/optimize/:jobId/status",
+        method: "get",
+        handler: "getJobStatus",
+        requiresAuth: true,
+        permission: Permission.VIEW_OPTIMIZATION_RESULTS,
+      },
+      {
         path: "/health",
         method: "get",
         handler: "healthCheck",

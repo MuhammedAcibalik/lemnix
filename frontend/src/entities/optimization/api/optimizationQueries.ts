@@ -20,6 +20,7 @@ import {
   checkOptimizationHealth,
   exportOptimizationResult,
   getOptimizationResult,
+  type OptimizationResponse,
 } from "./optimizationApi";
 import type {
   OptimizationRequest,
@@ -70,9 +71,18 @@ export const optimizationKeys = {
 export function useRunOptimization() {
   const queryClient = useQueryClient();
 
-  return useMutation({
+  return useMutation<
+    OptimizationResponse,
+    Error,
+    OptimizationRequest
+  >({
     mutationFn: runOptimization,
-    onSuccess: () => {
+    onSuccess: (result) => {
+      // Only invalidate if sync result (not queued)
+      if ("jobId" in result && result.status === "queued") {
+        // Job queued - don't invalidate yet, wait for completion
+        return;
+      }
       // Invalidate history and metrics after successful optimization
       queryClient.invalidateQueries({ queryKey: optimizationKeys.history() });
       queryClient.invalidateQueries({ queryKey: optimizationKeys.metrics() });

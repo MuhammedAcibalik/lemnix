@@ -114,6 +114,13 @@ export class EnterpriseOptimizationController {
     await this.optimizationHandler.optimizeCompare(req, res);
   };
 
+  public getJobStatus = async (
+    req: Request,
+    res: Response,
+  ): Promise<void> => {
+    await this.optimizationHandler.getJobStatus(req, res);
+  };
+
   // ==========================================================================
   // METRICS & ANALYTICS ENDPOINTS
   // ==========================================================================

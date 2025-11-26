@@ -77,20 +77,25 @@ export function getAuthToken(): string | null {
     return stored;
   }
 
-  // ✅ SECURITY: Development mode - use mock token for local development only
-  if (import.meta.env.MODE === "development" && import.meta.env.DEV) {
+  // ✅ SECURITY: Development mode - use mock token ONLY if explicitly enabled
+  // This requires VITE_ALLOW_MOCK_TOKEN=true environment variable
+  if (
+    import.meta.env.MODE === "development" &&
+    import.meta.env.DEV &&
+    import.meta.env.VITE_ALLOW_MOCK_TOKEN === "true"
+  ) {
     const mockToken = "mock-dev-token-lemnix-2025";
     localStorage.setItem("auth_token", mockToken);
+    console.warn(
+      "[SECURITY] Using mock token in development. This should NOT be enabled in production builds.",
+    );
     return mockToken;
   }
 
-  // ✅ SECURITY: Production mode - require actual token
-  // Do not use mock token in production
+  // ✅ SECURITY: Production mode - NEVER use mock token
+  // In production, if no token is found, return null
+  // The API client will handle the 401 response appropriately
   if (import.meta.env.MODE === "production" || import.meta.env.PROD) {
-    // In production, if no token is found, return null
-    // The API client will handle the 401 response appropriately
-    // This allows the app to function while authentication is being implemented
-    // but prevents using mock tokens in production
     return null;
   }
 

@@ -6,8 +6,12 @@ import { databaseManager } from "./config/database.js";
 import { logger } from "./services/logger.js";
 import { startQueryMonitoring } from "./middleware/queryMonitoring.js";
 import { initializeSentry } from "./monitoring/sentry.js";
+import { createOptimizationWorker } from "./workers/optimizationWorker.js";
+import { closeQueue } from "./config/queue.js";
+import type { Worker } from "bullmq";
 
 let httpServer: ReturnType<typeof createServer> | null = null;
+let optimizationWorker: Worker | null = null;
 
 async function bootstrap(): Promise<void> {
   // Initialize Sentry error tracking
@@ -24,10 +28,27 @@ async function bootstrap(): Promise<void> {
       await databaseManager.connect();
       startQueryMonitoring();
 
+      // Start optimization worker if queue is enabled
+      if (process.env.ENABLE_OPTIMIZATION_QUEUE === "true") {
+        try {
+          optimizationWorker = createOptimizationWorker();
+          logger.info("Optimization worker started", {
+            concurrency: process.env.QUEUE_CONCURRENCY || "5",
+            queueName: "optimization",
+          });
+        } catch (workerError) {
+          logger.error("Failed to start optimization worker", workerError as Error);
+          // Don't exit - server can still run without worker
+        }
+      } else {
+        logger.info("Optimization queue disabled (ENABLE_OPTIMIZATION_QUEUE not set)");
+      }
+
       logger.info("LEMNİX Backend API running", {
         url: `http://localhost:${env.PORT}`,
         environment: env.NODE_ENV,
         frontendUrl: env.FRONTEND_URL,
+        queueEnabled: process.env.ENABLE_OPTIMIZATION_QUEUE === "true",
       });
     } catch (error) {
       logger.error("Failed to start server", error as Error);
@@ -50,30 +71,26 @@ async function bootstrap(): Promise<void> {
         logger.warn("Port is already in use, attempting to free it", {
           port: env.PORT,
         });
-        // Try to kill the process using the port (Windows)
+        // Try to kill the process using the port (platform-agnostic)
         try {
-          const { exec } = await import("child_process");
-          const { promisify } = await import("util");
-          const execAsync = promisify(exec);
-
-          // Find process using port
-          const { stdout } = await execAsync(
-            `netstat -ano | findstr :${env.PORT} | findstr LISTENING`,
+          const { killProcessByPort, waitForPortRelease } = await import(
+            "./utils/processManager.js"
           );
 
-          const match = stdout.match(/\s+(\d+)\s*$/);
-          if (match && match[1]) {
-            const pid = match[1];
-            logger.info(`Killing process ${pid} using port ${env.PORT}`);
-            await execAsync(`taskkill /F /PID ${pid}`);
-
-            logger.info("Port freed, nodemon will restart automatically", {
+          const killed = await killProcessByPort(env.PORT, true);
+          if (killed) {
+            logger.info("Port freed, waiting for release", {
               port: env.PORT,
             });
-            // Wait briefly for port to be fully released (500ms)
-            await new Promise((resolve) => setTimeout(resolve, 500));
-            // Exit gracefully - nodemon will restart with delay (500ms from nodemon.json)
-            process.exit(0);
+            // Wait for port to be fully released (max 2 seconds)
+            const released = await waitForPortRelease(env.PORT, 2000, 100);
+            if (released) {
+              logger.info("Port released successfully, nodemon will restart automatically", {
+                port: env.PORT,
+              });
+              // Exit gracefully - nodemon will restart with delay (500ms from nodemon.json)
+              process.exit(0);
+            }
           }
         } catch (cleanupError) {
           logger.error(
@@ -152,6 +169,15 @@ async function handleShutdown(signal: string): Promise<void> {
         });
       });
     }
+
+    // Close optimization worker
+    if (optimizationWorker) {
+      await optimizationWorker.close();
+      logger.info("Optimization worker closed");
+    }
+
+    // Close queue connections
+    await closeQueue();
 
     // Disconnect database
     await databaseManager.disconnect();

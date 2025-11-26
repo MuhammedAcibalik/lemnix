@@ -36,6 +36,7 @@ const ENDPOINTS = {
   EXPORT: "/enterprise/export", // NEW: P0-3
   ANALYTICS: "/enterprise/analytics", // NEW
   OPTIMIZE_BY_PROFILE: "/enterprise/optimize-by-profile", // NEW: P0-5
+  JOB_STATUS: "/enterprise/optimize/:jobId/status", // NEW: Job status polling
 } as const;
 
 /**
@@ -133,11 +134,19 @@ export async function getAvailableAlgorithms(): Promise<
 }
 
 /**
+ * Run optimization result (sync or queued)
+ */
+export type OptimizationResponse =
+  | OptimizationResult
+  | { jobId: string; status: "queued" };
+
+/**
  * Run optimization (enhanced with validation + DTO normalization)
+ * Supports both sync and async (queue) processing
  */
 export async function runOptimization(
   request: OptimizationRequest,
-): Promise<OptimizationResult> {
+): Promise<OptimizationResponse> {
   // Client-side validation using Zod
   const validation = await validateOptimizationRequest(request);
 
@@ -156,7 +165,15 @@ export async function runOptimization(
     },
   });
 
-  // ✅ Normalize backend response to frontend type
+  // Check if job was queued (async processing)
+  if (response.data.jobId && response.data.status === "queued") {
+    return {
+      jobId: response.data.jobId,
+      status: "queued" as const,
+    };
+  }
+
+  // ✅ Normalize backend response to frontend type (sync processing)
   const normalized = safeNormalizeOptimizationResult(response.data);
 
   if (!normalized) {
@@ -164,6 +181,31 @@ export async function runOptimization(
   }
 
   return normalized;
+}
+
+/**
+ * Job status response
+ */
+export interface JobStatusResponse {
+  success: boolean;
+  jobId: string;
+  state: "waiting" | "active" | "completed" | "failed" | "delayed";
+  progress?: number;
+  result?: OptimizationResult;
+  failedReason?: string;
+  timestamp?: number;
+  processedOn?: number;
+  finishedOn?: number;
+}
+
+/**
+ * Get job status by job ID
+ */
+export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
+  const response = await api.get<JobStatusResponse>(
+    ENDPOINTS.JOB_STATUS.replace(":jobId", jobId),
+  );
+  return response.data;
 }
 
 /**

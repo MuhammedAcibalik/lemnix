@@ -18,6 +18,8 @@ import {
   SessionRecord,
   SessionStore,
 } from "./sessionStore";
+import { RedisSessionStore } from "./sessionStore/RedisSessionStore";
+import { UserService } from "../services/user/UserService";
 
 // ============================================================================
 // SESSION MANAGEMENT
@@ -153,30 +155,55 @@ class SessionManager {
   }
 }
 
-export const sessionManager = new SessionManager();
+/**
+ * Create session store based on environment variable
+ */
+function createSessionStore(): SessionStore {
+  const storeType = process.env.SESSION_STORE || "memory";
+
+  if (storeType === "redis") {
+    logger.info("Using Redis session store");
+    return new RedisSessionStore();
+  }
+
+  logger.info("Using in-memory session store");
+  return new InMemorySessionStore();
+}
+
+export const sessionManager = new SessionManager(createSessionStore());
 
 // ============================================================================
 // AUTHENTICATION MIDDLEWARE
 // ============================================================================
 
 /**
+ * User service instance for authentication
+ */
+const userService = new UserService();
+
+/**
  * Authenticate user with real user database integration
- * This will be replaced with actual database queries in production
+ * Uses UserService to verify credentials against database
  */
 export const authenticateUser = async (
   username: string,
   password: string,
 ): Promise<{ userId: string; role: UserRole } | null> => {
   try {
-    // TODO: Replace with actual database integration
-    // const user = await userService.findByUsername(username);
-    // if (!user || !await bcrypt.compare(password, user.hashedPassword)) {
-    //   return null;
-    // }
-    // return { userId: user.id, role: user.role };
+    // Use email as username (username field accepts email)
+    const authenticatedUser = await userService.authenticateUser(
+      username,
+      password,
+    );
 
-    logger.warn("Authentication service not implemented", { username });
-    return null;
+    if (!authenticatedUser) {
+      return null;
+    }
+
+    return {
+      userId: authenticatedUser.userId,
+      role: authenticatedUser.role,
+    };
   } catch (error) {
     logger.error("Authentication error", {
       error: (error as Error).message,
@@ -321,10 +348,15 @@ export const authenticateToken = (
     }
 
     // Development mode: Accept mock token with LIMITED permissions
+    // SECURITY: Only allow in non-production environments
     if (
-      process.env.NODE_ENV === "development" &&
+      process.env.NODE_ENV !== "production" &&
+      process.env.ALLOW_MOCK_TOKEN === "true" &&
       token === "mock-dev-token-lemnix-2025"
     ) {
+      logger.warn("Using mock token in development mode", {
+        environment: process.env.NODE_ENV,
+      });
       req.user = {
         userId: "dev-user-123",
         role: "planner" as UserRole, // ⚠️ ADMIN yerine PLANNER
@@ -337,6 +369,18 @@ export const authenticateToken = (
         tokenId: "dev-token-123",
       };
       next();
+      return;
+    }
+
+    // Production: Reject mock tokens
+    if (token === "mock-dev-token-lemnix-2025") {
+      logger.error("Mock token rejected in production", {
+        ip: req.ip,
+        userAgent: req.get("User-Agent"),
+      });
+      res
+        .status(401)
+        .json({ error: "Unauthorized", message: "Invalid token" });
       return;
     }
 
@@ -376,8 +420,10 @@ export const validateSession = (
   }
 
   // Development mode: Skip session validation for mock token
+  // SECURITY: Only allow in non-production environments
   if (
-    process.env.NODE_ENV === "development" &&
+    process.env.NODE_ENV !== "production" &&
+    process.env.ALLOW_MOCK_TOKEN === "true" &&
     req.user.userId === "dev-user-123"
   ) {
     next();

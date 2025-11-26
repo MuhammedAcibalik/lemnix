@@ -23,7 +23,7 @@ import {
   useAdaptiveVariant,
 } from "@/shared/hooks";
 import { CardV2 } from "@/shared";
-import { apiClient } from "@/shared/api/client";
+import { apiClient, getAuthToken } from "@/shared/api/client";
 import { getCurrentISOWeek } from "@/shared/lib/dateUtils";
 
 // Import step components (WizardHeader and WizardTabs no longer used - sidebar pattern)
@@ -384,12 +384,18 @@ export const EnterpriseOptimizationWizard: React.FC = () => {
       });
 
       // ✅ REAL API CALL: Enterprise optimization endpoint with mode support
+      // Get auth token from client (handles mock token in dev if enabled)
+      const authToken = getAuthToken();
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+      if (authToken) {
+        headers.Authorization = `Bearer ${authToken}`;
+      }
+
       const response = await fetch(endpoint, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer mock-dev-token`, // Development token
-        },
+        headers,
         body: JSON.stringify(requestBody),
       });
 

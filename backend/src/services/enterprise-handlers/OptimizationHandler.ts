@@ -18,6 +18,9 @@ import { OptimizationItem, OptimizationResult } from "../../types";
 import type { EnterpriseOptimizationRequest } from "../../types/enterprise";
 import type { AlgorithmMode } from "../optimization/AlgorithmModeSelector";
 import { logger } from "../logger";
+import { getOptimizationQueue } from "../../config/queue";
+import type { OptimizationJobData } from "../../workers/optimizationWorker";
+import type { AdvancedOptimizationResult } from "../optimization/types";
 
 export class OptimizationHandler
   extends BaseHandler
@@ -224,6 +227,7 @@ export class OptimizationHandler
   /**
    * Optimize with algorithm mode selection
    * Hybrid approach: standard/advanced/auto
+   * Supports both sync and async (queue) processing
    */
   public async optimizeWithMode(req: Request, res: Response): Promise<void> {
     const requestId = this.generateRequestId();
@@ -232,8 +236,51 @@ export class OptimizationHandler
     try {
       const request = req.body as EnterpriseOptimizationRequest & {
         algorithmMode?: AlgorithmMode;
+        useQueue?: boolean; // Feature flag for queue processing
       };
       const mode: AlgorithmMode = request.algorithmMode ?? "standard";
+      const useQueue = process.env.ENABLE_OPTIMIZATION_QUEUE === "true" || request.useQueue === true;
+
+      // If queue is enabled, submit job and return job ID
+      if (useQueue) {
+        const queue = getOptimizationQueue();
+        const userId = (req as { user?: { userId: string } }).user?.userId || "anonymous";
+
+        const jobData: OptimizationJobData = {
+          items: request.items,
+          params: {
+            algorithm: request.algorithm,
+            objectives: request.objectives,
+            constraints: request.constraints,
+            performance: request.performance,
+            costModel: request.costModel,
+          },
+          mode,
+          materialStockLengths: request.materialStockLengths,
+          profileParams: request.profileParams,
+          userId,
+          requestId,
+        };
+
+        const job = await queue.add("optimize", jobData, {
+          jobId: requestId,
+        });
+
+        logger.info("Optimization job queued", {
+          jobId: job.id,
+          requestId,
+          userId,
+        });
+
+        res.json({
+          success: true,
+          jobId: job.id,
+          requestId,
+          status: "queued",
+          message: "Optimization job queued successfully",
+        });
+        return;
+      }
 
       // DEBUG: Log incoming request
       logger.debug("[OptimizationHandler] Incoming request", {
@@ -474,5 +521,73 @@ export class OptimizationHandler
     if (algo === "pattern-exact") return "Pattern Exact Search";
 
     return "Smart Algorithm";
+  }
+
+  /**
+   * Get job status by job ID
+   */
+  public async getJobStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const { jobId } = req.params;
+
+      if (!jobId) {
+        res.status(400).json({
+          success: false,
+          error: {
+            message: "Job ID is required",
+            code: "INVALID_JOB_ID",
+          },
+        });
+        return;
+      }
+
+      const queue = getOptimizationQueue();
+      const job = await queue.getJob(jobId);
+
+      if (!job) {
+        res.status(404).json({
+          success: false,
+          error: {
+            message: "Job not found",
+            code: "JOB_NOT_FOUND",
+          },
+        });
+        return;
+      }
+
+      const state = await job.getState();
+      const progress = job.progress;
+      const jobResult = job.returnvalue as
+        | { result: AdvancedOptimizationResult; requestId: string }
+        | undefined;
+      const failedReason = job.failedReason;
+
+      // Extract result from job return value
+      const result = jobResult?.result;
+
+      res.json({
+        success: true,
+        jobId: job.id,
+        state,
+        progress,
+        result: result
+          ? {
+              ...result,
+              // Ensure all required fields are present
+              efficiency: result.efficiency ?? 0,
+              wastePercentage: result.wastePercentage ?? 0,
+              cuts: result.cuts ?? [],
+              totalCost: result.totalCost ?? 0,
+              executionTimeMs: result.executionTimeMs ?? 0,
+            }
+          : undefined,
+        failedReason,
+        timestamp: job.timestamp,
+        processedOn: job.processedOn,
+        finishedOn: job.finishedOn,
+      });
+    } catch (error) {
+      this.handleError(res, error, "GET_JOB_STATUS_ERROR");
+    }
   }
 }

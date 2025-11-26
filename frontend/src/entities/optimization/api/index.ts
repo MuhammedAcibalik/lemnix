@@ -19,6 +19,10 @@ export {
   exportOptimizationResult,
   // NEW: P3-11 Prefetch
   getOptimizationResult,
+  // NEW: Job polling
+  getJobStatus,
+  type JobStatusResponse,
+  type OptimizationResponse,
 } from "./optimizationApi";
 
 // DTO functions (backend-frontend type normalization)
@@ -40,3 +44,10 @@ export {
   // ⚠️ Removed unused hooks: useAvailableAlgorithms, useValidateOptimization, useOptimizationEstimate
   // Use raw API functions if needed: getAvailableAlgorithms(), validateOptimizationRequest(), getOptimizationEstimate()
 } from "./optimizationQueries";
+
+// Job polling hook
+export {
+  useJobPolling,
+  type UseJobPollingOptions,
+  type UseJobPollingReturn,
+} from "./useJobPolling";
