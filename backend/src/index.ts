@@ -68,41 +68,63 @@ async function bootstrap(): Promise<void> {
         });
         process.exit(1);
       case "EADDRINUSE":
-        logger.warn("Port is already in use, attempting to free it", {
-          port: env.PORT,
-        });
-        // Try to kill the process using the port (platform-agnostic)
-        try {
-          const { killProcessByPort, waitForPortRelease } = await import(
-            "./utils/processManager.js"
-          );
+        const isProduction = process.env.NODE_ENV === "production";
 
-          const killed = await killProcessByPort(env.PORT, true);
-          if (killed) {
-            logger.info("Port freed, waiting for release", {
+        if (isProduction) {
+          // Production: Fail fast with clear error message
+          // Do NOT attempt to kill processes - let orchestrator handle it
+          logger.error(
+            "Port is already in use. Application cannot start.",
+            {
               port: env.PORT,
-            });
-            // Wait for port to be fully released (max 2 seconds)
-            const released = await waitForPortRelease(env.PORT, 2000, 100);
-            if (released) {
-              logger.info("Port released successfully, nodemon will restart automatically", {
+              environment: env.NODE_ENV,
+              message:
+                "In production, port conflicts should be resolved by the orchestrator (Docker/K8s). " +
+                "Please check if another instance is running or if the port is configured incorrectly.",
+            },
+          );
+          process.exit(1);
+        } else {
+          // Development: Attempt to free port (for local development convenience)
+          logger.warn("Port is already in use, attempting to free it", {
+            port: env.PORT,
+            environment: env.NODE_ENV,
+          });
+          try {
+            const { killProcessByPort, waitForPortRelease } = await import(
+              "./utils/processManager.js"
+            );
+
+            const killed = await killProcessByPort(env.PORT, true);
+            if (killed) {
+              logger.info("Port freed, waiting for release", {
                 port: env.PORT,
               });
-              // Exit gracefully - nodemon will restart with delay (500ms from nodemon.json)
-              process.exit(0);
+              // Wait for port to be fully released (max 2 seconds)
+              const released = await waitForPortRelease(env.PORT, 2000, 100);
+              if (released) {
+                logger.info(
+                  "Port released successfully, nodemon will restart automatically",
+                  {
+                    port: env.PORT,
+                  },
+                );
+                // Exit gracefully - nodemon will restart with delay (500ms from nodemon.json)
+                process.exit(0);
+              }
             }
+          } catch (cleanupError) {
+            logger.error(
+              "Failed to free port automatically",
+              cleanupError as Error,
+            );
           }
-        } catch (cleanupError) {
-          logger.error(
-            "Failed to free port automatically",
-            cleanupError as Error,
-          );
-        }
 
-        logger.error("Port is still in use after cleanup attempt", {
-          port: env.PORT,
-        });
-        process.exit(1);
+          logger.error("Port is still in use after cleanup attempt", {
+            port: env.PORT,
+          });
+          process.exit(1);
+        }
       default:
         throw error;
     }

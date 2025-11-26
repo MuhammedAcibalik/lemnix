@@ -157,13 +157,42 @@ class SessionManager {
 
 /**
  * Create session store based on environment variable
+ * Production requires Redis, development can use in-memory fallback
  */
 function createSessionStore(): SessionStore {
-  const storeType = process.env.SESSION_STORE || "memory";
+  const isProduction = process.env.NODE_ENV === "production";
+  const storeType = process.env.SESSION_STORE || (isProduction ? "redis" : "memory");
 
-  if (storeType === "redis") {
-    logger.info("Using Redis session store");
-    return new RedisSessionStore();
+  if (storeType === "redis" || isProduction) {
+    try {
+      // Check Redis connection
+      const { isRedisConnected } = require("../config/redis");
+      if (!isRedisConnected() && isProduction) {
+        logger.error(
+          "Redis is required for production session store. Application cannot start without Redis.",
+        );
+        throw new Error(
+          "Redis connection failed. Production requires Redis for session management.",
+        );
+      }
+      logger.info("Using Redis session store");
+      return new RedisSessionStore();
+    } catch (error) {
+      if (isProduction) {
+        logger.error(
+          "Redis is required for production session store. Application cannot start without Redis.",
+          error as Error,
+        );
+        throw new Error(
+          "Redis connection failed. Production requires Redis for session management.",
+        );
+      }
+      logger.warn(
+        "Redis session store failed, falling back to in-memory store",
+        { error: (error as Error).message },
+      );
+      return new InMemorySessionStore();
+    }
   }
 
   logger.info("Using in-memory session store");
@@ -347,43 +376,6 @@ export const authenticateToken = (
       return;
     }
 
-    // Development mode: Accept mock token with LIMITED permissions
-    // SECURITY: Only allow in non-production environments
-    if (
-      process.env.NODE_ENV !== "production" &&
-      process.env.ALLOW_MOCK_TOKEN === "true" &&
-      token === "mock-dev-token-lemnix-2025"
-    ) {
-      logger.warn("Using mock token in development mode", {
-        environment: process.env.NODE_ENV,
-      });
-      req.user = {
-        userId: "dev-user-123",
-        role: "planner" as UserRole, // ⚠️ ADMIN yerine PLANNER
-        sessionId: "dev-session-123",
-        permissions: [
-          Permission.VIEW_CUTTING_PLANS,
-          Permission.VIEW_OPTIMIZATION_RESULTS,
-          Permission.START_OPTIMIZATION,
-        ], // ⚠️ Sınırlı yetkiler
-        tokenId: "dev-token-123",
-      };
-      next();
-      return;
-    }
-
-    // Production: Reject mock tokens
-    if (token === "mock-dev-token-lemnix-2025") {
-      logger.error("Mock token rejected in production", {
-        ip: req.ip,
-        userAgent: req.get("User-Agent"),
-      });
-      res
-        .status(401)
-        .json({ error: "Unauthorized", message: "Invalid token" });
-      return;
-    }
-
     const jwtSecret = process.env.JWT_SECRET || "default-secret-key";
     const decoded = jwt.verify(token, jwtSecret) as JWTPayload;
 
@@ -416,17 +408,6 @@ export const validateSession = (
     res
       .status(401)
       .json({ error: "Unauthorized", message: "Authentication required" });
-    return;
-  }
-
-  // Development mode: Skip session validation for mock token
-  // SECURITY: Only allow in non-production environments
-  if (
-    process.env.NODE_ENV !== "production" &&
-    process.env.ALLOW_MOCK_TOKEN === "true" &&
-    req.user.userId === "dev-user-123"
-  ) {
-    next();
     return;
   }
 

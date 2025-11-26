@@ -1955,7 +1955,8 @@ export class GeneticAlgorithm extends BaseAlgorithm {
   }
 
   /**
-   * Recursively generate all valid combinations
+   * Iteratively generate all valid combinations using stack-based approach
+   * ✅ FIX: Converted from recursive to iterative to prevent stack overflow
    * ✅ FIX: Now supports kerf calculation
    */
   private generateCombinations(
@@ -1973,79 +1974,113 @@ export class GeneticAlgorithm extends BaseAlgorithm {
       waste: number;
     }>,
   ): void {
-    if (itemIndex >= lengths.length) {
-      // Check if this pattern is valid (has at least one item)
-      if (currentPattern.size > 0) {
-        // ✅ FIX: Calculate used length with kerf
-        let used = 0;
-        let totalSegments = 0;
-
-        for (const [length, count] of currentPattern.entries()) {
-          used += length * count;
-          totalSegments += count;
-        }
-
-        // ✅ Add kerf: (totalSegments - 1) × kerfWidth (kerf between segments)
-        if (kerfWidth > 0 && totalSegments > 0) {
-          const kerfNeeded = (totalSegments - 1) * kerfWidth;
-          used += kerfNeeded;
-        }
-
-        if (used <= usableLength) {
-          const waste = usableLength - used;
-          patterns.push({
-            stockLength,
-            pattern: new Map(currentPattern),
-            used,
-            waste,
-          });
-        }
-      }
-      return;
+    // Stack-based iterative approach to prevent stack overflow
+    interface StackFrame {
+      pattern: Map<number, number>;
+      itemIndex: number;
     }
 
-    const currentLength = lengths[itemIndex]!;
+    const stack: StackFrame[] = [];
+    const MAX_DEPTH = lengths.length;
+    const MAX_ITERATIONS = 1000000; // Safety limit to prevent infinite loops
 
-    // ✅ CRITICAL FIX: Calculate remaining space in current pattern
-    let currentUsed = 0;
-    let currentTotalSegments = 0;
-    for (const [length, count] of currentPattern.entries()) {
-      currentUsed += length * count;
-      currentTotalSegments += count;
-    }
+    // Initialize stack with starting state
+    stack.push({
+      pattern: new Map(currentPattern),
+      itemIndex,
+    });
 
-    // Calculate kerf already used
-    const currentKerf =
-      kerfWidth > 0 && currentTotalSegments > 0
-        ? (currentTotalSegments - 1) * kerfWidth
-        : 0;
+    let iterations = 0;
 
-    const remainingSpace = usableLength - currentUsed - currentKerf;
+    while (stack.length > 0 && iterations < MAX_ITERATIONS) {
+      iterations++;
+      const frame = stack.pop()!;
 
-    // Calculate max count for current item based on remaining space
-    const maxCount =
-      kerfWidth === 0
-        ? Math.floor(remainingSpace / currentLength)
-        : Math.floor(
-            (remainingSpace + kerfWidth) / (currentLength + kerfWidth),
-          );
+      // Base case: all items processed
+      if (frame.itemIndex >= lengths.length) {
+        // Check if this pattern is valid (has at least one item)
+        if (frame.pattern.size > 0) {
+          // ✅ FIX: Calculate used length with kerf
+          let used = 0;
+          let totalSegments = 0;
 
-    // Try all possible counts for current item (0 to maxCount)
-    for (let count = 0; count <= maxCount; count++) {
-      const newPattern = new Map(currentPattern);
-      if (count > 0) {
-        newPattern.set(currentLength, count);
+          for (const [length, count] of frame.pattern.entries()) {
+            used += length * count;
+            totalSegments += count;
+          }
+
+          // ✅ Add kerf: (totalSegments - 1) × kerfWidth (kerf between segments)
+          if (kerfWidth > 0 && totalSegments > 0) {
+            const kerfNeeded = (totalSegments - 1) * kerfWidth;
+            used += kerfNeeded;
+          }
+
+          if (used <= usableLength) {
+            const waste = usableLength - used;
+            patterns.push({
+              stockLength,
+              pattern: new Map(frame.pattern),
+              used,
+              waste,
+            });
+          }
+        }
+        continue;
       }
 
-      this.generateCombinations(
-        lengths,
-        maxCounts,
-        usableLength,
-        stockLength,
-        kerfWidth,
-        newPattern,
-        itemIndex + 1,
-        patterns,
+      // Safety check: prevent excessive depth
+      if (stack.length > MAX_DEPTH * 100) {
+        // Log warning but continue processing
+        console.warn(
+          `Stack depth exceeded safe limit: ${stack.length}. Stopping to prevent memory issues.`,
+        );
+        break;
+      }
+
+      const currentLength = lengths[frame.itemIndex]!;
+
+      // ✅ CRITICAL FIX: Calculate remaining space in current pattern
+      let currentUsed = 0;
+      let currentTotalSegments = 0;
+      for (const [length, count] of frame.pattern.entries()) {
+        currentUsed += length * count;
+        currentTotalSegments += count;
+      }
+
+      // Calculate kerf already used
+      const currentKerf =
+        kerfWidth > 0 && currentTotalSegments > 0
+          ? (currentTotalSegments - 1) * kerfWidth
+          : 0;
+
+      const remainingSpace = usableLength - currentUsed - currentKerf;
+
+      // Calculate max count for current item based on remaining space
+      const maxCount =
+        kerfWidth === 0
+          ? Math.floor(remainingSpace / currentLength)
+          : Math.floor(
+              (remainingSpace + kerfWidth) / (currentLength + kerfWidth),
+            );
+
+      // Try all possible counts for current item (0 to maxCount)
+      // Process in reverse order to maintain same order as recursive version
+      for (let count = maxCount; count >= 0; count--) {
+        const newPattern = new Map(frame.pattern);
+        if (count > 0) {
+          newPattern.set(currentLength, count);
+        }
+
+        stack.push({
+          pattern: newPattern,
+          itemIndex: frame.itemIndex + 1,
+        });
+      }
+    }
+
+    if (iterations >= MAX_ITERATIONS) {
+      console.warn(
+        `Maximum iterations (${MAX_ITERATIONS}) reached in generateCombinations. Some combinations may be missing.`,
       );
     }
   }

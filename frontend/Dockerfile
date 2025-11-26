@@ -45,7 +45,10 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copy nginx configuration
 COPY <<EOF /etc/nginx/nginx.conf
 user nginx;
-worker_processes auto;
+# Optimize worker processes for container environments
+# Use environment variable if set, otherwise auto-detect
+# In Docker/K8s, respect CPU limits by using auto (respects cgroup limits)
+worker_processes ${NGINX_WORKER_PROCESSES:-auto};
 error_log /var/log/nginx/error.log warn;
 pid /var/run/nginx.pid;
 

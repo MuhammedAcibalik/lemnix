@@ -6,6 +6,8 @@
 
 import { Request, Response, NextFunction } from "express";
 import { logger } from "../services/logger";
+import { RedisRateLimitStore } from "./rateLimiting/RedisRateLimitStore";
+import { InMemoryRateLimitStore } from "./rateLimiting/InMemoryRateLimitStore";
 
 interface RateLimitConfig {
   windowMs: number;
@@ -63,14 +65,27 @@ const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
   },
 };
 
-class RateLimitStore {
+/**
+ * Rate Limit Store Interface
+ */
+interface IRateLimitStore {
+  getRecord(key: string): Promise<RequestRecord>;
+  updateRecord(key: string, record: RequestRecord): Promise<void>;
+  getStats(): Promise<{ totalKeys: number; activeRecords: number }>;
+  reset(key: string): Promise<boolean>;
+}
+
+/**
+ * In-Memory Rate Limit Store (for development/fallback)
+ */
+class InMemoryRateLimitStore implements IRateLimitStore {
   private store = new Map<string, RequestRecord>();
 
   constructor() {
     setInterval(() => this.cleanupExpiredRecords(), 5 * 60 * 1000);
   }
 
-  getRecord(key: string): RequestRecord {
+  async getRecord(key: string): Promise<RequestRecord> {
     if (!this.store.has(key)) {
       const now = Date.now();
       this.store.set(key, {
@@ -84,7 +99,7 @@ class RateLimitStore {
     return this.store.get(key)!;
   }
 
-  updateRecord(key: string, record: RequestRecord): void {
+  async updateRecord(key: string, record: RequestRecord): Promise<void> {
     this.store.set(key, record);
   }
 
@@ -99,28 +114,77 @@ class RateLimitStore {
     }
   }
 
-  getStats(): { totalKeys: number; activeRecords: number } {
+  async getStats(): Promise<{ totalKeys: number; activeRecords: number }> {
     return {
       totalKeys: this.store.size,
       activeRecords: Array.from(this.store.values()).filter((r) => r.count > 0)
         .length,
     };
   }
+
+  async reset(key: string): Promise<boolean> {
+    if (this.store.has(key)) {
+      const now = Date.now();
+      this.store.set(key, {
+        count: 0,
+        burstCount: 0,
+        firstRequest: now,
+        lastRequest: now,
+        blockedCount: 0,
+      });
+      return true;
+    }
+    return false;
+  }
 }
 
-const rateLimitStore = new RateLimitStore();
+/**
+ * Create rate limit store based on environment
+ * Production requires Redis, development can use in-memory fallback
+ */
+function createRateLimitStore(): IRateLimitStore {
+  const isProduction = process.env.NODE_ENV === "production";
+  const useRedis = process.env.RATE_LIMIT_STORE === "redis" || isProduction;
+
+  if (useRedis) {
+    try {
+      logger.info("Using Redis rate limit store");
+      return new RedisRateLimitStore();
+    } catch (error) {
+      if (isProduction) {
+        logger.error(
+          "Redis is required for production rate limiting. Application cannot start without Redis.",
+          error as Error,
+        );
+        throw new Error(
+          "Redis connection failed. Production requires Redis for rate limiting.",
+        );
+      }
+      logger.warn(
+        "Redis rate limit store failed, falling back to in-memory store",
+        { error: (error as Error).message },
+      );
+      return new InMemoryRateLimitStore();
+    }
+  }
+
+  logger.info("Using in-memory rate limit store");
+  return new InMemoryRateLimitStore();
+}
+
+const rateLimitStore = createRateLimitStore();
 
 const generateRateLimitKey = (req: Request, configType: string): string => {
   const identifier = req.user?.userId || req.ip || "anonymous";
   return `${configType}:${identifier}`;
 };
 
-const checkRateLimit = (
+const checkRateLimit = async (
   config: RateLimitConfig,
   key: string,
-): { allowed: boolean; retryAfter?: number; reason?: string } => {
+): Promise<{ allowed: boolean; retryAfter?: number; reason?: string }> => {
   const now = Date.now();
-  const record = rateLimitStore.getRecord(key);
+  const record = await rateLimitStore.getRecord(key);
 
   if (now - record.lastRequest < config.burstWindowMs) {
     if (record.burstCount >= config.burstLimit) {
@@ -169,22 +233,26 @@ const checkRateLimit = (
   return { allowed: true };
 };
 
-const updateRequestRecord = (key: string): void => {
+const updateRequestRecord = async (key: string): Promise<void> => {
   const now = Date.now();
-  const record = rateLimitStore.getRecord(key);
+  const record = await rateLimitStore.getRecord(key);
 
   record.count++;
   record.burstCount++;
   record.lastRequest = now;
 
-  rateLimitStore.updateRecord(key, record);
+  await rateLimitStore.updateRecord(key, record);
 };
 
 export const createRateLimit = (configType: string = "default") => {
   const config =
     RATE_LIMIT_CONFIGS[configType] || RATE_LIMIT_CONFIGS["default"];
 
-  return (req: Request, res: Response, next: NextFunction): void => {
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     const key = generateRateLimitKey(req, configType);
     if (!config) {
       res.status(500).json({
@@ -194,50 +262,60 @@ export const createRateLimit = (configType: string = "default") => {
       return;
     }
 
-    const result = checkRateLimit(config, key);
+    try {
+      const result = await checkRateLimit(config, key);
 
-    if (!result.allowed) {
-      const record = rateLimitStore.getRecord(key);
-      record.blockedCount++;
+      if (!result.allowed) {
+        const record = await rateLimitStore.getRecord(key);
+        record.blockedCount++;
+        await rateLimitStore.updateRecord(key, record);
 
-      logger.warn("Rate limit exceeded", {
+        logger.warn("Rate limit exceeded", {
+          key,
+          configType,
+          reason: result.reason,
+          retryAfter: result.retryAfter,
+          userId: req.user?.userId,
+          ip: req.ip,
+          path: req.path,
+          userAgent: req.get("User-Agent"),
+        });
+
+        res.status(429).json({
+          error: "Too Many Requests",
+          message: "Rate limit exceeded",
+          retryAfter: result.retryAfter,
+          reason: result.reason,
+        });
+        return;
+      }
+
+      await updateRequestRecord(key);
+
+      const record = await rateLimitStore.getRecord(key);
+      if (config) {
+        const remaining = Math.max(0, config.maxRequests - record.count);
+        const resetTime = Math.ceil(
+          (record.firstRequest + config.windowMs) / 1000,
+        );
+
+        res.set({
+          "X-RateLimit-Limit": config.maxRequests.toString(),
+          "X-RateLimit-Remaining": remaining.toString(),
+          "X-RateLimit-Reset": resetTime.toString(),
+          "X-RateLimit-Window": config.windowMs.toString(),
+        });
+      }
+
+      next();
+    } catch (error) {
+      logger.error("Rate limit check failed", {
+        error: (error as Error).message,
         key,
-        configType,
-        reason: result.reason,
-        retryAfter: result.retryAfter,
-        userId: req.user?.userId,
-        ip: req.ip,
-        path: req.path,
-        userAgent: req.get("User-Agent"),
       });
-
-      res.status(429).json({
-        error: "Too Many Requests",
-        message: "Rate limit exceeded",
-        retryAfter: result.retryAfter,
-        reason: result.reason,
-      });
-      return;
+      // On error, allow the request (fail open for availability)
+      next();
     }
-
-    updateRequestRecord(key);
-
-    const record = rateLimitStore.getRecord(key);
-    if (config) {
-      const remaining = Math.max(0, config.maxRequests - record.count);
-      const resetTime = Math.ceil(
-        (record.firstRequest + config.windowMs) / 1000,
-      );
-
-      res.set({
-        "X-RateLimit-Limit": config.maxRequests.toString(),
-        "X-RateLimit-Remaining": remaining.toString(),
-        "X-RateLimit-Reset": resetTime.toString(),
-        "X-RateLimit-Window": config.windowMs.toString(),
-      });
-    }
-
-    next();
   };
 };
 
@@ -247,66 +325,68 @@ export const monitoringRateLimit = createRateLimit("monitoring");
 export const authRateLimit = createRateLimit("auth");
 export const apiRateLimit = createRateLimit("default");
 
-export const getRateLimitStats = (): {
+export const getRateLimitStats = async (): Promise<{
   store: Record<string, unknown>;
   configs: Record<string, RateLimitConfig>;
-} => {
+}> => {
   return {
-    store: rateLimitStore.getStats(),
+    store: await rateLimitStore.getStats(),
     configs: RATE_LIMIT_CONFIGS,
   };
 };
 
-export const resetRateLimit = (key: string): boolean => {
-  if (rateLimitStore.getRecord(key)) {
-    rateLimitStore.updateRecord(key, {
-      count: 0,
-      burstCount: 0,
-      firstRequest: Date.now(),
-      lastRequest: Date.now(),
-      blockedCount: 0,
-    });
-
-    logger.info("Rate limit reset", { key });
-    return true;
-  }
-  return false;
+export const resetRateLimit = async (key: string): Promise<boolean> => {
+  return await rateLimitStore.reset(key);
 };
 
 export const ipBasedRateLimit = (
   maxAttempts: number = 10,
   windowMs: number = 10 * 60 * 1000,
 ) => {
-  return (req: Request, res: Response, next: NextFunction): void => {
-    const ip = req.ip || "unknown";
-    const key = `auth_attempts:${ip}`;
-    const record = rateLimitStore.getRecord(key);
-    const now = Date.now();
+  return async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const ip = req.ip || "unknown";
+      const key = `auth_attempts:${ip}`;
+      const record = await rateLimitStore.getRecord(key);
+      const now = Date.now();
 
-    if (now - record.firstRequest > windowMs) {
-      record.count = 0;
-      record.firstRequest = now;
-    }
+      if (now - record.firstRequest > windowMs) {
+        record.count = 0;
+        record.firstRequest = now;
+      }
 
-    if (record.count >= maxAttempts) {
-      logger.warn("IP rate limit exceeded for auth attempts", {
-        ip,
-        attempts: record.count,
-        blockedCount: record.blockedCount,
+      if (record.count >= maxAttempts) {
+        logger.warn("IP rate limit exceeded for auth attempts", {
+          ip,
+          attempts: record.count,
+          blockedCount: record.blockedCount,
+        });
+
+        res.status(429).json({
+          error: "Too Many Requests",
+          message: "Too many authentication attempts",
+          retryAfter: Math.ceil(
+            (windowMs - (now - record.firstRequest)) / 1000,
+          ),
+        });
+        return;
+      }
+
+      record.count++;
+      record.lastRequest = now;
+      await rateLimitStore.updateRecord(key, record);
+
+      next();
+    } catch (error) {
+      logger.error("IP rate limit check failed", {
+        error: (error as Error).message,
       });
-
-      res.status(429).json({
-        error: "Too Many Requests",
-        message: "Too many authentication attempts",
-        retryAfter: Math.ceil((windowMs - (now - record.firstRequest)) / 1000),
-      });
-      return;
+      // On error, allow the request (fail open for availability)
+      next();
     }
-
-    record.count++;
-    record.lastRequest = now;
-    rateLimitStore.updateRecord(key, record);
-
-    next();
   };
 };

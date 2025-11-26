@@ -91,6 +91,11 @@ export class NoOpLogger implements ILogger {
 }
 
 const configuredLevel: LogLevel = ((): LogLevel => {
+  // Production defaults to 'info' to reduce log volume and disk I/O
+  // Development defaults to 'debug' for verbose logging
+  const isProduction = env.NODE_ENV === "production";
+  const defaultLevel = isProduction ? "info" : "debug";
+
   switch (env.LOG_LEVEL) {
     case "error":
     case "warn":
@@ -99,7 +104,7 @@ const configuredLevel: LogLevel = ((): LogLevel => {
     case "verbose":
       return "debug";
     default:
-      return "debug";
+      return defaultLevel;
   }
 })();
 

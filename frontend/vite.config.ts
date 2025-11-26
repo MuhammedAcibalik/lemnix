@@ -425,26 +425,29 @@ export default defineConfig(({ command, mode }) => {
             });
             
             proxy.on('proxyReq', (proxyReq, req, res) => {
-              if (isDevelopment) {
-                // Only log non-health-check requests to reduce noise
-                if (!req.url?.includes('/health') && !req.url?.includes('/metrics/web-vitals')) {
-                  console.log('🔄 [Vite Proxy]', req.method, req.url);
-                }
+              // Only log in development mode
+              if (isDevelopment && !req.url?.includes('/health') && !req.url?.includes('/metrics/web-vitals')) {
+                console.log('🔄 [Vite Proxy]', req.method, req.url);
               }
+              // Production: No logging to reduce console noise and improve performance
             });
             
             proxy.on('proxyRes', (proxyRes, req, res) => {
               // Track successful connections
               successfulConnections++;
               
-              // Reset error warning timer on successful connection
-              if (successfulConnections === 1) {
-                console.log('✅ [Vite Proxy] Backend connection established successfully');
+              // Only log in development mode
+              if (isDevelopment) {
+                // Reset error warning timer on successful connection
+                if (successfulConnections === 1) {
+                  console.log('✅ [Vite Proxy] Backend connection established successfully');
+                }
+                
+                if (!req.url?.includes('/health') && !req.url?.includes('/metrics/web-vitals')) {
+                  console.log('✅ [Vite Proxy]', proxyRes.statusCode, req.url);
+                }
               }
-              
-              if (isDevelopment && !req.url?.includes('/health') && !req.url?.includes('/metrics/web-vitals')) {
-                console.log('✅ [Vite Proxy]', proxyRes.statusCode, req.url);
-              }
+              // Production: No logging to reduce console noise and improve performance
             });
           }
         }

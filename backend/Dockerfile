@@ -59,7 +59,17 @@ RUN npm ci --only=production && \
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
+
+# Copy Prisma Client with version verification
+# Prisma Client is generated during build stage and must match runtime Node version
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
+# Verify Prisma Client was copied correctly
+RUN if [ ! -d "node_modules/.prisma" ] || [ ! -f "node_modules/.prisma/client/index.js" ]; then \
+      echo "ERROR: Prisma Client not found or incomplete. Build may have failed." && \
+      exit 1; \
+    fi && \
+    echo "Prisma Client verified successfully"
 
 # Copy Prisma schema (needed for migrations)
 COPY --from=builder /app/prisma ./prisma
