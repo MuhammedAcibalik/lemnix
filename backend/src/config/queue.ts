@@ -101,6 +101,11 @@ const workerOptions: WorkerOptions = {
 let optimizationQueue: Queue | null = null;
 
 /**
+ * Encryption queue instance
+ */
+let encryptionQueue: Queue | null = null;
+
+/**
  * Get or create optimization queue instance
  */
 export function getOptimizationQueue(): Queue {
@@ -123,6 +128,28 @@ export function getOptimizationQueue(): Queue {
 }
 
 /**
+ * Get or create encryption queue instance
+ */
+export function getEncryptionQueue(): Queue {
+  if (encryptionQueue) {
+    return encryptionQueue;
+  }
+
+  encryptionQueue = new Queue("encryption", queueOptions);
+
+  encryptionQueue.on("error", (error) => {
+    logger.error("Encryption queue error", { error: error.message });
+  });
+
+  logger.info("Encryption queue initialized", {
+    queueName: "encryption",
+    concurrency: CONCURRENCY,
+  });
+
+  return encryptionQueue;
+}
+
+/**
  * Get worker options
  */
 export function getWorkerOptions(): WorkerOptions {
@@ -130,13 +157,18 @@ export function getWorkerOptions(): WorkerOptions {
 }
 
 /**
- * Close queue connection
+ * Close queue connections
  */
 export async function closeQueue(): Promise<void> {
   if (optimizationQueue) {
     await optimizationQueue.close();
     optimizationQueue = null;
-    logger.info("Queue closed");
+    logger.info("Optimization queue closed");
+  }
+  if (encryptionQueue) {
+    await encryptionQueue.close();
+    encryptionQueue = null;
+    logger.info("Encryption queue closed");
   }
 }
 

@@ -379,6 +379,8 @@ model ProductionPlanItem {
   encryptedMusteriNo        String?                @db.VarChar(200)
   encryptedSiparis          String?                @db.VarChar(200)
   encryptedSiparisVeren     String?                @db.VarChar(500)
+  adHash                    String?                @db.VarChar(64) // Blind index hash for searching encrypted ad field
+  musteriNoHash             String?                @db.VarChar(64) // Blind index hash for searching encrypted musteriNo field
   linkedCuttingList         CuttingList?           @relation(fields: [linkedCuttingListId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   plan                      ProductionPlan         @relation(fields: [planId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   cuttingListItems          CuttingListItem[]
@@ -389,6 +391,8 @@ model ProductionPlanItem {
   @@index([bolum, oncelik])
   @@index([linkedCuttingListId])
   @@index([deletedAt])
+  @@index([adHash]) // Index for blind index search
+  @@index([musteriNoHash]) // Index for blind index search
   @@map("production_plan_items")
 }
 

@@ -271,6 +271,19 @@ router.delete(
     productionPlanController.unlinkPlanItemFromCuttingList(req, res),
 );
 
+/**
+ * @route GET /api/production-plan/encryption/:jobId/status
+ * @desc Get encryption job status by job ID
+ * @access Private (requires authentication)
+ */
+router.get(
+  "/encryption/:jobId/status",
+  authenticateToken,
+  validateSession,
+  (req: Request, res: Response) =>
+    productionPlanController.getEncryptionJobStatus(req, res),
+);
+
 // Error handling middleware
 router.use((error: Error, req: Request, res: Response, next: NextFunction) => {
   // In degraded mode (e.g. database offline), some routes like metrics should

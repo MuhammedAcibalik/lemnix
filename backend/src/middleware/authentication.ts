@@ -30,11 +30,23 @@ class SessionManager {
   private readonly ABSOLUTE_TIMEOUT = 8 * 60 * 60 * 1000; // 8 hours
   private readonly cleanupInterval: NodeJS.Timeout;
   private readonly activeSessionIds = new Set<string>();
-  private readonly activeUsers = new Map<string, number>();
+  private readonly useRedis: boolean;
+  private redisClient: ReturnType<typeof require>["redis"] | null = null;
 
   constructor(
     private readonly store: SessionStore = new InMemorySessionStore(),
   ) {
+    // Check if Redis is available for activeUsers tracking
+    try {
+      const { getRedisClient, isRedisConnected } = require("../config/redis");
+      this.useRedis = isRedisConnected();
+      if (this.useRedis) {
+        this.redisClient = getRedisClient();
+      }
+    } catch {
+      this.useRedis = false;
+    }
+
     this.cleanupInterval = setInterval(
       () => {
         this.cleanupInactiveSessions();
@@ -59,7 +71,17 @@ class SessionManager {
 
     this.store.create(session);
     this.activeSessionIds.add(sessionId);
-    this.activeUsers.set(userId, (this.activeUsers.get(userId) ?? 0) + 1);
+    
+    // ✅ DISTRIBUTED: Track active users in Redis for distributed systems
+    if (this.useRedis && this.redisClient) {
+      const activeUsersKey = "active_users";
+      this.redisClient.sadd(activeUsersKey, userId).catch((error) => {
+        logger.error("Failed to track active user in Redis", {
+          error: (error as Error).message,
+          userId,
+        });
+      });
+    }
 
     logger.info("Session created", { sessionId, userId, role });
     return sessionId;
@@ -99,11 +121,24 @@ class SessionManager {
     this.store.delete(sessionId);
     this.activeSessionIds.delete(sessionId);
 
-    const userCount = this.activeUsers.get(session.userId) ?? 0;
-    if (userCount <= 1) {
-      this.activeUsers.delete(session.userId);
-    } else {
-      this.activeUsers.set(session.userId, userCount - 1);
+    // ✅ DISTRIBUTED: Update active users in Redis
+    if (this.useRedis && this.redisClient) {
+      const activeUsersKey = "active_users";
+      // Check if user has other active sessions
+      const userSessions = this.store.findByUser(session.userId);
+      const hasOtherActiveSessions = userSessions.some(
+        (s) => s.sessionId !== sessionId && s.isActive,
+      );
+      
+      if (!hasOtherActiveSessions) {
+        // Remove user from active users set if no other active sessions
+        this.redisClient.srem(activeUsersKey, session.userId).catch((error) => {
+          logger.error("Failed to remove active user from Redis", {
+            error: (error as Error).message,
+            userId: session.userId,
+          });
+        });
+      }
     }
 
     logger.info("Session invalidated", { sessionId, userId: session.userId });
@@ -147,17 +182,50 @@ class SessionManager {
     }
   }
 
-  getSessionStats(): { activeSessions: number; totalUsers: number } {
+  async getSessionStats(): Promise<{ activeSessions: number; totalUsers: number }> {
+    let totalUsers = 0;
+    
+    // ✅ DISTRIBUTED: Get active user count from Redis
+    if (this.useRedis && this.redisClient) {
+      try {
+        const activeUsersKey = "active_users";
+        totalUsers = await this.redisClient.scard(activeUsersKey);
+      } catch (error) {
+        logger.error("Failed to get active user count from Redis", {
+          error: (error as Error).message,
+        });
+        // Fallback: count unique users from active sessions
+        const userIds = new Set<string>();
+        for (const sessionId of Array.from(this.activeSessionIds)) {
+          const session = this.store.find(sessionId);
+          if (session?.isActive) {
+            userIds.add(session.userId);
+          }
+        }
+        totalUsers = userIds.size;
+      }
+    } else {
+      // Fallback: count unique users from active sessions
+      const userIds = new Set<string>();
+      for (const sessionId of Array.from(this.activeSessionIds)) {
+        const session = this.store.find(sessionId);
+        if (session?.isActive) {
+          userIds.add(session.userId);
+        }
+      }
+      totalUsers = userIds.size;
+    }
+
     return {
       activeSessions: this.activeSessionIds.size,
-      totalUsers: this.activeUsers.size,
+      totalUsers,
     };
   }
 }
 
 /**
  * Create session store based on environment variable
- * Production requires Redis, development can use in-memory fallback
+ * Production requires Redis and will fail-fast if Redis is unavailable
  */
 function createSessionStore(): SessionStore {
   const isProduction = process.env.NODE_ENV === "production";
@@ -167,36 +235,58 @@ function createSessionStore(): SessionStore {
     try {
       // Check Redis connection
       const { isRedisConnected } = require("../config/redis");
-      if (!isRedisConnected() && isProduction) {
-        logger.error(
-          "Redis is required for production session store. Application cannot start without Redis.",
-        );
+      if (!isRedisConnected()) {
+        if (isProduction) {
+          logger.error(
+            "❌ CRITICAL: Redis is required for production session store. Application cannot start without Redis.",
+          );
+          logger.error(
+            "Please ensure Redis is running and REDIS_URL is configured correctly.",
+          );
+          // ✅ SECURITY: Fail-fast in production - exit immediately
+          process.exit(1);
+        }
+        // Development: throw error but don't exit (allows test to catch)
         throw new Error(
-          "Redis connection failed. Production requires Redis for session management.",
+          "Redis connection failed. Development mode requires Redis when SESSION_STORE=redis.",
         );
       }
-      logger.info("Using Redis session store");
+      logger.info("✅ Using Redis session store");
       return new RedisSessionStore();
     } catch (error) {
       if (isProduction) {
         logger.error(
-          "Redis is required for production session store. Application cannot start without Redis.",
+          "❌ CRITICAL: Redis session store initialization failed in production.",
           error as Error,
         );
-        throw new Error(
-          "Redis connection failed. Production requires Redis for session management.",
+        logger.error(
+          "Production requires Redis for distributed session management. Application cannot start.",
         );
+        // ✅ SECURITY: Fail-fast in production - exit immediately
+        process.exit(1);
       }
-      logger.warn(
-        "Redis session store failed, falling back to in-memory store",
-        { error: (error as Error).message },
-      );
-      return new InMemorySessionStore();
+      // Development: fallback to in-memory only if explicitly allowed
+      if (process.env.SESSION_STORE === "memory") {
+        logger.warn(
+          "Redis session store failed, using in-memory store (development only)",
+          { error: (error as Error).message },
+        );
+        return new InMemorySessionStore();
+      }
+      // If Redis was requested but failed, throw error
+      throw error;
     }
   }
 
-  logger.info("Using in-memory session store");
-  return new InMemorySessionStore();
+  // Development: in-memory store is allowed
+  if (!isProduction) {
+    logger.info("Using in-memory session store (development only)");
+    return new InMemorySessionStore();
+  }
+
+  // Production should never reach here (should have Redis)
+  logger.error("❌ CRITICAL: Production requires Redis session store");
+  process.exit(1);
 }
 
 export const sessionManager = new SessionManager(createSessionStore());
@@ -321,7 +411,16 @@ export const refreshToken = (req: Request, res: Response): void => {
       return;
     }
 
-    const jwtSecret = process.env.JWT_SECRET || "default-secret-key";
+    // ✅ SECURITY: JWT_SECRET is required (validated at startup)
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      logger.error("JWT_SECRET missing - application misconfiguration");
+      res.status(500).json({
+        error: "Internal Server Error",
+        message: "Authentication service misconfigured",
+      });
+      return;
+    }
     const decoded = jwt.verify(refreshToken, jwtSecret) as JWTPayload;
 
     if (!sessionManager.validateSession(decoded.sessionId, decoded.jti)) {
@@ -376,7 +475,16 @@ export const authenticateToken = (
       return;
     }
 
-    const jwtSecret = process.env.JWT_SECRET || "default-secret-key";
+    // ✅ SECURITY: JWT_SECRET is required (validated at startup)
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      logger.error("JWT_SECRET missing - application misconfiguration");
+      res.status(500).json({
+        error: "Internal Server Error",
+        message: "Authentication service misconfigured",
+      });
+      return;
+    }
     const decoded = jwt.verify(token, jwtSecret) as JWTPayload;
 
     // Set user info on request

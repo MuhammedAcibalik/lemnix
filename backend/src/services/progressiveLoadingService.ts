@@ -144,29 +144,68 @@ export class ProgressiveLoadingService extends EventEmitter {
       this.emit("progress", { ...progress });
       options.onProgress?.(progress);
 
-      // Stage 3: Progressive encryption
+      // ✅ PERFORMANCE: Stage 3: Submit encryption to async queue
       progress.stage = "encrypting";
-      const encryptionResult =
-        await asyncEncryptionService.encryptProductionPlanItems(
-          parseResult.data.map((item) => ({
+      const { getEncryptionQueue } = await import("../config/queue");
+      const encryptionQueue = getEncryptionQueue();
+      const requestId = `encrypt_${productionPlan.id}_${Date.now()}`;
+
+      const job = await encryptionQueue.add(
+        "encrypt",
+        {
+          items: parseResult.data.map((item) => ({
             ...item,
             planId: productionPlan.id,
           })),
-          {
-            batchSize: options.batchSize || this.defaultBatchSize,
-            concurrency: options.concurrency || this.defaultConcurrency,
-            onProgress: (encryptionProgress: EncryptionProgress) => {
-              progress.percentage = 30 + encryptionProgress.percentage * 0.6; // 30-90%
-              progress.itemsProcessed = encryptionProgress.processed;
-              progress.message = `${encryptionProgress.processed}/${encryptionProgress.total} öğe şifrelendi...`;
-              progress.estimatedTimeRemaining =
-                encryptionProgress.estimatedTimeRemaining;
+          planId: productionPlan.id,
+          requestId,
+          userId: uploadedBy,
+        },
+        {
+          jobId: requestId,
+        },
+      );
 
-              this.emit("progress", { ...progress });
-              options.onProgress?.(progress);
-            },
-          },
+      logger.info("Encryption job queued for progressive upload", {
+        jobId: job.id,
+        planId: productionPlan.id,
+        requestId,
+        itemCount: parseResult.data.length,
+      });
+
+      // Poll for job completion
+      let jobCompleted = false;
+      let encryptionResult: { success: boolean; errors?: string[] } = {
+        success: false,
+      };
+
+      while (!jobCompleted) {
+        const jobState = await job.getState();
+        const jobProgress = (job.progress as number) || 0;
+
+        progress.percentage = 30 + jobProgress * 0.6; // 30-90%
+        progress.itemsProcessed = Math.round(
+          (jobProgress / 100) * parseResult.data.length,
         );
+        progress.message = `Şifreleme devam ediyor... ${Math.round(jobProgress)}%`;
+
+        this.emit("progress", { ...progress });
+        options.onProgress?.(progress);
+
+        if (jobState === "completed") {
+          jobCompleted = true;
+          encryptionResult = { success: true };
+        } else if (jobState === "failed") {
+          jobCompleted = true;
+          encryptionResult = {
+            success: false,
+            errors: [job.failedReason || "Encryption job failed"],
+          };
+        } else {
+          // Wait before polling again
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+      }
 
       if (!encryptionResult.success) {
         return {
@@ -177,27 +216,13 @@ export class ProgressiveLoadingService extends EventEmitter {
         };
       }
 
-      // Stage 4: Progressive saving
+      // ✅ PERFORMANCE: Stage 4: Items already saved by encryption worker
+      // Just update progress
       progress.stage = "saving";
-      progress.percentage = 90;
-      progress.message = "Veritabanına kaydediliyor...";
+      progress.percentage = 95;
+      progress.message = "Veriler hazırlanıyor...";
       this.emit("progress", { ...progress });
       options.onProgress?.(progress);
-
-      const savedItems = await this.saveItemsProgressive(
-        encryptionResult.data!,
-        productionPlan.id,
-        {
-          onProgress: (saveProgress) => {
-            progress.percentage = 90 + saveProgress.percentage * 0.1; // 90-100%
-            progress.itemsProcessed = saveProgress.processed;
-            progress.message = `${saveProgress.processed}/${saveProgress.total} öğe kaydedildi...`;
-
-            this.emit("progress", { ...progress });
-            options.onProgress?.(progress);
-          },
-        },
-      );
 
       // Stage 5: Complete
       progress.stage = "complete";

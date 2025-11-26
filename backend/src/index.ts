@@ -7,11 +7,13 @@ import { logger } from "./services/logger.js";
 import { startQueryMonitoring } from "./middleware/queryMonitoring.js";
 import { initializeSentry } from "./monitoring/sentry.js";
 import { createOptimizationWorker } from "./workers/optimizationWorker.js";
+import { createEncryptionWorker } from "./workers/encryptionWorker.js";
 import { closeQueue } from "./config/queue.js";
 import type { Worker } from "bullmq";
 
 let httpServer: ReturnType<typeof createServer> | null = null;
 let optimizationWorker: Worker | null = null;
+let encryptionWorker: Worker | null = null;
 
 async function bootstrap(): Promise<void> {
   // Initialize Sentry error tracking
@@ -46,6 +48,18 @@ async function bootstrap(): Promise<void> {
         }
       } else {
         logger.info("Optimization queue disabled (ENABLE_OPTIMIZATION_QUEUE not set)");
+      }
+
+      // ✅ PERFORMANCE: Start encryption worker (always enabled for async encryption)
+      try {
+        encryptionWorker = createEncryptionWorker();
+        logger.info("Encryption worker started", {
+          concurrency: process.env.QUEUE_CONCURRENCY || "5",
+          queueName: "encryption",
+        });
+      } catch (workerError) {
+        logger.error("Failed to start encryption worker", workerError as Error);
+        // Don't exit - server can still run without worker (will use sync encryption)
       }
 
       logger.info("LEMNİX Backend API running", {
@@ -200,6 +214,12 @@ async function handleShutdown(signal: string): Promise<void> {
     if (optimizationWorker) {
       await optimizationWorker.close();
       logger.info("Optimization worker closed");
+    }
+
+    // Close encryption worker
+    if (encryptionWorker) {
+      await encryptionWorker.close();
+      logger.info("Encryption worker closed");
     }
 
     // Close queue connections

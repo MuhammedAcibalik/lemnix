@@ -30,6 +30,8 @@ export interface ProductionPlanFilters {
   oncelik?: string;
   page?: number;
   limit?: number;
+  searchAd?: string; // Search by ad (customer name) using blind index
+  searchMusteriNo?: string; // Search by musteriNo using blind index
 }
 
 export interface ProductionPlanMetrics {
@@ -55,7 +57,7 @@ export class ProductionPlanService {
     uploadedBy?: string,
   ): Promise<{
     success: boolean;
-    data?: ProductionPlanWithItems;
+    data?: ProductionPlanWithItems & { jobId?: string };
     errors?: string[];
   }> {
     try {
@@ -106,59 +108,56 @@ export class ProductionPlanService {
       //   };
       // }
 
-      // Use extended timeout for large batch operations (30 seconds)
-      const createdPlan = await this.prisma.$transaction(
-        async (tx) => {
-          const plan = await tx.productionPlan.create({
-            data: {
-              weekNumber,
-              year,
-              uploadedBy,
-              metadata: {
-                totalItems: parsedData.length,
-                validRows: parsedSummary.validRows,
-                invalidRows: parsedSummary.invalidRows,
-                uploadedAt: new Date().toISOString(),
-              },
-            },
-          });
+      // ✅ PERFORMANCE: Use async encryption queue instead of blocking HTTP request
+      // Create production plan first (without items)
+      const plan = await this.prisma.productionPlan.create({
+        data: {
+          weekNumber,
+          year,
+          uploadedBy,
+          metadata: {
+            totalItems: parsedData.length,
+            validRows: parsedSummary.validRows,
+            invalidRows: parsedSummary.invalidRows,
+            uploadedAt: new Date().toISOString(),
+          },
+        },
+      });
 
-          // Process items in batches to avoid timeout and improve performance
-          const BATCH_SIZE = 100;
-          const itemsToCreate = parsedData.map((item) =>
-            mapProductionPlanItem(item, plan.id),
-          );
+      // Submit encryption job to queue
+      const { getEncryptionQueue } = await import("../config/queue");
+      const encryptionQueue = getEncryptionQueue();
+      const requestId = `encrypt_${plan.id}_${Date.now()}`;
 
-          const totalBatches = Math.ceil(itemsToCreate.length / BATCH_SIZE);
-          logger.info("Processing production plan items in batches", {
-            totalItems: itemsToCreate.length,
-            batchSize: BATCH_SIZE,
-            totalBatches,
-          });
-
-          for (let i = 0; i < itemsToCreate.length; i += BATCH_SIZE) {
-            const batch = itemsToCreate.slice(i, i + BATCH_SIZE);
-            const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
-            await tx.productionPlanItem.createMany({
-              data: batch,
-            });
-            logger.debug("Batch processed", {
-              batchNumber,
-              totalBatches,
-              itemsInBatch: batch.length,
-            });
-          }
-
-          return tx.productionPlan.findUnique({
-            where: { id: plan.id },
-            include: { items: true },
-          });
+      const job = await encryptionQueue.add(
+        "encrypt",
+        {
+          items: parsedData,
+          planId: plan.id,
+          requestId,
+          userId: uploadedBy,
         },
         {
-          maxWait: 30000, // 30 seconds max wait for transaction to start
-          timeout: 30000, // 30 seconds timeout for transaction to complete
+          jobId: requestId,
         },
       );
+
+      logger.info("Encryption job queued for production plan", {
+        jobId: job.id,
+        planId: plan.id,
+        requestId,
+        itemCount: parsedData.length,
+      });
+
+      // Return plan with job ID (items will be added async)
+      return {
+        success: true,
+        data: {
+          ...plan,
+          items: [], // Items will be added by worker
+          jobId: job.id, // Include job ID for status polling
+        } as ProductionPlanWithItems & { jobId: string },
+      };
 
       logger.info("Production plan created", {
         weekNumber,
@@ -203,6 +202,8 @@ export class ProductionPlanService {
       status = "active",
       bolum,
       oncelik,
+      searchAd,
+      searchMusteriNo,
       page = 1,
       limit = 50,
     } = filters;
@@ -235,6 +236,16 @@ export class ProductionPlanService {
       };
       const mappedOncelik = oncelikMapping[oncelik] || oncelik;
       itemWhere.oncelik = mappedOncelik;
+    }
+
+    // ✅ SEARCH: Use blind index for searching encrypted fields
+    if (searchAd) {
+      const adHash = encryptionService.hashForSearch(searchAd);
+      itemWhere.adHash = adHash;
+    }
+    if (searchMusteriNo) {
+      const musteriNoHash = encryptionService.hashForSearch(searchMusteriNo);
+      itemWhere.musteriNoHash = musteriNoHash;
     }
 
     const plans = await this.prisma.productionPlan.findMany({

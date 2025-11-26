@@ -106,55 +106,10 @@ export const verifyToken = (
 
     const token = authHeader.substring(7);
 
-    // ✅ SECURITY: Strict development-only mock token acceptance
-    const isDevelopment = process.env.NODE_ENV === "development";
+    // ✅ SECURITY: Reject ALL mock tokens (including in development)
     const isMockToken = token.startsWith("mock-");
-
-    // DEBUG: Log for troubleshooting
-    logger.info("[AUTH DEBUG]", {
-      isDevelopment,
-      isMockToken,
-      tokenPrefix: token.substring(0, 15),
-      nodeEnv: process.env.NODE_ENV,
-      path: req.path,
-    });
-
-    if (isDevelopment && isMockToken) {
-      // ⚠️ SECURITY WARNING: Log mock token usage
-      logger.warn("[AUTH] ⚠️ MOCK TOKEN USED - DEVELOPMENT MODE ONLY", {
-        token: token.substring(0, 20) + "...",
-        isInternalService: token === "mock-dev-token-internal-service",
-        environment: process.env.NODE_ENV,
-      });
-
-      // Internal service-to-service communication
-      if (token === "mock-dev-token-internal-service") {
-        req.user = {
-          userId: "internal-service",
-          role: UserRole.ADMIN,
-          sessionId: "internal-service-session",
-          permissions: Object.values(Permission), // Full permissions
-          tokenId: "internal-service-token",
-        };
-        next();
-        return;
-      }
-
-      // Regular dev mock token
-      req.user = {
-        userId: "dev-user",
-        role: UserRole.ADMIN,
-        sessionId: "dev-session",
-        permissions: Object.values(Permission),
-        tokenId: "dev-token-id",
-      };
-      next();
-      return;
-    }
-
-    // ✅ SECURITY: Reject mock tokens in production
-    if (!isDevelopment && isMockToken) {
-      logger.error("[AUTH] 🚨 MOCK TOKEN REJECTED IN PRODUCTION", {
+    if (isMockToken) {
+      logger.error("[AUTH] 🚨 MOCK TOKEN REJECTED - Security hardening", {
         token: token.substring(0, 10) + "...",
         environment: process.env.NODE_ENV,
         ip: req.ip,
@@ -167,7 +122,19 @@ export const verifyToken = (
       return;
     }
 
-    const jwtSecret = process.env["JWT_SECRET"] || "default-secret-key";
+    // ✅ SECURITY: JWT_SECRET is required (validated at startup)
+    const jwtSecret = process.env["JWT_SECRET"];
+    if (!jwtSecret) {
+      logger.error("[AUTH] JWT_SECRET missing - application misconfiguration", {
+        ip: req.ip,
+        path: req.path,
+      });
+      res.status(500).json({
+        error: "Internal Server Error",
+        message: "Authentication service misconfigured",
+      });
+      return;
+    }
     const decoded = jwt.verify(token, jwtSecret) as JWTPayload;
 
     req.user = {
@@ -279,7 +246,11 @@ export const generateToken = (
   role: UserRole,
   sessionId: string,
 ): string => {
-  const jwtSecret = process.env["JWT_SECRET"] || "default-secret-key";
+  // ✅ SECURITY: JWT_SECRET is required (validated at startup)
+  const jwtSecret = process.env["JWT_SECRET"];
+  if (!jwtSecret) {
+    throw new Error("JWT_SECRET is required but not configured");
+  }
   const expiresIn = process.env["JWT_EXPIRES_IN"] || "15m";
 
   const payload: JWTPayload = {

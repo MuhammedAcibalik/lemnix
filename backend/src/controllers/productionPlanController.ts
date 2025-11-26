@@ -5,11 +5,12 @@
  */
 
 import { Request, Response } from "express";
-import { productionPlanService } from "../services/productionPlanService";
+import { productionPlanService, ProductionPlanWithItems } from "../services/productionPlanService";
 import { productionPlanToCuttingListService } from "../services/productionPlanToCuttingListService";
 import { productionPlanStatisticsService } from "../services/productionPlanStatisticsService";
 import { logger } from "../services/logger";
 import { databaseManager } from "../config/database";
+import { getEncryptionQueue } from "../config/queue";
 
 export class ProductionPlanController {
   /**
@@ -57,13 +58,26 @@ export class ProductionPlanController {
           weekNumber: result.data?.weekNumber,
           year: result.data?.year,
           itemCount: result.data?.items.length,
+          jobId: (result.data as { jobId?: string })?.jobId,
         });
 
-        res.status(201).json({
-          success: true,
-          data: result.data,
-          message: "Üretim planı başarıyla yüklendi",
-        });
+        // If jobId is present, return job status info for polling
+        const responseData = result.data as ProductionPlanWithItems & { jobId?: string };
+        if (responseData.jobId) {
+          res.status(202).json({
+            success: true,
+            data: responseData,
+            jobId: responseData.jobId,
+            message: "Üretim planı yükleme işlemi başlatıldı. Şifreleme arka planda devam ediyor.",
+            status: "processing",
+          });
+        } else {
+          res.status(201).json({
+            success: true,
+            data: responseData,
+            message: "Üretim planı başarıyla yüklendi",
+          });
+        }
       } else {
         logger.error("Production plan upload failed", {
           errors: result.errors,
@@ -694,6 +708,72 @@ export class ProductionPlanController {
         success: false,
         error: "Sunucu hatası",
         details: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  /**
+   * Get encryption job status by job ID
+   * GET /api/production-plan/encryption/:jobId/status
+   */
+  async getEncryptionJobStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const { jobId } = req.params;
+
+      if (!jobId) {
+        res.status(400).json({
+          success: false,
+          error: {
+            message: "Job ID is required",
+            code: "INVALID_JOB_ID",
+          },
+        });
+        return;
+      }
+
+      const encryptionQueue = getEncryptionQueue();
+      const job = await encryptionQueue.getJob(jobId);
+
+      if (!job) {
+        res.status(404).json({
+          success: false,
+          error: {
+            message: "Job not found",
+            code: "JOB_NOT_FOUND",
+          },
+        });
+        return;
+      }
+
+      const state = await job.getState();
+      const progress = job.progress;
+      const jobResult = job.returnvalue as
+        | { encryptedItems: unknown[]; requestId: string }
+        | undefined;
+      const failedReason = job.failedReason;
+
+      res.json({
+        success: true,
+        jobId: job.id,
+        state,
+        progress,
+        itemsProcessed: jobResult?.encryptedItems?.length || 0,
+        failedReason,
+        timestamp: job.timestamp,
+        processedOn: job.processedOn,
+        finishedOn: job.finishedOn,
+      });
+    } catch (error) {
+      logger.error("Get encryption job status error", {
+        error: (error as Error).message,
+        jobId: req.params.jobId,
+      });
+      res.status(500).json({
+        success: false,
+        error: {
+          message: "Failed to get job status",
+          code: "JOB_STATUS_ERROR",
+        },
       });
     }
   }

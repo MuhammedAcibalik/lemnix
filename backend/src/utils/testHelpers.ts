@@ -1,65 +1,53 @@
 /**
- * Test Helpers
- * Utility functions for testing, including mock authentication tokens
+ * Test Helpers for Authentication
+ * 
+ * ⚠️ SECURITY: These helpers are ONLY for testing purposes.
+ * Mock tokens are completely disabled in production code.
  * 
  * @module utils/testHelpers
- * @description Mock token helpers for testing purposes only
- * SECURITY: These should NEVER be used in production code
  */
 
 import { UserRole, Permission } from "../middleware/authorization";
 
 /**
- * Mock token for testing purposes
- * SECURITY WARNING: Only use in test environment
+ * Create a mock user object for testing
+ * ⚠️ ONLY use in test files, never in production code
  */
-export const MOCK_TEST_TOKEN = "mock-test-token-lemnix-2025";
-
-/**
- * Create mock user object for testing
- * SECURITY WARNING: Only use in test environment
- */
-export function createMockTestUser(overrides?: {
+export function createMockUser(overrides?: {
   userId?: string;
   role?: UserRole;
+  sessionId?: string;
   permissions?: Permission[];
-}): {
-  userId: string;
-  role: UserRole;
-  sessionId: string;
-  permissions: Permission[];
-  tokenId: string;
-} {
+  tokenId?: string;
+}) {
   return {
-    userId: overrides?.userId || "test-user-123",
-    role: overrides?.role || UserRole.PLANNER,
-    sessionId: "test-session-123",
-    permissions: overrides?.permissions || [
-      Permission.VIEW_CUTTING_PLANS,
-      Permission.VIEW_OPTIMIZATION_RESULTS,
-      Permission.START_OPTIMIZATION,
-    ],
-    tokenId: "test-token-123",
+    userId: overrides?.userId || "test-user-id",
+    role: overrides?.role || UserRole.ADMIN,
+    sessionId: overrides?.sessionId || "test-session-id",
+    permissions: overrides?.permissions || Object.values(Permission),
+    tokenId: overrides?.tokenId || "test-token-id",
   };
 }
 
 /**
- * Create mock admin user for testing
- * SECURITY WARNING: Only use in test environment
+ * Create a mock JWT token payload for testing
+ * ⚠️ ONLY use in test files, never in production code
  */
-export function createMockAdminUser(): {
-  userId: string;
-  role: UserRole;
-  sessionId: string;
-  permissions: Permission[];
-  tokenId: string;
-} {
+export function createMockJWTPayload(overrides?: {
+  userId?: string;
+  role?: UserRole;
+  sessionId?: string;
+  permissions?: Permission[];
+  jti?: string;
+}) {
+  const now = Math.floor(Date.now() / 1000);
   return {
-    userId: "test-admin-123",
-    role: UserRole.ADMIN,
-    sessionId: "test-admin-session-123",
-    permissions: Object.values(Permission),
-    tokenId: "test-admin-token-123",
+    userId: overrides?.userId || "test-user-id",
+    role: overrides?.role || UserRole.ADMIN,
+    sessionId: overrides?.sessionId || "test-session-id",
+    permissions: overrides?.permissions || Object.values(Permission),
+    iat: now,
+    exp: now + 3600, // 1 hour
+    jti: overrides?.jti || "test-token-id",
   };
 }
-

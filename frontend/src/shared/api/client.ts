@@ -61,8 +61,8 @@ function generateCorrelationId(): string {
  * @returns Authentication token or null if not available
  *
  * @security
- * - Development: Uses mock token for local development
- * - Production: Requires actual token, throws error if missing
+ * - Mock tokens are completely disabled for security hardening
+ * - All environments require proper authentication
  *
  * @todo Implement actual authentication flow with JWT refresh
  */
@@ -74,33 +74,17 @@ export function getAuthToken(): string | null {
   // Check localStorage for stored token
   const stored = localStorage.getItem("auth_token");
   if (stored) {
+    // ✅ SECURITY: Reject mock tokens even if stored
+    if (stored.startsWith("mock-")) {
+      console.error("[SECURITY] Mock token detected and rejected");
+      localStorage.removeItem("auth_token");
+      return null;
+    }
     return stored;
   }
 
-  // ✅ SECURITY: Development mode - use mock token ONLY if explicitly enabled
-  // This requires VITE_ALLOW_MOCK_TOKEN=true environment variable
-  if (
-    import.meta.env.MODE === "development" &&
-    import.meta.env.DEV &&
-    import.meta.env.VITE_ALLOW_MOCK_TOKEN === "true"
-  ) {
-    const mockToken = "mock-dev-token-lemnix-2025";
-    localStorage.setItem("auth_token", mockToken);
-    console.warn(
-      "[SECURITY] Using mock token in development. This should NOT be enabled in production builds.",
-    );
-    return mockToken;
-  }
-
-  // ✅ SECURITY: Production mode - NEVER use mock token
-  // In production, if no token is found, return null
+  // No token available - return null
   // The API client will handle the 401 response appropriately
-  if (import.meta.env.MODE === "production" || import.meta.env.PROD) {
-    return null;
-  }
-
-  // Non-production environments (e.g., tests, storybook)
-  // Return null to force proper authentication setup
   return null;
 }
 

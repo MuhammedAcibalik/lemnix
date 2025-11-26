@@ -145,20 +145,20 @@ const envSchema = z.object({
     .transform((val) => val !== 'false')
     .optional(),
 
-  // JWT Authentication (REQUIRED in production, optional in development)
+  // JWT Authentication (REQUIRED in all environments for security hardening)
   JWT_SECRET: z
     .string()
     .min(32)
-    .optional()
     .transform((val) => {
       // Try reading from Docker secret file first
       const secretValue = readSecret("JWT_SECRET", "jwt_secret") || val;
-      // In production, JWT_SECRET is required
-      if (process.env.NODE_ENV === "production" && !secretValue) {
-        throw new Error("JWT_SECRET is required in production environment");
+      // ✅ SECURITY: JWT_SECRET is required in all environments
+      if (!secretValue) {
+        throw new Error(
+          "JWT_SECRET is required. Please set JWT_SECRET environment variable or provide Docker secret file.",
+        );
       }
-      // In development, provide a default
-      return secretValue || "dev-secret-key-DO-NOT-USE-IN-PRODUCTION-12345678";
+      return secretValue;
     }),
   JWT_EXPIRES_IN: z.string().default("7d"),
 
